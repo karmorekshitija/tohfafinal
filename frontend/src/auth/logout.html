@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Logout | Tohfa</title>
+    <!-- External Resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/tailwind.css">
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+      }
+    </style>
+</head>
+<body class="font-body-main text-[#1A1A1A] bg-[#1E3D0F]/20 backdrop-blur-md min-h-screen flex items-center justify-center">
+
+    <!-- Standalone Logout Confirmation Modal -->
+    <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#1E3D0F]/45 backdrop-blur-md animate-fade" id="logoutModal">
+        <div id="logoutCard" class="bg-[#FFF8E7] rounded-[20px] p-10 md:p-12 max-w-sm w-full shadow-[0_24px_48px_rgba(30,61,15,0.18)] transform scale-92 opacity-0 transition-all duration-300 ease-[cubic-bezier(0.34,1.2,0.64,1)] flex flex-col items-center text-center relative overflow-hidden" style="max-width: 384px; width: 100%;">
+            <!-- Decorative Accent Blur -->
+            <div class="absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 bg-[#3D6B4F]/5 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <span class="material-symbols-outlined text-[#3D6B4F] mb-6" style="font-size: 48px;">sensor_door</span>
+            <h1 class="font-serif font-bold text-[#1A1A1A] mb-2" style="font-size: 22px; line-height: 1.35;">Do you really want to log out?</h1>
+            <p class="font-sans text-[#6B6B6B] mb-9" style="font-size: 13px;">You'll need to sign in again to access your account.</p>
+            
+            <div class="flex flex-col gap-3 w-full">
+                <button id="confirm-logout-btn" class="w-full bg-[#3D6B4F] text-white font-semibold text-sm py-[14px] rounded-[10px] hover:bg-[#2e5140] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3D6B4F]/20 active:scale-[0.98]">
+                    Log out
+                </button>
+                <button id="cancel-logout-btn" class="w-full bg-transparent border-[1.5px] border-[#3D6B4F] text-[#3D6B4F] font-semibold text-sm py-[14px] rounded-[10px] hover:bg-[#3D6B4F]/5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3D6B4F]/20 active:scale-[0.98]">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const card = document.getElementById('logoutCard');
+            // Trigger entry animation
+            requestAnimationFrame(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'scale(1)';
+            });
+
+            // Action: Cancel
+            const handleCancel = () => {
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.92)';
+                setTimeout(() => {
+                    window.history.back();
+                }, 300);
+            };
+
+            // Action: Confirm Logout
+            const handleLogout = () => {
+                const token = sessionStorage.getItem('tohfa_access_token');
+                const refresh = sessionStorage.getItem('tohfa_refresh_token');
+                if (token && refresh) {
+                    fetch('/api/auth/logout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ refresh_token: refresh })
+                    }).catch(() => {});
+                }
+                sessionStorage.clear();
+                // login check bypassed
+            };
+
+            document.getElementById('cancel-logout-btn').addEventListener('click', handleCancel);
+            document.getElementById('confirm-logout-btn').addEventListener('click', handleLogout);
+
+            // Escape key handler
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') handleCancel();
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,928 @@
+﻿<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <script type="module" src="/src/components/ReportWidget.js" defer></script>
+<script type="module" src="/src/components/ProtectedRoute.js"></script>
+    <meta charset="utf-8"/>
+    <title>TOFA Seller Studio | Edit Listing</title>
+    <!-- Fonts -->
+      <!-- Material Symbols -->
+    
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+    <script type="module" src="/components/seller-components.js"></script>
+    
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-[#FFF8E7] text-on-surface font-body-md overflow-x-hidden">
+
+<seller-layout active-tab="catalog">
+  <!-- Header -->
+  <header class="flex justify-between items-end mb-8 px-8 pt-4">
+    <div>
+      <h1 class="font-display-hero text-3xl font-serif text-forest flex items-center gap-sm">
+        Edit Masterpiece <span class="text-gold">✦</span>
+      </h1>
+      <p class="text-on-surface-variant text-sm mt-1">Refine your listing details.</p>
+    </div>
+  </header>
+
+  <!-- Main Edit Form Container -->
+  <main class="max-w-4xl mx-auto px-8 pb-24">
+    <div id="toast" class="hidden fixed top-6 right-6 z-[300] flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg text-sm font-medium transition-all bg-forest text-white border border-forest/20">
+      <span class="material-symbols-outlined" id="toast-icon">check_circle</span>
+      <span id="toast-msg">Listing saved.</span>
+    </div>
+
+    <!-- Dynamic Banner -->
+    <div id="warning-banner" class="mb-8 p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-850 rounded-r-xl shadow-sm flex items-start gap-3">
+        <span class="material-symbols-outlined text-amber-600 shrink-0 mt-0.5">warning</span>
+        <div class="text-xs font-semibold leading-relaxed" id="warning-banner-text">
+            You can only edit photos, dimensions, description, price, and inventory. The product name and category stay locked to protect your reviews and purchase history.
+        </div>
+    </div>
+
+    <!-- Edit Form Box -->
+    <div class="bg-[#FFF8E7] border border-outline-variant/30 rounded-xl p-8 relative overflow-hidden shadow-sm space-y-8">
+
+      <!-- Product Details Section (Dynamic) -->
+      <section class="border-b border-sage/15 pb-6 space-y-4 relative z-10" id="product-details-section">
+          <label class="block text-xs font-bold uppercase tracking-wider text-forest" id="details-section-label">Product Details</label>
+          <div class="grid grid-cols-1 gap-4" id="details-fields-container">
+              <!-- Dynamically populated by JS -->
+          </div>
+          <!-- Subcategories Wrapper -->
+          <div id="subcategories-wrapper" class="hidden mt-4">
+              <label class="block text-xs font-semibold text-on-surface-variant/80 mb-2">Subcategories</label>
+              <div id="subcategories-container" class="flex flex-wrap gap-2 p-3 bg-[#FFF8E7] border border-outline-variant/30 rounded-xl max-h-40 overflow-y-auto">
+                  <!-- Populated dynamically -->
+              </div>
+          </div>
+      </section>
+
+      <!-- Photos Section -->
+      <section class="border-b border-sage/15 pb-6 space-y-4 relative z-10">
+          <label class="block text-xs font-bold uppercase tracking-wider text-forest">Photos</label>
+          <div class="grid grid-cols-4 gap-4">
+            <div class="photo-slot border-2 border-dashed border-outline-variant/50 rounded-lg h-32 flex flex-col items-center justify-center relative cursor-pointer hover:border-forest transition-colors bg-parchment/30" data-slot="0">
+              <span class="material-symbols-outlined text-outline-variant text-2xl">add_a_photo</span>
+              <span class="text-[10px] text-on-surface-variant mt-1">Cover Image</span>
+              <input accept="image/*" class="hidden photo-input" type="file"/>
+              <img class="hidden w-full h-full object-cover rounded-lg absolute inset-0" loading="lazy" />
+              <button class="hidden absolute top-1 right-1 w-6 h-6 bg-error text-white rounded-full flex items-center justify-center text-xs font-bold remove-photo-btn">&times;</button>
+            </div>
+            <div class="photo-slot border-2 border-dashed border-outline-variant/50 rounded-lg h-32 flex flex-col items-center justify-center relative cursor-pointer hover:border-forest transition-colors bg-parchment/30" data-slot="1">
+              <span class="material-symbols-outlined text-outline-variant text-2xl">add_a_photo</span>
+              <span class="text-[10px] text-on-surface-variant mt-1">Photo 2</span>
+              <input accept="image/*" class="hidden photo-input" type="file"/>
+              <img class="hidden w-full h-full object-cover rounded-lg absolute inset-0" loading="lazy" />
+              <button class="hidden absolute top-1 right-1 w-6 h-6 bg-error text-white rounded-full flex items-center justify-center text-xs font-bold remove-photo-btn">&times;</button>
+            </div>
+            <div class="photo-slot border-2 border-dashed border-outline-variant/50 rounded-lg h-32 flex flex-col items-center justify-center relative cursor-pointer hover:border-forest transition-colors bg-parchment/30" data-slot="2">
+              <span class="material-symbols-outlined text-outline-variant text-2xl">add_a_photo</span>
+              <span class="text-[10px] text-on-surface-variant mt-1">Photo 3</span>
+              <input accept="image/*" class="hidden photo-input" type="file"/>
+              <img class="hidden w-full h-full object-cover rounded-lg absolute inset-0" loading="lazy" />
+              <button class="hidden absolute top-1 right-1 w-6 h-6 bg-error text-white rounded-full flex items-center justify-center text-xs font-bold remove-photo-btn">&times;</button>
+            </div>
+            <div class="photo-slot border-2 border-dashed border-outline-variant/50 rounded-lg h-32 flex flex-col items-center justify-center relative cursor-pointer hover:border-forest transition-colors bg-parchment/30" data-slot="3">
+              <span class="material-symbols-outlined text-outline-variant text-2xl">add_a_photo</span>
+              <span class="text-[10px] text-on-surface-variant mt-1">Photo 4</span>
+              <input accept="image/*" class="hidden photo-input" type="file"/>
+              <img class="hidden w-full h-full object-cover rounded-lg absolute inset-0" loading="lazy" />
+              <button class="hidden absolute top-1 right-1 w-6 h-6 bg-error text-white rounded-full flex items-center justify-center text-xs font-bold remove-photo-btn">&times;</button>
+            </div>
+          </div>
+      </section>
+
+      <!-- Video Section -->
+      <section class="border-b border-sage/15 pb-6 space-y-4 relative z-10">
+          <label class="block text-xs font-bold uppercase tracking-wider text-forest">Product Video (Optional)</label>
+          <div id="video-drag-zone" class="border-2 border-dashed border-outline-variant/50 rounded-lg h-32 flex flex-col items-center justify-center relative cursor-pointer hover:border-forest transition-colors bg-parchment/30 overflow-hidden">
+            <input accept="video/*" class="hidden" id="video-file-input" type="file"/>
+            <div id="video-upload-prompt" class="flex flex-col items-center justify-center text-center">
+              <span class="material-symbols-outlined text-outline-variant text-2xl">videocam</span>
+              <span class="text-[10px] text-on-surface-variant mt-1">Upload Video (Max 10s, 20MB)</span>
+            </div>
+            <div id="video-preview-container" class="hidden absolute inset-0 bg-[#FFF8E7] flex items-center justify-center">
+              <video id="video-preview" class="w-full h-full object-cover rounded-lg" autoplay loop muted playsinline></video>
+              <button id="remove-video-btn" type="button" class="absolute top-1 right-1 w-6 h-6 bg-error text-white rounded-full flex items-center justify-center text-xs font-bold" onclick="event.stopPropagation(); removeSelectedVideo();">&times;</button>
+            </div>
+          </div>
+      </section>
+
+      <!-- Pricing & Stock -->
+      <section class="border-b border-sage/15 pb-6 space-y-6 relative z-10">
+          <label class="block text-xs font-bold uppercase tracking-wider text-forest">Pricing & Stock</label>
+          <div class="grid grid-cols-2 gap-6">
+              <div>
+                  <label class="block text-xs font-semibold text-on-surface-variant/80 mb-1">Listing Price (₹)</label>
+                  <input id="listing-price" type="number" step="1" min="0" class="w-full px-4 py-2.5 bg-surface border border-outline-variant/40 rounded-xl focus:border-forest focus:ring-forest text-sm font-medium"/>
+              </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-6">
+              <div>
+                  <label class="block text-xs font-semibold text-on-surface-variant/80 mb-1">Units in Inventory</label>
+                  <input id="stock-count" type="number" step="1" min="0" class="w-full px-4 py-2.5 bg-surface border border-outline-variant/40 rounded-xl focus:border-forest focus:ring-forest text-sm font-medium"/>
+              </div>
+              <div class="flex flex-col justify-end">
+                  <div class="flex items-center justify-between p-4 bg-surface border border-outline-variant/30 rounded-xl">
+                      <div>
+                          <p class="text-xs font-bold text-forest">Pre-booking option</p>
+                          <p class="text-[10px] text-on-surface-variant">Allow buyers to order before dispatch</p>
+                      </div>
+                      <button id="prebook-toggle" class="w-12 h-6 bg-outline-variant/40 rounded-full p-1 transition-colors duration-300 focus:outline-none flex items-center">
+                          <div id="prebook-toggle-circle" class="w-4 h-4 bg-[#FFF8E7] rounded-full transition-transform transform translate-x-0"></div>
+                      </button>
+                  </div>
+              </div>
+          </div>
+
+          <div id="prebook-limit-container" class="hidden grid grid-cols-2 gap-6">
+              <div>
+                  <label class="block text-xs font-semibold text-on-surface-variant/80 mb-1">Production Limit</label>
+                  <input id="prebook-limit" type="number" min="1" placeholder="Max pre-orders" class="w-full px-4 py-2.5 bg-surface border border-outline-variant/40 rounded-xl focus:border-forest focus:ring-forest text-sm font-medium"/>
+              </div>
+          </div>
+      </section>
+
+      <!-- Dimensions & Description -->
+      <section class="space-y-6 relative z-10">
+          <label class="block text-xs font-bold uppercase tracking-wider text-forest">Details <span class="text-[10px] text-on-surface-variant/70 lowercase font-medium">(optional)</span></label>
+          <div class="grid grid-cols-4 gap-4">
+              <div>
+                  <label class="block text-xs font-medium text-on-surface-variant/85 mb-1">L (cm)</label>
+                  <input id="dim-l" type="number" step="0.1" class="w-full px-3 py-2 bg-surface border border-outline-variant/40 rounded-xl text-xs font-medium focus:ring-forest focus:border-forest"/>
+              </div>
+              <div>
+                  <label class="block text-xs font-medium text-on-surface-variant/85 mb-1">W (cm)</label>
+                  <input id="dim-w" type="number" step="0.1" class="w-full px-3 py-2 bg-surface border border-outline-variant/40 rounded-xl text-xs font-medium focus:ring-forest focus:border-forest"/>
+              </div>
+              <div>
+                  <label class="block text-xs font-medium text-on-surface-variant/85 mb-1">H (cm)</label>
+                  <input id="dim-h" type="number" step="0.1" class="w-full px-3 py-2 bg-surface border border-outline-variant/40 rounded-xl text-xs font-medium focus:ring-forest focus:border-forest"/>
+              </div>
+              <div>
+                  <label class="block text-xs font-medium text-on-surface-variant/85 mb-1">Weight (g)</label>
+                  <input id="dim-weight" type="number" step="0.1" class="w-full px-3 py-2 bg-surface border border-outline-variant/40 rounded-xl text-xs font-medium focus:ring-forest focus:border-forest"/>
+              </div>
+          </div>
+
+          <div>
+              <label class="block text-xs font-semibold text-on-surface-variant/80 mb-1">Product Description</label>
+              <textarea id="product-bio" rows="4" placeholder="Provide a detailed description of the product that you are offering..." class="w-full px-4 py-3 bg-surface border border-outline-variant/40 rounded-xl focus:border-forest focus:ring-forest text-sm leading-relaxed"></textarea>
+          </div>
+      </section>
+
+      <!-- Action Footer Buttons -->
+      <div class="flex justify-end gap-4 border-t border-sage/15 pt-6 relative z-10">
+          <button id="cancel-btn" class="px-6 py-2.5 border border-outline-variant/60 rounded-full text-sm font-semibold text-on-surface-variant hover:bg-black/5 transition-all active:scale-95">
+              Cancel
+          </button>
+          <button id="save-btn" class="px-8 py-2.5 bg-forest text-white rounded-full text-sm font-bold shadow-md hover:bg-forest/90 transition-all active:scale-95 flex items-center gap-1">
+              Save Changes
+          </button>
+      </div>
+
+    </div>
+  </main>
+</seller-layout>
+
+<script>
+    const API_BASE = window.location.origin;
+    let productId = null;
+    let prebookEnabled = false;
+
+    // Photos state (up to 4 slots)
+    let photoFiles = [null, null, null, null];
+    let photoUrls = ['', '', '', ''];
+    let selectedVideoFile = null;
+    let videoUrl = '';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const videoInput = document.getElementById('video-file-input');
+        const videoDragZone = document.getElementById('video-drag-zone');
+
+        if (videoDragZone && videoInput) {
+            videoDragZone.addEventListener('click', () => videoInput.click());
+            
+            videoDragZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                videoDragZone.classList.add('bg-sage/10');
+            });
+            videoDragZone.addEventListener('dragleave', () => {
+                videoDragZone.classList.remove('bg-sage/10');
+            });
+            videoDragZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                videoDragZone.classList.remove('bg-sage/10');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleVideoSelect(files[0]);
+                }
+            });
+
+            videoInput.addEventListener('change', (e) => {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    handleVideoSelect(files[0]);
+                }
+            });
+        }
+    });
+
+    function handleVideoSelect(file) {
+        if (!file.type.startsWith('video/')) {
+            showToast('Please select a valid video file.', 'error');
+            return;
+        }
+        if (file.size > 20 * 1024 * 1024) {
+            showToast('Video size must not exceed 20MB.', 'error');
+            return;
+        }
+
+        const videoElement = document.createElement('video');
+        videoElement.preload = 'metadata';
+        videoElement.src = URL.createObjectURL(file);
+        videoElement.onloadedmetadata = () => {
+            window.URL.revokeObjectURL(videoElement.src);
+            if (videoElement.duration > 10) {
+                showToast('Video duration must be 10 seconds or less.', 'error');
+            } else {
+                selectedVideoFile = file;
+                videoUrl = URL.createObjectURL(file);
+                renderVideoPreview(videoUrl);
+            }
+        };
+        videoElement.onerror = () => {
+            showToast('Failed to load video metadata.', 'error');
+        };
+    }
+
+    function renderVideoPreview(url) {
+        const preview = document.getElementById('video-preview');
+        const container = document.getElementById('video-preview-container');
+        const prompt = document.getElementById('video-upload-prompt');
+        
+        if (url) {
+            preview.src = url;
+            container.classList.remove('hidden');
+            prompt.classList.add('hidden');
+        } else {
+            preview.src = '';
+            container.classList.add('hidden');
+            prompt.classList.remove('hidden');
+        }
+    }
+
+    window.removeSelectedVideo = function() {
+        selectedVideoFile = null;
+        videoUrl = '';
+        renderVideoPreview(null);
+        if (videoInput) videoInput.value = '';
+    };
+
+    function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+    }
+
+    function showToast(msg, type = 'success') {
+        const toast = document.getElementById('toast');
+        const icon = document.getElementById('toast-icon');
+        const text = document.getElementById('toast-msg');
+        
+        icon.textContent = type === 'success' ? 'check_circle' : 'error';
+        text.textContent = msg;
+        toast.className = `fixed top-6 right-6 z-[300] flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg text-sm font-medium transition-all ${
+            type === 'success' ? 'bg-forest text-white' : 'bg-red-600 text-white'
+        }`;
+        
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 3500);
+    }
+
+    // Load Listing Data
+    async function loadListingData() {
+        const token = sessionStorage.getItem('tohfa_access_token');
+        try {
+            const res = await fetch(`${API_BASE}/api/seller/listings/${productId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                if (res.status === 401 || res.status === 403) {
+                    sessionStorage.clear();
+                    // login check bypassed
+                    return;
+                }
+                throw new Error(`HTTP ${res.status}`);
+            }
+
+            const resp = await res.json();
+            const data = resp.data || resp;
+            
+            // Let's store listing status
+            const listingStatus = data.status || 'draft';
+            
+            // Toggle view of banner and input fields based on status
+            const warningBanner = document.getElementById('warning-banner');
+            const detailsSectionLabel = document.getElementById('details-section-label');
+            const detailsFieldsContainer = document.getElementById('details-fields-container');
+            
+            selectedSubcategoryIds = (data.subcategories || []).map(sc => sc.id || sc);
+
+            if (listingStatus === 'draft') {
+                // Draft status: customizable name and category
+                warningBanner.className = "mb-8 p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-950 rounded-r-xl shadow-sm flex items-start gap-3";
+                warningBanner.innerHTML = `
+                    <span class="material-symbols-outlined text-emerald-600 shrink-0 mt-0.5">info</span>
+                    <div class="text-xs font-semibold leading-relaxed">
+                        You are editing a <strong>Draft</strong> listing. You can change any details, including the product name and category.
+                    </div>
+                `;
+                
+                detailsSectionLabel.textContent = "Product Details (Draft)";
+                detailsFieldsContainer.className = "grid grid-cols-1 md:grid-cols-2 gap-6";
+                const optionsHtml = categoriesList.map(cat => `
+                    <option value="${cat.id}">${cat.display_name || cat.name}</option>
+                `).join('');
+
+                detailsFieldsContainer.innerHTML = `
+                    <div>
+                        <label class="block text-xs font-semibold text-on-surface-variant/80 mb-1">Product Name</label>
+                        <input id="edit-product-name" type="text" class="w-full px-4 py-2.5 bg-surface border border-outline-variant/40 rounded-xl focus:border-forest focus:ring-forest text-sm font-medium" value=""/>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-on-surface-variant/80 mb-1">Category</label>
+                        <select id="edit-product-category" class="w-full px-4 py-2.5 bg-surface border border-outline-variant/40 rounded-xl focus:border-forest focus:ring-forest text-sm font-medium">
+                            <option value="">Select a Category</option>
+                            ${optionsHtml}
+                        </select>
+                    </div>
+                `;
+                document.getElementById('edit-product-name').value = data.title || '';
+                
+                let matchedCatId = data.category_id;
+                if (!matchedCatId && data.category) {
+                    const catObj = categoriesList.find(c => (c.display_name || c.name).toLowerCase() === data.category.toLowerCase());
+                    if (catObj) matchedCatId = catObj.id;
+                }
+                document.getElementById('edit-product-category').value = matchedCatId || '';
+                
+                renderSubcategories(matchedCatId || '');
+
+                document.getElementById('edit-product-category').addEventListener('change', (e) => {
+                    renderSubcategories(e.target.value);
+                });
+            } else {
+                // Non-draft status: locked name and category
+                warningBanner.className = "mb-8 p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-850 rounded-r-xl shadow-sm flex items-start gap-3";
+                warningBanner.innerHTML = `
+                    <span class="material-symbols-outlined text-amber-600 shrink-0 mt-0.5">warning</span>
+                    <div class="text-xs font-semibold leading-relaxed">
+                        You can only edit photos, dimensions, description, price, and inventory. The product name and category stay locked to protect your reviews and purchase history.
+                    </div>
+                `;
+                
+                detailsSectionLabel.textContent = "Locked Product Details";
+                detailsFieldsContainer.className = "grid grid-cols-1 md:grid-cols-2 gap-6"; 
+                detailsFieldsContainer.innerHTML = `
+                    <div>
+                        <label class="block text-xs font-medium text-on-surface-variant/80 mb-1 flex items-center gap-1">
+                            Product Name <span class="material-symbols-outlined text-xs text-outline">lock</span>
+                        </label>
+                        <div class="flex items-center gap-2 px-4 py-3 bg-surface-container rounded-lg border border-outline-variant/35 text-on-surface-variant font-medium text-sm">
+                            <span class="material-symbols-outlined text-sm text-outline">lock</span>
+                            <span id="locked-product-name">—</span>
+                        </div>
+                        <p class="text-[10px] text-on-surface-variant/70 mt-1">Locked to keep reviews and purchase history tied to this listing.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-on-surface-variant/80 mb-1 flex items-center gap-1">
+                            Category <span class="material-symbols-outlined text-xs text-outline">lock</span>
+                        </label>
+                        <div class="flex items-center gap-2 px-4 py-3 bg-surface-container rounded-lg border border-outline-variant/35 text-on-surface-variant font-medium text-sm">
+                            <span class="material-symbols-outlined text-sm text-outline">lock</span>
+                            <span id="locked-product-category">—</span>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('locked-product-name').textContent = data.title || '';
+                document.getElementById('locked-product-category').textContent = data.category || '';
+
+                let matchedCatId = data.category_id;
+                if (!matchedCatId && data.category) {
+                    const catObj = categoriesList.find(c => (c.display_name || c.name).toLowerCase() === data.category.toLowerCase());
+                    if (catObj) matchedCatId = catObj.id;
+                }
+                renderSubcategories(matchedCatId || '');
+            }
+            document.getElementById('listing-price').value = data.price || (data.price_paise ? data.price_paise / 100 : 0) || data.base_price || '';
+            document.getElementById('stock-count').value = data.stock !== undefined ? data.stock : (data.stock_count !== undefined ? data.stock_count : 1);
+            document.getElementById('dim-l').value = data.dimensions_l || data.length_cm || '';
+            document.getElementById('dim-w').value = data.dimensions_w || data.width_cm || '';
+            document.getElementById('dim-h').value = data.dimensions_h || data.height_cm || '';
+            document.getElementById('dim-weight').value = data.dimensions_weight || data.weight_g || data.weight_grams || '';
+            document.getElementById('product-bio').value = data.bio || data.description || '';
+
+            // Prebook
+            prebookEnabled = data.prebook_enabled || data.allow_prebooking;
+            const prebookBtn = document.getElementById('prebook-toggle');
+            const prebookCircle = document.getElementById('prebook-toggle-circle');
+            const prebookLimitBox = document.getElementById('prebook-limit-container');
+            if (prebookEnabled) {
+                prebookBtn.classList.remove('bg-outline-variant/40');
+                prebookBtn.classList.add('bg-forest');
+                prebookCircle.className = 'w-4 h-4 bg-[#FFF8E7] rounded-full transition-transform transform translate-x-6';
+                prebookLimitBox.classList.remove('hidden');
+                document.getElementById('prebook-limit').value = data.prebook_limit || data.prebooking_window || '';
+            }
+
+            // Photos
+            if (data.photos && data.photos.length > 0) {
+                const imagePhotos = data.photos.filter(photo => photo.is_video !== 1 && photo.is_video !== 'true');
+                const videoPhoto = data.photos.find(photo => photo.is_video === 1 || photo.is_video === 'true');
+                
+                imagePhotos.forEach((photo, index) => {
+                    if (index < 4) {
+                        photoUrls[index] = photo.url;
+                        updatePhotoSlotUI(index, photo.url);
+                    }
+                });
+                
+                if (videoPhoto) {
+                    renderVideoPreview(videoPhoto.url);
+                }
+            }
+
+        } catch (err) {
+            console.error(err);
+            showToast('Failed to load listing details.', 'error');
+        }
+    }
+
+    function updatePhotoSlotUI(index, url) {
+        const slot = document.querySelector(`.photo-slot[data-slot="${index}"]`);
+        if (!slot) return;
+        const img = slot.querySelector('img');
+        const icon = slot.querySelector('.material-symbols-outlined');
+        const span = slot.querySelector('span:last-of-type');
+        const removeBtn = slot.querySelector('.remove-photo-btn');
+
+        if (url) {
+            img.src = url;
+            img.classList.remove('hidden');
+            icon.classList.add('hidden');
+            span.classList.add('hidden');
+            removeBtn.classList.remove('hidden');
+        } else {
+            img.src = '';
+            img.classList.add('hidden');
+            icon.classList.remove('hidden');
+            span.classList.remove('hidden');
+            removeBtn.classList.add('hidden');
+        }
+    }
+
+    // Prebooking Toggle references
+    let prebookBtn;
+    let prebookCircle;
+    let prebookLimitBox;
+
+    function handlePrebookClick(e) {
+        e.preventDefault();
+        prebookEnabled = !prebookEnabled;
+        if (prebookEnabled) {
+            prebookBtn.classList.remove('bg-outline-variant/40');
+            prebookBtn.classList.add('bg-forest');
+            prebookCircle.className = 'w-4 h-4 bg-[#FFF8E7] rounded-full transition-transform transform translate-x-6';
+            prebookLimitBox.classList.remove('hidden');
+        } else {
+            prebookBtn.classList.add('bg-outline-variant/40');
+            prebookBtn.classList.remove('bg-forest');
+            prebookCircle.className = 'w-4 h-4 bg-[#FFF8E7] rounded-full transition-transform transform translate-x-0';
+            prebookLimitBox.classList.add('hidden');
+        }
+    }
+
+    function setupPhotosInteractivity() {
+        document.querySelectorAll('.photo-slot').forEach(slot => {
+            const input = slot.querySelector('.photo-input');
+            const img = slot.querySelector('img');
+            const removeBtn = slot.querySelector('.remove-photo-btn');
+            const index = parseInt(slot.dataset.slot);
+
+            slot.addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-photo-btn')) return;
+                input.click();
+            });
+
+            input.addEventListener('change', () => {
+                const file = input.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        updatePhotoSlotUI(index, e.target.result);
+                        photoFiles[index] = file;
+                        photoUrls[index] = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                updatePhotoSlotUI(index, null);
+                input.value = '';
+                photoFiles[index] = null;
+                photoUrls[index] = '';
+            });
+        });
+    }
+
+    // Save changes (PATCH API)
+    async function handleSaveClick() {
+        const price = parseFloat(document.getElementById('listing-price').value) || 0.0;
+        const stock = parseInt(document.getElementById('stock-count').value) || 0;
+        const prebook_limit = parseInt(document.getElementById('prebook-limit').value) || null;
+
+        // Optional details
+        const dimensions_l = parseFloat(document.getElementById('dim-l').value) || null;
+        const dimensions_w = parseFloat(document.getElementById('dim-w').value) || null;
+        const dimensions_h = parseFloat(document.getElementById('dim-h').value) || null;
+        const dimensions_weight = parseFloat(document.getElementById('dim-weight').value) || null;
+        const bio = document.getElementById('product-bio').value.trim() || null;
+
+        // Video upload first if selected
+        if (selectedVideoFile) {
+            const token = sessionStorage.getItem('tohfa_access_token');
+            const formData = new FormData();
+            formData.append('file', selectedVideoFile);
+            formData.append('is_video', 'true');
+            formData.append('sort_order', '0');
+            
+            try {
+                const uploadRes = await fetch(`${API_BASE}/api/seller/listings/${productId}/photos`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                if (uploadRes.ok) {
+                    const resp = await uploadRes.json();
+                    const videoData = resp.data || resp;
+                    videoUrl = videoData.url;
+                    selectedVideoFile = null;
+                }
+            } catch (err) {
+                console.error('Video upload error:', err);
+            }
+        }
+
+        // Photo payloads
+        const photosPayload = [];
+        photoUrls.forEach((url, idx) => {
+            if (url) {
+                const actualUrl = url.startsWith('data:image') 
+                    ? `https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500` 
+                    : url;
+                photosPayload.push({
+                    url: actualUrl,
+                    sort_order: idx,
+                    is_cover: idx === 0,
+                    is_video: 0
+                });
+            }
+        });
+
+        if (videoUrl) {
+            photosPayload.push({
+                url: videoUrl,
+                sort_order: 99,
+                is_cover: false,
+                is_video: 1
+            });
+        }
+
+        const patchBody = {
+            price,
+            base_price: price,
+            price_paise: Math.round(price * 100),
+            stock,
+            stock_count: stock,
+            prebook_enabled: prebookEnabled,
+            allow_prebooking: prebookEnabled ? 1 : 0,
+            prebook_limit: prebookEnabled ? prebook_limit : null,
+            prebooking_window: prebookEnabled ? prebook_limit : null,
+            dimensions_l,
+            length_cm: dimensions_l,
+            dimensions_w,
+            width_cm: dimensions_w,
+            dimensions_h,
+            height_cm: dimensions_h,
+            dimensions_weight,
+            weight_g: dimensions_weight,
+            weight_grams: dimensions_weight,
+            bio,
+            description: bio,
+            photos: photosPayload
+        };
+
+        const nameInput = document.getElementById('edit-product-name');
+        const categoryInput = document.getElementById('edit-product-category');
+        if (nameInput) {
+            patchBody.title = nameInput.value.trim();
+        }
+        if (categoryInput) {
+            const catIdVal = categoryInput.value;
+            patchBody.category_id = catIdVal ? parseInt(catIdVal, 10) : null;
+            const catObj = categoriesList.find(c => String(c.id) === String(catIdVal));
+            patchBody.category = catObj ? (catObj.display_name || catObj.name) : '';
+        }
+        patchBody.subcategory_ids = selectedSubcategoryIds;
+
+        const token = sessionStorage.getItem('tohfa_access_token');
+        try {
+            const res = await fetch(`${API_BASE}/api/seller/listings/${productId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(patchBody)
+            });
+
+            if (res.ok) {
+                showToast('Changes saved successfully! 🌸');
+                setTimeout(() => {
+                    window.location.href = '/seller/catalog.html';
+                }, 1500);
+            } else {
+                const err = await res.json();
+                showToast(err.message || err.detail || 'Failed to save changes.', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Studio backend server connection error.', 'error');
+        }
+    }
+
+    let categoriesList = [];
+    let selectedSubcategoryIds = [];
+
+    const FALLBACK_CATEGORIES = [
+        {
+            id: 2,
+            display_name: "Jewellery",
+            name: "Jewellery",
+            subcategories: [
+                { id: 14, name: "Bracelets & Kada" },
+                { id: 15, name: "Earrings" },
+                { id: 16, name: "Necklace & Pendants" },
+                { id: 17, name: "Rings" }
+            ]
+        },
+        {
+            id: 7,
+            display_name: "Customized Gifts",
+            name: "Customized Gifts",
+            subcategories: [
+                { id: 2, name: "3D Hologram Lamps" },
+                { id: 3, name: "Acrylic Frames" },
+                { id: 4, name: "Explosion Boxes" },
+                { id: 5, name: "Keychains" },
+                { id: 6, name: "Lamps" },
+                { id: 7, name: "Letters & Cards" },
+                { id: 8, name: "Mugs" },
+                { id: 9, name: "Photo Albums" },
+                { id: 10, name: "Plates" },
+                { id: 11, name: "Scrapbooks & Memory Books" },
+                { id: 12, name: "Wallets & Clutches" },
+                { id: 13, name: "Wooden Plaques" }
+            ]
+        },
+        {
+            id: 8,
+            display_name: "Home Decor",
+            name: "Home Decor",
+            subcategories: [
+                { id: 25, name: "Wall Art" },
+                { id: 26, name: "Dreamcatchers" },
+                { id: 27, name: "Nameplates" },
+                { id: 28, name: "Resin Art" },
+                { id: 29, name: "Macrame" },
+                { id: 30, name: "Clocks" },
+                { id: 31, name: "Organizers & Boxes" },
+                { id: 32, name: "Miniature Models" },
+                { id: 33, name: "Lamps" }
+            ]
+        },
+        {
+            id: 9,
+            display_name: "Hampers",
+            name: "Hampers",
+            subcategories: [
+                { id: 34, name: "Birthday Hampers" },
+                { id: 35, name: "Corporate Hampers" },
+                { id: 36, name: "Festive Hampers" },
+                { id: 37, name: "Wedding Hampers" }
+            ]
+        },
+        {
+            id: 10,
+            display_name: "Wedding & Rituals",
+            name: "Wedding & Rituals",
+            subcategories: [
+                { id: 43, name: "Shagun Envelopes" },
+                { id: 44, name: "Wedding Cards" }
+            ]
+        },
+        {
+            id: 11,
+            display_name: "Crochet",
+            name: "Crochet",
+            subcategories: [
+                { id: 55, name: "Bouquets" },
+                { id: 56, name: "Soft Toys" },
+                { id: 57, name: "Sunflowers" }
+            ]
+        },
+        {
+            id: 12,
+            display_name: "Fabric Crafts",
+            name: "Fabric Crafts",
+            subcategories: [
+                { id: 62, name: "Embroidery" },
+                { id: 61, name: "Knitted Items" },
+                { id: 60, name: "Tote Bags" }
+            ]
+        },
+        {
+            id: 13,
+            display_name: "Festivals",
+            name: "Festivals",
+            subcategories: [
+                { id: 67, name: "Christmas" },
+                { id: 64, name: "Diwali" },
+                { id: 68, name: "Eid" },
+                { id: 66, name: "Holi" },
+                { id: 69, name: "Karwa Chauth" },
+                { id: 65, name: "Navratri" },
+                { id: 63, name: "Rakhi" }
+            ]
+        },
+        {
+            id: 14,
+            display_name: "Couples",
+            name: "Couples",
+            subcategories: [
+                { id: 82, name: "Anniversary Gifts" },
+                { id: 80, name: "Anniversary Gifts" },
+                { id: 71, name: "Customized Gifts" },
+                { id: 76, name: "Flowers" },
+                { id: 70, name: "Hampers" },
+                { id: 79, name: "Home Decor" },
+                { id: 72, name: "Jewellery" },
+                { id: 78, name: "Keychains" },
+                { id: 77, name: "Lamps" },
+                { id: 75, name: "Letters & Cards" },
+                { id: 83, name: "Matching Accessories" },
+                { id: 73, name: "Portraits" },
+                { id: 81, name: "Proposal Gifts" },
+                { id: 74, name: "Scrapbooks & Memory Books" }
+            ]
+        },
+        {
+            id: 15,
+            display_name: "Art & Portraits",
+            name: "Art & Portraits",
+            subcategories: [
+                { id: 97, name: "Caricatures" },
+                { id: 92, name: "Couple Portraits" },
+                { id: 91, name: "Digital Portraits" },
+                { id: 93, name: "Family Portraits" },
+                { id: 95, name: "Paintings" },
+                { id: 96, name: "Sketches" }
+            ]
+        }
+    ];
+
+    async function initCategories() {
+        let loaded = false;
+        try {
+            const res = await fetch(`${API_BASE}/api/categories`);
+            if (res.ok) {
+                const json = await res.json();
+                categoriesList = json.data?.categories || json.categories || (Array.isArray(json.data) ? json.data : []) || [];
+                if (categoriesList && categoriesList.length > 0) {
+                    loaded = true;
+                }
+            }
+        } catch (err) {
+            console.error('Failed to load categories:', err);
+        }
+
+        if (!loaded) {
+            categoriesList = FALLBACK_CATEGORIES;
+        }
+    }
+
+    function renderSubcategories(categoryId) {
+        const subwrapper = document.getElementById('subcategories-wrapper');
+        const subcontainer = document.getElementById('subcategories-container');
+        if (!subcontainer) return;
+        subcontainer.innerHTML = '';
+        
+        if (!categoryId) {
+            if (subwrapper) subwrapper.classList.add('hidden');
+            return;
+        }
+        
+        const cat = categoriesList.find(c => String(c.id) === String(categoryId));
+        if (cat && cat.subcategories && cat.subcategories.length > 0) {
+            if (subwrapper) subwrapper.classList.remove('hidden');
+            cat.subcategories.forEach(sub => {
+                const label = document.createElement('label');
+                label.className = 'flex items-center gap-2 px-3 py-1.5 bg-sage/5 hover:bg-sage/10 rounded-md border border-sage/20 cursor-pointer text-xs transition-all';
+                
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.value = sub.id;
+                cb.className = 'rounded border-sage text-forest focus:ring-forest';
+                if (selectedSubcategoryIds.includes(sub.id)) {
+                    cb.checked = true;
+                }
+                
+                cb.addEventListener('change', () => {
+                    const val = parseInt(cb.value, 10);
+                    if (cb.checked) {
+                        if (selectedSubcategoryIds.length >= 5) {
+                            cb.checked = false;
+                            showToast('You can select a maximum of 5 subcategories', 'error');
+                            return;
+                        }
+                        if (!selectedSubcategoryIds.includes(val)) selectedSubcategoryIds.push(val);
+                    } else {
+                        selectedSubcategoryIds = selectedSubcategoryIds.filter(id => id !== val);
+                    }
+                });
+                
+                label.appendChild(cb);
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'text-primary font-medium';
+                nameSpan.textContent = sub.name;
+                label.appendChild(nameSpan);
+                
+                subcontainer.appendChild(label);
+            });
+        } else {
+            if (subwrapper) subwrapper.classList.add('hidden');
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+        // Resolve DOM elements
+        prebookBtn = document.getElementById('prebook-toggle');
+        prebookCircle = document.getElementById('prebook-toggle-circle');
+        prebookLimitBox = document.getElementById('prebook-limit-container');
+
+        if (prebookBtn) {
+            prebookBtn.addEventListener('click', handlePrebookClick);
+        }
+
+        setupPhotosInteractivity();
+
+        const cancelBtn = document.getElementById('cancel-btn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                window.location.href = '/seller/catalog.html';
+            });
+        }
+
+        const saveBtn = document.getElementById('save-btn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', handleSaveClick);
+        }
+
+        productId = getQueryParam('id');
+        if (!productId) {
+            window.location.href = '/seller/catalog.html';
+            return;
+        }
+        await initCategories();
+        loadListingData();
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <script type="module" src="/src/components/ReportWidget.js" defer></script>
+<script type="module" src="/src/components/ProtectedRoute.js"></script>
+<meta charset="utf-8"/>
+<title>My Occasions | Tohfa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+  <style>
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+  }
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .ink-texture {
+    background-image: url("/img/textures/natural-paper.png");
+  }
+  /* Modal animation */
+  #occasionModal .modal-inner {
+    transform: translateY(40px);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s ease;
+  }
+  #occasionModal.open .modal-inner {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  /* Type pill selected */
+  .occ-type-btn.selected {
+    background-color: #14381F;
+    color: #ffffff;
+    border-color: transparent;
+  }
+  /* Countdown badge */
+  .badge-soon  { background:rgba(20,56,31,0.2); color:#14381F; }
+  .badge-today { background:#bceecb; color:#14381F; }
+  .badge-far   { background:#FFF8E7; color:#414942; }
+  .badge-past  { background:#FFF8E7; color:#14381F; }
+</style>
+
+</head>
+<body class="bg-[#FFF8E7] text-on-background min-h-screen font-body-md overflow-x-hidden">
+
+<!-- Top Navigation Bar (LOCKED) -->
+<header
+  class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-4 md:px-8 lg:px-12 h-16 md:h-20 transition-colors"
+  style="background-color: #273328; background-image: url('/img/taskbar-texture.png'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
+>
+  <!-- Brand Logo -->
+  <div class="flex items-center flex-1">
+    <a
+      href="/buyer/home.html"
+      class="select-none"
+      style="font-family: 'Playfair Display', serif; font-size: clamp(24px, 4vw, 32px); font-style: italic; color: #FAF6EE; text-decoration: none;"
+    >
+      Tohfa<span style="color: #FAF6EE; opacity: 0.7;">.</span>
+    </a>
+  </div>
+
+  <!-- Desktop Navigation Links -->
+  <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+    <a
+      href="/buyer/home.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">home</span>
+      <span>Home</span>
+    </a>
+    <a
+      href="/buyer/categories.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">category</span>
+      <span>Category</span>
+    </a>
+    <a
+      href="/buyer/zip-gift.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">bolt</span>
+      <span>ZipGift</span>
+    </a>
+    <a
+      href="/buyer/profile.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <!-- Right side items -->
+  <div class="flex items-center justify-end flex-1 gap-1 sm:gap-2">
+    <!-- Search Button -->
+    <a
+      href="/buyer/search.html?focus=true"
+      id="header-search-btn"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+      title="Search"
+    >
+      <span class="material-symbols-outlined text-[22px]">search</span>
+    </a>
+
+    <!-- Wishlist Button -->
+    <a
+      href="/buyer/wishlist.html"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      title="Saved Makes"
+    >
+      <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+      <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+    </a>
+
+    <!-- Cart Button -->
+    <a
+      href="/buyer/cart.html"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      title="Shopping Cart"
+    >
+      <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
+      <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+    </a>
+
+    <!-- Notifications Button -->
+    <a
+      href="/buyer/notifications.html"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      title="Notifications"
+    >
+      <span class="material-symbols-outlined text-[22px]">notifications</span>
+      <span id="nav-notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
+      <span id="nav-notif-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
+    </a>
+
+    <!-- Auth Container -->
+    <div id="auth-buttons-container" class="flex items-center gap-2 ml-2 md:ml-4"></div>
+  </div>
+</header>
+
+<main class="pt-[60px] max-w-4xl mx-auto px-margin-mobile md:px-0 pb-xl">
+
+  <!-- --- Section 1: Page Header --- -->
+  <section class="relative py-xl px-md bg-[#FFF8E7] overflow-hidden">
+    <div class="relative z-10">
+      <p class="font-label-caps text-[10px] text-gold mb-2">NEVER MISS A SPECIAL MOMENT ?</p>
+      <h1 class="font-headline-lg italic text-[26px] text-on-surface mb-2">My Occasions</h1>
+      <p class="font-body-md text-[13px] text-[#6E6453] max-w-sm">Track birthdays, anniversaries, weddings and more � we'll remind you before every important date.</p>
+    </div>
+    <!-- Watermark -->
+    <div class="absolute right-4 top-1/2 -translate-y-1/2 opacity-[0.07] pointer-events-none">
+      <span class="material-symbols-outlined text-[120px]">celebration</span>
+    </div>
+  </section>
+
+  <!-- --- Section 2: Hero Strip (Upcoming count) --- -->
+  <section class="relative bg-[#FFF8E7] h-[88px] flex items-center justify-between px-md mb-xl">
+    <div class="flex flex-col">
+      <h2 class="font-headline-lg italic text-primary text-lg">Upcoming occasions ?</h2>
+      <p id="upcoming-subtitle" class="font-body-md text-[13px] text-on-surface-variant">Loading your upcoming occasions�</p>
+    </div>
+    <div class="flex items-center relative">
+      <span class="material-symbols-outlined text-[48px] text-primary opacity-30">cake</span>
+      <div class="absolute -left-20 top-0 opacity-[0.07] rotate-12">
+        <span class="material-symbols-outlined text-3xl">psychology_alt</span>
+      </div>
+      <div class="absolute -right-4 bottom-0 opacity-[0.09] rotate-45">
+        <span class="material-symbols-outlined text-2xl">label</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- --- Section 3: Upcoming Chip Strip --- -->
+  <section class="mb-xl relative px-md">
+    <div class="absolute top-1/2 right-10 opacity-[0.08] rotate-[-15deg] pointer-events-none">
+      <span class="material-symbols-outlined text-6xl">content_cut</span>
+    </div>
+    <p class="font-label-caps text-[10px] text-gold mb-md">COMING SOON</p>
+    <div id="upcoming-strip" class="flex overflow-x-auto gap-md hide-scrollbar pb-sm">
+      <!-- chips rendered by JS -->
+      <!-- placeholder add chip always at end -->
+      <div onclick="openAddModal()" class="flex-shrink-0 w-[80px] h-[96px] bg-[#FFF8E7] border border-dashed border-outline-variant rounded-[14px] flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
+        <span class="material-symbols-outlined text-outline-variant">add</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- --- Section 4: Add Occasion Button --- -->
+  <section class="mb-xl px-md">
+    <button onclick="openAddModal()" class="w-full h-12 bg-[#FFF8E7] border border-sage rounded-[14px] flex items-center justify-center gap-2 hover:bg-surface-container-low transition-all active:scale-[0.98]">
+      <span class="material-symbols-outlined text-primary">add</span>
+      <span class="font-body-md font-semibold text-primary">Add an occasion</span>
+    </button>
+  </section>
+
+  <!-- --- Section 5: All Occasions List --- -->
+  <section class="mb-xl relative px-md">
+    <p class="font-label-caps text-[10px] text-gold mb-md">ALL OCCASIONS</p>
+    <div id="occasions-list" class="space-y-md">
+      <div class="text-center py-8 text-on-surface-variant italic font-body-md text-[14px]">Loading your occasions...</div>
+    </div>
+  </section>
+
+  <!-- --- Section 6: Empty State (hidden initially) --- -->
+  <section id="empty-state" class="hidden mb-xl px-md flex flex-col items-center text-center pt-xl">
+    <div class="mb-lg">
+      <div class="w-24 h-24 rounded-full bg-[rgba(20,56,31,0.06)] border border-[#14381F]/15 flex items-center justify-center mx-auto mb-md">
+        <span class="material-symbols-outlined text-[48px] text-[#14381F]">celebration</span>
+      </div>
+      <h2 class="font-headline-lg italic text-[22px] text-primary mb-2">No Occasions Saved Yet</h2>
+      <p class="font-body-md text-[14px] text-on-surface-variant max-w-sm mx-auto leading-relaxed">
+        Never miss a birthday, anniversary, or milestone. Add your first occasion to receive curated artisan gift recommendations and reminders.
+      </p>
+    </div>
+    <button onclick="openAddModal()" class="bg-primary text-white px-8 py-3.5 rounded-full font-body-md font-bold flex items-center gap-sm shadow-md hover:bg-primary/90 transition-all active:scale-95 text-sm">
+      <span class="material-symbols-outlined text-[20px]">add</span>
+      <span>Add your first occasion</span>
+    </button>
+  </section>
+
+  <!-- --- Section 7: Reminder Settings Card --- -->
+  <section class="mb-xl px-md">
+    <div class="bg-ivory border border-sage rounded-[18px] p-xl relative overflow-hidden shadow-[4px_4px_15px_rgba(58,51,40,0.05)]">
+      <div class="relative z-10">
+        <p class="font-label-caps text-[10px] text-gold mb-2">REMINDER SETTINGS</p>
+        <h2 class="font-headline-lg italic text-[16px] text-on-surface mb-2">When should we remind you?</h2>
+        <p class="font-body-md text-[13px] text-[#6E6453] mb-md">Each occasion has its own reminder setting — set it when adding or editing an occasion.</p>
+        <span class="font-body-md text-[13px] text-tertiary flex items-center gap-1">Reminders are displayed on your journal dashboard with countdown days.</span>
+      </div>
+      <div class="absolute right-6 top-1/2 -translate-y-1/2 opacity-[0.08] pointer-events-none">
+        <span class="material-symbols-outlined text-7xl">notifications_active</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Aesthetic footer marks -->
+  <div class="flex justify-center gap-xl opacity-[0.09] py-xl pointer-events-none">
+    <span class="material-symbols-outlined text-3xl rotate-12">park</span>
+    <span class="material-symbols-outlined text-3xl -rotate-12">local_florist</span>
+    <span class="material-symbols-outlined text-3xl rotate-45">stylus</span>
+  </div>
+
+</main>
+
+<!-- NEW TOHFA FOOTER � footer_stitch v1 -->
+<footer style="position:relative;overflow:hidden;background:#273328;color:#FFF8E7;padding-top:64px;padding-bottom:32px;">
+  <!-- Ghost watermark -->
+  <div style="position:absolute;bottom:-10%;right:-5%;opacity:0.04;pointer-events:none;user-select:none;">
+    <span class="material-symbols-outlined" style="font-size:600px;color:white;">local_florist</span>
+  </div>
+  <!-- Main grid -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:repeat(1,1fr);gap:48px;margin-bottom:80px;position:relative;z-index:10;" class="tohfa-footer-grid">
+    <!-- Brand -->
+    <div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:44px;font-style:italic;color:#273328;margin-bottom:16px;">Tohfa.</h2>
+      <p style="font-family:'DM Sans',sans-serif;color:#FFF8E7;margin-bottom:8px;font-weight:500;">Thoughtful Gifting, Made Effortless.</p>
+      <p style="font-family:'DM Sans',sans-serif;color:#A8B89A;margin-bottom:32px;line-height:1.6;">India's first home for handcrafted gifts, celebrating the soul of artisanal craftsmanship.</p>
+      
+    </div>
+    <!-- Company -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">Company</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">About Us</a></li>
+        <li><a href="/buyer/our-story.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Our Story</a></li>
+        
+      </ul>
+    </div>
+    <!-- For Sellers -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">For Sellers</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a onclick="handleFooterSellerLink(event)" href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Sell on Tohfa</a></li>
+        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Seller Dashboard</a></li>
+        
+      </ul>
+    </div>
+    <!-- For Buyers -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">For Buyers</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'" onclick="event.preventDefault(); if (window.openTohfaChat) { window.openTohfaChat('Find me a gift'); } else { window.__tohfaChatQueue = window.__tohfaChatQueue || []; window.__tohfaChatQueue.push('Find me a gift'); }">AI Gift Guide</a></li>
+        
+      </ul>
+    </div>
+    <!-- Support -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">Support</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Contact Us</a></li>
+        <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Refunds &amp; Disputes</a></li>
+        <li><a href="/buyer/terms-conditions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Terms and Conditions</a></li>
+        <li><a href="/buyer/faq.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">FAQs</a></li>
+      </ul>
+    </div>
+  </div>
+  <!-- Divider -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;margin-bottom:32px;">
+    <div style="width:100%;height:1px;background:rgba(255,255,255,0.1);position:relative;">
+      <div style="position:absolute;left:50%;top:-8px;transform:translateX(-50%);display:flex;gap:16px;color:rgba(201,151,44,0.3);">
+        <span class="material-symbols-outlined" style="font-size:16px;">stars</span>
+      </div>
+    </div>
+  </div>
+  <!-- Bottom bar -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:flex;flex-direction:column;align-items:center;gap:24px;position:relative;z-index:10;" class="tohfa-footer-bottom">
+    
+    <div style="display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;font-size:14px;color:#FFF8E7;">
+      <span>Made with</span>
+      <span class="material-symbols-outlined" style="color:#273328;font-size:18px;font-variation-settings:'FILL' 1;">favorite</span>
+      <span>in India</span>
+    </div>
+  </div>
+  <style>
+    @media (min-width: 768px) {
+      .tohfa-footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr 1fr !important; }
+      .tohfa-footer-bottom { flex-direction: row !important; justify-content: space-between !important; }
+    }
+  </style>
+</footer>
+
+<!-- ---------------------------------------
+     ADD / EDIT OCCASION MODAL
+--------------------------------------- -->
+<div id="occasionModal" class="fixed inset-0 z-[100] hidden items-end md:items-center justify-center bg-on-surface/30 backdrop-blur-sm">
+  <div class="modal-inner bg-[#FFF8E7] border border-sage rounded-t-[24px] md:rounded-[20px] w-full md:max-w-lg shadow-2xl flex flex-col max-h-[92vh]">
+
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between px-lg pt-lg pb-md border-b border-outline-variant/40">
+      <div>
+        <p class="font-label-caps text-[10px] text-gold">MY OCCASIONS</p>
+        <h2 id="modal-title" class="font-headline-lg italic text-[20px] text-on-surface">Add an Occasion</h2>
+      </div>
+      <button onclick="closeModal()" class="p-xs hover:bg-surface-container rounded-full transition-colors">
+        <span class="material-symbols-outlined text-on-surface-variant">close</span>
+      </button>
+    </div>
+
+    <!-- Modal Body (scrollable) -->
+    <div class="overflow-y-auto flex-1 px-lg py-md space-y-md">
+
+      <!-- Title -->
+      <div class="space-y-xs">
+        <label class="font-label-caps text-[10px] text-gold uppercase tracking-widest flex justify-between">
+          Occasion Title <span class="text-[8px] opacity-50">REQUIRED</span>
+        </label>
+        <input id="occ-title" type="text" placeholder="e.g. Mom's Birthday, Our Anniversary�"
+          class="w-full bg-ivory border border-sage px-md py-sm rounded-lg font-body-md text-[15px] focus:outline-none focus:border-gold-brand transition-colors" />
+      </div>
+
+      <!-- Occasion Type -->
+      <div class="space-y-xs">
+        <label class="font-label-caps text-[10px] text-gold uppercase tracking-widest">Occasion Type</label>
+        <div class="grid grid-cols-3 gap-sm">
+          <button type="button" data-type="birthday"    onclick="selectType('birthday')"    class="occ-type-btn flex flex-col items-center gap-xs py-sm border border-sage rounded-xl bg-[#FFF8E7] hover:bg-surface-container-low transition-all text-sm font-body-md text-on-surface-variant">
+            <span class="material-symbols-outlined text-[20px]">cake</span>Birthday
+          </button>
+          <button type="button" data-type="anniversary" onclick="selectType('anniversary')" class="occ-type-btn flex flex-col items-center gap-xs py-sm border border-sage rounded-xl bg-[#FFF8E7] hover:bg-surface-container-low transition-all text-sm font-body-md text-on-surface-variant">
+            <span class="material-symbols-outlined text-[20px]">favorite</span>Anniversary
+          </button>
+          <button type="button" data-type="wedding"     onclick="selectType('wedding')"     class="occ-type-btn flex flex-col items-center gap-xs py-sm border border-sage rounded-xl bg-[#FFF8E7] hover:bg-surface-container-low transition-all text-sm font-body-md text-on-surface-variant">
+            <span class="material-symbols-outlined text-[20px]">celebration</span>Wedding
+          </button>
+          <button type="button" data-type="festival"    onclick="selectType('festival')"    class="occ-type-btn flex flex-col items-center gap-xs py-sm border border-sage rounded-xl bg-[#FFF8E7] hover:bg-surface-container-low transition-all text-sm font-body-md text-on-surface-variant">
+            <span class="material-symbols-outlined text-[20px]">festival</span>Festival
+          </button>
+          <button type="button" data-type="just_because" onclick="selectType('just_because')" class="occ-type-btn flex flex-col items-center gap-xs py-sm border border-sage rounded-xl bg-[#FFF8E7] hover:bg-surface-container-low transition-all text-sm font-body-md text-on-surface-variant">
+            <span class="material-symbols-outlined text-[20px]">volunteer_activism</span>Just Because
+          </button>
+          <button type="button" data-type="other"       onclick="selectType('other')"       class="occ-type-btn flex flex-col items-center gap-xs py-sm border border-sage rounded-xl bg-[#FFF8E7] hover:bg-surface-container-low transition-all text-sm font-body-md text-on-surface-variant">
+            <span class="material-symbols-outlined text-[20px]">more_horiz</span>Other
+          </button>
+        </div>
+        <input type="hidden" id="occ-type" value="birthday" />
+      </div>
+
+      <!-- Date -->
+      <div class="space-y-xs">
+        <label class="font-label-caps text-[10px] text-gold uppercase tracking-widest flex justify-between">
+          Date <span class="text-[8px] opacity-50">REQUIRED</span>
+        </label>
+        <input id="occ-date" type="date"
+          class="w-full bg-ivory border border-sage px-md py-sm rounded-lg font-body-md text-[15px] focus:outline-none focus:border-gold-brand transition-colors" />
+      </div>
+
+      <!-- Reminder -->
+      <div class="space-y-xs">
+        <label class="font-label-caps text-[10px] text-gold uppercase tracking-widest">Remind Me</label>
+        <select id="occ-reminder" class="w-full bg-ivory border border-sage px-md py-sm rounded-lg font-body-md text-[15px] focus:outline-none focus:border-gold-brand transition-colors">
+          <option value="1">1 day before</option>
+          <option value="3">3 days before</option>
+          <option value="7" selected>7 days before</option>
+          <option value="14">14 days before</option>
+          <option value="30">1 month before</option>
+        </select>
+      </div>
+
+      <!-- Notes -->
+      <div class="space-y-xs">
+        <label class="font-label-caps text-[10px] text-gold uppercase tracking-widest">Notes <span class="text-[8px] opacity-40">(OPTIONAL)</span></label>
+        <textarea id="occ-notes" rows="2" placeholder="e.g. She loves handmade candles, prefers earthy tones�"
+          class="w-full bg-ivory border border-sage px-md py-sm rounded-lg font-body-md text-[15px] focus:outline-none focus:border-gold-brand transition-colors resize-none"></textarea>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="border-t border-outline-variant/30 px-lg py-md flex gap-md">
+      <button onclick="closeModal()" class="flex-1 py-2.5 border border-outline-variant rounded-full text-sm font-bold active:scale-95 transition-all hover:bg-surface-container-low">
+        Cancel
+      </button>
+      <button id="save-occ-btn" onclick="saveOccasion()" class="flex-1 py-2.5 bg-primary text-white rounded-full text-sm font-bold shadow-md hover:bg-primary/90 active:scale-95 transition-all flex items-center justify-center gap-sm">
+        <span class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1;">save</span>
+        Save Occasion
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ---------------------------------------
+     DELETE CONFIRMATION MODAL
+--------------------------------------- -->
+<div id="deleteModal" class="fixed inset-0 z-[110] hidden items-center justify-center bg-on-surface/30 backdrop-blur-sm">
+  <div class="bg-[#FFF8E7] border border-sage rounded-[18px] p-lg max-w-xs w-full mx-md text-center shadow-xl">
+    <span class="material-symbols-outlined text-error text-4xl mb-md">warning</span>
+    <h4 class="font-title-serif text-lg mb-sm">Remove occasion?</h4>
+    <p class="text-on-surface-variant text-sm mb-lg">This will permanently delete this occasion from your journal.</p>
+    <div class="flex gap-md">
+      <button onclick="closeDeleteModal()" class="flex-1 py-2 border border-outline-variant rounded-full text-sm font-bold hover:bg-surface-container-low transition-colors">Cancel</button>
+      <button id="confirm-delete-btn" class="flex-1 py-2 bg-error text-white rounded-full text-sm font-bold shadow-md active:scale-95 hover:opacity-90 transition-all">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-sm pointer-events-none"></div>
+
+<!-- ---------------------------------------
+     SCRIPT
+--------------------------------------- -->
+<script type="module">
+import apiClient from '/src/utils/apiClient.js';
+    import { logout } from '/src/utils/auth.js';
+    import { initSearchOverlay } from '/buyer/searchOverlay.js';
+
+    initSearchOverlay();
+
+// -- Auth guard ----------------------------------------------
+const token = sessionStorage.getItem('tohfa_access_token');
+/* auth check bypassed */
+
+// -- State ---------------------------------------------------
+let allOccasions = [];
+let editingId = null;
+let deletingId = null;
+
+// -- Occasion metadata ----------------------------------------
+const TYPE_META = {
+  birthday:    { label: 'Birthday',    icon: 'cake',              color: '#A68942', bg: '#FFF8E7', text: '#7a5c00' },
+  anniversary: { label: 'Anniversary', icon: 'favorite',          color: '#b14a6e', bg: '#ffe4ef', text: '#7a2040' },
+  wedding:     { label: 'Wedding',     icon: 'celebration',       color: '#14381F', bg: 'rgba(20,56,31,0.2)', text: '#1a3a26' },
+  festival:    { label: 'Festival',    icon: 'festival',          color: '#7B5EA7', bg: '#ecdcff', text: '#3a1f5e' },
+  just_because:{ label: 'Just Because',icon: 'volunteer_activism',color: '#49663f', bg: '#d4edda', text: '#2e4228' },
+  other:       { label: 'Other',       icon: 'more_horiz',        color: '#717972', bg: '#FFF8E7', text: '#3c3c3c' }
+};
+
+// -- Date helpers ---------------------------------------------
+function daysUntilNextOccurrence(dateStr) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const occ = new Date(dateStr);
+  const thisYear = today.getFullYear();
+  let next = new Date(thisYear, occ.getMonth(), occ.getDate());
+  if (next < today) next.setFullYear(thisYear + 1);
+  return Math.round((next - today) / 86400000);
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function daysBadge(days) {
+  if (days === 0) return { cls: 'badge-today', label: 'TODAY ??' };
+  if (days < 0)  return { cls: 'badge-past',  label: `${Math.abs(days)}d ago` };
+  if (days <= 7) return { cls: 'badge-soon',  label: `IN ${days} DAYS` };
+  return { cls: 'badge-far', label: `IN ${days} DAYS` };
+}
+
+function avatarLetter(title) {
+  return title.trim().charAt(0).toUpperCase();
+}
+
+// -- Toast ----------------------------------------------------
+function showToast(msg, type = 'success') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  const bg = type === 'success' ? 'bg-primary' : 'bg-error';
+  t.className = `${bg} text-white text-sm font-body-md px-lg py-sm rounded-full shadow-lg pointer-events-auto transition-all duration-300 opacity-0 translate-y-2`;
+  t.innerText = msg;
+  c.appendChild(t);
+  requestAnimationFrame(() => { t.classList.remove('opacity-0','translate-y-2'); });
+  setTimeout(() => { t.classList.add('opacity-0'); setTimeout(() => t.remove(), 400); }, 3000);
+}
+
+// -- Render upcoming chips -------------------------------------
+function renderUpcomingStrip(occasions) {
+  const strip = document.getElementById('upcoming-strip');
+  // keep the add placeholder chip
+  strip.innerHTML = '';
+
+  const upcoming = occasions
+    .map(o => ({ ...o, days: daysUntilNextOccurrence(o.date) }))
+    .filter(o => o.days >= 0 && o.days <= 60)
+    .sort((a, b) => a.days - b.days)
+    .slice(0, 6);
+
+  const subtitle = document.getElementById('upcoming-subtitle');
+  subtitle.innerText = upcoming.length === 0
+    ? 'No upcoming occasions in the next 60 days.'
+    : `You have ${upcoming.length} occasion${upcoming.length > 1 ? 's' : ''} in the next 60 days.`;
+
+  upcoming.forEach(o => {
+    const meta = TYPE_META[o.occasion_type] || TYPE_META.other;
+    const badge = daysBadge(o.days);
+    const chip = document.createElement('div');
+    chip.className = 'flex-shrink-0 w-[88px] h-[100px] bg-ivory border border-sage rounded-[14px] flex flex-col items-center justify-center gap-xs shadow-[4px_4px_10px_rgba(58,51,40,0.08)] cursor-pointer hover:scale-105 transition-transform';
+    chip.innerHTML = `
+      <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style="background:${meta.color}">
+        <span class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1;">${meta.icon}</span>
+      </div>
+      <span class="font-title-serif text-[11px] text-on-surface text-center leading-tight px-xs">${o.title.length > 10 ? o.title.slice(0,9)+'�' : o.title}</span>
+      <span class="font-data-price text-[10px] text-gold">${formatDate(o.date).split(' ').slice(0,2).join(' ')}</span>
+      <div class="${badge.cls} px-2 py-0.5 rounded-full">
+        <span class="font-label-caps text-[8px]">${badge.label}</span>
+      </div>
+    `;
+    strip.appendChild(chip);
+  });
+
+  // add placeholder
+  const addChip = document.createElement('div');
+  addChip.onclick = openAddModal;
+  addChip.className = 'flex-shrink-0 w-[88px] h-[100px] bg-[#FFF8E7] border border-dashed border-outline-variant rounded-[14px] flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors';
+  addChip.innerHTML = `<span class="material-symbols-outlined text-outline-variant">add</span>`;
+  strip.appendChild(addChip);
+}
+
+// -- Render occasions list -------------------------------------
+function renderList(occasions) {
+  const list = document.getElementById('occasions-list');
+  const emptyState = document.getElementById('empty-state');
+
+  if (occasions.length === 0) {
+    list.innerHTML = '';
+    list.classList.add('hidden');
+    emptyState.classList.remove('hidden');
+    emptyState.classList.add('flex');
+    return;
+  }
+
+  list.classList.remove('hidden');
+  emptyState.classList.add('hidden');
+  emptyState.classList.remove('flex');
+
+  list.innerHTML = occasions.map(o => {
+    const meta = TYPE_META[o.occasion_type] || TYPE_META.other;
+    const days = daysUntilNextOccurrence(o.date);
+    const badge = daysBadge(days);
+    const initial = avatarLetter(o.title);
+    const dueText = o.reminder_days
+      ? `<span class="material-symbols-outlined text-sm" style="vertical-align:middle">notifications</span> Remind ${o.reminder_days} day${o.reminder_days > 1 ? 's' : ''} before`
+      : '';
+
+    return `
+    <div class="bg-ivory border border-sage rounded-[16px] p-md shadow-[4px_4px_12px_rgba(58,51,40,0.08)] relative overflow-hidden" data-id="${o.id}">
+      <!-- Card top row -->
+      <div class="flex justify-between items-start mb-sm">
+        <div class="flex gap-md items-center">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0" style="background:${meta.color}">
+            ${initial}
+          </div>
+          <div>
+            <h3 class="font-title-serif text-lg text-on-surface leading-tight">${o.title}</h3>
+            <p class="font-label-caps text-[10px] text-on-surface-variant">${meta.label.toUpperCase()} � ${formatDate(o.date).toUpperCase()}</p>
+          </div>
+        </div>
+        <div class="${badge.cls} px-3 py-1 rounded-full flex-shrink-0 ml-sm ${days === 0 ? 'animate-pulse' : ''}">
+          <span class="font-label-caps text-[10px]">${badge.label}</span>
+        </div>
+      </div>
+
+      <!-- Notes (if any) -->
+      ${o.notes ? `<p class="font-body-md text-[13px] text-on-surface-variant italic mb-sm px-1">"${o.notes}"</p>` : ''}
+
+      <!-- Reminder row -->
+      <div class="flex items-center justify-between py-sm border-t border-dashed border-outline-variant mt-sm">
+        <div class="flex items-center gap-sm text-on-surface-variant font-body-md text-[13px]">
+          ${dueText}
+        </div>
+        <a href="/buyer/categories.html" class="font-body-md text-[13px] text-secondary hover:underline flex items-center gap-xs">
+          <span class="material-symbols-outlined text-sm">redeem</span> Shop gifts
+        </a>
+      </div>
+
+      <!-- Actions row -->
+      <div class="flex items-center gap-md pt-sm">
+        <div class="flex-grow"></div>
+        <button onclick="openEditModal(${o.id})" class="text-tertiary font-label-caps text-[11px] hover:opacity-70 transition-opacity flex items-center gap-xs">
+          <span class="material-symbols-outlined text-sm">edit</span> EDIT
+        </button>
+        <div class="w-[1px] h-3 bg-sage"></div>
+        <button onclick="openDeleteModal(${o.id})" class="text-error font-label-caps text-[11px] hover:opacity-70 transition-opacity">DELETE</button>
+      </div>
+
+      <!-- Watermark -->
+      <div class="absolute -right-2 -bottom-2 opacity-[0.05] rotate-[-20deg] pointer-events-none">
+        <span class="material-symbols-outlined text-5xl">${meta.icon}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// -- Fetch all occasions ---------------------------------------
+async function fetchOccasions() {
+  try {
+    const res = await apiClient.get('/occasions');
+    if (res.data && res.data.success) {
+      allOccasions = res.data.data.occasions || [];
+      renderUpcomingStrip(allOccasions);
+      renderList(allOccasions);
+    }
+  } catch (e) {
+    console.error('Failed to load occasions:', e);
+    document.getElementById('occasions-list').innerHTML =
+      '<div class="text-center py-8 text-error font-body-md text-[14px]">Failed to load occasions. Please try again.</div>';
+  }
+}
+
+// -- Type selector ---------------------------------------------
+function selectType(type) {
+  document.querySelectorAll('.occ-type-btn').forEach(b => b.classList.remove('selected'));
+  const btn = document.querySelector(`.occ-type-btn[data-type="${type}"]`);
+  if (btn) btn.classList.add('selected');
+  document.getElementById('occ-type').value = type;
+}
+
+// -- Open Add Modal --------------------------------------------
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modal-title').innerText = 'Add an Occasion';
+  document.getElementById('occ-title').value = '';
+  document.getElementById('occ-date').value = '';
+  document.getElementById('occ-notes').value = '';
+  document.getElementById('occ-reminder').value = '7';
+  selectType('birthday');
+  showModal();
+}
+
+// -- Open Edit Modal -------------------------------------------
+function openEditModal(id) {
+  const occ = allOccasions.find(o => o.id === id);
+  if (!occ) return;
+  editingId = id;
+  document.getElementById('modal-title').innerText = 'Edit Occasion';
+  document.getElementById('occ-title').value = occ.title;
+  document.getElementById('occ-date').value = occ.date;
+  document.getElementById('occ-notes').value = occ.notes || '';
+  document.getElementById('occ-reminder').value = String(occ.reminder_days || 7);
+  selectType(occ.occasion_type || 'other');
+  showModal();
+}
+
+function showModal() {
+  const m = document.getElementById('occasionModal');
+  m.classList.remove('hidden');
+  m.classList.add('flex');
+  requestAnimationFrame(() => m.classList.add('open'));
+}
+
+function closeModal() {
+  const m = document.getElementById('occasionModal');
+  m.classList.remove('open');
+  setTimeout(() => { m.classList.add('hidden'); m.classList.remove('flex'); }, 300);
+}
+
+// -- Save Occasion ---------------------------------------------
+async function saveOccasion() {
+  const title = document.getElementById('occ-title').value.trim();
+  const type  = document.getElementById('occ-type').value;
+  const date  = document.getElementById('occ-date').value;
+  const reminder = parseInt(document.getElementById('occ-reminder').value);
+  const notes = document.getElementById('occ-notes').value.trim();
+
+  if (!title) { showToast('Please enter an occasion title', 'error'); return; }
+  if (!date)  { showToast('Please pick a date', 'error'); return; }
+
+  const payload = { title, occasion_type: type, date, reminder_days: reminder, notes: notes || null };
+
+  const btn = document.getElementById('save-occ-btn');
+  btn.disabled = true; btn.innerText = 'Saving�';
+
+  try {
+    if (editingId) {
+      await apiClient.put(`/occasions/${editingId}`, payload);
+      showToast('Occasion updated!');
+    } else {
+      await apiClient.post('/occasions', payload);
+      showToast('Occasion saved!');
+    }
+    closeModal();
+    await fetchOccasions();
+  } catch (e) {
+    showToast(e.response?.data?.message || 'Error saving occasion', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined text-[18px]" style="font-variation-settings:\'FILL\' 1;">save</span> Save Occasion';
+  }
+}
+
+// -- Delete Modal ----------------------------------------------
+function openDeleteModal(id) {
+  deletingId = id;
+  const m = document.getElementById('deleteModal');
+  m.classList.remove('hidden');
+  m.classList.add('flex');
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.add('hidden');
+  document.getElementById('deleteModal').classList.remove('flex');
+  deletingId = null;
+}
+
+document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+  if (!deletingId) return;
+  try {
+    await apiClient.delete(`/occasions/${deletingId}`);
+    showToast('Occasion removed.');
+    closeDeleteModal();
+    await fetchOccasions();
+  } catch (e) {
+    showToast('Failed to delete occasion.', 'error');
+  }
+});
+
+// -- Cart badge ------------------------------------------------
+async function updateCartBadge() {
+  try {
+    const res = await apiClient.get('/cart');
+    const badge = document.getElementById('nav-cart-badge');
+    if (badge && res.data?.data?.item_count > 0) {
+      badge.innerText = res.data.data.item_count;
+      badge.classList.remove('hidden');
+    }
+  } catch(_) {}
+}
+
+// -- Expose to window for onclick attrs ------------------------
+window.openAddModal    = openAddModal;
+window.openEditModal   = openEditModal;
+window.openDeleteModal = openDeleteModal;
+window.closeModal      = closeModal;
+window.closeDeleteModal = closeDeleteModal;
+window.selectType      = selectType;
+window.saveOccasion    = saveOccasion;
+
+// -- Init ------------------------------------------------------
+fetchOccasions();
+updateCartBadge();
+
+// Close modal on backdrop click
+document.getElementById('occasionModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeModal();
+});
+document.getElementById('deleteModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeDeleteModal();
+});
+
+// Chip hover micro-interaction
+document.addEventListener('mouseover', (e) => {
+  const chip = e.target.closest('.flex-shrink-0');
+  if (chip && !chip.classList.contains('scale-105')) {
+    chip.style.transition = 'transform 0.2s ease-out';
+  }
+});
+
+    let isLoggedIn = false;
+    async function checkAuthState() {
+        const token = sessionStorage.getItem('tohfa_access_token');
+        const authContainer = document.getElementById('auth-buttons-container');
+        
+        if (token) {
+            isLoggedIn = true;
+            try {
+                let avatarUrl = null;
+                let initial = 'A';
+                try {
+                    const res = await apiClient.get('/profile/me');
+                    if (res.data && res.data.success) {
+                        avatarUrl = res.data.data.avatar_url;
+                        if (res.data.data.full_name) {
+                            initial = res.data.data.full_name.charAt(0).toUpperCase();
+                        }
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch profile avatar:", err);
+                }
+                
+                let avatarHtml = '';
+                if (avatarUrl) {
+                    avatarHtml = `<img src="${avatarUrl}" alt="Profile" class="w-10 h-10 rounded-full border border-[rgba(20,56,31,0.2)] object-cover cursor-pointer" onclick="window.location.href='profile.html'" loading="lazy" />`;
+                } else {
+                    avatarHtml = `
+                        <a href="/buyer/profile.html" class="w-10 h-10 rounded-full bg-[#14381F] flex items-center justify-center text-white font-bold border border-[rgba(20,56,31,0.2)] text-sm overflow-hidden flex-shrink-0 cursor-pointer">
+                            ${initial}
+                        </a>
+                    `;
+                }
+
+                if (authContainer) {
+                    authContainer.innerHTML = avatarHtml;
+                }
+            } catch(e) {
+                console.error("Failed to parse token:", e);
+                logout();
+            }
+        } else {
+            isLoggedIn = false;
+            if (authContainer) {
+                authContainer.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <a href="/auth/login.html" class="text-sm font-semibold text-[#FAF6EE] hover:text-white hover:underline no-underline" style="font-family: 'DM Sans', sans-serif;">Login</a>
+                        <a href="/auth/signup-buyer.html" class="text-[#14381F] text-sm font-semibold px-3.5 py-1.5 rounded-lg bg-[#FAF6EE] hover:bg-white transition-all no-underline shadow-sm" style="font-family: 'DM Sans', sans-serif;">Sign Up</a>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    checkAuthState();
+</script>
+
+
+<script>
+async function handleFooterSellerLink(e) {
+  if (e) e.preventDefault();
+  const isMobile = window.innerWidth < 768;
+  const token = sessionStorage.getItem('tohfa_access_token');
+  if (!token) {
+    sessionStorage.setItem('tohfa_redirect_seller', 'true');
+    sessionStorage.setItem('tohfa_return_to', window.location.pathname + window.location.search); window.location.href = '/auth/login.html';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/profile/me', {
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success) {
+        const role = data.data.role;
+        if (role === 'seller') {
+          window.location.href = isMobile ? '/mobile-seller/dashboard.html' : '/seller/dashboard.html';
+          return;
+        }
+      }
+    }
+  } catch(err) {
+    console.error("Error checking seller status:", err);
+  }
+  
+  window.location.href = isMobile ? '/mobile-buyer/become-seller.html' : '/buyer/become-seller.html';
+}
+
+// Check if we need to auto-redirect back to dashboard/signup after login redirect
+document.addEventListener("DOMContentLoaded", () => {
+  const needsRedirect = sessionStorage.getItem('tohfa_redirect_seller');
+  if (needsRedirect === 'true') {
+    sessionStorage.removeItem('tohfa_redirect_seller');
+    const token = sessionStorage.getItem('tohfa_access_token');
+    if (token) {
+      handleFooterSellerLink();
+    }
+  }
+});
+
+window.openContactModal = function(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const modal = document.getElementById('tohfa-contact-modal');
+  if (modal) {
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeContactModal = function() {
+  const modal = document.getElementById('tohfa-contact-modal');
+  if (modal) {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+};
+
+if (!window.hasContactModalEscListener) {
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      window.closeContactModal();
+    }
+  });
+  window.hasContactModalEscListener = true;
+}
+
+window.openRefundsModal = function(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const modal = document.getElementById('tohfa-refunds-modal');
+  if (modal) {
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeRefundsModal = function() {
+  const modal = document.getElementById('tohfa-refunds-modal');
+  if (modal) {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+};
+
+if (!window.hasRefundsModalEscListener) {
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      window.closeRefundsModal();
+    }
+  });
+  window.hasRefundsModalEscListener = true;
+}
+</script>
+</body>
+</html>

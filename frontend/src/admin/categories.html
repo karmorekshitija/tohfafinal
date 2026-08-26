@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+<script type="module" src="/src/components/AdminSidebar.js"></script>
+<script type="module" src="/src/components/ReportWidget.js" defer></script>
+<script type="module" src="/src/components/ProtectedRoute.js"></script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Categories Manager | Tohfa Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+  <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .sketch-watermark {
+            mask-image: url("/img/textures/natural-paper.png");
+            background-repeat: no-repeat;
+            background-position: top right;
+            background-size: 400px;
+            pointer-events: none;
+        }
+        .row-alt:nth-child(even) { background-color: #FFF8E7; }
+        .row-alt:nth-child(odd) { background-color: #FFF8E7; }
+        
+        .warm-shadow {
+            box-shadow: 0 10px 30px rgba(58, 51, 40, 0.08);
+        }
+
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #14381F;
+        }
+        .toggle-checkbox:checked + .toggle-label .toggle-dot {
+            transform: translateX(100%);
+        }
+    </style>
+</head>
+<body class="bg-[#FFF8E7] text-text-default font-body-md overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 py-10 px-6 z-50 w-64 border-r border-outline-variant/30 bg-[#FFF8E7]">
+<div class="mb-14">
+<h1 class="font-headline-lg text-headline-lg italic text-[#14381F] leading-tight">Tohfa</h1>
+<p class="text-accent-caps font-accent-caps text-text-faint tracking-widest text-[10px] mt-1 opacity-70">Admin Console</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="#">
+<span class="material-symbols-outlined text-[20px]">grid_view</span>
+<span class="font-label-btn text-label-btn">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/sellers.html">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span class="font-label-btn text-label-btn">Sellers</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/orders.html">
+<span class="material-symbols-outlined text-[20px]">shopping_cart</span>
+<span class="font-label-btn text-label-btn">Orders</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-[#14381F] text-white rounded-full transition-all" href="/admin/categories.html">
+<span class="material-symbols-outlined text-[20px]">category</span>
+<span class="font-label-btn text-label-btn">Categories</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/products.html">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="font-label-btn text-label-btn">Products</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/audit-logs.html">
+<span class="material-symbols-outlined text-[20px]">history_edu</span>
+<span class="font-label-btn text-label-btn">Audit Logs</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="font-label-btn text-label-btn">Settings</span>
+</a>
+</nav>
+<!-- Profile Footer -->
+<div class="mt-auto pt-6 border-t border-outline-variant/20 flex items-center gap-3">
+<div class="h-10 w-10 rounded-full bg-sage-soft flex items-center justify-center text-primary font-bold text-xs shrink-0">TA</div>
+<div class="overflow-hidden">
+<p class="text-[13px] font-bold text-text-default truncate leading-tight">Tohfa Admin</p>
+<p class="text-[11px] text-text-faint font-data-meta truncate">Master Access</p>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="ml-64 h-screen overflow-y-auto relative">
+<!-- Watermark Background -->
+<div class="absolute top-0 right-0 w-[500px] h-[500px] opacity-[0.08] sketch-watermark -z-10 pointer-events-none translate-x-20 -translate-y-20">
+<svg viewbox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+<path d="M40,100 C40,40 160,40 160,100 C160,160 40,160 40,100 M60,80 Q80,40 100,80 Q120,40 140,80" fill="none" stroke="#49663f" stroke-width="0.5"></path>
+<path d="M100,20 L100,180 M20,100 L180,100" opacity="0.5" stroke="#49663f" stroke-width="0.2"></path>
+</svg>
+</div>
+<div class="px-gutter-md py-12 max-w-[1400px] mx-auto">
+<!-- Page Header -->
+<header class="mb-10">
+<h2 class="font-headline-lg text-primary text-[32px] leading-tight">Categories</h2>
+<p class="font-cormorant-italic italic text-text-muted text-[18px]">Manage marketplace product categories</p>
+</header>
+<div class="flex gap-10 items-start">
+<!-- LEFT: Categories Table (60%) -->
+<section class="w-3/5">
+<div class="flex items-baseline justify-between mb-6">
+<div class="flex items-baseline gap-3">
+<h3 class="font-accent-caps text-highlight-gold text-[12px] tracking-widest">ALL CATEGORIES</h3>
+<span class="font-data-meta text-text-faint text-[10px]">INCLUDING HIDDEN</span>
+</div>
+</div>
+<div class="bg-[#FFF8E7] border border-outline-variant rounded-xl overflow-x-auto shadow-sm">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low border-b border-outline-variant">
+<tr>
+<th class="p-4 w-10"></th>
+<th class="p-4 w-10"></th>
+<th class="p-4 font-accent-caps text-[10px] text-text-muted">Display Name</th>
+<th class="p-4 font-accent-caps text-[10px] text-text-muted">Slug</th>
+<th class="p-4 font-accent-caps text-[10px] text-text-muted text-center">Products</th>
+<th class="p-4 font-accent-caps text-[10px] text-text-muted text-center">Sort</th>
+<th class="p-4 font-accent-caps text-[10px] text-text-muted">Status</th>
+<th class="p-4 font-accent-caps text-[10px] text-text-muted text-right">Actions</th>
+</tr>
+</thead>
+<tbody id="categories-list">
+<!-- Dynamic content will be injected here -->
+</tbody>
+</table>
+</div>
+</section>
+<!-- RIGHT: Create / Edit Form Panel (40%) -->
+<section class="w-2/5 sticky top-10">
+<div class="bg-[#FFF8E7] border border-sage-soft rounded-xl p-8 warm-shadow max-h-[calc(100vh-80px)] overflow-y-auto">
+<div class="flex items-center justify-between mb-8">
+<h3 id="formTitle" class="font-headline-md text-primary text-[18px]">New Category</h3>
+<button id="closeFormBtn" type="button" class="text-text-faint hover:text-danger-terracotta transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<form id="categoryForm" class="space-y-6">
+<!-- Emoji Picker Area -->
+<div class="flex flex-col items-center gap-2">
+<label class="w-full font-body-md font-bold text-text-muted text-[14px]">Emoji Icon</label>
+<button id="emojiBtn" class="w-20 h-20 bg-surface-ivory border border-sage-soft rounded-full flex items-center justify-center text-[36px] hover:bg-[#FFF8E7] hover:shadow-md transition-all group" type="button">
+<span id="emojiSpan" class="group-hover:scale-110 transition-transform">🏺</span>
+</button>
+<span class="text-[10px] font-accent-caps text-text-faint">Click to Change</span>
+</div>
+<!-- Image Upload -->
+<div class="space-y-2">
+<label class="block font-body-md font-bold text-text-muted text-[14px]">Category Image</label>
+<div class="flex items-center gap-3">
+<div id="imagePreviewContainer" class="w-14 h-14 rounded-lg overflow-hidden border border-sage-soft bg-surface-ivory flex items-center justify-center shrink-0">
+<img id="imagePreview" src="/img/ceramic_bowls.jpg" class="w-full h-full object-cover" />
+</div>
+<div class="flex-1 space-y-2">
+<input id="imageInput" type="file" accept="image/*" class="w-full text-xs text-text-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-[11px] file:font-semibold file:bg-sage-soft/30 file:text-primary hover:file:bg-sage-soft/50 transition-all cursor-pointer" />
+<input id="imageUrlInput" type="text" placeholder="Or enter image URL (e.g. /img/categories/art_prints.jpg)" class="w-full text-xs px-3 py-1.5 bg-[#FFF8E7] border border-sage-soft rounded-lg focus:ring-1 focus:ring-primary outline-none font-body-md" />
+</div>
+</div>
+</div>
+<!-- Display Name -->
+<div class="space-y-2">
+<label class="block font-body-md font-bold text-text-muted text-[14px]">Display Name</label>
+<input id="displayNameInput" class="w-full px-4 py-3 bg-[#FFF8E7] border border-sage-soft rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all font-body-md" placeholder="e.g. Handmade Ceramics" type="text" required/>
+</div>
+<!-- Slug -->
+<div class="space-y-2">
+<label class="block font-body-md font-bold text-text-muted text-[14px]">Slug</label>
+<input id="slugInput" class="w-full px-4 py-3 bg-[#FFF8E7] border border-sage-soft rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all font-data-meta text-accent-violet" placeholder="ceramics-pottery" type="text" required/>
+<p class="text-[11px] font-data-meta text-text-faint mt-1">
+URL: <span class="text-accent-violet">/category/<span id="slugPreview">ceramics-pottery</span></span>
+</p>
+</div>
+<!-- Description -->
+<div class="space-y-2">
+<label class="block font-body-md font-bold text-text-muted text-[14px]">Description</label>
+<textarea id="descriptionInput" class="w-full px-4 py-3 bg-[#FFF8E7] border border-sage-soft rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all font-body-md resize-none" placeholder="Describe the craft style and origin..." rows="3"></textarea>
+</div>
+<!-- Row: Sort & Status -->
+<div class="flex items-end justify-between gap-6">
+<div class="space-y-2">
+<label class="block font-body-md font-bold text-text-muted text-[14px]">Sort Order</label>
+<input id="sortOrderInput" class="w-[80px] px-4 py-3 bg-[#FFF8E7] border border-sage-soft rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all font-data-meta" type="number" value="1"/>
+</div>
+<div class="flex items-center gap-3 mb-3">
+<div class="relative inline-block w-10 h-5 align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-[#FFF8E7] border-4 border-sage-soft appearance-none cursor-pointer transition-transform duration-200 ease-in z-10 checked:translate-x-full" id="activeStatus" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-surface-container-high cursor-pointer transition-colors duration-200" for="activeStatus"></label>
+</div>
+<span class="font-body-md font-bold text-text-muted text-[14px]">Active</span>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="pt-4 flex flex-col gap-4">
+<button class="w-full bg-primary text-white py-3.5 rounded-full font-label-btn hover:bg-primary-deep transition-all shadow-sm active:scale-[0.98]" type="submit">
+Save Category
+</button>
+<button id="cancelBtn" class="w-full text-text-muted font-label-btn hover:text-primary transition-colors py-1" type="button">
+Cancel
+</button>
+</div>
+</form>
+</div>
+</section>
+</div>
+</div>
+
+<!-- Subcategory Modal -->
+<div id="subcatModal" class="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+  <div class="bg-[#FFF8E7] rounded-xl max-w-md w-full p-8 warm-shadow relative transform scale-95 transition-transform duration-300">
+    <div class="flex items-center justify-between mb-6">
+      <h3 id="subcatModalTitle" class="font-headline-md text-primary text-[18px]">New Subcategory</h3>
+      <button id="closeSubcatModalBtn" type="button" class="text-text-faint hover:text-danger-terracotta transition-colors">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <form id="subcatForm" class="space-y-4">
+      <input type="hidden" id="subcatParentCatId" />
+      <input type="hidden" id="editingSubcatId" />
+      <div class="space-y-1">
+        <label class="block font-body-md font-bold text-text-muted text-[13px]">Subcategory Name</label>
+        <input id="subcatNameInput" class="w-full px-4 py-2 border border-sage-soft rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all text-sm font-body-md" placeholder="e.g. Terracotta Pottery" type="text" required/>
+      </div>
+      <div class="space-y-1">
+        <label class="block font-body-md font-bold text-text-muted text-[13px]">Slug</label>
+        <input id="subcatSlugInput" class="w-full px-4 py-2 border border-sage-soft rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all text-sm font-data-meta text-accent-violet" placeholder="terracotta-pottery" type="text" required/>
+      </div>
+      <div class="space-y-1">
+        <label class="block font-body-md font-bold text-text-muted text-[13px]">Description</label>
+        <textarea id="subcatDescriptionInput" class="w-full px-4 py-2 border border-sage-soft rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all text-sm resize-none font-body-md" placeholder="Describe the subcategory..." rows="3"></textarea>
+      </div>
+      <div class="pt-4 flex justify-end gap-3">
+        <button id="cancelSubcatBtn" type="button" class="px-4 py-2 text-text-muted font-label-btn hover:text-primary transition-colors text-sm">Cancel</button>
+        <button type="submit" class="bg-[#14381F] text-white px-5 py-2 rounded-full font-label-btn hover:bg-[#14381F]/90 transition-all text-sm">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+</main>
+<script type="module">
+import adminApiClient from '/src/utils/adminApiClient.js';
+
+if (!sessionStorage.getItem('tohfa_admin_token')) {
+  // admin login check bypassed
+}
+
+let categories = [];
+let editingCategoryId = null;
+let currentEmoji = '🏺';
+
+const listEl = document.getElementById('categories-list');
+const formEl = document.getElementById('categoryForm');
+const formTitle = document.getElementById('formTitle');
+const emojiBtn = document.getElementById('emojiBtn');
+const emojiSpan = document.getElementById('emojiSpan');
+const imageInput = document.getElementById('imageInput');
+const imageUrlInput = document.getElementById('imageUrlInput');
+const imagePreview = document.getElementById('imagePreview');
+const displayNameInput = document.getElementById('displayNameInput');
+const slugInput = document.getElementById('slugInput');
+const slugPreview = document.getElementById('slugPreview');
+const descriptionInput = document.getElementById('descriptionInput');
+const sortOrderInput = document.getElementById('sortOrderInput');
+const activeStatus = document.getElementById('activeStatus');
+const cancelBtn = document.getElementById('cancelBtn');
+const closeFormBtn = document.getElementById('closeFormBtn');
+
+// Subcategory Modal DOM Elements
+const subcatModal = document.getElementById('subcatModal');
+const subcatForm = document.getElementById('subcatForm');
+const subcatModalTitle = document.getElementById('subcatModalTitle');
+const closeSubcatModalBtn = document.getElementById('closeSubcatModalBtn');
+const cancelSubcatBtn = document.getElementById('cancelSubcatBtn');
+const subcatParentCatId = document.getElementById('subcatParentCatId');
+const editingSubcatId = document.getElementById('editingSubcatId');
+const subcatNameInput = document.getElementById('subcatNameInput');
+const subcatSlugInput = document.getElementById('subcatSlugInput');
+const subcatDescriptionInput = document.getElementById('subcatDescriptionInput');
+
+async function fetchCategories() {
+  try {
+    const response = await adminApiClient.get('/admin/categories');
+    if (response.data?.success) {
+      categories = response.data.data.categories;
+      renderCategories();
+    }
+  } catch (error) {
+    console.error('Failed to fetch categories:', error);
+  }
+}
+
+// Category image preview change
+imageInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    imagePreview.src = URL.createObjectURL(file);
+  }
+});
+
+function renderCategories() {
+  listEl.innerHTML = '';
+  if (categories.length === 0) {
+    listEl.innerHTML = `
+      <tr>
+        <td colspan="8" class="p-4 text-center text-text-muted text-sm font-serif-ui-sm">
+          No categories found.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  categories.forEach((cat) => {
+    const tr = document.createElement('tr');
+    tr.className = "row-alt group transition-colors border-b border-outline-variant/30";
+    
+    // Add slide micro-animation behaviors
+    tr.addEventListener('mouseenter', () => {
+      tr.style.transform = 'translateX(4px)';
+      tr.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+    });
+    tr.addEventListener('mouseleave', () => {
+      tr.style.transform = 'translateX(0)';
+    });
+
+    const isBannedOrHidden = !cat.is_active;
+    const statusBadge = isBannedOrHidden
+      ? `<span class="px-2.5 py-0.5 rounded-full bg-surface-ivory text-text-muted text-[11px] border border-outline-variant/40">Hidden</span>`
+      : `<span class="px-2.5 py-0.5 rounded-full bg-sage-soft/30 text-primary text-[11px] font-bold">Active</span>`;
+
+    const productCount = cat.product_count || 0;
+    const isDeletable = productCount === 0 && (!cat.subcategories || cat.subcategories.length === 0);
+
+    const deleteBtn = isDeletable
+      ? `<button class="delete-btn p-1.5 rounded-full hover:bg-danger-terracotta/10 text-danger-terracotta transition-all" data-id="${cat.id}">
+           <span class="material-symbols-outlined text-[18px]">delete</span>
+         </button>`
+      : `<button class="p-1.5 rounded-full text-text-faint cursor-not-allowed opacity-40" title="Has products or subcategories — cannot delete">
+           <span class="material-symbols-outlined text-[18px]">delete</span>
+         </button>`;
+
+    let imgUrl = cat.image_url || '/img/ceramic_bowls.jpg';
+    if (imgUrl.includes('unsplash.com')) imgUrl = '/img/ceramic_bowls.jpg';
+
+    tr.innerHTML = `
+      <td class="p-4 text-center cursor-pointer text-text-faint hover:text-primary toggle-subcats-btn" data-id="${cat.id}">
+        <span class="material-symbols-outlined text-[20px] transition-transform duration-200" id="chevron-${cat.id}">chevron_right</span>
+      </td>
+      <td class="p-4">
+        <div class="flex items-center gap-3">
+          <img src="${imgUrl}" class="w-10 h-10 rounded object-cover border border-outline-variant/30" onerror="this.onerror=null; this.src='/img/ceramic_bowls.jpg';" />
+          <div class="w-8 h-8 rounded-full bg-surface-ivory flex items-center justify-center text-[16px] border border-outline-variant/30">${cat.emoji_icon || '🏷️'}</div>
+        </div>
+      </td>
+      <td class="p-4">
+        <span class="font-body-md font-bold text-text-default">${cat.display_name}</span>
+      </td>
+      <td class="p-4">
+        <span class="font-data-meta text-accent-violet">${cat.slug}</span>
+      </td>
+      <td class="p-4 text-center">
+        <span class="font-data-price text-primary text-[13px]">${productCount}</span>
+      </td>
+      <td class="p-4 text-center">
+        <span class="font-data-meta text-[13px]">${cat.sort_order}</span>
+      </td>
+      <td class="p-4">
+        ${statusBadge}
+      </td>
+      <td class="p-4 text-right">
+        <div class="flex items-center justify-end gap-2">
+          <button class="edit-btn p-1.5 rounded-full hover:bg-sage-soft/20 text-secondary transition-all" data-id="${cat.id}">
+            <span class="material-symbols-outlined text-[18px]">edit</span>
+          </button>
+          ${deleteBtn}
+        </div>
+      </td>
+    `;
+    listEl.appendChild(tr);
+
+    // Create nested subcategory row
+    const subcatTr = document.createElement('tr');
+    subcatTr.id = `subcat-row-${cat.id}`;
+    subcatTr.className = "hidden bg-surface-ivory/20";
+    
+    let subcatRowsHtml = '';
+    if (cat.subcategories && cat.subcategories.length > 0) {
+      cat.subcategories.forEach(sub => {
+        subcatRowsHtml += `
+          <tr class="border-b border-outline-variant/20 hover:bg-surface-ivory/40">
+            <td class="p-3 font-body-md font-semibold text-text-default">${sub.name}</td>
+            <td class="p-3 font-data-meta text-accent-violet">${sub.slug}</td>
+            <td class="p-3 text-text-muted text-xs max-w-[200px] truncate">${sub.description || '-'}</td>
+            <td class="p-3 text-right">
+              <div class="flex items-center justify-end gap-1">
+                <button class="edit-subcat-btn p-1 rounded hover:bg-sage-soft/20 text-secondary" data-cat-id="${cat.id}" data-id="${sub.id}">
+                  <span class="material-symbols-outlined text-[15px]">edit</span>
+                </button>
+                <button class="delete-subcat-btn p-1 rounded hover:bg-danger-terracotta/10 text-danger-terracotta" data-cat-id="${cat.id}" data-id="${sub.id}">
+                  <span class="material-symbols-outlined text-[15px]">delete</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+    } else {
+      subcatRowsHtml = `
+        <tr>
+          <td colspan="4" class="p-4 text-center text-text-faint text-xs italic">No subcategories defined for this category.</td>
+        </tr>
+      `;
+    }
+
+    subcatTr.innerHTML = `
+      <td colspan="8" class="p-4 border-b border-outline-variant bg-[#F9F7F3]">
+        <div class="pl-12 pr-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="font-accent-caps text-[#14381F] text-[10px] tracking-wider font-bold">SUBCATEGORIES</span>
+            <button class="add-subcat-btn bg-[#14381F] text-white px-3 py-1 rounded-full text-[11px] font-label-btn hover:bg-[#14381F]/90 transition-all flex items-center gap-1" data-cat-id="${cat.id}">
+              <span class="material-symbols-outlined text-[12px]">add</span> Add Subcategory
+            </button>
+          </div>
+          <div class="bg-[#FFF8E7] border border-outline-variant/60 rounded-lg overflow-hidden shadow-sm">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-surface-container-low border-b border-outline-variant/60">
+                <tr>
+                  <th class="p-2.5 font-accent-caps text-[9px] text-text-muted">Subcategory Name</th>
+                  <th class="p-2.5 font-accent-caps text-[9px] text-text-muted">Slug</th>
+                  <th class="p-2.5 font-accent-caps text-[9px] text-text-muted">Description</th>
+                  <th class="p-2.5 font-accent-caps text-[9px] text-text-muted text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${subcatRowsHtml}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </td>
+    `;
+    listEl.appendChild(subcatTr);
+  });
+
+  // Toggle subcategories rows handler
+  listEl.querySelectorAll('.toggle-subcats-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const catId = btn.getAttribute('data-id');
+      const targetRow = document.getElementById(`subcat-row-${catId}`);
+      const chevron = document.getElementById(`chevron-${catId}`);
+      if (targetRow.classList.contains('hidden')) {
+        targetRow.classList.remove('hidden');
+        chevron.style.transform = 'rotate(90deg)';
+      } else {
+        targetRow.classList.add('hidden');
+        chevron.style.transform = 'rotate(0deg)';
+      }
+    });
+  });
+
+  // Add Subcategory click
+  listEl.querySelectorAll('.add-subcat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const catId = btn.getAttribute('data-cat-id');
+      openSubcatModal(catId);
+    });
+  });
+
+  // Edit Subcategory click
+  listEl.querySelectorAll('.edit-subcat-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const catId = btn.getAttribute('data-cat-id');
+      const subId = btn.getAttribute('data-id');
+      const cat = categories.find(c => String(c.id) === String(catId));
+      const sub = cat?.subcategories?.find(s => String(s.id) === String(subId));
+      if (sub) {
+        openSubcatModal(catId, sub);
+      }
+    });
+  });
+
+  // Delete Subcategory click
+  listEl.querySelectorAll('.delete-subcat-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const catId = btn.getAttribute('data-cat-id');
+      const subId = btn.getAttribute('data-id');
+      const cat = categories.find(c => String(c.id) === String(catId));
+      const sub = cat?.subcategories?.find(s => String(s.id) === String(subId));
+      if (confirm(`Are you sure you want to delete subcategory "${sub?.name || ''}"?`)) {
+        try {
+          await adminApiClient.delete(`/admin/subcategories/${subId}`);
+          fetchCategories();
+        } catch (error) {
+          alert(error.response?.data?.message || 'Failed to delete subcategory');
+        }
+      }
+    });
+  });
+
+  // Edit Category click
+  listEl.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const target = e.currentTarget;
+      const id = target.getAttribute('data-id');
+      const cat = categories.find(c => String(c.id) === String(id));
+      if (cat) {
+        startEditing(cat);
+      }
+    });
+  });
+
+  // Delete Category click
+  listEl.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const target = e.currentTarget;
+      const id = target.getAttribute('data-id');
+      const cat = categories.find(c => String(c.id) === String(id));
+      if (confirm(`Are you sure you want to delete the category "${cat?.display_name || ''}"?`)) {
+        try {
+          await adminApiClient.delete(`/admin/categories/${id}`);
+          fetchCategories();
+          if (editingCategoryId === id) {
+            resetForm();
+          }
+        } catch (error) {
+          alert(error.response?.data?.message || 'Failed to delete category');
+        }
+      }
+    });
+  });
+}
+
+// Subcategory Modal Actions
+function openSubcatModal(catId, sub = null) {
+  subcatForm.reset();
+  subcatParentCatId.value = catId;
+  if (sub) {
+    editingSubcatId.value = sub.id;
+    subcatModalTitle.textContent = "Edit Subcategory";
+    subcatNameInput.value = sub.name;
+    subcatSlugInput.value = sub.slug;
+    subcatDescriptionInput.value = sub.description || '';
+  } else {
+    editingSubcatId.value = '';
+    subcatModalTitle.textContent = "New Subcategory";
+  }
+  subcatModal.classList.remove('hidden');
+  setTimeout(() => {
+    subcatModal.classList.remove('opacity-0');
+    subcatModal.firstElementChild.classList.remove('scale-95');
+  }, 10);
+}
+
+function closeSubcatModal() {
+  subcatModal.classList.add('opacity-0');
+  subcatModal.firstElementChild.classList.add('scale-95');
+  setTimeout(() => {
+    subcatModal.classList.add('hidden');
+  }, 300);
+}
+
+closeSubcatModalBtn.addEventListener('click', closeSubcatModal);
+cancelSubcatBtn.addEventListener('click', closeSubcatModal);
+
+// Auto slug generation for subcategory
+subcatNameInput.addEventListener('input', (e) => {
+  if (!editingSubcatId.value) {
+    const slug = e.target.value.toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-');
+    subcatSlugInput.value = slug;
+  }
+});
+
+subcatSlugInput.addEventListener('input', (e) => {
+  const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  subcatSlugInput.value = val;
+});
+
+subcatForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const catId = subcatParentCatId.value;
+  const subId = editingSubcatId.value;
+  const payload = {
+    category_id: catId,
+    name: subcatNameInput.value.trim(),
+    slug: subcatSlugInput.value.trim(),
+    description: subcatDescriptionInput.value.trim()
+  };
+
+  try {
+    if (subId) {
+      await adminApiClient.patch(`/admin/subcategories/${subId}`, payload);
+    } else {
+      await adminApiClient.post('/admin/subcategories', payload);
+    }
+    closeSubcatModal();
+    fetchCategories();
+  } catch (error) {
+    alert(error.response?.data?.message || 'Failed to save subcategory');
+  }
+});
+
+function startEditing(cat) {
+  editingCategoryId = cat.id;
+  formTitle.textContent = "Edit Category";
+  currentEmoji = cat.emoji_icon || '🏺';
+  emojiSpan.textContent = currentEmoji;
+  displayNameInput.value = cat.display_name;
+  slugInput.value = cat.slug;
+  slugPreview.textContent = cat.slug;
+  descriptionInput.value = cat.description || '';
+  sortOrderInput.value = cat.sort_order;
+  activeStatus.checked = !!cat.is_active;
+  imageUrlInput.value = cat.image_url || '';
+  imagePreview.src = cat.image_url || '/img/ceramic_bowls.jpg';
+  imageInput.value = '';
+}
+
+function resetForm() {
+  editingCategoryId = null;
+  formTitle.textContent = "New Category";
+  currentEmoji = '🏺';
+  emojiSpan.textContent = currentEmoji;
+  formEl.reset();
+  slugPreview.textContent = '[slug]';
+  sortOrderInput.value = 1;
+  activeStatus.checked = true;
+  imageUrlInput.value = '';
+  imagePreview.src = '/img/ceramic_bowls.jpg';
+  imageInput.value = '';
+}
+
+imageUrlInput.addEventListener('input', (e) => {
+  const val = e.target.value.trim();
+  if (val) {
+    imagePreview.src = val;
+  }
+});
+
+// Auto slug generation from display name when creating (not when editing)
+displayNameInput.addEventListener('input', (e) => {
+  if (!editingCategoryId) {
+    const slug = e.target.value.toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-');
+    slugInput.value = slug;
+    slugPreview.textContent = slug || '[slug]';
+  }
+});
+
+slugInput.addEventListener('input', (e) => {
+  const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  slugInput.value = val;
+  slugPreview.textContent = val || '[slug]';
+});
+
+emojiBtn.addEventListener('click', () => {
+  const newEmoji = prompt("Enter category emoji icon:", currentEmoji);
+  if (newEmoji !== null) {
+    const trimmed = newEmoji.trim();
+    if (trimmed) {
+      currentEmoji = trimmed;
+      emojiSpan.textContent = currentEmoji;
+    }
+  }
+});
+
+formEl.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const formData = new FormData();
+  formData.append('emoji_icon', currentEmoji);
+  formData.append('display_name', displayNameInput.value.trim());
+  formData.append('slug', slugInput.value.trim());
+  formData.append('description', descriptionInput.value.trim());
+  formData.append('sort_order', sortOrderInput.value);
+  formData.append('is_active', activeStatus.checked);
+  
+  if (imageInput.files[0]) {
+    formData.append('image', imageInput.files[0]);
+  } else if (imageUrlInput.value.trim()) {
+    formData.append('image_url', imageUrlInput.value.trim());
+    formData.append('banner_image_url', imageUrlInput.value.trim());
+  }
+
+  try {
+    if (editingCategoryId) {
+      await adminApiClient.patch(`/admin/categories/${editingCategoryId}`, formData);
+    } else {
+      await adminApiClient.post('/admin/categories', formData);
+    }
+    fetchCategories();
+    resetForm();
+  } catch (error) {
+    alert(error.response?.data?.message || 'Failed to save category');
+  }
+});
+
+cancelBtn.addEventListener('click', resetForm);
+closeFormBtn.addEventListener('click', resetForm);
+
+// Initial Load
+fetchCategories();
+</script>
+</body></html>

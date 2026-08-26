@@ -1,0 +1,258 @@
+/* =============================================================================
+   Tohfa v3 — Animations
+   File: frontend/src/styles/animations.css
+   Role: All platform animations. GPU-safe only (transform + opacity).
+         Respects prefers-reduced-motion.
+   PALETTE: Warm Gold shimmer · Cream/Blush skeleton tones
+   =============================================================================
+*/
+
+/* ---------------------------------------------------------------------------
+   KEYFRAMES
+--------------------------------------------------------------------------- */
+
+/* Fade in */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Fade in + slide up (cards, modal content) */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Fade in + slide down (dropdowns) */
+@keyframes fadeSlideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Slide in from right (mobile panels, drawers) */
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Slide in from bottom (bottom sheets, mobile cart) */
+@keyframes slideInBottom {
+  from { opacity: 0; transform: translateY(100%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Slide out to bottom */
+@keyframes slideOutBottom {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(100%); }
+}
+
+/* Scale in (modals, popovers) */
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.93); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Gold shimmer skeleton — warm cream/blush tones */
+@keyframes shimmerGold {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* Spin (loading spinner) */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Pulse (live indicators, Tanya typing) */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.15); opacity: 0.7; }
+}
+
+/* Bounce (notification dot) */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-5px); }
+}
+
+/* Product card entrance — used via .product-card nth-child delays */
+@keyframes fadeUpCard {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Hero image Ken Burns subtle zoom */
+@keyframes heroZoom {
+  from { transform: scale(1.00); }
+  to   { transform: scale(1.06); }
+}
+
+/* Hero slide crossfade */
+@keyframes heroSlide {
+  0%   { opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Gold shimmer sweep — for CTA buttons on hover */
+@keyframes goldSweep {
+  from { background-position: -200% center; }
+  to   { background-position:  200% center; }
+}
+
+/* Add to Cart fly (item flies to cart icon) */
+@keyframes flyToCart {
+  0%   { opacity: 1; transform: scale(1) translate(0, 0); }
+  60%  { opacity: 0.8; transform: scale(0.6) translate(var(--fly-x), var(--fly-y)); }
+  100% { opacity: 0; transform: scale(0.2) translate(var(--fly-x), var(--fly-y)); }
+}
+
+/* Cart icon bounce (after item added) */
+@keyframes cartBounce {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.3); }
+  60%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+/* Toast slide in */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Toast slide out */
+@keyframes toastOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-10px) scale(0.95); }
+}
+
+/* Heart wishlist pop */
+@keyframes heartPop {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.4); }
+  60%  { transform: scale(0.85); }
+  100% { transform: scale(1); }
+}
+
+/* Gold confetti drop (payment success) */
+@keyframes confettiDrop {
+  0%   { opacity: 1; transform: translateY(-20px) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(80px) rotate(360deg); }
+}
+
+/* Gentle float (hero decorative elements) */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+/* ---------------------------------------------------------------------------
+   UTILITY ANIMATION CLASSES
+   Apply directly to elements for quick one-off animations
+--------------------------------------------------------------------------- */
+
+.animate-fade-in {
+  animation: fadeIn var(--transition-base) ease forwards;
+}
+
+.animate-slide-up {
+  animation: fadeSlideUp var(--transition-slow) ease forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--transition-base) ease forwards;
+}
+
+.animate-spin {
+  animation: spin 0.8s linear infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-bounce {
+  animation: bounce 1.4s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-heart-pop {
+  animation: heartPop var(--transition-spring) ease forwards;
+}
+
+/* Hero Ken Burns — apply to hero background image */
+.animate-hero-zoom {
+  animation: heroZoom 8s ease-in-out infinite alternate;
+}
+
+/* Staggered card entrance — apply to grid parent */
+.animate-stagger > * {
+  opacity: 0;
+  animation: fadeUpCard var(--transition-slow) ease forwards;
+}
+.animate-stagger > *:nth-child(1)  { animation-delay: 0ms; }
+.animate-stagger > *:nth-child(2)  { animation-delay: 60ms; }
+.animate-stagger > *:nth-child(3)  { animation-delay: 120ms; }
+.animate-stagger > *:nth-child(4)  { animation-delay: 180ms; }
+.animate-stagger > *:nth-child(5)  { animation-delay: 240ms; }
+.animate-stagger > *:nth-child(6)  { animation-delay: 300ms; }
+.animate-stagger > *:nth-child(7)  { animation-delay: 360ms; }
+.animate-stagger > *:nth-child(8)  { animation-delay: 420ms; }
+.animate-stagger > *:nth-child(9)  { animation-delay: 480ms; }
+.animate-stagger > *:nth-child(10) { animation-delay: 540ms; }
+
+/* ---------------------------------------------------------------------------
+   SKELETON / SHIMMER LOADER — warm gold tones
+   Usage: <div class="skeleton skeleton--text"></div>
+--------------------------------------------------------------------------- */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface)      0%,
+    var(--color-surface-deep) 40%,
+    var(--color-surface)      80%
+  );
+  background-size: 200% 100%;
+  animation: shimmerGold 1.6s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeleton--text    { height: 14px; width: 100%; border-radius: var(--radius-pill); }
+.skeleton--title   { height: 28px; width: 60%; border-radius: var(--radius-pill); }
+.skeleton--card    { height: 280px; width: 100%; border-radius: var(--radius-lg); }
+.skeleton--avatar  { height: 48px; width: 48px; border-radius: var(--radius-pill); }
+.skeleton--image   { height: 200px; width: 100%; border-radius: var(--radius-lg); }
+.skeleton--button  { height: 48px; width: 140px; border-radius: var(--radius-md); }
+.skeleton--pill    { height: 36px; width: 100px; border-radius: var(--radius-pill); }
+.skeleton--circle  { height: 64px; width: 64px; border-radius: var(--radius-pill); }
+
+/* ---------------------------------------------------------------------------
+   TRANSITION HELPERS
+--------------------------------------------------------------------------- */
+
+.transition-all       { transition: all var(--transition-base); }
+.transition-fast      { transition: all var(--transition-fast); }
+.transition-slow      { transition: all var(--transition-slow); }
+.transition-transform { transition: transform var(--transition-base); }
+.transition-opacity   { transition: opacity var(--transition-base); }
+
+/* ---------------------------------------------------------------------------
+   REDUCED MOTION — respect user preference
+--------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

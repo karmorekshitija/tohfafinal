@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <script type="module" src="/src/components/ReportWidget.js" defer></script>
+<script type="module" src="/src/components/ProtectedRoute.js"></script>
+    <meta charset="utf-8"/>
+    <title>Tohfa | Product Details</title>
+    <meta name="description" content="Explore and purchase unique handcrafted products directly from independent artisans."/>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+      <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .watercolour-wash { background: linear-gradient(135deg, #FFF8E7 0%, rgba(20,56,31,0.2) 100%); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .carousel-dot { width: 8px; height: 8px; border-radius: 50%; transition: all 0.2s ease; cursor: pointer; }
+    </style>
+</head>
+<body class="bg-[#FFF8E7] text-on-background min-h-screen font-body-md overflow-x-hidden">
+    <!-- TopNavBar -->
+    <!-- Top Navigation Bar (LOCKED) -->
+<header
+  class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-4 md:px-8 lg:px-12 h-16 md:h-20 transition-colors"
+  style="background-color: #273328; background-image: url('/img/taskbar-texture.png'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
+>
+  <!-- Brand Logo -->
+  <div class="flex items-center flex-1">
+    <a
+      href="/buyer/home.html"
+      class="select-none"
+      style="font-family: 'Playfair Display', serif; font-size: clamp(24px, 4vw, 32px); font-style: italic; color: #FAF6EE; text-decoration: none;"
+    >
+      Tohfa<span style="color: #FAF6EE; opacity: 0.7;">.</span>
+    </a>
+  </div>
+
+  <!-- Desktop Navigation Links -->
+  <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+    <a
+      href="/buyer/home.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">home</span>
+      <span>Home</span>
+    </a>
+    <a
+      href="/buyer/categories.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">category</span>
+      <span>Category</span>
+    </a>
+    <a
+      href="/buyer/zip-gift.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">bolt</span>
+      <span>ZipGift</span>
+    </a>
+    <a
+      href="/buyer/profile.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <!-- Right side items -->
+  <div class="flex items-center justify-end flex-1 gap-1 sm:gap-2">
+    <!-- Search Button -->
+    <a
+      href="/buyer/search.html?focus=true"
+      id="header-search-btn"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+      title="Search"
+    >
+      <span class="material-symbols-outlined text-[22px]">search</span>
+    </a>
+
+    <!-- Wishlist Button -->
+    <a
+      href="/buyer/wishlist.html"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      title="Saved Makes"
+    >
+      <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+      <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+    </a>
+
+    <!-- Cart Button -->
+    <a
+      href="/buyer/cart.html"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      title="Shopping Cart"
+    >
+      <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
+      <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+    </a>
+
+    <!-- Notifications Button -->
+    <a
+      href="/buyer/notifications.html"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      title="Notifications"
+    >
+      <span class="material-symbols-outlined text-[22px]">notifications</span>
+      <span id="nav-notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
+      <span id="nav-notif-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
+    </a>
+
+    <!-- Auth Container -->
+    <div id="auth-buttons-container" class="flex items-center gap-2 ml-2 md:ml-4"></div>
+  </div>
+</header>
+
+    <main class="max-w-[1440px] mx-auto px-margin-desktop py-12">
+        <!-- 1. BREADCRUMBS & BACK NAV -->
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-2 text-xs text-outline font-label-caps uppercase tracking-wider">
+                <a href="/buyer/home.html" class="hover:text-primary transition-colors">Home</a>
+                <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+                <a id="breadcrumb-category" href="#" class="hover:text-primary transition-colors">Category</a>
+                <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+                <span id="breadcrumb-product" class="text-primary font-bold">Product</span>
+            </div>
+            <button onclick="window.history.back()" class="flex items-center gap-xs text-secondary hover:text-primary transition-colors text-sm font-semibold group focus:outline-none">
+                <span class="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                <span>Back</span>
+            </button>
+        </div>
+
+        <div id="product-details-container" class="grid grid-cols-1 lg:grid-cols-12 gap-xl items-start">
+            <!-- Left: Horizontal Swipeable Product Image Gallery -->
+            <div class="lg:col-span-7 flex flex-col gap-md">
+                <div class="relative bg-[#FFF8E7] border border-outline-variant/60 rounded-2xl overflow-hidden shadow-sm aspect-square">
+                    <!-- Horizontal Swipe Container -->
+                    <div id="product-carousel" class="w-full h-full flex overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide">
+                        <!-- Dynamically populated <img> slides -->
+                    </div>
+                    <!-- Wishlist toggle -->
+                    <button id="wishlist-toggle-btn" class="absolute top-6 right-6 p-3 bg-[#FFF8E7]/90 backdrop-blur-md rounded-full shadow-md hover:scale-105 active:scale-95 transition-all text-outline hover:text-primary focus:outline-none z-10">
+                        <span id="wishlist-icon" class="material-symbols-outlined text-2xl">favorite</span>
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Right: Product Information -->
+            <div class="lg:col-span-5 space-y-lg bg-[#FFF8E7] p-lg border border-outline-variant/60 rounded-2xl">
+                <div class="space-y-sm">
+                    <div id="product-tags-container" class="flex flex-wrap gap-2 mb-2"></div>
+                    <h1 id="product-name" class="font-headline-lg text-primary text-3xl leading-tight font-semibold">Product Name</h1>
+                    <div id="product-rating-container" class="flex items-center gap-1.5 text-amber-500 text-sm mt-1 hidden"></div>
+                    <div class="flex items-center gap-md pt-sm">
+                        <span class="text-2xl font-data-price text-secondary-fixed-variant font-bold" id="product-price">?0.00</span>
+                        <span class="text-xs bg-success-container/20 text-success border border-success/20 px-sm py-[2px] rounded font-semibold" id="product-stock-badge">In Stock</span>
+                    </div>
+                </div>
+
+                <a id="seller-profile-link" href="#" class="border-t border-b border-outline-variant/20 py-md flex items-center gap-md hover:opacity-85 transition-opacity duration-200">
+                    <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm" id="seller-avatar">S</div>
+                    <div>
+                        <p class="text-xs text-outline uppercase tracking-wider font-label-caps">Shaped By</p>
+                        <p class="font-title-serif text-primary text-base font-semibold" id="product-seller">Seller Name</p>
+                    </div>
+                </a>
+
+                <div class="space-y-sm">
+                    <h4 class="font-label-caps text-outline text-xs tracking-wider uppercase">Description</h4>
+                    <p id="product-description" class="text-secondary text-sm leading-relaxed whitespace-pre-line">Loading details...</p>
+                    <div id="product-subcategories-container" class="flex flex-wrap gap-2 pt-2"></div>
+                </div>
+
+                <!-- Add to Cart Widget -->
+                <div class="space-y-md pt-md border-t border-outline-variant/20">
+                    <div id="qty-selector-container" class="flex items-center justify-between">
+                        <span class="font-label-caps text-outline text-xs tracking-wider uppercase">Quantity</span>
+                        <div class="flex items-center border border-outline-variant rounded-lg bg-[#FFF8E7] overflow-hidden shadow-sm">
+                            <button id="qty-decrease" class="px-md py-sm hover:bg-surface-container transition-colors text-primary font-bold focus:outline-none">-</button>
+                            <input type="number" id="qty-input" value="1" min="1" max="99" class="w-12 text-center border-none focus:ring-0 text-sm font-semibold text-primary p-0">
+                            <button id="qty-increase" class="px-md py-sm hover:bg-surface-container transition-colors text-primary font-bold focus:outline-none">+</button>
+                        </div>
+                    </div>
+                    <button id="add-to-cart-btn" class="w-full bg-primary hover:bg-[#14381F] text-white py-4 rounded-xl font-semibold uppercase tracking-widest hover:shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-sm">
+                        <span class="material-symbols-outlined">shopping_cart</span>
+                        <span>Add to Cart</span>
+                    </button>
+                    
+                    <!-- Delivery Estimator (BUY-08) -->
+                    <div class="mt-4 p-4 rounded-xl border border-outline-variant/60 bg-[#FAF6EE] text-xs">
+                        <div class="font-semibold text-primary mb-2 flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[18px]">local_shipping</span>
+                            <span>Delivery &amp; Crafting Estimator</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" id="pincode-check-input" placeholder="Enter 6-digit Pincode" maxlength="6" class="w-40 px-3 py-2 rounded-lg border border-outline-variant bg-white text-xs text-on-surface focus:outline-none focus:border-primary">
+                            <button type="button" id="pincode-check-btn" class="px-4 py-2 bg-[#14381F] text-white rounded-lg font-semibold hover:bg-[#0D2614] active:scale-95 transition-all text-xs">Check</button>
+                        </div>
+                        <div id="pincode-check-result" class="mt-2 text-secondary leading-relaxed"></div>
+                    </div>
+
+                    <div id="overflow-container" class="hidden space-y-xs">
+                        <button id="chat-with-seller-btn" class="w-full bg-primary hover:bg-[#14381F] text-white py-4 rounded-xl font-semibold uppercase tracking-widest hover:shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-sm">
+                            <span class="material-symbols-outlined">chat</span>
+                            <span>Chat with Seller</span>
+                        </button>
+                        <p id="overflow-msg" class="text-xs text-amber-700 bg-amber-50/50 border border-amber-200/60 rounded-lg p-sm leading-relaxed">
+                            Today's daily fulfillment limit for this product has been reached. Chat with the seller to arrange your order.
+                        </p>
+                    </div>
+                    </div>
+
+                    <!-- Phase 4: Contention pending overlay (hidden by default) -->
+                    <div id="contention-overlay" class="hidden mt-4 p-4 border-2 border-purple-200 bg-purple-50 rounded-2xl text-center">
+                        <div class="flex items-center justify-center gap-3 mb-2">
+                            <span id="contention-spinner" style="display:inline-block;width:20px;height:20px;border:2.5px solid #c4b5fd;border-top-color:#7c3aed;border-radius:50%;animation:tohfa-spin 0.7s linear infinite;"></span>
+                            <span class="font-semibold text-purple-800 text-sm">High demand! Confirming your spot�</span>
+                        </div>
+                        <p class="text-xs text-purple-600">Please wait � we're checking availability for you.</p>
+                    </div>
+                    <div id="contention-lost" class="hidden mt-4 p-4 border-2 border-red-200 bg-red-50 rounded-2xl">
+                        <p class="font-semibold text-red-800 text-sm text-center mb-2">?? Someone else just grabbed the last one.</p>
+                        <button id="remake-request-btn" class="hidden w-full mt-2 border border-primary text-primary py-3 rounded-xl font-semibold text-sm transition-all hover:bg-primary hover:text-white">
+                            Request a Custom Remake
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Phase 2: Paused state container (hidden by default) -->
+                <div id="paused-state-container" class="hidden"></div>
+            </div>
+        </div>
+
+        <!-- 5. REVIEWS SECTION -->
+        <section class="mt-16 border-t border-outline-variant/30 pt-12 max-w-4xl" id="reviews-section">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="font-headline-lg text-primary text-2xl">Artisan Reviews</h2>
+                    <p class="text-xs text-outline tracking-wider uppercase mt-1" id="reviews-summary-text">0 reviews</p>
+                </div>
+                <div class="flex items-center gap-xs text-amber-500 font-bold" id="reviews-rating-summary">
+                    <!-- Rating summary -->
+                </div>
+            </div>
+
+            <div id="reviews-list" class="space-y-6">
+                <!-- Reviews injected here -->
+            </div>
+
+            <!-- Write a Review Form -->
+            <div id="write-review-container" class="mt-12 bg-[#FFF8E7] p-lg border border-outline-variant/60 rounded-2xl hidden">
+                <h3 class="font-title-serif text-primary text-xl mb-md">Write a Review</h3>
+                <form id="review-form" class="space-y-md">
+                    <div>
+                        <label class="block text-xs font-label-caps text-outline uppercase tracking-wider mb-sm">Rating</label>
+                        <div class="flex items-center gap-sm text-amber-500" id="star-input-container">
+                            <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="1">
+                                <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
+                            </button>
+                            <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="2">
+                                <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
+                            </button>
+                            <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="3">
+                                <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
+                            </button>
+                            <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="4">
+                                <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
+                            </button>
+                            <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="5">
+                                <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="review-body" class="block text-xs font-label-caps text-outline uppercase tracking-wider mb-sm">Review Comments</label>
+                        <textarea id="review-body" rows="4" class="w-full rounded-xl border border-outline-variant bg-[#FFF8E7] p-4 text-sm focus:border-primary focus:ring-0 focus:outline-none" placeholder="Share your experience with this handmade piece..."></textarea>
+                    </div>
+                    <button type="submit" class="bg-primary hover:bg-[#14381F] text-white px-lg py-md rounded-xl font-semibold uppercase tracking-wider transition-all active:scale-95">
+                        Submit Review
+                    </button>
+                </form>
+            </div>
+            <div id="review-gating-notice" class="mt-12 p-md bg-[#FFF8E7] border border-dashed border-outline-variant/60 rounded-xl text-center text-secondary text-sm">
+                Only verified buyers who received this item can write a review.
+            </div>
+        </section>
+
+        <!-- You May Also Like Section -->
+        <section class="mt-16 border-t border-outline-variant/30 pt-12 hidden" id="recommendations-section">
+            <h2 class="font-headline-lg text-primary text-2xl mb-8" style="font-family: 'Playfair Display', serif;">You May Also Like</h2>
+            <div id="recommendations-grid" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
+                <!-- Dynamically rendered products -->
+            </div>
+        </section>
+
+        <!-- Product Error State -->
+        <div id="product-error-container" class="hidden text-center py-24">
+            <span class="material-symbols-outlined text-6xl text-error mb-4">error</span>
+            <h3 class="font-headline-lg text-headline-lg mb-2">Product Not Found</h3>
+            <p class="text-secondary max-w-md mx-auto mb-6">The product you're looking for might have been removed, deactivated, or does not exist.</p>
+            <button onclick="window.location.href='category.html'" class="bg-primary text-background px-8 py-3 rounded-lg font-semibold uppercase tracking-wider">Back to Browse</button>
+        </div>
+    </main>
+
+    <!-- BottomNavBar -->
+    <nav class="hidden md:flex items-center justify-center gap-xl h-full">
+    <!-- Home -->
+    <a href="/buyer/home.html" class="flex items-center gap-xs text-[#414942] hover:text-[#14381F] transition-colors h-full px-1 font-['DM_Sans'] text-[16px] font-normal">
+      <span class="material-symbols-outlined text-[20px]">home</span>
+      <span>Home</span>
+    </a>
+    <!-- Category -->
+    <a href="/buyer/categories.html" class="flex items-center gap-xs text-[#414942] hover:text-[#14381F] transition-colors h-full px-1 font-['DM_Sans'] text-[16px] font-normal">
+      <span class="material-symbols-outlined text-[20px]">category</span>
+      <span>Category</span>
+    </a>
+    <!-- ZipGift -->
+    <a href="/buyer/zip-gift.html" class="flex items-center gap-xs text-[#414942] hover:text-[#14381F] transition-colors h-full px-1 font-['DM_Sans'] text-[16px] font-normal">
+      <span class="material-symbols-outlined text-[20px]">bolt</span>
+      <span>ZipGift</span>
+    </a>
+    <!-- Profile -->
+    <a href="/buyer/profile.html" class="flex items-center gap-xs text-[#414942] hover:text-[#14381F] transition-colors h-full px-1 font-['DM_Sans'] text-[16px] font-normal">
+      <span class="material-symbols-outlined text-[20px]">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+    <!-- Footer -->
+    <!-- NEW TOHFA FOOTER � footer_stitch v1 -->
+<footer style="position:relative;overflow:hidden;background:#273328;color:#FFF8E7;padding-top:64px;padding-bottom:32px;">
+  <!-- Ghost watermark -->
+  <div style="position:absolute;bottom:-10%;right:-5%;opacity:0.04;pointer-events:none;user-select:none;">
+    <span class="material-symbols-outlined" style="font-size:600px;color:white;">local_florist</span>
+  </div>
+  <!-- Main grid -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:repeat(1,1fr);gap:48px;margin-bottom:80px;position:relative;z-index:10;" class="tohfa-footer-grid">
+    <!-- Brand -->
+    <div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:44px;font-style:italic;color:#273328;margin-bottom:16px;">Tohfa.</h2>
+      <p style="font-family:'DM Sans',sans-serif;color:#FFF8E7;margin-bottom:8px;font-weight:500;">Thoughtful Gifting, Made Effortless.</p>
+      <p style="font-family:'DM Sans',sans-serif;color:#A8B89A;margin-bottom:32px;line-height:1.6;">India's first home for handcrafted gifts, celebrating the soul of artisanal craftsmanship.</p>
+      
+    </div>
+    <!-- Company -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">Company</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">About Us</a></li>
+        <li><a href="/buyer/our-story.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Our Story</a></li>
+        
+      </ul>
+    </div>
+    <!-- For Sellers -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">For Sellers</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a onclick="handleFooterSellerLink(event)" href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Sell on Tohfa</a></li>
+        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Seller Dashboard</a></li>
+        
+      </ul>
+    </div>
+    <!-- For Buyers -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">For Buyers</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'" onclick="event.preventDefault(); if (window.openTohfaChat) { window.openTohfaChat('Find me a gift'); } else { window.__tohfaChatQueue = window.__tohfaChatQueue || []; window.__tohfaChatQueue.push('Find me a gift'); }">AI Gift Guide</a></li>
+        
+      </ul>
+    </div>
+    <!-- Support -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">Support</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Contact Us</a></li>
+        <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Refunds &amp; Disputes</a></li>
+        <li><a href="/buyer/terms-conditions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Terms and Conditions</a></li>
+        <li><a href="/buyer/faq.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">FAQs</a></li>
+      </ul>
+    </div>
+  </div>
+  <!-- Divider -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;margin-bottom:32px;">
+    <div style="width:100%;height:1px;background:rgba(255,255,255,0.1);position:relative;">
+      <div style="position:absolute;left:50%;top:-8px;transform:translateX(-50%);display:flex;gap:16px;color:rgba(201,151,44,0.3);">
+        <span class="material-symbols-outlined" style="font-size:16px;">stars</span>
+      </div>
+    </div>
+  </div>
+  <!-- Bottom bar -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:flex;flex-direction:column;align-items:center;gap:24px;position:relative;z-index:10;" class="tohfa-footer-bottom">
+    
+    <div style="display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;font-size:14px;color:#FFF8E7;">
+      <span>Made with</span>
+      <span class="material-symbols-outlined" style="color:#273328;font-size:18px;font-variation-settings:'FILL' 1;">favorite</span>
+      <span>in India</span>
+    </div>
+  </div>
+  <style>
+    @media (min-width: 768px) {
+      .tohfa-footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr 1fr !important; }
+      .tohfa-footer-bottom { flex-direction: row !important; justify-content: space-between !important; }
+    }
+
+    /* Recommendations Ribbon Styles */
+    .ribbon-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 120px;
+        height: 120px;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 20;
+    }
+    .ribbon-tag {
+        position: absolute;
+        top: 22px;
+        left: -32px;
+        width: 160px;
+        transform: rotate(-45deg);
+        text-align: center;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #ffffff;
+        line-height: 24px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+    }
+    .ribbon-tag::before, .ribbon-tag::after {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        border-top: 3px solid rgba(0,0,0,0.4);
+        border-left: 3px solid transparent;
+        border-right: 3px solid transparent;
+    }
+    .ribbon-tag::before { left: 0; }
+    .ribbon-tag::after { right: 0; }
+
+    .ribbon-sponsored {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+    .ribbon-bestseller {
+        background: #C85A32;
+    }
+    .ribbon-custom {
+        background: #B492B7;
+    }
+    .ribbon-bestseller-double {
+        top: 13px !important;
+        left: -41px !important;
+    }
+    .ribbon-custom-double {
+        top: 30px !important;
+        left: -24px !important;
+    }
+
+    /* Redefine Ribbon to Flat top-left pills */
+    .ribbon-wrapper {
+        position: absolute !important;
+        top: 8px !important;
+        left: 8px !important;
+        width: auto !important;
+        height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 4px !important;
+        z-index: 20 !important;
+        overflow: visible !important;
+        pointer-events: none !important;
+    }
+
+    @media (min-width: 640px) {
+        .ribbon-wrapper {
+            top: 12px !important;
+            left: 12px !important;
+        }
+    }
+
+    .ribbon-tag {
+        position: static !important;
+        width: auto !important;
+        transform: none !important;
+        text-align: center !important;
+        font-size: 9px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.05em !important;
+        color: #ffffff !important;
+        line-height: 1 !important;
+        padding: 4px 8px !important;
+        border-radius: 9999px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+        display: inline-block !important;
+        white-space: nowrap !important;
+    }
+
+    .ribbon-tag::before,
+    .ribbon-tag::after {
+        display: none !important;
+    }
+
+    .ribbon-bestseller-double,
+    .ribbon-custom-double {
+        top: auto !important;
+        left: auto !important;
+        position: static !important;
+    }
+
+    /* Force Filled White Heart with Green Border style for card wishlist buttons */
+    .toggle-rec-wishlist-btn .material-symbols-outlined {
+        font-variation-settings: 'FILL' 1 !important;
+        -webkit-text-stroke: 1.5px #273328 !important;
+        color: #ffffff !important;
+    }
+
+    .toggle-rec-wishlist-btn[data-wishlisted="true"] .material-symbols-outlined,
+    .toggle-rec-wishlist-btn .text-red-500 {
+        -webkit-text-stroke: 1.5px #ef4444 !important;
+        color: #ef4444 !important;
+    }
+  </style>
+</footer>
+
+    <script type="module">
+        import apiClient, { requireAuth } from '/src/utils/apiClient.js';
+        import { formatPaise } from '/src/utils/currency.js';
+        import { logout } from '/src/utils/auth.js';
+        import { initSearchOverlay } from '/buyer/searchOverlay.js';
+
+        initSearchOverlay();
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Set search active style since we are browsing a product
+        (function() {
+            const activeEl = document.getElementById('tab-search');
+            if (activeEl) {
+                activeEl.style.color = '#14381F';
+                const icon = activeEl.querySelector('.material-symbols-outlined');
+                if (icon) {
+                    icon.style.fontVariationSettings = "'FILL' 1, 'wght' 600";
+                }
+            }
+        })();
+
+        // Extract Product ID — accept any standard parameter name
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id') || urlParams.get('productId') || urlParams.get('slug') || '';
+
+        // Redirect to categories if no identifier is present — avoids showing error card on bare URL
+        if (!productId || productId === 'null' || productId === 'undefined') {
+            window.location.replace('/buyer/categories.html');
+        }
+
+        async function logProductEvent(eventType) {
+            try {
+                let sessionId = localStorage.getItem('tohfa_chat_session_id');
+                if (!sessionId) {
+                    sessionId = 'session_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+                    localStorage.setItem('tohfa_chat_session_id', sessionId);
+                }
+                await apiClient.post(`/products/${productId}/event`, {
+                    event_type: eventType,
+                    session_id: sessionId
+                });
+            } catch (err) {
+                console.error(`Failed to log product event ${eventType}:`, err);
+            }
+        }
+
+        let product = null;
+        let isCustomized = false;
+        let isSoldOut = false;
+        let isWishlisted = false;
+        let qty = 1;
+        let maxStock = 99;
+        let isLoggedIn = false;
+        let matchedOrderId = null;
+        let selectedRating = 0;
+        let currentUser = null;
+
+    async function checkAuthState() {
+        const token = sessionStorage.getItem('tohfa_access_token');
+        const authContainer = document.getElementById('auth-buttons-container');
+        
+        if (token) {
+            isLoggedIn = true;
+            try {
+                let avatarUrl = null;
+                let initial = 'A';
+                try {
+                    const res = await apiClient.get('/profile/me');
+                    if (res.data && res.data.success) {
+                        currentUser = res.data.data;
+                        avatarUrl = res.data.data.avatar_url;
+                        if (res.data.data.full_name) {
+                            initial = res.data.data.full_name.charAt(0).toUpperCase();
+                        }
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch profile avatar:", err);
+                }
+                
+                let avatarHtml = '';
+                if (avatarUrl) {
+                    avatarHtml = `<img src="${avatarUrl}" alt="Profile" class="w-10 h-10 rounded-full border border-[rgba(20,56,31,0.2)] object-cover cursor-pointer" onclick="window.location.href='profile.html'" loading="lazy" />`;
+                } else {
+                    avatarHtml = `
+                        <a href="/buyer/profile.html" class="w-10 h-10 rounded-full bg-[#14381F] flex items-center justify-center text-white font-bold border border-[rgba(20,56,31,0.2)] text-sm overflow-hidden flex-shrink-0 cursor-pointer">
+                            ${initial}
+                        </a>
+                    `;
+                }
+
+                if (authContainer) {
+                    authContainer.innerHTML = avatarHtml;
+                }
+            } catch(e) {
+                console.error("Failed to parse token:", e);
+                logout();
+            }
+        } else {
+            isLoggedIn = false;
+            if (authContainer) {
+                authContainer.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <a href="/auth/login.html" class="text-sm font-semibold text-[#FAF6EE] hover:text-white hover:underline no-underline" style="font-family: 'DM Sans', sans-serif;">Login</a>
+                        <a href="/auth/signup-buyer.html" class="text-[#14381F] text-sm font-semibold px-3.5 py-1.5 rounded-lg bg-[#FAF6EE] hover:bg-white transition-all no-underline shadow-sm" style="font-family: 'DM Sans', sans-serif;">Sign Up</a>
+                    </div>
+                `;
+            }
+        }
+    }
+
+        async function loadProduct() {
+            if (!productId || productId === 'null' || productId === 'undefined') {
+                window.location.replace('/buyer/categories.html');
+                return;
+            }
+
+            try {
+                const response = await apiClient.get(`/products/${productId}`);
+                if (response.data && response.data.success) {
+                    // Backend returns { success, data: { product: {...} } }
+                    // axios wraps it so response.data = { success, data: { product } }
+                    product = response.data.data?.product || response.data.data;
+
+                    maxStock = product.stock_qty || 0;
+                    isWishlisted = !!product.is_wishlisted;
+
+                    // Update UI Info
+                    document.getElementById('product-name').innerText = product.name;
+                    document.getElementById('product-description').innerText = product.description || 'Crafted with love and care, this piece is a heartfelt creation by an independent artisan.\nEvery detail is thoughtfully made by hand � a little treasure, made just for you.';
+                    
+                    const subcontainer = document.getElementById('product-subcategories-container');
+                    if (subcontainer) {
+                        subcontainer.innerHTML = '';
+                        
+                        // Render Category first
+                        if (product.category && product.category.name) {
+                            const catSpan = document.createElement('span');
+                            catSpan.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-primary text-white border border-primary/20 font-body";
+                            catSpan.textContent = `Category: ${product.category.name}`;
+                            subcontainer.appendChild(catSpan);
+                        }
+                        
+                        // Render Subcategories
+                        if (product.subcategories && product.subcategories.length > 0) {
+                            product.subcategories.forEach(sub => {
+                                const span = document.createElement('span');
+                                span.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-[#E8F0E6] text-[#14381F] border border-[#C5D9C2] font-body";
+                                span.textContent = sub.name;
+                                subcontainer.appendChild(span);
+                            });
+                        }
+                    }
+
+                    document.getElementById('product-price').innerText = formatPaise(product.price_paise);
+                    document.getElementById('product-seller').innerText = product.seller?.seller_name || 'Artisan';
+                    
+                    const ratingContainer = document.getElementById('product-rating-container');
+                    if (ratingContainer) {
+                        const count = Number(product.review_count) || 0;
+                        const avg = Number(product.avg_rating);
+                        if (count > 0 && !isNaN(avg) && avg > 0) {
+                            ratingContainer.innerHTML = `
+                                <div class="flex items-center text-amber-500">
+                                    ${Array.from({ length: 5 }, (_, i) => `
+                                        <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' ${i < Math.round(avg) ? 1 : 0};">star</span>
+                                    `).join('')}
+                                </div>
+                                <span class="text-[#14381F] text-xs font-semibold hover:underline cursor-pointer" onclick="document.getElementById('reviews-section').scrollIntoView({ behavior: 'smooth' })">
+                                    ${avg.toFixed(1)} (${count} ${count === 1 ? 'review' : 'reviews'})
+                                </span>
+                            `;
+                            ratingContainer.classList.remove('hidden');
+                        } else {
+                            ratingContainer.innerHTML = `
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-[#14381F]/10 text-[#14381F] border border-[#14381F]/15 font-['DM_Sans']">
+                                    ✨ New Artisan Listing
+                                </span>
+                            `;
+                            ratingContainer.classList.remove('hidden');
+                        }
+                    }
+                    
+                    const avatarEl = document.getElementById('seller-avatar');
+                    if (product.seller?.avatar_url) {
+                        avatarEl.innerHTML = `<img src="${product.seller.avatar_url}" alt="Seller Avatar" class="w-full h-full object-cover rounded-full" loading="lazy" />`;
+                        avatarEl.classList.remove('bg-primary/20', 'text-primary');
+                    } else {
+                        avatarEl.innerText = (product.seller?.seller_name || 'A').charAt(0).toUpperCase();
+                    }
+
+                    const sellerLink = document.getElementById('seller-profile-link');
+                    if (sellerLink && product.seller?.id) {
+                        sellerLink.href = `/buyer/seller-profile.html?id=${product.seller.id}`;
+                    }
+
+                    const isBulk = product.tags?.includes('bulk') || product.category?.slug === 'bulk-orders';
+                    isCustomized = product.is_customized || product.category?.slug === 'customized-gifts' || isBulk;
+                    isSoldOut = !isCustomized && (product.status === 'sold_out' || maxStock === 0);
+                    const isPaused = product.status === 'paused';
+
+                    // Populate badges/tags in the tags container
+                    const tagsContainer = document.getElementById('product-tags-container');
+                    if (tagsContainer) {
+                        tagsContainer.innerHTML = '';
+                        
+                        // Check Customized
+                        if (isCustomized) {
+                            const customTag = document.createElement('span');
+                            customTag.innerText = isBulk ? 'Bulk Available' : 'Customized';
+                            customTag.className = 'font-data-price text-xs bg-[#14381F] text-white px-3 py-[2px] rounded-full inline-block font-semibold';
+                            tagsContainer.appendChild(customTag);
+                        }
+                        
+                        // Check Sponsored
+                        if (product.is_sponsored) {
+                            const sponsoredTag = document.createElement('span');
+                            sponsoredTag.innerText = 'Sponsored';
+                            sponsoredTag.className = 'font-data-price text-xs bg-[#d97706] text-white px-3 py-[2px] rounded-full inline-block font-semibold';
+                            tagsContainer.appendChild(sponsoredTag);
+                        }
+                        
+                        // Check Best Seller
+                        if (product.is_best_seller) {
+                            const bestSellerTag = document.createElement('span');
+                            bestSellerTag.innerText = 'Best Seller';
+                            bestSellerTag.className = 'font-data-price text-xs bg-[#C4622D] text-white px-3 py-[2px] rounded-full inline-block font-semibold';
+                            tagsContainer.appendChild(bestSellerTag);
+                        }
+                    }
+
+                    // Show/hide qty selector and modify button
+                    const qtySelector = document.getElementById('qty-selector-container');
+                    const addToCartBtn = document.getElementById('add-to-cart-btn');
+                    if (isCustomized || isSoldOut) {
+                        if (qtySelector) qtySelector.style.display = 'none';
+                        if (addToCartBtn) {
+                            addToCartBtn.querySelector('span.material-symbols-outlined').innerText = 'chat';
+                            addToCartBtn.querySelector('span:last-child').innerText = isSoldOut ? 'Chat with Seller' : 'Request seller';
+                        }
+                    } else {
+                        if (qtySelector) qtySelector.style.display = 'flex';
+                        if (addToCartBtn) {
+                            addToCartBtn.querySelector('span.material-symbols-outlined').innerText = 'shopping_cart';
+                            addToCartBtn.querySelector('span:last-child').innerText = 'Add to Cart';
+                        }
+                    }
+
+                    // Stock badge
+                    const stockBadge = document.getElementById('product-stock-badge');
+                    if (isCustomized) {
+                        stockBadge.innerText = 'Made to Order';
+                        stockBadge.className = 'text-xs bg-purple-100 text-purple-700 border border-purple-200 px-sm py-[2px] rounded font-semibold';
+                        if (addToCartBtn) {
+                            addToCartBtn.disabled = false;
+                            addToCartBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        }
+                    } else if (isSoldOut) {
+                        stockBadge.innerText = 'Sold Out';
+                        stockBadge.className = 'text-xs bg-red-100 text-red-700 border border-red-200 px-sm py-[2px] rounded font-semibold';
+                        if (addToCartBtn) {
+                            addToCartBtn.disabled = false;
+                            addToCartBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        }
+                    } else if (maxStock <= 3) {
+                        stockBadge.innerText = `Only ${maxStock} left!`;
+                        stockBadge.className = 'text-xs bg-amber-100 text-amber-700 border border-amber-200 px-sm py-[2px] rounded font-semibold';
+                        if (addToCartBtn) {
+                            addToCartBtn.disabled = false;
+                            addToCartBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        }
+                    } else {
+                        stockBadge.innerText = 'In Stock';
+                        stockBadge.className = 'text-xs bg-green-100 text-green-700 border border-green-200 px-sm py-[2px] rounded font-semibold';
+                        if (addToCartBtn) {
+                            addToCartBtn.disabled = false;
+                            addToCartBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        }
+                    }
+
+                    // Images
+                    const carousel = document.getElementById('product-carousel');
+                    const dotsContainer = document.getElementById('carousel-dots-container');
+                    
+                    const productImages = product.images || [];
+                    if (productImages.length === 0) {
+                        carousel.innerHTML = `
+                            <div class="w-full h-full flex-shrink-0 snap-center flex items-center justify-center p-6">
+                                <img class="max-w-full max-h-full object-contain" src="https://placehold.co/600x600/f4ede3/516447?text=Handcrafted" alt="Placeholder Image" />
+                            </div>
+                        `;
+                        if (dotsContainer) dotsContainer.innerHTML = '';
+                    } else {
+                        // Render slides
+                        carousel.innerHTML = productImages.map((img, idx) => `
+                            <div class="w-full h-full flex-shrink-0 snap-center flex items-center justify-center p-6">
+                                <img class="max-w-full max-h-full object-contain" src="${img.url}" alt="${product.name} - Image ${idx + 1}" loading="lazy" />
+                            </div>
+                        `).join('');
+
+                        // Render dots
+                        if (dotsContainer) {
+                            dotsContainer.innerHTML = productImages.map((img, idx) => {
+                                const activeClass = idx === 0 ? 'bg-primary' : 'bg-outline-variant/60';
+                                return `<button class="carousel-dot ${activeClass}" data-index="${idx}"></button>`;
+                            }).join('');
+
+                            // Wire dots clicks
+                            dotsContainer.querySelectorAll('.carousel-dot').forEach(dot => {
+                                dot.addEventListener('click', () => {
+                                    const idx = Number(dot.getAttribute('data-index'));
+                                    const slideWidth = carousel.offsetWidth;
+                                    carousel.scrollTo({ left: idx * slideWidth, behavior: 'smooth' });
+                                });
+                            });
+                        }
+
+                        // Sync scroll to update dots
+                        carousel.addEventListener('scroll', () => {
+                            const width = carousel.offsetWidth;
+                            if (width <= 0) return;
+                            const index = Math.round(carousel.scrollLeft / width);
+                            if (dotsContainer) {
+                                const dots = dotsContainer.querySelectorAll('.carousel-dot');
+                                dots.forEach((d, idx) => {
+                                    if (idx === index) {
+                                        d.classList.add('bg-primary');
+                                        d.classList.remove('bg-outline-variant/60');
+                                    } else {
+                                        d.classList.remove('bg-primary');
+                                        d.classList.add('bg-outline-variant/60');
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    // Breadcrumb
+                    const categoryBreadcrumb = document.getElementById('breadcrumb-category');
+                    const productBreadcrumb = document.getElementById('breadcrumb-product');
+                    if (product.category) {
+                        categoryBreadcrumb.innerText = product.category.name;
+                        categoryBreadcrumb.href = `category.html?slug=${product.category.slug}`;
+                    } else {
+                        categoryBreadcrumb.innerText = 'Products';
+                        categoryBreadcrumb.href = 'category.html';
+                    }
+                    productBreadcrumb.innerText = product.name;
+
+                    // Wishlist state
+                    updateWishlistButtonUI();
+
+                    // Reviews Summary & list
+                    renderReviewsSection();
+
+                    // Check if user has bought this item to gate review submission
+                    await checkReviewEligibility();
+
+                    // Check capacity on page load for pre-made items
+                    if (!product.holiday_mode_active && !isCustomized && !isSoldOut && product.status !== 'sold_out' && maxStock > 0) {
+                        try {
+                            const checkRes = await apiClient.post('/capacity/check', { 
+                                product_id: Number(productId), 
+                                quantity: 1, 
+                                preview: true 
+                            });
+                            if (checkRes.data && checkRes.data.overflow) {
+                                showOverflowState("Today's capacity reached � next available: tomorrow");
+                            }
+                        } catch (e) {
+                            console.error("Error checking capacity status on load:", e);
+                        }
+                    }
+
+                    // Holiday Mode enforcement
+                    if (product.holiday_mode_active) {
+                        if (qtySelector) qtySelector.style.display = 'none';
+                        if (addToCartBtn) {
+                            addToCartBtn.querySelector('span.material-symbols-outlined').innerText = 'beach_access';
+                            addToCartBtn.querySelector('span:last-child').innerText = 'Shop on Break';
+                            addToCartBtn.disabled = true;
+                            addToCartBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        }
+                        const chatBtn = document.getElementById('chat-with-seller-btn');
+                        if (chatBtn) {
+                            chatBtn.disabled = true;
+                            chatBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        }
+                        // Insert notice below the button group
+                        const btnContainer = addToCartBtn?.parentElement;
+                        if (btnContainer && !document.getElementById('holiday-notice')) {
+                            const notice = document.createElement('p');
+                            notice.id = 'holiday-notice';
+                            notice.className = 'text-xs text-on-surface-variant italic text-center mt-2';
+                            notice.textContent = 'This artisan is currently on a break. Check back soon.';
+                            btnContainer.insertAdjacentElement('afterend', notice);
+                        }
+                    }
+                    // -- Phase 2: Paused state ----------------------------------------------
+                    if (isPaused) {
+                        // Hide buy widget, show paused state
+                        document.getElementById('qty-selector-container').style.display = 'none';
+                        document.getElementById('add-to-cart-btn').style.display = 'none';
+                        document.getElementById('overflow-container').classList.add('hidden');
+                        const pausedContainer = document.getElementById('paused-state-container');
+                        pausedContainer.classList.remove('hidden');
+                        // Dynamically import and render the shared unavailable-state module
+                        try {
+                            const { renderUnavailableState } = await import('/src/components/unavailable-state.js');
+                            await renderUnavailableState(pausedContainer, {
+                                mode: 'paused',
+                                message: product.pause_reason
+                                    ? `Temporarily unavailable: ${product.pause_reason}`
+                                    : 'This product is temporarily paused by the artisan.',
+                                resumeEstimate: product.resume_estimate_date,
+                                productId: productId
+                            });
+                        } catch (importErr) {
+                            pausedContainer.innerHTML = '<p class="text-sm text-purple-700 bg-purple-50 border border-purple-200 rounded-xl p-4">?? This product is temporarily paused by the artisan. Please check back soon.</p>';
+                            console.warn('Could not load unavailable-state module:', importErr);
+                        }
+                    }
+
+                    // Owner Restrictions
+                    const isOwner = currentUser && product.seller && currentUser.id === product.seller.id;
+                    if (isOwner) {
+                        if (qtySelector) qtySelector.style.display = 'none';
+                        if (addToCartBtn) {
+                            addToCartBtn.disabled = true;
+                            addToCartBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                            const spanLabel = addToCartBtn.querySelector('span:last-child');
+                            if (spanLabel) spanLabel.innerText = 'Own Product';
+                        }
+                        const chatBtn = document.getElementById('chat-with-seller-btn');
+                        if (chatBtn) {
+                            chatBtn.disabled = true;
+                            chatBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                            const spanLabel = chatBtn.querySelector('span:last-child');
+                            if (spanLabel) spanLabel.innerText = 'Own Shop';
+                        }
+                        const remakeBtn = document.getElementById('remake-request-btn');
+                        if (remakeBtn) {
+                            remakeBtn.disabled = true;
+                            remakeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        }
+                        const wishlistBtn = document.getElementById('wishlist-toggle-btn');
+                        if (wishlistBtn) {
+                            wishlistBtn.disabled = true;
+                            wishlistBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        }
+                        
+                        // Insert notice below the button group
+                        const btnContainer = addToCartBtn?.parentElement;
+                        if (btnContainer && !document.getElementById('owner-notice')) {
+                            const notice = document.createElement('p');
+                            notice.id = 'owner-notice';
+                            notice.className = 'text-xs text-on-surface-variant italic text-center mt-2 text-[#14381F] font-semibold';
+                            notice.textContent = 'You cannot buy/wishlist/chat your own product.';
+                            btnContainer.insertAdjacentElement('afterend', notice);
+                        }
+                    }
+                    // ---------------------------------------------------------------------
+
+                    // Track views and clicks
+                    logProductEvent('view');
+                    const ref = document.referrer;
+                    if (ref && (ref.includes(window.location.host) || ref.includes('/buyer/'))) {
+                        logProductEvent('click');
+                    }
+
+                } else {
+                    showErrorState();
+                }
+            } catch (err) {
+                console.error("Failed to load product details:", err);
+                showErrorState();
+            }
+        }
+
+        function updateWishlistButtonUI() {
+            const wishlistIcon = document.getElementById('wishlist-icon');
+            const wishlistBtn = document.getElementById('wishlist-toggle-btn');
+            const isOwner = currentUser && product && product.seller && currentUser.id === product.seller.id;
+            if (isOwner) {
+                wishlistIcon.style.fontVariationSettings = "'FILL' 0";
+                wishlistBtn.className = "absolute top-6 right-6 p-3 bg-[#FFF8E7]/90 backdrop-blur-md rounded-full shadow-md transition-all text-outline opacity-50 cursor-not-allowed focus:outline-none";
+                wishlistBtn.disabled = true;
+                return;
+            }
+            if (isWishlisted) {
+                wishlistIcon.style.fontVariationSettings = "'FILL' 1";
+                wishlistBtn.className = "absolute top-6 right-6 p-3 bg-[#FFF8E7]/90 backdrop-blur-md rounded-full shadow-md hover:scale-105 active:scale-95 transition-all text-red-600 focus:outline-none";
+            } else {
+                wishlistIcon.style.fontVariationSettings = "'FILL' 0";
+                wishlistBtn.className = "absolute top-6 right-6 p-3 bg-[#FFF8E7]/90 backdrop-blur-md rounded-full shadow-md hover:scale-105 active:scale-95 transition-all text-outline hover:text-primary focus:outline-none";
+            }
+        }
+
+        async function handleToggleWishlist() {
+            if (currentUser && product && product.seller && currentUser.id === product.seller.id) {
+                window.Toast?.show("Sellers cannot wishlist their own products", "error");
+                return;
+            }
+            if (!isLoggedIn) {
+                // login check bypassed
+                return;
+            }
+
+            try {
+                if (isWishlisted) {
+                    const res = await apiClient.delete(`/wishlist/${productId}`);
+                    if (res.data && res.data.success) {
+                        isWishlisted = false;
+                        updateWishlistButtonUI();
+                        window.Toast?.show("Removed from wishlist!", "success");
+                    }
+                } else {
+                    const res = await apiClient.post(`/wishlist/${productId}`);
+                    if (res.data && res.data.success) {
+                        isWishlisted = true;
+                        updateWishlistButtonUI();
+                        window.Toast?.show("Added to wishlist!", "success");
+                    }
+                }
+            } catch (err) {
+                console.error("Wishlist error:", err);
+            }
+        }
+
+        function renderReviewsSection() {
+            const list = document.getElementById('reviews-list');
+            const ratingSummary = document.getElementById('reviews-rating-summary');
+            const summaryText = document.getElementById('reviews-summary-text');
+            
+            const reviews = product.recent_reviews || [];
+            
+            const count = Number(product.review_count) || 0;
+            const avg = Number(product.avg_rating);
+            summaryText.innerText = `${count} ${count === 1 ? 'review' : 'reviews'}`;
+
+            if (count > 0 && !isNaN(avg) && avg > 0) {
+                ratingSummary.innerHTML = `
+                    <span class="text-sm font-bold text-on-surface mr-1">${avg.toFixed(1)}</span>
+                    <div class="flex items-center text-amber-500">
+                        ${Array.from({ length: 5 }, (_, i) => `
+                            <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' ${i < Math.round(avg) ? 1 : 0};">star</span>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                ratingSummary.innerHTML = `<span class="text-xs font-medium text-[#14381F] bg-[#14381F]/10 px-2.5 py-1 rounded-full border border-[#14381F]/15">✨ New Artisan Listing</span>`;
+            }
+
+            if (reviews.length === 0) {
+                list.innerHTML = `<p class="text-secondary text-sm italic py-4">No reviews yet for this product. Be the first to share your thoughts!</p>`;
+            } else {
+                list.innerHTML = reviews.map(r => {
+                    const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Recently';
+                    const initials = r.reviewer_name ? r.reviewer_name.charAt(0).toUpperCase() : 'A';
+                    const avatarHtml = r.reviewer_avatar ? 
+                        `<img src="${r.reviewer_avatar}" class="w-10 h-10 rounded-full object-cover border border-sage/20 flex-shrink-0" alt="Reviewer Avatar" />` :
+                        `<div class="w-10 h-10 rounded-full bg-[rgba(20,56,31,0.2)]/20 text-[#14381F] flex items-center justify-center font-bold text-sm flex-shrink-0">${initials}</div>`;
+                    
+                    return `
+                        <div class="bg-[#FFF8E7] p-md rounded-2xl border border-outline-variant/40 space-y-sm animate-fade-in flex gap-md items-start">
+                            ${avatarHtml}
+                            <div class="flex-grow">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <span class="font-semibold text-sm text-primary block">${escapeHtml(r.reviewer_name || 'Anonymous')}</span>
+                                        <span class="text-[10px] text-outline">${dateStr}</span>
+                                    </div>
+                                    <div class="flex items-center text-amber-500">
+                                        ${Array.from({ length: 5 }, (_, i) => `
+                                            <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' ${i < r.rating ? 1 : 0};">star</span>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                <p class="text-secondary text-sm leading-relaxed mt-2">${escapeHtml(r.body || '')}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        async function checkReviewEligibility() {
+            if (!isLoggedIn) {
+                document.getElementById('write-review-container').classList.add('hidden');
+                document.getElementById('review-gating-notice').classList.remove('hidden');
+                return;
+            }
+
+            try {
+                // Fetch user's delivered orders
+                const res = await apiClient.get('/orders', { params: { status: 'Delivered' } });
+                if (res.data && res.data.success) {
+                    let orders = res.data.data || [];
+                    if (orders && !Array.isArray(orders)) {
+                        orders = orders.orders || [];
+                    }
+                    if (!Array.isArray(orders)) {
+                        orders = [];
+                    }
+                    
+                    // Search for order item matching product
+                    for (const order of orders) {
+                        const detailRes = await apiClient.get(`/orders/${order.id}`);
+                        if (detailRes.data && detailRes.data.success) {
+                            const orderDetails = detailRes.data.data;
+                            const hasItem = orderDetails.items?.some(item => String(item.product_id) === String(productId) && !item.is_reviewed);
+                            if (hasItem) {
+                                matchedOrderId = order.id;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (matchedOrderId) {
+                        document.getElementById('write-review-container').classList.remove('hidden');
+                        document.getElementById('review-gating-notice').classList.add('hidden');
+                    } else {
+                        document.getElementById('write-review-container').classList.add('hidden');
+                        document.getElementById('review-gating-notice').classList.remove('hidden');
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to check order history for review gating:", err);
+            }
+        }
+
+        function resetOverflowState() {
+            document.getElementById('add-to-cart-btn')?.classList.remove('hidden');
+            document.getElementById('overflow-container')?.classList.add('hidden');
+        }
+
+        function showOverflowState(msg) {
+            document.getElementById('add-to-cart-btn')?.classList.add('hidden');
+            const container = document.getElementById('overflow-container');
+            if (container) {
+                container.classList.remove('hidden');
+                if (msg) {
+                    document.getElementById('overflow-msg').innerText = msg;
+                }
+            }
+        }
+
+        async function handleChatWithSeller() {
+            if (currentUser && product && product.seller && currentUser.id === product.seller.id) {
+                window.Toast?.show("Sellers cannot start a chat with themselves", "error");
+                return;
+            }
+            if (product && product.holiday_mode_active) return;
+            if (!requireAuth({ type: 'start_chat', productId: Number(productId) })) {
+                return;
+            }
+            const btn = document.getElementById('chat-with-seller-btn');
+            if (!btn) return;
+            btn.disabled = true;
+            btn.querySelector('span:last-child').innerText = 'Starting chat...';
+
+            try {
+                const res = await apiClient.post('/conversations', {
+                    listing_id: Number(productId),
+                    product_type_tag: 'overflow',
+                    quantity: qty,
+                    bypass_intake: true
+                });
+                const convId = res.data.conversation_id;
+                window.location.href = `/buyer/chat.html?conversationId=${convId}`;
+            } catch (e) {
+                console.error("Failed to start chat with seller:", e);
+                window.Toast?.show("Failed to start chat. Please try again.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.querySelector('span:last-child').innerText = 'Chat with Seller';
+            }
+        }
+
+        async function handleAddToCart() {
+            if (currentUser && product && product.seller && currentUser.id === product.seller.id) {
+                window.Toast?.show("Sellers cannot purchase their own products", "error");
+                return;
+            }
+            if (product && product.holiday_mode_active) return;
+            if (isCustomized) {
+                if (!requireAuth({ type: 'start_chat', productId: Number(productId) })) {
+                    return;
+                }
+                const btn = document.getElementById('add-to-cart-btn');
+                btn.disabled = true;
+                btn.querySelector('span:last-child').innerText = 'Starting chat...';
+                try {
+                    const isBulk = product.tags?.includes('bulk') || product.category?.slug === 'bulk-orders';
+                    const res = await apiClient.post('/requests', {
+                        listing_id: Number(productId),
+                        request_type: isBulk ? 'bulk' : 'customization',
+                        quantity: qty
+                    });
+                    const convId = res.data.conversation_id;
+                    window.location.href = `/buyer/chat.html?conversationId=${convId}`;
+                } catch (e) {
+                    console.error("Failed to start chat with seller:", e);
+                    window.Toast?.show("Failed to start chat. Please try again.", "error");
+                } finally {
+                    btn.disabled = false;
+                    btn.querySelector('span:last-child').innerText = 'Request seller';
+                }
+                return;
+            }
+
+            if (isSoldOut) {
+                if (!requireAuth({ type: 'start_chat', productId: Number(productId) })) {
+                    return;
+                }
+                const btn = document.getElementById('add-to-cart-btn');
+                btn.disabled = true;
+                btn.querySelector('span:last-child').innerText = 'Starting chat...';
+                try {
+                    const res = await apiClient.post('/conversations', {
+                        listing_id: Number(productId),
+                        product_type_tag: 'sold_out'
+                    });
+                    const convId = res.data.conversation_id;
+                    window.location.href = `/buyer/chat.html?conversationId=${convId}`;
+                } catch (e) {
+                    console.error("Failed to start chat for sold-out item:", e);
+                    window.Toast?.show("Failed to start chat. Please try again.", "error");
+                } finally {
+                    btn.disabled = false;
+                    btn.querySelector('span:last-child').innerText = 'Chat with Seller';
+                }
+                return;
+            }
+
+            if (!requireAuth({ type: 'add_to_cart', productId: Number(productId), quantity: qty })) {
+                return;
+            }
+
+            const btn = document.getElementById('add-to-cart-btn');
+            btn.disabled = true;
+            btn.querySelector('span:last-child').innerText = 'Checking...';
+
+            try {
+                // Check capacity first
+                const checkRes = await apiClient.post('/capacity/check', { product_id: Number(productId), quantity: qty });
+                if (checkRes.data && checkRes.data.overflow) {
+                    showOverflowState(checkRes.data.message || "Fulfillment capacity exceeded for this date. Would you like to request a reschedule?");
+                    return;
+                }
+
+                btn.querySelector('span:last-child').innerText = 'Adding...';
+                const response = await apiClient.post('/cart/items', { product_id: Number(productId), quantity: qty });
+                if (response.data && response.data.success) {
+                    window.Toast?.show("Added to cart successfully!", "success");
+                    logProductEvent('cart_add');
+                }
+            } catch (e) {
+                console.error("Error adding to cart:", e);
+                window.Toast?.show(e.response?.data?.message || "Failed to add to cart.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.querySelector('span:last-child').innerText = 'Add to Cart';
+            }
+        }
+
+        function setupQuantityControls() {
+            const decreaseBtn = document.getElementById('qty-decrease');
+            const increaseBtn = document.getElementById('qty-increase');
+            const qtyInput = document.getElementById('qty-input');
+
+            decreaseBtn.addEventListener('click', () => {
+                if (qty > 1) {
+                    qty--;
+                    qtyInput.value = qty;
+                    resetOverflowState();
+                }
+            });
+
+            increaseBtn.addEventListener('click', () => {
+                if (qty < maxStock) {
+                    qty++;
+                    qtyInput.value = qty;
+                    resetOverflowState();
+                }
+            });
+
+            qtyInput.addEventListener('change', () => {
+                let val = parseInt(qtyInput.value) || 1;
+                if (val < 1) val = 1;
+                if (val > maxStock) val = maxStock;
+                qty = val;
+                qtyInput.value = qty;
+                resetOverflowState();
+            });
+        }
+
+        function setupReviewForm() {
+            const stars = document.querySelectorAll('.star-btn');
+            const form = document.getElementById('review-form');
+            const bodyInput = document.getElementById('review-body');
+
+            stars.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const rating = parseInt(btn.getAttribute('data-rating'));
+                    selectedRating = rating;
+
+                    // Update UI fill
+                    stars.forEach((b, idx) => {
+                        const icon = b.querySelector('.material-symbols-outlined');
+                        if (idx < rating) {
+                            icon.style.fontVariationSettings = "'FILL' 1";
+                        } else {
+                            icon.style.fontVariationSettings = "'FILL' 0";
+                        }
+                    });
+                });
+
+                btn.addEventListener('mouseenter', () => {
+                    const rating = parseInt(btn.getAttribute('data-rating'));
+                    stars.forEach((b, idx) => {
+                        const icon = b.querySelector('.material-symbols-outlined');
+                        if (idx < rating) {
+                            icon.style.fontVariationSettings = "'FILL' 1";
+                        } else {
+                            icon.style.fontVariationSettings = "'FILL' 0";
+                        }
+                    });
+                });
+            });
+
+            const starContainer = document.getElementById('star-input-container');
+            if (starContainer) {
+                starContainer.addEventListener('mouseleave', () => {
+                    stars.forEach((b, idx) => {
+                        const icon = b.querySelector('.material-symbols-outlined');
+                        if (idx < selectedRating) {
+                            icon.style.fontVariationSettings = "'FILL' 1";
+                        } else {
+                            icon.style.fontVariationSettings = "'FILL' 0";
+                        }
+                    });
+                });
+            }
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                if (selectedRating === 0) {
+                    window.Toast?.show("Please select a star rating", "error");
+                    return;
+                }
+
+                const body = bodyInput.value.trim();
+                try {
+                    const res = await apiClient.post('/reviews', {
+                        product_id: Number(productId),
+                        order_id: matchedOrderId,
+                        rating: selectedRating,
+                        body: body
+                    });
+
+                    if (res.data && res.data.success) {
+                        window.Toast?.show("Review submitted successfully!", "success");
+                        bodyInput.value = '';
+                        selectedRating = 0;
+                        stars.forEach(b => {
+                            b.querySelector('.material-symbols-outlined').style.fontVariationSettings = "'FILL' 0";
+                        });
+                        
+                        // Reload product to show new review
+                        await loadProduct();
+                    }
+                } catch (err) {
+                    console.error("Failed to submit review:", err);
+                }
+            });
+        }
+
+        function showErrorState() {
+            document.getElementById('product-details-container').classList.add('hidden');
+            document.getElementById('reviews-section')?.classList.add('hidden');
+            document.getElementById('recommendations-section')?.classList.add('hidden');
+            document.getElementById('product-error-container').classList.remove('hidden');
+        }
+
+        // -- Phase 4: Contention polling helper ------------------------------------
+        async function pollContention(attemptId) {
+            const overlay = document.getElementById('contention-overlay');
+            const lostBanner = document.getElementById('contention-lost');
+            const addToCartBtn = document.getElementById('add-to-cart-btn');
+
+            overlay?.classList.remove('hidden');
+            if (addToCartBtn) {
+                addToCartBtn.disabled = true;
+                addToCartBtn.querySelector('span:last-child').innerText = 'Checking�';
+            }
+
+            const MAX_POLLS = 12; // 12 � 1500ms = 18s max wait
+            let polls = 0;
+
+            const poll = async () => {
+                polls++;
+                try {
+                    const res = await apiClient.get(`/checkout/contention/${attemptId}`);
+                    const { status, remake_eligible } = res.data?.data || {};
+
+                    if (status === 'won') {
+                        overlay?.classList.add('hidden');
+                        if (addToCartBtn) {
+                            addToCartBtn.disabled = false;
+                            addToCartBtn.querySelector('span:last-child').innerText = 'Add to Cart';
+                        }
+                        window.Toast?.show('Great news! The item is yours. Adding to cart�', 'success');
+                        // Add to cart automatically for the winner
+                        try {
+                            await apiClient.post('/cart/items', { product_id: Number(productId), quantity: qty });
+                            window.Toast?.show('Added to cart!', 'success');
+                        } catch (e) {
+                            window.Toast?.show('Could not add to cart. Please try again.', 'error');
+                        }
+                        return;
+                    }
+
+                    if (status === 'lost') {
+                        overlay?.classList.add('hidden');
+                        lostBanner?.classList.remove('hidden');
+                        if (addToCartBtn) {
+                            addToCartBtn.disabled = false;
+                            addToCartBtn.querySelector('span:last-child').innerText = 'Add to Cart';
+                        }
+                        // Show remake button if eligible
+                        if (remake_eligible) {
+                            document.getElementById('remake-request-btn')?.classList.remove('hidden');
+                        }
+                        return;
+                    }
+
+                    // Still pending
+                    if (polls < MAX_POLLS) {
+                        setTimeout(poll, 1500);
+                    } else {
+                        overlay?.classList.add('hidden');
+                        if (addToCartBtn) {
+                            addToCartBtn.disabled = false;
+                            addToCartBtn.querySelector('span:last-child').innerText = 'Add to Cart';
+                        }
+                        window.Toast?.show('Could not confirm availability. Please try again.', 'error');
+                    }
+                } catch (pollErr) {
+                    console.error('[Contention] Poll error:', pollErr);
+                    overlay?.classList.add('hidden');
+                    if (addToCartBtn) {
+                        addToCartBtn.disabled = false;
+                        addToCartBtn.querySelector('span:last-child').innerText = 'Add to Cart';
+                    }
+                }
+            };
+
+            setTimeout(poll, 1500);
+        }
+
+        async function handleRemakeRequest() {
+            if (currentUser && product && product.seller && currentUser.id === product.seller.id) {
+                window.Toast?.show("Sellers cannot request a remake of their own product", "error");
+                return;
+            }
+            if (!requireAuth({ type: 'start_chat', productId: Number(productId), productTypeTag: 'remake' })) {
+                return;
+            }
+            const btn = document.getElementById('remake-request-btn');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Starting chat�';
+            }
+            try {
+                const res = await apiClient.post('/conversations', {
+                    listing_id: Number(productId),
+                    product_type_tag: 'remake',
+                    bypass_intake: true
+                });
+                const convId = res.data.conversation_id;
+                window.location.href = `/buyer/chat.html?conversationId=${convId}`;
+            } catch (e) {
+                window.Toast?.show('Could not start remake request. Please try again.', 'error');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Request a Custom Remake';
+                }
+            }
+        }
+        // -- Recommendations ("You May Also Like") Helper Functions --------------
+        function isProductOwned(sellerId) {
+            try {
+                const user = JSON.parse(sessionStorage.getItem('tohfa_user'));
+                return user && Number(user.id) === Number(sellerId);
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function getRecommendationCardHtml(p) {
+            const imageUrl = p.image_url || 'https://placehold.co/400x400/f4ede3/516447?text=Handcrafted';
+            const price = `?${(p.price_paise / 100).toLocaleString('en-IN')}`;
+
+            let ribbonHtml = '';
+            if (p.product_tag === 'Sponsored' || p.type === 'sponsored') {
+                ribbonHtml = `
+                    <div class="ribbon-wrapper">
+                        <div class="ribbon-tag ribbon-sponsored">Sponsored</div>
+                    </div>
+                `;
+            } else if (p.is_bestseller && p.listing_type === 'custom') {
+                ribbonHtml = `
+                    <div class="ribbon-wrapper">
+                        <div class="ribbon-tag ribbon-bestseller ribbon-bestseller-double">BEST SELLER</div>
+                        <div class="ribbon-tag ribbon-custom ribbon-custom-double">CUSTOM</div>
+                    </div>
+                `;
+            } else if (p.is_bestseller) {
+                ribbonHtml = `
+                    <div class="ribbon-wrapper">
+                        <div class="ribbon-tag ribbon-bestseller">BEST SELLER</div>
+                    </div>
+                `;
+            } else if (p.listing_type === 'custom') {
+                ribbonHtml = `
+                    <div class="ribbon-wrapper">
+                        <div class="ribbon-tag ribbon-custom">CUSTOM</div>
+                    </div>
+                `;
+            }
+
+            const isOwner = isProductOwned(p.seller_id);
+            const wishlistBtnHtml = isOwner
+                ? `<button class="absolute top-2 right-2 sm:top-3 sm:right-3 p-1 sm:p-1.5 md:p-2 bg-transparent opacity-50 cursor-not-allowed flex items-center justify-center z-10" disabled onclick="event.stopPropagation();">
+                       <span class="material-symbols-outlined text-[14px] sm:text-[16px] md:text-[20px] text-secondary" style="font-variation-settings: 'FILL' 0;">favorite</span>
+                   </button>`
+                : `<button class="absolute top-2 right-2 sm:top-3 sm:right-3 p-1 sm:p-1.5 md:p-2 bg-transparent hover:scale-110 active:scale-95 transition-all duration-200 toggle-rec-wishlist-btn flex items-center justify-center cursor-pointer z-10" data-id="${p.id}" data-wishlisted="${p.is_wishlisted}" onclick="event.stopPropagation();">
+                       <span class="material-symbols-outlined text-[14px] sm:text-[16px] md:text-[20px] transition-all ${p.is_wishlisted ? 'fill-icon text-red-500' : 'text-secondary'}" style="font-variation-settings: 'FILL' ${p.is_wishlisted ? 1 : 0};">favorite</span>
+                   </button>`;
+
+            const isCustomized = p.listing_type === 'custom';
+            const addToCartBtnHtml = isOwner
+                ? `<button class="w-full bg-[#14381F]/20 text-[#605e57] py-2 rounded-lg font-semibold opacity-50 cursor-not-allowed text-sm" disabled onclick="event.stopPropagation();">
+                       Own Product
+                   </button>`
+                : isCustomized
+                    ? `<button class="w-full bg-[#14381F] text-white py-2 rounded-lg font-semibold hover:opacity-90 active:scale-[0.98] transition-all text-sm talk-to-seller-btn" data-id="${p.id}" onclick="event.stopPropagation();">
+                           Talk to Seller
+                       </button>`
+                    : `<button class="w-full bg-[#14381F] text-white py-2 rounded-lg font-semibold hover:opacity-90 active:scale-[0.98] transition-all text-sm add-rec-to-cart-btn" data-id="${p.id}" onclick="event.stopPropagation();">
+                           Add to Cart
+                       </button>`;
+
+            return `
+                <div class="group bg-[#FFF8E7] border border-[#c3c8c1] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative" onclick="window.location.href='product.html?id=${p.id}'">
+                    <div>
+                        <div class="relative aspect-square overflow-hidden rounded-xl bg-surface-container-lowest mb-4">
+                            ${ribbonHtml}
+                            <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="${imageUrl}" alt="${p.name}" loading="lazy">
+                            ${wishlistBtnHtml}
+                        </div>
+                        <div class="flex flex-col mb-4">
+                            <div class="flex items-center justify-between gap-2 mb-1">
+                                <span class="font-bold text-lg text-[#14381F]">${price}</span>
+                                ${parseInt(p.review_count || 0, 10) > 0
+                                    ? `<div class="flex items-center gap-1 text-xs text-[#605e57]">
+                                           <span class="text-[#14381F] font-bold">?</span>
+                                           <span class="font-semibold text-on-surface">${parseFloat(p.avg_rating || 0).toFixed(1)}</span>
+                                           <span>(${parseInt(p.review_count || 0, 10)})</span>
+                                       </div>`
+                                    : `<span class="bg-[#14381F]/10 text-[#14381F] text-[10px] font-mono font-bold px-2 py-0.5 rounded tracking-wider uppercase">New</span>`
+                                }
+                            </div>
+                            <h4 class="font-headline-lg font-bold text-on-surface line-clamp-1 mb-1" style="font-family: 'Playfair Display', serif;">${p.name}</h4>
+                            <span class="text-xs text-[#605e57] hover:underline cursor-pointer" onclick="event.stopPropagation(); window.location.href='/buyer/seller-profile.html?id=${p.seller_id}'">By ${p.seller_name || 'Artisan'}</span>
+                        </div>
+                    </div>
+                    <div class="w-full font-['DM_Sans']">
+                        ${addToCartBtnHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function handleRecommendationTalkToSeller(productId, btn) {
+            const token = sessionStorage.getItem('tohfa_access_token');
+            if (!token) {
+                // login check bypassed
+                return;
+            }
+
+            btn.disabled = true;
+            const originalText = btn.innerText;
+            btn.innerText = 'Starting chat...';
+
+            try {
+                const res = await apiClient.post('/requests', {
+                    listing_id: Number(productId),
+                    request_type: 'customization',
+                    quantity: 1
+                });
+                if (res.data && res.data.success) {
+                    const convId = res.data.conversation_id;
+                    window.location.href = `/buyer/chat.html?conversationId=${convId}`;
+                } else {
+                    throw new Error("Invalid response");
+                }
+            } catch (err) {
+                console.error("Failed to start customization request:", err);
+                window.Toast?.show("Failed to start chat. Please try again.", "error");
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        }
+
+        async function handleRecommendationAddToCart(productId) {
+            if (!requireAuth({ type: 'add_to_cart', productId: Number(productId), quantity: 1 })) {
+                return;
+            }
+
+            try {
+                const res = await apiClient.post('/cart/items', { product_id: Number(productId), quantity: 1 });
+                if (res.data && res.data.success) {
+                    window.Toast?.show("Added to cart successfully!", "success");
+                    try {
+                        let sessionId = localStorage.getItem('tohfa_chat_session_id');
+                        if (!sessionId) {
+                            sessionId = 'session_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+                            localStorage.setItem('tohfa_chat_session_id', sessionId);
+                        }
+                        await apiClient.post(`/products/${productId}/event`, {
+                            event_type: 'cart_add',
+                            session_id: sessionId
+                        });
+                    } catch (err) {
+                        console.error('Failed to log recommendation cart_add:', err);
+                    }
+                }
+            } catch (err) {
+                console.error("Cart error:", err);
+            }
+        }
+
+        async function handleRecommendationToggleWishlist(productId, isWishlisted, btn) {
+            const token = sessionStorage.getItem('tohfa_access_token');
+            if (!token) {
+                // login check bypassed
+                return;
+            }
+
+            try {
+                const iconEl = btn.querySelector('.material-symbols-outlined');
+                if (isWishlisted) {
+                    const res = await apiClient.delete(`/wishlist/${productId}`);
+                    if (res.data && res.data.success) {
+                        btn.setAttribute('data-wishlisted', 'false');
+                        if (iconEl) {
+                            iconEl.classList.remove('fill-icon', 'text-red-500');
+                            iconEl.classList.add('text-secondary');
+                            iconEl.style.fontVariationSettings = "'FILL' 0";
+                        }
+                        window.Toast?.show("Removed from wishlist!", "success");
+                    }
+                } else {
+                    const res = await apiClient.post(`/wishlist/${productId}`);
+                    if (res.data && res.data.success) {
+                        btn.setAttribute('data-wishlisted', 'true');
+                        if (iconEl) {
+                            iconEl.classList.add('fill-icon', 'text-red-500');
+                            iconEl.classList.remove('text-secondary');
+                            iconEl.style.fontVariationSettings = "'FILL' 1";
+                        }
+                        window.Toast?.show("Added to wishlist!", "success");
+                    }
+                }
+            } catch (err) {
+                console.error("Wishlist error:", err);
+            }
+        }
+
+        async function loadRecommendations() {
+            const section = document.getElementById('recommendations-section');
+            const grid = document.getElementById('recommendations-grid');
+            if (!section || !grid || !productId) return;
+
+            section.classList.remove('hidden');
+            grid.innerHTML = `
+                <div class="col-span-full flex flex-col items-center justify-center py-20">
+                    <div class="relative w-10 h-10">
+                        <div class="absolute inset-0 border-4 border-primary/10 rounded-full"></div>
+                        <div class="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <p class="mt-4 text-outline text-sm italic">Gathering recommendations...</p>
+                </div>
+            `;
+
+            try {
+                const res = await apiClient.get(`/products/${productId}/recommendations`);
+                if (res.data && res.data.success) {
+                    const products = res.data.data || [];
+                    if (products.length === 0) {
+                        section.classList.add('hidden');
+                        return;
+                    }
+
+                    grid.innerHTML = products.map(p => getRecommendationCardHtml(p)).join('');
+
+                    grid.querySelectorAll('.add-rec-to-cart-btn').forEach(btn => {
+                        btn.addEventListener('click', async (e) => {
+                            e.stopPropagation();
+                            const id = btn.getAttribute('data-id');
+                            await handleRecommendationAddToCart(id);
+                        });
+                    });
+
+                    grid.querySelectorAll('.talk-to-seller-btn').forEach(btn => {
+                        btn.addEventListener('click', async (e) => {
+                            e.stopPropagation();
+                            const id = btn.getAttribute('data-id');
+                            await handleRecommendationTalkToSeller(id, btn);
+                        });
+                    });
+
+                    grid.querySelectorAll('.toggle-rec-wishlist-btn').forEach(btn => {
+                        btn.addEventListener('click', async (e) => {
+                            e.stopPropagation();
+                            const id = btn.getAttribute('data-id');
+                            const wishlisted = btn.getAttribute('data-wishlisted') === 'true';
+                            await handleRecommendationToggleWishlist(id, wishlisted, btn);
+                        });
+                    });
+                } else {
+                    section.classList.add('hidden');
+                }
+            } catch (err) {
+                console.error("Failed to load recommendations:", err);
+                section.classList.add('hidden');
+            }
+        }
+        // -------------------------------------------------------------------------
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await checkAuthState();
+            await loadProduct();
+            if (product) {
+                await loadRecommendations();
+            }
+            setupQuantityControls();
+            setupReviewForm();
+
+            document.getElementById('wishlist-toggle-btn')?.addEventListener('click', handleToggleWishlist);
+            document.getElementById('add-to-cart-btn')?.addEventListener('click', handleAddToCart);
+            document.getElementById('chat-with-seller-btn')?.addEventListener('click', handleChatWithSeller);
+            document.getElementById('remake-request-btn')?.addEventListener('click', handleRemakeRequest);
+
+            document.getElementById('pincode-check-btn')?.addEventListener('click', () => {
+                const input = document.getElementById('pincode-check-input');
+                const result = document.getElementById('pincode-check-result');
+                const code = input?.value?.trim() || '';
+                if (!/^\d{6}$/.test(code)) {
+                    if (result) result.innerHTML = '<span class="text-error font-medium">Please enter a valid 6-digit delivery pincode.</span>';
+                    return;
+                }
+                const prepDays = Number(product?.preparation_days || product?.crafting_days || 2);
+                const transitDays = 3;
+                const totalDays = prepDays + transitDays;
+                const deliveryDate = new Date();
+                deliveryDate.setDate(deliveryDate.getDate() + totalDays);
+                const formattedDate = deliveryDate.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' });
+                if (result) {
+                    result.innerHTML = `<span class="text-primary font-semibold">Estimated Delivery by ${formattedDate} (Includes ${prepDays} days artisan crafting lead time)</span>`;
+                }
+            });
+
+            // -- Phase 4: Check URL for returned contention attempt_id (e.g. from checkout redirect)
+            const urlParams = new URLSearchParams(window.location.search);
+            const contestAttemptId = urlParams.get('contention_attempt');
+            if (contestAttemptId) {
+                pollContention(parseInt(contestAttemptId));
+            }
+        });
+    </script>
+
+
+<script>
+async function handleFooterSellerLink(e) {
+  if (e) e.preventDefault();
+  const isMobile = window.innerWidth < 768;
+  const token = sessionStorage.getItem('tohfa_access_token');
+  if (!token) {
+    sessionStorage.setItem('tohfa_redirect_seller', 'true');
+    sessionStorage.setItem('tohfa_return_to', window.location.pathname + window.location.search); window.location.href = '/auth/login.html';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/profile/me', {
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success) {
+        const role = data.data.role;
+        if (role === 'seller') {
+          window.location.href = isMobile ? '/mobile-seller/dashboard.html' : '/seller/dashboard.html';
+          return;
+        }
+      }
+    }
+  } catch(err) {
+    console.error("Error checking seller status:", err);
+  }
+  
+  window.location.href = isMobile ? '/mobile-buyer/become-seller.html' : '/buyer/become-seller.html';
+}
+
+// Check if we need to auto-redirect back to dashboard/signup after login redirect
+document.addEventListener("DOMContentLoaded", () => {
+  const needsRedirect = sessionStorage.getItem('tohfa_redirect_seller');
+  if (needsRedirect === 'true') {
+    sessionStorage.removeItem('tohfa_redirect_seller');
+    const token = sessionStorage.getItem('tohfa_access_token');
+    if (token) {
+      handleFooterSellerLink();
+    }
+  }
+});
+
+window.openContactModal = function(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const modal = document.getElementById('tohfa-contact-modal');
+  if (modal) {
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeContactModal = function() {
+  const modal = document.getElementById('tohfa-contact-modal');
+  if (modal) {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+};
+
+if (!window.hasContactModalEscListener) {
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      window.closeContactModal();
+    }
+  });
+  window.hasContactModalEscListener = true;
+}
+
+window.openRefundsModal = function(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const modal = document.getElementById('tohfa-refunds-modal');
+  if (modal) {
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeRefundsModal = function() {
+  const modal = document.getElementById('tohfa-refunds-modal');
+  if (modal) {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+};
+
+if (!window.hasRefundsModalEscListener) {
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      window.closeRefundsModal();
+    }
+  });
+  window.hasRefundsModalEscListener = true;
+}
+</script>
+</body>
+</html>

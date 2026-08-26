@@ -1,0 +1,346 @@
+﻿<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+<script type="module" src="/src/components/AdminSidebar.js"></script>
+<script type="module" src="/src/components/ReportWidget.js" defer></script>
+<script type="module" src="/src/components/ProtectedRoute.js"></script>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Tohfa Admin - Reports Inbox</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+    <style>
+    .watermark-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0.05;
+      background-image: url('/img/textures/pinstripe.png');
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+    }
+  </style>
+</head>
+<body class="bg-[#FFF8E7] text-text-default font-body-md min-h-screen overflow-x-hidden">
+  <div class="watermark-overlay"></div>
+
+  <!-- Shared Sidebar Component Injected Dynamically -->
+  <aside></aside>
+
+  <!-- Top Navigation Header -->
+  <header class="fixed top-0 right-0 w-[calc(100%-256px)] h-[60px] bg-[#FFF8E7] border-b border-outline-variant flex justify-between items-center px-8 z-40">
+    <h2 class="font-headline-md text-headline-md italic text-primary">Reports Inbox</h2>
+    <div class="flex items-center gap-6">
+      <button id="logout-btn" class="text-on-surface-variant hover:text-primary transition-colors text-[14px] font-label-btn">Logout</button>
+      <div class="h-8 w-8 rounded-full bg-secondary-container flex items-center justify-center text-primary font-bold text-xs">TA</div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="ml-64 pt-[60px] p-8 max-w-[1200px] mx-auto min-h-screen">
+    <!-- Header Section -->
+    <section class="mb-8 mt-4">
+      <h1 class="font-headline-lg text-headline-lg text-primary leading-tight">User Reports</h1>
+      <p class="font-serif italic text-text-muted">Review, investigate, and reply to user feedback and issues</p>
+    </section>
+
+    <!-- Filter Chips -->
+    <div class="flex items-center gap-2 mb-8" id="status-chips">
+      <button class="px-5 py-1.5 rounded-full bg-[#14381F] text-white font-label-btn text-xs font-bold tracking-wide shadow-sm" data-status="">All Reports</button>
+      <button class="px-5 py-1.5 rounded-full bg-[#FFF8E7] border border-[rgba(20,56,31,0.2)]/40 text-[#49663f] font-label-btn text-xs font-bold tracking-wide hover:bg-surface-container transition-colors" data-status="open">Open</button>
+      <button class="px-5 py-1.5 rounded-full bg-[#FFF8E7] border border-[rgba(20,56,31,0.2)]/40 text-[#49663f] font-label-btn text-xs font-bold tracking-wide hover:bg-surface-container transition-colors" data-status="in-review">In Review</button>
+      <button class="px-5 py-1.5 rounded-full bg-[#FFF8E7] border border-[rgba(20,56,31,0.2)]/40 text-[#49663f] font-label-btn text-xs font-bold tracking-wide hover:bg-surface-container transition-colors" data-status="resolved">Resolved</button>
+    </div>
+
+    <!-- Main Grid (List + Detail Pane) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <!-- Reports List (5/12 width) -->
+      <div class="lg:col-span-5 bg-[#FFF8E7] rounded-xl border border-outline-variant/30 overflow-hidden shadow-sm flex flex-col h-[600px]">
+        <div class="p-4 border-b border-outline-variant/20 bg-gray-50 flex items-center justify-between">
+          <span class="text-xs font-bold text-text-muted uppercase tracking-wider">Reports Queue</span>
+          <span class="text-[11px] text-primary font-semibold" id="reports-count">0 items</span>
+        </div>
+        <div class="flex-1 overflow-y-auto divide-y divide-outline-variant/10" id="reports-list">
+          <div class="text-center text-text-muted py-12 text-sm">Loading reports queue...</div>
+        </div>
+      </div>
+
+      <!-- Detail Pane (7/12 width) -->
+      <div class="lg:col-span-7 bg-[#FFF8E7] rounded-xl border border-outline-variant/30 overflow-hidden shadow-sm flex flex-col h-[600px] justify-between" id="report-detail-pane">
+        <div class="flex-1 flex flex-col items-center justify-center p-8 text-center text-text-muted" id="placeholder-detail">
+          <span class="material-symbols-outlined text-5xl text-text-faint mb-4">inbox</span>
+          <h4 class="font-headline-md text-base text-primary italic">No Report Selected</h4>
+          <p class="text-xs max-w-[280px] mx-auto mt-1 leading-relaxed">Select a user report from the list on the left to review details, view related items, and reply.</p>
+        </div>
+
+        <div class="hidden flex-1 flex flex-col justify-between overflow-y-auto" id="actual-detail">
+          <div class="p-8 space-y-6">
+            <!-- Header section -->
+            <div class="flex justify-between items-start gap-4">
+              <div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2" id="detail-type-badge">buyer</span>
+                <h2 class="font-headline-md text-xl text-primary leading-snug" id="detail-subject">Subject of the Report</h2>
+                <p class="text-xs text-text-muted mt-1">Submitted on <span class="font-semibold text-text-default" id="detail-date">—</span></p>
+              </div>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border" id="detail-status-badge">open</span>
+            </div>
+
+            <!-- Reporter Details -->
+            <div class="grid grid-cols-2 gap-4 bg-[#FFF8E7]/50 border border-outline-variant/20 p-4 rounded-xl text-xs">
+              <div>
+                <span class="font-bold text-[#14381F] uppercase tracking-wider block mb-1">Reporter</span>
+                <span id="detail-reporter-name" class="font-medium text-text-default">Anonymous</span>
+              </div>
+              <div>
+                <span class="font-bold text-[#14381F] uppercase tracking-wider block mb-1">Related Entity</span>
+                <span id="detail-entity-link" class="font-medium text-primary hover:underline cursor-pointer">None</span>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="space-y-2">
+              <span class="text-xs font-bold text-text-muted uppercase tracking-wider block">Description of Issue</span>
+              <p class="text-sm text-text-default leading-relaxed bg-gray-50 border border-outline-variant/10 p-4 rounded-xl whitespace-pre-wrap font-sans" id="detail-description"></p>
+            </div>
+
+            <!-- Admin Action Box -->
+            <div class="space-y-4 pt-4 border-t border-outline-variant/10">
+              <div class="flex items-center gap-4">
+                <div class="w-1/2">
+                  <label class="block text-xs font-bold text-[#14381F] uppercase tracking-wider mb-2">Update Status</label>
+                  <select id="update-status" class="w-full px-4 py-2 border border-outline-variant/40 rounded-xl text-xs bg-[#FFF8E7] focus:outline-none focus:border-[#14381F]">
+                    <option value="open">Open</option>
+                    <option value="in-review">In Review</option>
+                    <option value="resolved">Resolved</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-[#14381F] uppercase tracking-wider mb-2">Admin Reply / Resolution Notes</label>
+                <textarea id="admin-reply-text" rows="4" placeholder="Write internal notes or response to user..." class="w-full px-4 py-2 border border-outline-variant/40 rounded-xl text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none resize-none bg-[#FFF8E7]/20"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-6 bg-gray-50 border-t border-outline-variant/10 flex items-center justify-end gap-3 shrink-0">
+            <button id="btn-save-report" class="px-6 py-2.5 bg-[#14381F] hover:bg-[#2a4d38] text-white rounded-full text-xs font-bold transition-all shadow-sm">
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import adminApiClient from '/src/utils/adminApiClient.js';
+
+    let reports = [];
+    let currentReport = null;
+    let selectedStatusFilter = '';
+
+    async function loadReports() {
+      try {
+        let url = '/admin/reports';
+        if (selectedStatusFilter) {
+          url += `?status=${selectedStatusFilter}`;
+        }
+        const res = await adminApiClient.get(url);
+        if (res.data && res.data.success) {
+          reports = res.data.data;
+          renderReportsList();
+          document.getElementById('reports-count').textContent = `${reports.length} items`;
+        }
+      } catch (err) {
+        console.error('Failed to load reports:', err);
+      }
+    }
+
+    function renderReportsList() {
+      const listEl = document.getElementById('reports-list');
+      listEl.innerHTML = '';
+      if (reports.length > 0) {
+        reports.forEach(r => {
+          const div = document.createElement('div');
+          const isSelected = currentReport && currentReport.id === r.id;
+          div.className = `p-4 cursor-pointer transition-all ${isSelected ? 'bg-[#FFF8E7] border-l-4 border-l-[#14381F]' : 'hover:bg-gray-50/70 border-l-4 border-l-transparent'}`;
+          div.addEventListener('click', () => selectReport(r));
+
+          const dateStr = new Date(r.created_at.replace(' ', 'T')).toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric'
+          });
+
+          const typeColors = {
+            buyer: 'bg-[#FFF8E7] text-[#14381F] border-[#14381F]/20',
+            seller: 'bg-[#FFF8E7] text-[#7B5EA7] border-[#7B5EA7]/20',
+            anonymous: 'bg-gray-100 text-gray-600 border-gray-300/20'
+          };
+          const typeBadge = typeColors[r.reporter_type] || typeColors.anonymous;
+
+          const statusColors = {
+            open: 'bg-[#FFF8E7] text-[#14381F] border-[#14381F]/20',
+            'in-review': 'bg-[#FFF8E7] text-[#14381F] border-[#14381F]/20',
+            resolved: 'bg-[#f0f7ee] text-[#14381F] border-[rgba(20,56,31,0.2)]/20'
+          };
+          const statusBadge = statusColors[r.status] || 'bg-gray-100 text-gray-500';
+
+          div.innerHTML = `
+            <div class="flex justify-between items-start mb-1.5 gap-2">
+              <span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase border ${typeBadge}">${r.reporter_type}</span>
+              <span class="text-[11px] font-data-meta text-text-faint">${dateStr}</span>
+            </div>
+            <h4 class="text-sm font-semibold text-primary truncate leading-snug">${r.subject}</h4>
+            <div class="flex justify-between items-center mt-2.5">
+              <span class="text-[10px] text-text-muted uppercase font-bold tracking-wider truncate max-w-[140px]">
+                ${r.related_to_type !== 'other' ? `${r.related_to_type}: ${r.related_to_id || 'N/A'}` : 'Feedback'}
+              </span>
+              <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${statusBadge}">${r.status}</span>
+            </div>
+          `;
+          listEl.appendChild(div);
+        });
+      } else {
+        listEl.innerHTML = `<div class="text-center text-text-muted py-12 text-sm">No reports matching filter</div>`;
+      }
+    }
+
+    function selectReport(r) {
+      currentReport = r;
+      renderReportsList(); // Refresh list selection borders
+
+      document.getElementById('placeholder-detail').classList.add('hidden');
+      const detail = document.getElementById('actual-detail');
+      detail.classList.remove('hidden');
+
+      // Populate details
+      document.getElementById('detail-subject').textContent = r.subject;
+      document.getElementById('detail-description').textContent = r.description;
+      document.getElementById('detail-reporter-name').textContent = r.reporter_name || 'Anonymous (Guest)';
+      
+      const dateStr = new Date(r.created_at.replace(' ', 'T')).toLocaleString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      document.getElementById('detail-date').textContent = dateStr;
+
+      // Status dropdown setting
+      document.getElementById('update-status').value = r.status;
+      document.getElementById('admin-reply-text').value = r.admin_reply || '';
+
+      // Set Up Entity Link click redirection
+      const linkEl = document.getElementById('detail-entity-link');
+      if (r.related_to_type === 'order' && r.related_to_id) {
+        linkEl.textContent = `Order ${r.related_to_id}`;
+        linkEl.className = 'font-bold text-primary hover:underline cursor-pointer';
+        linkEl.onclick = () => window.location.href = `/admin/order-detail.html?id=${r.related_to_id}`;
+      } else if (r.related_to_type === 'seller' && r.related_to_id) {
+        linkEl.textContent = `Seller ID: ${r.related_to_id}`;
+        linkEl.className = 'font-bold text-primary hover:underline cursor-pointer';
+        linkEl.onclick = () => window.location.href = `/admin/seller-detail.html?id=${r.related_to_id}`;
+      } else if (r.related_to_type === 'product' && r.related_to_id) {
+        linkEl.textContent = `Product ID: ${r.related_to_id}`;
+        linkEl.className = 'font-bold text-primary hover:underline cursor-pointer';
+        linkEl.onclick = () => window.location.href = `/admin/products.html?search=${encodeURIComponent(r.related_to_id)}`;
+      } else {
+        linkEl.textContent = 'General Feedback';
+        linkEl.className = 'font-medium text-text-muted';
+        linkEl.onclick = null;
+      }
+
+      // Format badges
+      const typeColors = {
+        buyer: 'bg-[#FFF8E7] text-[#14381F] border-[#14381F]/20',
+        seller: 'bg-[#FFF8E7] text-[#7B5EA7] border-[#7B5EA7]/20',
+        anonymous: 'bg-gray-100 text-gray-600 border-gray-300/20'
+      };
+      const badgeEl = document.getElementById('detail-type-badge');
+      badgeEl.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2 border ${typeColors[r.reporter_type] || typeColors.anonymous}`;
+      badgeEl.textContent = r.reporter_type;
+
+      const statusColors = {
+        open: 'bg-[#FFF8E7] text-[#14381F] border-[#14381F]/20',
+        'in-review': 'bg-[#FFF8E7] text-[#14381F] border-[#14381F]/20',
+        resolved: 'bg-[#f0f7ee] text-[#14381F] border-[rgba(20,56,31,0.2)]/20'
+      };
+      const statusBadge = document.getElementById('detail-status-badge');
+      statusBadge.className = `inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${statusColors[r.status] || 'bg-gray-100 text-gray-500'}`;
+      statusBadge.textContent = r.status;
+    }
+
+    // Save Resolution / Status Changes
+    document.getElementById('btn-save-report').addEventListener('click', async () => {
+      if (!currentReport) return;
+      const saveBtn = document.getElementById('btn-save-report');
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = 'Saving...';
+
+      const newStatus = document.getElementById('update-status').value;
+      const reply = document.getElementById('admin-reply-text').value;
+
+      try {
+        const res = await adminApiClient.patch(`/admin/reports/${currentReport.id}`, {
+          status: newStatus,
+          admin_reply: reply
+        });
+        if (res.data && res.data.success) {
+          alert('Report updated successfully!');
+          // Refresh data
+          await loadReports();
+          // Keep current report open
+          const updated = reports.find(item => item.id === currentReport.id);
+          if (updated) selectReport(updated);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to save changes.');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = 'Save Changes';
+      }
+    });
+
+    // Handle filter chips
+    const chips = document.getElementById('status-chips').querySelectorAll('button');
+    chips.forEach(c => {
+      c.addEventListener('click', () => {
+        chips.forEach(btn => {
+          btn.className = "px-5 py-1.5 rounded-full bg-[#FFF8E7] border border-[rgba(20,56,31,0.2)]/40 text-[#49663f] font-label-btn text-xs font-bold tracking-wide hover:bg-surface-container transition-colors";
+        });
+        c.className = "px-5 py-1.5 rounded-full bg-[#14381F] text-white font-label-btn text-xs font-bold tracking-wide shadow-sm";
+        selectedStatusFilter = c.getAttribute('data-status');
+        
+        // Deselect current detail
+        currentReport = null;
+        document.getElementById('placeholder-detail').classList.remove('hidden');
+        document.getElementById('actual-detail').classList.add('hidden');
+
+        loadReports();
+      });
+    });
+
+    // Logout Action
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      sessionStorage.removeItem('tohfa_admin_token');
+      // admin login check bypassed
+    });
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', loadReports);
+  </script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!-- File: frontend/src/admin/master-admin.html | Role: Master Admin Privileges & Credentials -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Master Admin | Tohfa Admin</title>
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <link rel="stylesheet" href="../styles/reset.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/animations.css">
+  <style>
+    .admin-layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+    .admin-main { padding: var(--space-8); background: var(--color-background); }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar" id="adminSidebar"></aside>
+
+    <main class="admin-main">
+      <div style="max-width: 600px;">
+        <h1 class="text-display" style="font-size:var(--text-2xl); color:var(--color-primary); margin-bottom:var(--space-1);">Master Admin Controls</h1>
+        <p class="text-small" style="color:var(--color-text-muted); margin-bottom:var(--space-6);">Manage executive platform access and administrator credentials</p>
+
+        <div class="card" style="padding:var(--space-6); margin-bottom:var(--space-6);">
+          <h3 class="text-heading-2" style="font-size:var(--text-md); margin-bottom:var(--space-4);">Grant Administrator Role</h3>
+          <form id="grantAdminForm" class="flex gap-2">
+            <input type="email" name="email" class="form-input" placeholder="user@thetohfa.in" required>
+            <button type="submit" class="btn btn-primary">Grant Admin Access</button>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+  <script type="module">
+    import { api } from '../js/api.js';
+    import { initAdminShell } from '../js/adminLayout.js';
+    import { requireAuth, requireRole } from '../js/auth.js';
+    import { showToast } from '../js/utils.js';
+
+    if (requireAuth() && requireRole('admin')) {
+      initAdminShell({ activeTab: 'dashboard' });
+    }
+
+    document.getElementById('grantAdminForm').onsubmit = (e) => {
+      e.preventDefault();
+      showToast('Admin privilege granted.', 'success');
+      e.target.reset();
+    };
+  </script>
+</body>
+</html>

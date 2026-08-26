@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html class="light scroll-smooth" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Terms & Conditions | Tohfa</title>
+  <meta name="description" content="Tohfa terms and conditions for buyers and sellers of authentic handcrafted artisanal goods."/>
+  
+  <script type="module" src="/src/components/ReportWidget.js" defer></script>
+  <script type="module" src="/src/components/ProtectedRoute.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,600;0,6..96,700;1,6..96,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  
+  <link rel="stylesheet" href="/src/tailwind.css">
+  <link rel="stylesheet" href="/src/responsive.css">
+
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 350, 'GRAD' 0, 'opsz' 24;
+    }
+    .legal-content h2 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.65rem;
+      color: #14381F;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(40, 92, 58, 0.12);
+    }
+    .legal-content h2:first-of-type {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+    .legal-content p {
+      font-size: 0.875rem;
+      line-height: 1.75;
+      color: rgba(28, 28, 26, 0.85);
+      margin-bottom: 1rem;
+    }
+    .legal-content ul {
+      list-style-type: disc;
+      padding-left: 1.5rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.875rem;
+      color: rgba(28, 28, 26, 0.85);
+      line-height: 1.7;
+    }
+    .legal-content li {
+      margin-bottom: 0.35rem;
+    }
+    .tab-btn.active {
+      background-color: #14381F;
+      color: #FFF8E7;
+      border-color: #14381F;
+      box-shadow: 0 2px 8px rgba(20, 56, 31, 0.18);
+    }
+  </style>
+</head>
+
+<body class="bg-[#FFF8E7] text-[#1C1C1A] min-h-screen font-['DM_Sans'] flex flex-col justify-between antialiased selection:bg-[#DCE6D8] selection:text-[#14381F]">
+
+  <!-- Top Navigation Bar (LOCKED) -->
+  <header
+    class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-4 md:px-8 lg:px-12 h-16 md:h-20 transition-colors"
+    style="background-color: #273328; background-image: url('/img/taskbar-texture.png'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
+  >
+    <!-- Brand Logo -->
+    <div class="flex items-center flex-1">
+      <a
+        href="/buyer/home.html"
+        class="select-none"
+        style="font-family: 'Playfair Display', serif; font-size: clamp(24px, 4vw, 32px); font-style: italic; color: #FAF6EE; text-decoration: none;"
+      >
+        Tohfa<span style="color: #FAF6EE; opacity: 0.7;">.</span>
+      </a>
+    </div>
+
+    <!-- Desktop Navigation Links -->
+    <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+      <a
+        href="/buyer/home.html"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      >
+        <span class="material-symbols-outlined text-[20px]">home</span>
+        <span>Home</span>
+      </a>
+      <a
+        href="/buyer/categories.html"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      >
+        <span class="material-symbols-outlined text-[20px]">category</span>
+        <span>Category</span>
+      </a>
+      <a
+        href="/buyer/zip-gift.html"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      >
+        <span class="material-symbols-outlined text-[20px]">bolt</span>
+        <span>ZipGift</span>
+      </a>
+      <a
+        href="/buyer/profile.html"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      >
+        <span class="material-symbols-outlined text-[20px]">person</span>
+        <span>Profile</span>
+      </a>
+    </nav>
+
+    <!-- Right side items -->
+    <div class="flex items-center justify-end flex-1 gap-1 sm:gap-2">
+      <a
+        href="/buyer/search.html?focus=true"
+        id="header-search-btn"
+        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+        title="Search"
+      >
+        <span class="material-symbols-outlined text-[22px]">search</span>
+      </a>
+
+      <a
+        href="/buyer/wishlist.html"
+        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+        title="Wishlist"
+      >
+        <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+        <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+      </a>
+
+      <a
+        href="/buyer/cart.html"
+        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+        title="Shopping Cart"
+      >
+        <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
+        <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+      </a>
+
+      <a
+        href="/buyer/notifications.html"
+        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+        title="Notifications"
+      >
+        <span class="material-symbols-outlined text-[22px]">notifications</span>
+        <span id="nav-notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
+      </a>
+
+      <div id="auth-buttons-container" class="flex items-center gap-2 ml-2 md:ml-4">
+        <a href="/auth/login.html" class="text-sm font-semibold text-[#FAF6EE] hover:text-white hover:underline no-underline" style="font-family: 'DM Sans', sans-serif;">Login</a>
+        <a href="/auth/signup-buyer.html" class="text-[#14381F] text-sm font-semibold px-3.5 py-1.5 rounded-lg bg-[#FAF6EE] hover:bg-white transition-all no-underline shadow-sm" style="font-family: 'DM Sans', sans-serif;">Sign Up</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Header -->
+  <section class="pt-12 pb-8 px-4 md:px-8 max-w-4xl mx-auto text-center">
+    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#DCE6D8] text-[#14381F] text-xs font-semibold tracking-wider uppercase mb-3 font-mono">
+      <span>Legal & Platform Governance</span>
+    </div>
+    <h1 class="text-3xl sm:text-4xl md:text-5xl font-normal text-[#14381F] tracking-tight" style="font-family: 'Cormorant Garamond', Georgia, serif;">
+      Terms & Conditions
+    </h1>
+    <p class="text-xs sm:text-sm text-[#587A5B] mt-2 font-mono">Last Updated: August 2026 · Effective Immediately</p>
+  </section>
+
+  <!-- Tab Switcher (Buyer vs Seller) -->
+  <section class="max-w-4xl mx-auto px-4 mb-8 flex justify-center">
+    <div class="inline-flex bg-white/80 p-1.5 rounded-full border border-[#285C3A]/20 shadow-xs">
+      <button id="btn-buyer-terms" onclick="switchTerms('buyer')" class="tab-btn active px-6 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all">
+        Buyer Terms
+      </button>
+      <button id="btn-seller-terms" onclick="switchTerms('seller')" class="tab-btn px-6 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all text-[#14381F] hover:bg-[#FAF6EE]">
+        Seller Terms
+      </button>
+    </div>
+  </section>
+
+  <!-- Legal Body Content -->
+  <main class="max-w-4xl mx-auto px-4 md:px-8 pb-16 w-full flex-grow">
+    
+    <div class="bg-white border border-[#285C3A]/15 rounded-3xl p-6 md:p-12 shadow-sm legal-content">
+      
+      <!-- BUYER TERMS -->
+      <div id="terms-buyer-view" class="space-y-6">
+        
+        <section>
+          <h2>1. Introduction & Agreement to Terms</h2>
+          <p>
+            Welcome to Tohfa (the "Platform", "we", "us", or "our"). By browsing, accessing, registering, or purchasing products on Tohfa, you ("Buyer", "User", "Patron") agree to be bound by these Terms and Conditions and our Privacy Policy.
+          </p>
+          <p>
+            Tohfa operates an artisanal marketplace connecting independent Indian craftspeople, studios, and heritage master artisans with conscious patrons.
+          </p>
+        </section>
+
+        <section>
+          <h2>2. Authentic Handcrafted Goods & Natural Variations</h2>
+          <p>
+            Every product listed on Tohfa is handmade by individual artisans rather than mass-produced in automated factories. You acknowledge and appreciate that:
+          </p>
+          <ul>
+            <li>Subtle variations in glaze color, hand-embroidery alignment, wood grain, clay texture, or mineral dyes are hallmarks of authentic Indian handcrafting and do not constitute defects.</li>
+            <li>Photographs are representative of artisan works; exact natural textures may differ slightly between batches.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>3. Customisation & Bespoke Orders</h2>
+          <p>
+            Many Tohfa artisans accept personalized engravings, tailored color palettes, or custom dimension orders:
+          </p>
+          <ul>
+            <li><strong>Accuracy:</strong> Buyers are solely responsible for ensuring names, dates, text spellings, and uploaded reference images are accurate prior to order submission.</li>
+            <li><strong>Non-cancellable once crafted:</strong> Because bespoke items are made uniquely to your specifications, customized orders cannot be cancelled or returned once the artisan begins the crafting cycle.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>4. Pricing, Payments & Taxes</h2>
+          <p>
+            All prices displayed on Tohfa are in Indian National Rupees (₹) and are inclusive of applicable GST unless explicitly stated otherwise.
+          </p>
+          <ul>
+            <li>Payments are processed securely via RBI-compliant gateway partners (including Razorpay, UPI, Net Banking, and Debit/Credit Cards).</li>
+            <li>Tohfa does not store sensitive card PINs or CVV numbers on its servers.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>5. Shipping, Logistics & Delivery</h2>
+          <p>
+            Orders are fulfilled via verified courier partners across all serviceable pincodes in India:
+          </p>
+          <ul>
+            <li><strong>Dispatch Times:</strong> Ready items dispatch within 2–4 business days. Custom crafted creations follow the maker's turnaround timeline (typically 7–12 business days).</li>
+            <li><strong>Delivery Tracking:</strong> Live dispatch and tracking updates are provided via email, SMS, and your Profile Orders tab.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>6. Returns, Defect Claims & Refund Policy</h2>
+          <p>
+            We stand behind the integrity of our artisan community:
+          </p>
+          <ul>
+            <li><strong>Damaged / Incorrect Goods:</strong> If your parcel arrives damaged in transit or differs fundamentally from your order, notify our concierge within <strong>48 hours</strong> of delivery with photographic proof for an immediate replacement or full refund.</li>
+            <li><strong>Refund Processing:</strong> Approved refunds are credited back to your original source payment method within 5–7 banking days.</li>
+          </ul>
+        </section>
+
+      </div>
+
+      <!-- SELLER TERMS -->
+      <div id="terms-seller-view" class="hidden space-y-6">
+        
+        <section>
+          <h2>1. Merchant Onboarding & Authenticity Standard</h2>
+          <p>
+            Artisans, studios, and GI craft collectives selling on Tohfa ("Seller", "Maker", "Artisan") agree to adhere to authentic Indian craftsmanship standards.
+          </p>
+          <ul>
+            <li>No factory mass-produced plastic replicas or unauthorized copyrighted counterfeit items may be listed.</li>
+            <li>Sellers represent and warrant that products listed are handmade, hand-finished, or ethically sourced.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>2. Listing & Commission Structure</h2>
+          <p>
+            Joining Tohfa has zero upfront listing fee. Tohfa retains a nominal agreed marketplace commission on successfully completed and delivered orders to support logistics, payment gateways, and patron marketing.
+          </p>
+        </section>
+
+        <section>
+          <h2>3. Payouts & Settlement Schedule</h2>
+          <p>
+            Artisan earnings are settled via automated bank transfer (NEFT/IMPS) 7 calendar days after order delivery confirmation, allowing for standard patron inspection and satisfaction.
+          </p>
+        </section>
+
+        <section>
+          <h2>4. Packaging & Fulfillment Standards</h2>
+          <p>
+            Sellers agree to package items securely in eco-friendly packaging materials conforming to Tohfa presentation guidelines, ensuring delicate ceramics, textiles, and brassware arrive safely.
+          </p>
+        </section>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Shared Footer -->
+  <div id="tohfa-footer"></div>
+  <script type="module" src="/src/components/tohfa-include.js"></script>
+
+  <script type="module">
+    import { initSearchOverlay } from '/buyer/searchOverlay.js';
+    initSearchOverlay();
+
+    window.switchTerms = function(tab) {
+      const buyerBtn = document.getElementById('btn-buyer-terms');
+      const sellerBtn = document.getElementById('btn-seller-terms');
+      const buyerView = document.getElementById('terms-buyer-view');
+      const sellerView = document.getElementById('terms-seller-view');
+
+      if (tab === 'seller') {
+        sellerBtn.classList.add('active');
+        sellerBtn.classList.remove('text-[#14381F]');
+        buyerBtn.classList.remove('active');
+        buyerBtn.classList.add('text-[#14381F]');
+        buyerView.classList.add('hidden');
+        sellerView.classList.remove('hidden');
+      } else {
+        buyerBtn.classList.add('active');
+        buyerBtn.classList.remove('text-[#14381F]');
+        sellerBtn.classList.remove('active');
+        sellerBtn.classList.add('text-[#14381F]');
+        sellerView.classList.add('hidden');
+        buyerView.classList.remove('hidden');
+      }
+    };
+
+    // Check Auth State for Navbar
+    function checkAuthState() {
+      const token = sessionStorage.getItem('tohfa_access_token');
+      const authContainer = document.getElementById('auth-buttons-container');
+      if (token) {
+        const cachedUser = sessionStorage.getItem('tohfa_user');
+        let initial = 'U';
+        if (cachedUser) {
+          try {
+            const u = JSON.parse(cachedUser);
+            if (u.name) initial = u.name.charAt(0).toUpperCase();
+            else if (u.full_name) initial = u.full_name.charAt(0).toUpperCase();
+          } catch(e) {}
+        }
+        if (authContainer) {
+          authContainer.innerHTML = `<a href="/buyer/profile.html" class="w-9 h-9 rounded-full bg-[#FAF6EE] text-[#14381F] flex items-center justify-center font-bold text-sm overflow-hidden flex-shrink-0 shadow-sm no-underline hover:bg-white">${initial}</a>`;
+        }
+      }
+    }
+    checkAuthState();
+  </script>
+</body>
+</html>

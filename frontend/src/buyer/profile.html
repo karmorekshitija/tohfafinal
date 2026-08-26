@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <script type="module" src="/src/components/ReportWidget.js" defer></script>
+<script type="module" src="/src/components/ProtectedRoute.js"></script>
+    <meta charset="utf-8"/>
+    <title>Tohfa | Buyer Profile</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+      <style>
+        .ink-wash-gradient {
+            background: linear-gradient(135deg, rgba(20,56,31,0.2) 0%, rgba(20,56,31,0.2) 50%, #FFF8E7 100%);
+        }
+        .artisan-card-hover {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .artisan-card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(37, 83, 56, 0.12);
+        }
+        /* Chat modal styles */
+        .chat-scrim {
+            background-color: rgba(31,27,21,0.55);
+            backdrop-filter: blur(4px);
+        }
+        @keyframes chatSlideIn {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .chat-modal-animate {
+            animation: chatSlideIn 0.35s cubic-bezier(0.34,1.2,0.64,1) forwards;
+        }
+        .chat-bubble-seller {
+            background: rgba(20,56,31,0.2);
+            border-radius: 18px 18px 18px 4px;
+        }
+        .chat-bubble-me {
+            background: #14381F;
+            color: white;
+            border-radius: 18px 18px 4px 18px;
+        }
+        .chat-scroll::-webkit-scrollbar { width: 3px; }
+        .chat-scroll::-webkit-scrollbar-thumb { background: #FFF8E7; border-radius: 2px; }
+        
+        .edit-input-field {
+            width: 100%;
+            background: #FFF8E7;
+            border: 1px solid #c5d6bc;
+            border-radius: 0.5rem;
+            padding: 10px 14px;
+            font-size: 14px;
+            line-height: 20px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .edit-input-field:focus {
+            border-color: #14381F;
+            box-shadow: 0 0 0 3px rgba(37,83,56,0.08);
+        }
+        .edit-input-field.error {
+            border-color: #ba1a1a;
+            box-shadow: 0 0 0 3px rgba(186,26,26,0.08);
+        }
+        .edit-field-error {
+            display: none;
+            color: #ba1a1a;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+        .edit-field-error.visible { display: block; }
+    </style>
+</head>
+<body class="bg-[#FFF8E7] text-on-background font-body-md selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Top Navigation -->
+<!-- Top Navigation Bar (LOCKED) -->
+<header
+  class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-4 md:px-8 lg:px-12 h-16 md:h-20 transition-colors"
+  style="background-color: #273328; background-image: url('/img/taskbar-texture.png'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
+>
+  <!-- Brand Logo -->
+  <div class="flex items-center flex-1">
+    <a
+      href="/buyer/home.html"
+      class="select-none"
+      style="font-family: 'Playfair Display', serif; font-size: clamp(24px, 4vw, 32px); font-style: italic; color: #FAF6EE; text-decoration: none;"
+    >
+      Tohfa<span style="color: #FAF6EE; opacity: 0.7;">.</span>
+    </a>
+  </div>
+
+  <!-- Desktop Navigation Links -->
+  <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+    <a
+      href="/buyer/home.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">home</span>
+      <span>Home</span>
+    </a>
+    <a
+      href="/buyer/categories.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">category</span>
+      <span>Category</span>
+    </a>
+    <a
+      href="/buyer/zip-gift.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">bolt</span>
+      <span>ZipGift</span>
+    </a>
+    <a
+      href="/buyer/profile.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE] border-b-2 border-[#FAF6EE] transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <!-- Right side items -->
+  <div class="flex items-center justify-end flex-1 gap-1 sm:gap-2">
+    <!-- Search Button -->
+    <a
+      href="/buyer/search.html?focus=true"
+      id="header-search-btn"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+      title="Search"
+    >
+      <span class="material-symbols-outlined text-[22px]">search</span>
+    </a>
+
+    <!-- Wishlist Button -->
+    <a
+      href="/buyer/wishlist.html"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      title="Saved Makes"
+    >
+      <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+      <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+    </a>
+
+    <!-- Cart Button -->
+    <a
+      href="/buyer/cart.html"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      title="Shopping Cart"
+    >
+      <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
+      <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+    </a>
+
+    <!-- Notifications Button -->
+    <a
+      href="/buyer/notifications.html"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      title="Notifications"
+    >
+      <span class="material-symbols-outlined text-[22px]">notifications</span>
+      <span id="nav-notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
+      <span id="nav-notif-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
+    </a>
+
+    <!-- Auth Container -->
+    <div id="auth-buttons-container" class="flex items-center gap-2 ml-2 md:ml-4"></div>
+  </div>
+</header>
+<!-- Header Section -->
+<section class="w-full relative px-margin-desktop mt-sm">
+<div class="max-w-7xl mx-auto">
+<!-- Profile Banner -->
+<div class="w-full h-48 sm:h-56 md:h-64 rounded-2xl overflow-hidden relative shadow-sm bg-[#273328]">
+  <img
+    id="profile-banner-img"
+    src="/img/profile-banner.png"
+    alt="Profile Banner"
+    class="w-full h-full object-cover object-center"
+  />
+  <div class="absolute inset-0 bg-black/10 pointer-events-none"></div>
+</div>
+<!-- Profile Info Overlay -->
+<div class="flex flex-col items-center -mt-24 pb-lg">
+<div class="relative group">
+<div id="profile-avatar-container" class="relative group w-32 h-32 rounded-full border-[3px] border-[#14381F] overflow-hidden bg-surface-container animate-pulse shadow-lg flex-shrink-0">
+  <img id="profile-avatar-img" class="w-full h-full object-cover opacity-0 transition-opacity duration-300" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%238FAF82' opacity='0.3'/></svg>" loading="lazy">
+  <!-- Camera overlay ? go to edit profile -->
+  <a href="javascript:void(0)" class="edit-profile-trigger absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+    <span class="material-symbols-outlined text-white text-2xl">photo_camera</span>
+  </a>
+</div>
+<a href="javascript:void(0)" class="edit-profile-trigger absolute bottom-2 right-2 bg-primary text-white p-xs rounded-full border-2 border-surface artisan-card-hover">
+  <span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+ </a>
+</div>
+<div class="mt-md text-center flex flex-col items-center">
+<h2 id="profile-name" class="font-['Playfair_Display',serif] italic text-3xl md:text-4xl text-[#14381F] font-bold min-h-[40px] min-w-[200px] bg-surface-container animate-pulse rounded-md"></h2>
+<a href="javascript:void(0)"
+   class="edit-profile-trigger mt-4 inline-flex items-center gap-2 px-6 py-2 border-2 border-[#14381F] font-['DM_Sans',sans-serif] text-sm font-semibold text-[#14381F] rounded-full hover:bg-[#14381F] hover:text-[#FAF6EE] transition-all active:scale-95 artisan-card-hover cursor-pointer no-underline">
+  <span class="material-symbols-outlined text-[16px]">edit</span>
+  <span>Edit Profile</span>
+</a>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Content Grid -->
+<main class="max-w-7xl mx-auto px-margin-desktop py-xl grid grid-cols-12 gap-xl">
+<!-- Left Column: Quick Links Bento Grid -->
+<section class="col-span-12 lg:col-span-8 flex flex-col gap-6" id="profile-left-column">
+  <!-- Activity Hub Section -->
+  <div class="p-6 md:p-7 rounded-2xl bg-white/80 border border-[#14381F]/15 shadow-[0_2px_12px_rgba(20,56,31,0.04)]">
+    <div class="flex items-center gap-2 mb-5 pb-3 border-b border-[#14381F]/10">
+      <span class="material-symbols-outlined text-[#14381F] text-[22px]">grid_view</span>
+      <h3 class="font-['Playfair_Display',serif] italic text-2xl md:text-[26px] font-bold text-[#14381F]">Activity Hub</h3>
+    </div>
+    
+    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Quick Link Cards -->
+      <a class="p-5 bg-[#FAF6EE] rounded-xl artisan-card-hover group border border-[#14381F]/15 hover:border-[#14381F]/40 shadow-[0_2px_6px_rgba(20,56,31,0.03)] no-underline flex flex-col justify-between" href="/buyer/orders.html">
+        <div>
+          <div class="w-10 h-10 rounded-lg bg-[#14381F]/10 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <span class="material-symbols-outlined text-[#14381F] text-[22px]" data-icon="package_2">package_2</span>
+          </div>
+          <p class="font-['Playfair_Display',serif] text-[#14381F] font-bold text-lg mb-0.5">Orders</p>
+        </div>
+        <p id="hub-orders-count" class="text-xs font-['DM_Sans',sans-serif] text-[#587A5B] font-medium">0 active shipments</p>
+      </a>
+
+      <a class="p-5 bg-[#FAF6EE] rounded-xl artisan-card-hover group border border-[#14381F]/15 hover:border-[#14381F]/40 shadow-[0_2px_6px_rgba(20,56,31,0.03)] no-underline flex flex-col justify-between" href="/buyer/addresses.html">
+        <div>
+          <div class="w-10 h-10 rounded-lg bg-[#285C3A]/10 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <span class="material-symbols-outlined text-[#285C3A] text-[22px]" data-icon="location_on">location_on</span>
+          </div>
+          <p class="font-['Playfair_Display',serif] text-[#14381F] font-bold text-lg mb-0.5">Addresses</p>
+        </div>
+        <p id="hub-addresses-count" class="text-xs font-['DM_Sans',sans-serif] text-[#587A5B] font-medium">0 saved locations</p>
+      </a>
+
+      <a class="p-5 bg-[#FAF6EE] rounded-xl artisan-card-hover group border border-[#14381F]/15 hover:border-[#14381F]/40 shadow-[0_2px_6px_rgba(20,56,31,0.03)] no-underline flex flex-col justify-between" href="/buyer/occasions.html">
+        <div>
+          <div class="w-10 h-10 rounded-lg bg-[#587A5B]/15 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <span class="material-symbols-outlined text-[#587A5B] text-[22px]" data-icon="celebration">celebration</span>
+          </div>
+          <p class="font-['Playfair_Display',serif] text-[#14381F] font-bold text-lg mb-0.5">Occasions</p>
+        </div>
+        <p id="hub-occasions-count" class="text-xs font-['DM_Sans',sans-serif] text-[#587A5B] font-medium">0 occasions saved</p>
+      </a>
+
+      <a class="p-5 bg-[#FAF6EE] rounded-xl artisan-card-hover group border border-[#14381F]/15 hover:border-[#14381F]/40 shadow-[0_2px_6px_rgba(20,56,31,0.03)] no-underline flex flex-col justify-between" href="/buyer/notifications.html">
+        <div>
+          <div class="w-10 h-10 rounded-lg bg-[#285C3A]/10 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <span class="material-symbols-outlined text-[#285C3A] text-[22px]" data-icon="notifications">notifications</span>
+          </div>
+          <p class="font-['Playfair_Display',serif] text-[#14381F] font-bold text-lg mb-0.5">Notifications</p>
+        </div>
+        <p class="text-xs font-['DM_Sans',sans-serif] text-[#587A5B] font-medium">Recent alerts</p>
+      </a>
+    </div>
+  </div>
+
+  <!-- Shipping & Payment Details -->
+  <div class="p-6 md:p-7 border border-[#14381F]/15 rounded-2xl bg-white/80 shadow-[0_2px_12px_rgba(20,56,31,0.04)] relative overflow-hidden">
+    <div class="flex justify-between items-center mb-4 pb-3 border-b border-[#14381F]/10">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-[#14381F] text-[20px]">local_shipping</span>
+        <span class="font-['DM_Sans',sans-serif] font-bold text-xs tracking-wider uppercase text-[#14381F]">Default Shipping</span>
+      </div>
+      <a href="/buyer/addresses.html" class="inline-flex items-center gap-1 px-3 py-1 bg-[#14381F] hover:bg-[#285C3A] text-[#FAF6EE] text-xs font-semibold rounded-full transition-colors no-underline">
+        <span>Edit</span>
+        <span class="material-symbols-outlined text-[14px]">edit</span>
+      </a>
+    </div>
+    <p id="shipping-line1" class="font-['Playfair_Display',serif] text-[#14381F] font-bold text-lg">No shipping address</p>
+    <p id="shipping-line2" class="font-['DM_Sans',sans-serif] text-[#587A5B] text-sm mt-1">Please add an address in settings.</p>
+    <p id="shipping-country" class="font-['DM_Sans',sans-serif] text-[#587A5B] text-sm"></p>
+    <!-- Decorative ink wash dot -->
+    <div class="absolute -bottom-4 -right-4 w-16 h-16 bg-[#14381F]/5 blur-2xl rounded-full pointer-events-none"></div>
+  </div>
+</section>
+
+<!-- Right Column: Settings & Preferences -->
+<aside class="col-span-12 lg:col-span-4 flex flex-col gap-6">
+  <div class="bg-white/80 p-6 rounded-2xl border border-[#14381F]/15 shadow-[0_2px_12px_rgba(20,56,31,0.04)]">
+    <div class="flex items-center gap-2 mb-4 pb-3 border-b border-[#14381F]/10">
+      <span class="material-symbols-outlined text-[#14381F] text-[22px]">tune</span>
+      <h3 class="font-['Playfair_Display',serif] italic text-2xl font-bold text-[#14381F]">Preferences</h3>
+    </div>
+    <ul class="flex flex-col gap-1.5" id="preferences-menu">
+      <li>
+        <a class="flex items-center justify-between p-3 hover:bg-[#14381F]/5 rounded-xl transition-all group no-underline" href="/buyer/notifications.html">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-[#14381F]/10 flex items-center justify-center text-[#14381F] group-hover:bg-[#14381F]/15 transition-colors">
+              <span class="material-symbols-outlined text-[20px]" data-icon="notifications_active">notifications_active</span>
+            </div>
+            <span class="font-['DM_Sans',sans-serif] font-medium text-[15px] text-[#14381F]">Notifications</span>
+          </div>
+          <span class="material-symbols-outlined text-[#587A5B] group-hover:translate-x-1 transition-transform text-[20px]" data-icon="chevron_right">chevron_right</span>
+        </a>
+      </li>
+      <li>
+        <a class="flex items-center justify-between p-3 hover:bg-[#14381F]/5 rounded-xl transition-all group no-underline cursor-pointer" id="pref-wishlist-link" href="/buyer/wishlist.html">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-[#14381F]/10 flex items-center justify-center text-[#14381F] group-hover:bg-[#14381F]/15 transition-colors">
+              <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+            </div>
+            <span class="font-['DM_Sans',sans-serif] font-medium text-[15px] text-[#14381F]">Wishlist</span>
+          </div>
+          <span class="material-symbols-outlined text-[#587A5B] group-hover:translate-x-1 transition-transform text-[20px]" data-icon="chevron_right">chevron_right</span>
+        </a>
+      </li>
+      <li>
+        <a class="flex items-center justify-between p-3 hover:bg-[#14381F]/5 rounded-xl transition-all group no-underline" href="/buyer/faq.html">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-[#14381F]/10 flex items-center justify-center text-[#14381F] group-hover:bg-[#14381F]/15 transition-colors">
+              <span class="material-symbols-outlined text-[20px]" data-icon="help_center">help_center</span>
+            </div>
+            <span class="font-['DM_Sans',sans-serif] font-medium text-[15px] text-[#14381F]">Help &amp; Support</span>
+          </div>
+          <span class="material-symbols-outlined text-[#587A5B] group-hover:translate-x-1 transition-transform text-[20px]" data-icon="chevron_right">chevron_right</span>
+        </a>
+      </li>
+      <li>
+        <a class="flex items-center justify-between p-3 hover:bg-[#14381F]/5 rounded-xl transition-all group no-underline" href="/buyer/our-story.html">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-[#14381F]/10 flex items-center justify-center text-[#14381F] group-hover:bg-[#14381F]/15 transition-colors">
+              <span class="material-symbols-outlined text-[20px]" data-icon="info">info</span>
+            </div>
+            <span class="font-['DM_Sans',sans-serif] font-medium text-[15px] text-[#14381F]">About Tohfa</span>
+          </div>
+          <span class="material-symbols-outlined text-[#587A5B] group-hover:translate-x-1 transition-transform text-[20px]" data-icon="chevron_right">chevron_right</span>
+        </a>
+      </li>
+      <li class="mt-2 pt-2 border-t border-[#14381F]/10">
+        <button class="w-full flex items-center justify-between p-3 text-error hover:bg-error-container/20 rounded-xl transition-all group cursor-pointer" id="profile-logout-btn">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-error group-hover:bg-red-500/15 transition-colors">
+              <span class="material-symbols-outlined text-[20px]" data-icon="logout">logout</span>
+            </div>
+            <span class="font-['DM_Sans',sans-serif] font-bold text-[15px]">Log out</span>
+          </div>
+          <span class="material-symbols-outlined text-error/60 group-hover:translate-x-1 transition-transform text-[20px]">chevron_right</span>
+        </button>
+      </li>
+    </ul>
+  </div>
+  <!-- Hand-drawn style decorative card -->
+  <div id="join-studio-card" class="relative p-6 bg-[#DCE6D8] rounded-2xl border border-[#14381F]/15 overflow-hidden shadow-[0_2px_12px_rgba(20,56,31,0.04)] artisan-card-hover cursor-pointer">
+    <div class="relative z-10">
+      <p class="font-['Playfair_Display',serif] italic text-2xl text-[#14381F] font-bold">Join the Studio</p>
+      <p class="font-['DM_Sans',sans-serif] text-sm text-[#285C3A] mt-1">Become a certified Tohfa Artisan and share your craft with the world.</p>
+      <button class="mt-4 bg-[#14381F] hover:bg-[#285C3A] text-[#FAF6EE] px-5 py-2 rounded-full font-['DM_Sans',sans-serif] text-xs font-semibold artisan-card-hover cursor-pointer transition-colors">Apply Now</button>
+    </div>
+    <div class="absolute -right-4 -bottom-4 opacity-15 pointer-events-none">
+      <span class="material-symbols-outlined text-[100px] text-[#14381F]" data-icon="palette">palette</span>
+    </div>
+  </div>
+</aside>
+</main>
+<!-- Footer Spacer for Desktop -->
+<!-- NEW TOHFA FOOTER � footer_stitch v1 -->
+<footer style="position:relative;overflow:hidden;background:#273328;color:#FFF8E7;padding-top:64px;padding-bottom:32px;">
+  <!-- Ghost watermark -->
+  <div style="position:absolute;bottom:-10%;right:-5%;opacity:0.04;pointer-events:none;user-select:none;">
+    <span class="material-symbols-outlined" style="font-size:600px;color:white;">local_florist</span>
+  </div>
+  <!-- Main grid -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:repeat(1,1fr);gap:48px;margin-bottom:80px;position:relative;z-index:10;" class="tohfa-footer-grid">
+    <!-- Brand -->
+    <div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:44px;font-style:italic;color:#273328;margin-bottom:16px;">Tohfa.</h2>
+      <p style="font-family:'DM Sans',sans-serif;color:#FFF8E7;margin-bottom:8px;font-weight:500;">Thoughtful Gifting, Made Effortless.</p>
+      <p style="font-family:'DM Sans',sans-serif;color:#A8B89A;margin-bottom:32px;line-height:1.6;">India's first home for handcrafted gifts, celebrating the soul of artisanal craftsmanship.</p>
+      
+    </div>
+    <!-- Company -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">Company</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">About Us</a></li>
+        <li><a href="/buyer/our-story.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Our Story</a></li>
+        
+      </ul>
+    </div>
+    <!-- For Sellers -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">For Sellers</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a onclick="handleFooterSellerLink(event)" href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Sell on Tohfa</a></li>
+        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Seller Dashboard</a></li>
+        
+      </ul>
+    </div>
+    <!-- For Buyers -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">For Buyers</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'" onclick="event.preventDefault(); if (window.openTohfaChat) { window.openTohfaChat('Find me a gift'); } else { window.__tohfaChatQueue = window.__tohfaChatQueue || []; window.__tohfaChatQueue.push('Find me a gift'); }">AI Gift Guide</a></li>
+        
+      </ul>
+    </div>
+    <!-- Support -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">Support</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Contact Us</a></li>
+        <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Refunds &amp; Disputes</a></li>
+        <li><a href="/buyer/terms-conditions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Terms and Conditions</a></li>
+        <li><a href="/buyer/faq.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">FAQs</a></li>
+      </ul>
+    </div>
+  </div>
+  <!-- Divider -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;margin-bottom:32px;">
+    <div style="width:100%;height:1px;background:rgba(255,255,255,0.1);position:relative;">
+      <div style="position:absolute;left:50%;top:-8px;transform:translateX(-50%);display:flex;gap:16px;color:rgba(201,151,44,0.3);">
+        <span class="material-symbols-outlined" style="font-size:16px;">stars</span>
+      </div>
+    </div>
+  </div>
+  <!-- Bottom bar -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:flex;flex-direction:column;align-items:center;gap:24px;position:relative;z-index:10;" class="tohfa-footer-bottom">
+    
+    <div style="display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;font-size:14px;color:#FFF8E7;">
+      <span>Made with</span>
+      <span class="material-symbols-outlined" style="color:#273328;font-size:18px;font-variation-settings:'FILL' 1;">favorite</span>
+      <span>in India</span>
+    </div>
+  </div>
+  <style>
+    @media (min-width: 768px) {
+      .tohfa-footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr 1fr !important; }
+      .tohfa-footer-bottom { flex-direction: row !important; justify-content: space-between !important; }
+    }
+  </style>
+</footer>
+
+</div>
+<script type="module">
+    import apiClient from '/src/utils/apiClient.js';
+    import { logout } from '/src/utils/auth.js';
+    import { initSearchOverlay } from '/buyer/searchOverlay.js';
+
+    let profileData = null;
+
+    async function handleSellerEntryPoint(e) {
+        if (e) e.preventDefault();
+        const token = sessionStorage.getItem('tohfa_access_token');
+        if (!token) {
+            // login check bypassed
+            return;
+        }
+        try {
+            const res = await apiClient.get('/profile/me');
+            if (res.data?.success) {
+                const role = res.data.data.role;
+                if (role === 'seller') {
+                    window.location.href = '/seller/dashboard.html';
+                    return;
+                }
+            }
+        } catch(err) {}
+        window.location.href = '/buyer/become-seller.html';
+    }
+    window.handleSellerEntryPoint = handleSellerEntryPoint;
+
+    // Check if token exists, if not redirect
+    const token = sessionStorage.getItem('tohfa_access_token');
+    if (!token) {
+        // login check bypassed
+    }
+
+     // Load profile and addresses data on startup
+    async function init() {
+        try {
+            // Fetch profile
+            const profileRes = await apiClient.get('/profile/me');
+            if (profileRes.data && profileRes.data.success) {
+                profileData = profileRes.data.data;
+                updateProfileUI(profileData);
+            }
+
+            // Fetch default shipping address
+            const addRes = await apiClient.get('/addresses');
+            if (addRes.data && addRes.data.success && addRes.data.data.addresses.length > 0) {
+                const addresses = addRes.data.data.addresses;
+                const defaultAddr = addresses.find(a => a.is_default === 1) || addresses[0];
+                document.getElementById('shipping-line1').innerText = defaultAddr.full_name || defaultAddr.line1;
+                document.getElementById('shipping-line2').innerText = defaultAddr.line1 + (defaultAddr.line2 ? `, ${defaultAddr.line2}` : '');
+                document.getElementById('shipping-country').innerText = `${defaultAddr.city}, ${defaultAddr.state} ${defaultAddr.pincode}`;
+            }
+
+            // Fetch occasions count
+            try {
+                const occRes = await apiClient.get('/occasions');
+                if (occRes.data && occRes.data.success) {
+                    const count = occRes.data.data.total || 0;
+                    const occEl = document.getElementById('hub-occasions-count');
+                    if (occEl) {
+                        occEl.innerText = count === 1 ? '1 occasion saved' : `${count} occasions saved`;
+                    }
+                }
+            } catch (e) { /* silently ignore */ }
+        } catch (err) {
+            console.error('Failed to load profile/address details:', err);
+        }
+    }
+
+    function updateProfileUI(profile) {
+        // Name and bio (if available)
+        const nameEl = document.getElementById('profile-name');
+        if (nameEl) {
+            nameEl.innerText = profile.display_name || profile.full_name || 'Artisan';
+            nameEl.classList.remove('bg-surface-container', 'animate-pulse', 'min-h-[40px]', 'min-w-[200px]', 'rounded-md');
+        }
+
+        // Avatar images
+        const bigAvatar = document.getElementById('profile-avatar-img');
+        const bigAvatarContainer = document.getElementById('profile-avatar-container');
+        const initialChar = (profile.display_name || profile.full_name || 'A').charAt(0).toUpperCase();
+        const svgFallback = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%233D6B4F'/><text x='50' y='55' font-family='DM Sans, sans-serif' font-size='40' font-weight='bold' fill='white' dominant-baseline='middle' text-anchor='middle'>${initialChar}</text></svg>`;
+
+        if (bigAvatar) {
+            bigAvatar.onerror = () => {
+                bigAvatar.src = svgFallback;
+            };
+            if (profile.avatar_url) {
+                bigAvatar.src = profile.avatar_url;
+                bigAvatar.onload = () => {
+                    bigAvatar.classList.remove('opacity-0');
+                    if (bigAvatarContainer) {
+                        bigAvatarContainer.classList.remove('animate-pulse');
+                    }
+                };
+                if (bigAvatar.complete) {
+                    bigAvatar.classList.remove('opacity-0');
+                    if (bigAvatarContainer) {
+                        bigAvatarContainer.classList.remove('animate-pulse');
+                    }
+                }
+            } else {
+                bigAvatar.src = svgFallback;
+                bigAvatar.classList.remove('opacity-0');
+                if (bigAvatarContainer) {
+                    bigAvatarContainer.classList.remove('animate-pulse');
+                }
+            }
+        }
+        
+        const navAvatar = document.getElementById('nav-avatar');
+        if (navAvatar) {
+            if (profile.avatar_url) {
+                navAvatar.innerHTML = `<img src="${profile.avatar_url}" alt="Avatar" class="w-full h-full object-cover" loading="lazy" />`;
+            } else if (profile.display_name) {
+                navAvatar.innerText = profile.display_name.substring(0, 1).toUpperCase();
+            }
+        }
+
+        // Activity Hub counts
+        const ordersCountEl = document.getElementById('hub-orders-count');
+        if (ordersCountEl) {
+            ordersCountEl.innerText = `${profile.active_orders_count || 0} active shipments`;
+        }
+
+        
+
+        const addressesCountEl = document.getElementById('hub-addresses-count');
+        if (addressesCountEl) {
+            addressesCountEl.innerText = `${profile.address_count || 0} saved locations`;
+        }
+
+        const joinCard = document.getElementById('join-studio-card');
+        if (joinCard) {
+            if (profile.role === 'seller') {
+                joinCard.remove();
+            } else {
+                joinCard.addEventListener('click', handleSellerEntryPoint);
+            }
+        }
+    }
+
+    async function updateCartBadge() {
+        try {
+            const res = await apiClient.get('/cart');
+            if (res.data && res.data.success) {
+                const count = res.data.data.item_count;
+                const navBadge = document.getElementById('nav-cart-badge');
+                if (navBadge) {
+                    if (count > 0) {
+                        navBadge.innerText = count;
+                        navBadge.classList.remove('hidden');
+                    } else {
+                        navBadge.classList.add('hidden');
+                    }
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // Toggle active state visualization
+    const navLinks = document.querySelectorAll('nav a');
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            navLinks.forEach(l => {
+                l.classList.remove('text-primary', 'font-bold', 'border-b-2', 'border-primary');
+                l.classList.add('text-on-surface-variant');
+            });
+            link.classList.remove('text-on-surface-variant');
+            link.classList.add('text-primary', 'font-bold', 'border-b-2', 'border-primary');
+        });
+    });
+
+    // Simple micro-interaction for artisan cards
+    document.querySelectorAll('.artisan-card-hover').forEach(card => {
+        card.addEventListener('mousedown', () => {
+            card.style.transform = 'scale(0.98)';
+        });
+        card.addEventListener('mouseup', () => {
+            card.style.transform = 'translateY(-2px)';
+        });
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0px)';
+        });
+    });
+
+    // Handle logout click
+    const logoutBtn = document.getElementById('profile-logout-btn');
+    const logoutOverlay = document.getElementById('logout-modal-overlay');
+    const logoutCard = document.getElementById('logout-modal-card');
+
+    function openLogoutModal() {
+        if (!logoutOverlay || !logoutCard) return;
+        logoutOverlay.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            logoutCard.style.opacity = '1';
+            logoutCard.style.transform = 'scale(1)';
+        });
+    }
+
+    function closeLogoutModal() {
+        if (!logoutOverlay || !logoutCard) return;
+        logoutCard.style.opacity = '0';
+        logoutCard.style.transform = 'scale(0.92)';
+        setTimeout(() => {
+            logoutOverlay.classList.add('hidden');
+        }, 300);
+    }
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openLogoutModal();
+        });
+    }
+
+    document.getElementById('modal-cancel-logout')?.addEventListener('click', closeLogoutModal);
+    document.getElementById('modal-confirm-logout')?.addEventListener('click', () => {
+        logout();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && logoutOverlay && !logoutOverlay.classList.contains('hidden')) {
+            closeLogoutModal();
+        }
+    });
+
+    logoutOverlay?.addEventListener('click', (e) => {
+        if (e.target === logoutOverlay) {
+            closeLogoutModal();
+        }
+    });
+
+    // Initial load
+    initSearchOverlay();
+    init();
+    updateCartBadge();
+
+    function loadAndOpenChat() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const openChat = urlParams.get('open_chat');
+        const conversationId = urlParams.get('conversation_id');
+        
+        if (openChat === 'true' && conversationId) {
+            window.location.href = `/buyer/chat.html?conversationId=${conversationId}`;
+        }
+    }
+    loadAndOpenChat();
+
+    let isLoggedIn = false;
+    async function checkAuthState() {
+        const token = sessionStorage.getItem('tohfa_access_token');
+        const authContainer = document.getElementById('auth-buttons-container');
+        
+        if (token) {
+            isLoggedIn = true;
+            try {
+                let avatarUrl = null;
+                let initial = 'A';
+                try {
+                    const res = await apiClient.get('/profile/me');
+                    if (res.data && res.data.success) {
+                        avatarUrl = res.data.data.avatar_url;
+                        if (res.data.data.full_name) {
+                            initial = res.data.data.full_name.charAt(0).toUpperCase();
+                        }
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch profile avatar:", err);
+                }
+                
+                let avatarHtml = '';
+                if (avatarUrl) {
+                    avatarHtml = `<img src="${avatarUrl}" alt="Profile" class="w-10 h-10 rounded-full border border-[rgba(20,56,31,0.2)] object-cover cursor-pointer" onclick="window.location.href='profile.html'" loading="lazy" />`;
+                } else {
+                    avatarHtml = `
+                        <a href="/buyer/profile.html" class="w-10 h-10 rounded-full bg-[#14381F] flex items-center justify-center text-white font-bold border border-[rgba(20,56,31,0.2)] text-sm overflow-hidden flex-shrink-0 cursor-pointer">
+                            ${initial}
+                        </a>
+                    `;
+                }
+
+                if (authContainer) {
+                    authContainer.innerHTML = avatarHtml;
+                }
+            } catch(e) {
+                console.error("Failed to parse token:", e);
+                logout();
+            }
+        } else {
+            isLoggedIn = false;
+            if (authContainer) {
+                authContainer.innerHTML = `
+                    <div class="flex items-center gap-md">
+                        <a href="/auth/login.html" class="text-[#14381F] hover:underline text-sm font-semibold">Login</a>
+                        <a href="/auth/signup-buyer.html" class="bg-[#14381F] text-white px-md py-sm rounded-lg text-sm font-semibold hover:opacity-90 transition-all">Register</a>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    checkAuthState();
+
+    /* -- Edit Profile Modal Logic -- */
+    const editOverlay = document.getElementById('edit-profile-overlay');
+    const editCard = document.getElementById('edit-profile-card');
+    const fileInput = document.getElementById('edit-avatar-file');
+    let selectedAvatarFile = null;
+
+    function openEditProfile() {
+        if (!editOverlay || !editCard || !profileData) return;
+        
+        // Populate inputs
+        document.getElementById('edit-display-name').value = profileData.display_name || profileData.full_name || '';
+        document.getElementById('edit-email').value = profileData.email || '';
+        document.getElementById('edit-phone').value = profileData.phone || '';
+        
+        const previewImg = document.getElementById('edit-avatar-preview');
+        if (previewImg) {
+            previewImg.src = profileData.avatar_url || `https://placehold.co/150x150/f4ede3/516447?text=${encodeURIComponent((profileData.display_name || profileData.full_name || 'A').charAt(0).toUpperCase())}`;
+        }
+
+        editOverlay.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            editCard.style.opacity = '1';
+            editCard.style.transform = 'scale(1)';
+        });
+    }
+
+    function closeEditProfile() {
+        if (!editOverlay || !editCard) return;
+        editCard.style.opacity = '0';
+        editCard.style.transform = 'scale(0.92)';
+        selectedAvatarFile = null;
+        setTimeout(() => {
+            editOverlay.classList.add('hidden');
+        }, 300);
+    }
+
+    // Attach click triggers to all Edit Profile buttons
+    document.querySelectorAll('.edit-profile-trigger').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.preventDefault();
+            openEditProfile();
+        });
+    });
+
+    document.getElementById('edit-modal-cancel')?.addEventListener('click', closeEditProfile);
+    document.getElementById('edit-modal-close-btn')?.addEventListener('click', closeEditProfile);
+
+    // Escape and click-away triggers
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && editOverlay && !editOverlay.classList.contains('hidden')) {
+            closeEditProfile();
+        }
+    });
+    editOverlay?.addEventListener('click', (e) => {
+        if (e.target === editOverlay) {
+            closeEditProfile();
+        }
+    });
+
+    // File selection trigger
+    document.getElementById('edit-avatar-trigger-div')?.addEventListener('click', () => {
+        fileInput?.click();
+    });
+
+    fileInput?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        selectedAvatarFile = file;
+
+        // Preview locally immediately
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const previewImg = document.getElementById('edit-avatar-preview');
+            if (previewImg) previewImg.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
+
+
+    // Save profile handler
+    window.handleEditProfileSave = async function() {
+        const displayName = document.getElementById('edit-display-name').value.trim();
+        const email = document.getElementById('edit-email').value.trim();
+        const phone = document.getElementById('edit-phone').value.trim();
+
+        let hasErrors = false;
+
+        // Name validate
+        if (!displayName) {
+            document.getElementById('edit-display-name').classList.add('error');
+            document.getElementById('edit-error-display-name').classList.add('visible');
+            hasErrors = true;
+        } else {
+            document.getElementById('edit-display-name').classList.remove('error');
+            document.getElementById('edit-error-display-name').classList.remove('visible');
+        }
+
+        // Email validate
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            document.getElementById('edit-email').classList.add('error');
+            document.getElementById('edit-error-email').classList.add('visible');
+            hasErrors = true;
+        } else {
+            document.getElementById('edit-email').classList.remove('error');
+            document.getElementById('edit-error-email').classList.remove('visible');
+        }
+
+        // Phone validate
+        let cleanedPhone = phone.replace(/[\s\-\+\(\)]/g, '');
+        if (cleanedPhone.startsWith('91') && cleanedPhone.length > 10) {
+            cleanedPhone = cleanedPhone.substring(2);
+        }
+        if (!/^[6-9]\d{9}$/.test(cleanedPhone)) {
+            document.getElementById('edit-phone').classList.add('error');
+            document.getElementById('edit-error-phone').classList.add('visible');
+            hasErrors = true;
+        } else {
+            document.getElementById('edit-phone').classList.remove('error');
+            document.getElementById('edit-error-phone').classList.remove('visible');
+        }
+
+        if (hasErrors) return;
+
+        const saveBtn = document.getElementById('edit-modal-save');
+        saveBtn.disabled = true;
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">refresh</span> Saving...';
+
+        try {
+            // Upload Avatar File first if selected
+            let finalAvatarUrl = profileData.avatar_url;
+            if (selectedAvatarFile) {
+                try {
+                    const formData = new FormData();
+                    formData.append('avatar', selectedAvatarFile);
+                    const uploadRes = await apiClient.post('/profile/me/avatar', formData, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+                    if (uploadRes.data && uploadRes.data.success) {
+                        finalAvatarUrl = uploadRes.data.data.avatar_url;
+                    }
+                } catch (uploadErr) {
+                    console.warn("Avatar upload failed:", uploadErr);
+                }
+            }
+
+            // Save display name, email, phone, and optional avatar_url
+            const payload = {
+                display_name: displayName,
+                email: email,
+                phone: phone,
+                avatar_url: finalAvatarUrl
+            };
+
+            const response = await apiClient.patch('/profile/me', payload);
+            if (response.data && response.data.success) {
+                profileData = response.data.data;
+                
+                // Sync session storage
+                const userStr = sessionStorage.getItem('tohfa_user');
+                if (userStr) {
+                    try {
+                        const userObj = JSON.parse(userStr);
+                        userObj.display_name = profileData.display_name;
+                        userObj.email = profileData.email;
+                        userObj.phone = profileData.phone;
+                        userObj.avatar_url = profileData.avatar_url;
+                        sessionStorage.setItem('tohfa_user', JSON.stringify(userObj));
+                    } catch (_) {}
+                }
+
+                // Update UI dynamically in-place!
+                updateProfileUI(profileData);
+                checkAuthState();
+
+                // Show Success Toast
+                const successToast = document.getElementById('success-toast');
+                if (successToast) {
+                    successToast.classList.remove('hidden');
+                    setTimeout(() => successToast.classList.add('hidden'), 2500);
+                }
+
+                closeEditProfile();
+            }
+        } catch (saveErr) {
+            console.error("Failed to save changes:", saveErr);
+            alert(saveErr.response?.data?.message || "Failed to save profile changes. Please try again.");
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalText;
+        }
+    };
+</script>
+
+<!-- Logout Confirmation Modal (Desktop Overlay) -->
+<div id="logout-modal-overlay" class="hidden fixed inset-0 z-[9999] flex items-center justify-center p-4" style="background: rgba(30,61,15,0.45); backdrop-filter: blur(12px);">
+    <div id="logout-modal-card" class="bg-[#FFF8E7] rounded-[20px] p-10 md:p-12 max-w-sm w-full shadow-[0_24px_48px_rgba(30,61,15,0.18)] transform scale-92 opacity-0 transition-all duration-300 ease-[cubic-bezier(0.34,1.2,0.64,1)] flex flex-col items-center text-center relative overflow-hidden" style="max-width: 384px; width: 100%;">
+        <!-- Decorative Accent Blur -->
+        <div class="absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 bg-[#14381F]/5 rounded-full blur-2xl pointer-events-none"></div>
+        
+        <span class="material-symbols-outlined text-[#14381F] mb-6" style="font-size: 48px;">sensor_door</span>
+        <h2 class="font-serif font-bold text-[#1A1A1A] mb-2" style="font-size: 22px; line-height: 1.35;">Do you really want to log out?</h2>
+        <p class="font-sans text-[#6B6B6B] mb-9" style="font-size: 13px;">You'll need to sign in again to access your account.</p>
+        
+        <div class="flex flex-col gap-3 w-full">
+            <button id="modal-confirm-logout" class="w-full bg-[#14381F] text-white font-semibold text-sm py-[14px] rounded-[10px] hover:bg-[#2e5140] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#14381F]/20 active:scale-[0.98]">
+                Log out
+            </button>
+            <button id="modal-cancel-logout" class="w-full bg-transparent border-[1.5px] border-[#14381F] text-[#14381F] font-semibold text-sm py-[14px] rounded-[10px] hover:bg-[#14381F]/5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#14381F]/20 active:scale-[0.98]">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+<!-- Success Toast Notification -->
+<div id="success-toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[10000] hidden">
+  <div class="bg-inverse-surface text-inverse-on-surface px-6 py-3 rounded-full shadow-2xl flex items-center space-x-3 text-sm font-semibold">
+    <span class="font-serif">Profile updated ?</span>
+    <span class="material-symbols-outlined text-[rgba(20,56,31,0.2)]">check_circle</span>
+  </div>
+</div>
+
+<!-- Edit Profile Modal (Desktop Overlay) -->
+<div id="edit-profile-overlay" class="hidden fixed inset-0 z-[9999] flex items-center justify-center p-4" style="background: rgba(30,61,15,0.45); backdrop-filter: blur(12px);">
+    <div id="edit-profile-card" class="bg-[#FFF8E7] rounded-[20px] p-8 md:p-10 max-w-md w-full shadow-[0_24px_48px_rgba(30,61,15,0.18)] transform scale-92 opacity-0 transition-all duration-300 ease-[cubic-bezier(0.34,1.2,0.64,1)] flex flex-col relative overflow-hidden max-h-[90vh]">
+        <!-- Decorative Accent Blur -->
+        <div class="absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 bg-[#14381F]/5 rounded-full blur-2xl pointer-events-none"></div>
+        
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6 pb-4 border-b border-[rgba(20,56,31,0.2)]/20 relative z-10">
+            <div>
+                <h2 class="font-serif font-bold text-2xl text-[#1A1A1A]">Edit Profile</h2>
+                <p class="font-sans text-[11px] text-[#6B6B6B] mt-0.5">Update your account details</p>
+            </div>
+            <button id="edit-modal-close-btn" class="text-[#6B6B6B] hover:text-[#ba1a1a] transition-colors p-1 flex items-center justify-center">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <!-- Scrollable Form Body -->
+        <div class="flex-1 overflow-y-auto pr-1 space-y-5 relative z-10" style="max-height: 55vh;">
+            
+            <!-- Avatar Section -->
+            <div class="flex flex-col items-center gap-3">
+                <label class="font-sans text-xs font-semibold text-[#6B6B6B] self-start uppercase tracking-wider">Profile Picture</label>
+                <div id="edit-avatar-trigger-div" class="relative group cursor-pointer w-20 h-20 rounded-full border-2 border-[#14381F]/30 overflow-hidden bg-[#FFF8E7] flex-shrink-0">
+                    <img id="edit-avatar-preview" class="w-full h-full object-cover transition-opacity group-hover:opacity-75" src="https://placehold.co/150x150/f4ede3/516447?text=U" alt="Preview" loading="lazy">
+                    <div class="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span class="material-symbols-outlined text-white text-lg">photo_camera</span>
+                    </div>
+                </div>
+                <p class="text-[10px] text-[#6B6B6B]">Click photo to upload (JPG, PNG up to 5MB)</p>
+                <input type="file" id="edit-avatar-file" class="hidden" accept="image/*">
+            </div>
+
+            <!-- Full Name -->
+            <div class="space-y-1">
+                <label class="font-sans text-xs font-semibold text-[#6B6B6B] uppercase tracking-wider" for="edit-display-name">Full Name</label>
+                <input id="edit-display-name" class="edit-input-field" type="text" placeholder="Your display name">
+                <p id="edit-error-display-name" class="edit-field-error">Full name cannot be empty.</p>
+            </div>
+
+            <!-- Email -->
+            <div class="space-y-1">
+                <label class="font-sans text-xs font-semibold text-[#6B6B6B] uppercase tracking-wider" for="edit-email">Email Address</label>
+                <input id="edit-email" class="edit-input-field" type="email" placeholder="you@example.com">
+                <p id="edit-error-email" class="edit-field-error">Please enter a valid email address.</p>
+            </div>
+
+            <!-- Phone -->
+            <div class="space-y-1">
+                <label class="font-sans text-xs font-semibold text-[#6B6B6B] uppercase tracking-wider" for="edit-phone">Phone Number</label>
+                <input id="edit-phone" class="edit-input-field" type="tel" placeholder="10-digit mobile number">
+                <p id="edit-error-phone" class="edit-field-error">Please enter a valid 10-digit Indian mobile number.</p>
+            </div>
+        </div>
+
+        <!-- Sticky Actions -->
+        <div class="mt-6 pt-4 border-t border-[rgba(20,56,31,0.2)]/20 flex gap-3 relative z-10">
+            <button id="edit-modal-cancel" class="flex-1 bg-transparent border-[1.5px] border-[#14381F] text-[#14381F] font-semibold text-sm py-3 rounded-[10px] hover:bg-[#14381F]/5 transition-all duration-200 active:scale-[0.98]">
+                Cancel
+            </button>
+            <button id="edit-modal-save" onclick="handleEditProfileSave()" class="flex-1 bg-[#14381F] text-white font-semibold text-sm py-3 rounded-[10px] hover:bg-[#2e5140] transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-sm">
+                <span class="material-symbols-outlined text-[16px]">save</span>
+                Save Changes
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+async function handleFooterSellerLink(e) {
+  if (e) e.preventDefault();
+  const isMobile = window.innerWidth < 768;
+  const token = sessionStorage.getItem('tohfa_access_token');
+  if (!token) {
+    sessionStorage.setItem('tohfa_redirect_seller', 'true');
+    sessionStorage.setItem('tohfa_return_to', window.location.pathname + window.location.search); window.location.href = '/auth/login.html';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/profile/me', {
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success) {
+        const role = data.data.role;
+        if (role === 'seller') {
+          window.location.href = isMobile ? '/mobile-seller/dashboard.html' : '/seller/dashboard.html';
+          return;
+        }
+      }
+    }
+  } catch(err) {
+    console.error("Error checking seller status:", err);
+  }
+  
+  window.location.href = isMobile ? '/mobile-buyer/become-seller.html' : '/buyer/become-seller.html';
+}
+
+// Check if we need to auto-redirect back to dashboard/signup after login redirect
+document.addEventListener("DOMContentLoaded", () => {
+  const needsRedirect = sessionStorage.getItem('tohfa_redirect_seller');
+  if (needsRedirect === 'true') {
+    sessionStorage.removeItem('tohfa_redirect_seller');
+    const token = sessionStorage.getItem('tohfa_access_token');
+    if (token) {
+      handleFooterSellerLink();
+    }
+  }
+});
+
+window.openContactModal = function(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const modal = document.getElementById('tohfa-contact-modal');
+  if (modal) {
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeContactModal = function() {
+  const modal = document.getElementById('tohfa-contact-modal');
+  if (modal) {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+};
+
+if (!window.hasContactModalEscListener) {
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      window.closeContactModal();
+    }
+  });
+  window.hasContactModalEscListener = true;
+}
+
+window.openRefundsModal = function(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const modal = document.getElementById('tohfa-refunds-modal');
+  if (modal) {
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeRefundsModal = function() {
+  const modal = document.getElementById('tohfa-refunds-modal');
+  if (modal) {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+};
+
+if (!window.hasRefundsModalEscListener) {
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      window.closeRefundsModal();
+    }
+  });
+  window.hasRefundsModalEscListener = true;
+}
+</script>
+</body>
+</html>

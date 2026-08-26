@@ -1,0 +1,642 @@
+﻿<!DOCTYPE html><html class="light" lang="en"><head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+<script type="module" src="/src/components/AdminSidebar.js"></script>
+<script type="module" src="/src/components/ReportWidget.js" defer></script>
+<script type="module" src="/src/components/ProtectedRoute.js"></script>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Tohfa Admin - Products &amp; Visibility</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+        }
+        .watermark-bg {
+            background-image: url(/img/textures/natural-paper.png);
+            position: relative
+        }
+        .watermark-bg::before {
+            content: "";
+            position: absolute;
+            top: 10%;
+            right: 5%;
+            width: 300px;
+            height: 300px;
+            background-image: url(/img/ceramic_bowls.jpg);
+            background-repeat: no-repeat;
+            background-size: contain;
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 0;
+            filter: sepia(100%) hue-rotate(60deg) saturate(30%)
+        }
+        .switch-input:checked + .switch-label {
+            background-color: #14381F
+        }
+        .switch-input:checked + .switch-label::after {
+            transform: translatex(1.25rem)
+        }
+    </style>
+</head>
+<body class="bg-[#FFF8E7] text-text-default font-body-md overflow-x-hidden">
+<div class="flex min-h-screen">
+<!-- Sidebar Navigation (Refined Style) -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 py-10 px-6 z-50 w-64 border-r border-outline-variant/30 bg-[#FFF8E7]">
+<div class="mb-14">
+<h1 class="font-headline-lg text-headline-lg italic text-[#14381F] leading-tight">Tohfa</h1>
+<p class="text-accent-caps font-accent-caps text-text-faint tracking-widest text-[10px] mt-1 opacity-70">Admin Console</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="#">
+<span class="material-symbols-outlined text-[20px]">grid_view</span>
+<span class="font-label-btn text-label-btn">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/sellers.html">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span class="font-label-btn text-label-btn">Sellers</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/orders.html">
+<span class="material-symbols-outlined text-[20px]">shopping_cart</span>
+<span class="font-label-btn text-label-btn">Orders</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/categories.html">
+<span class="material-symbols-outlined text-[20px]">category</span>
+<span class="font-label-btn text-label-btn">Categories</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-[#14381F] text-white rounded-full transition-all" href="/admin/products.html">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="font-label-btn text-label-btn">Products</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/audit-logs.html">
+<span class="material-symbols-outlined text-[20px]">history_edu</span>
+<span class="font-label-btn text-label-btn">Audit Logs</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="font-label-btn text-label-btn">Settings</span>
+</a>
+</nav>
+<!-- Profile Footer -->
+<div class="mt-auto pt-6 border-t border-outline-variant/20 flex items-center gap-3">
+<div class="h-10 w-10 rounded-full bg-sage-soft flex items-center justify-center text-primary font-bold text-xs shrink-0">TA</div>
+<div class="overflow-hidden">
+<p class="text-[13px] font-bold text-text-default truncate leading-tight">Tohfa Admin</p>
+<p class="text-[11px] text-text-faint font-data-meta truncate">Master Access</p>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="ml-64 flex-1 flex flex-col watermark-bg min-w-0">
+<!-- Top Bar -->
+<header class="h-16 bg-bg-primary/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-8 sticky top-0 z-10">
+<div class="flex items-center gap-4 flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-faint text-lg" data-icon="search">search</span>
+<input class="w-full pl-10 pr-4 py-1.5 bg-surface-ivory border border-outline-variant rounded-full text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="Global search tools..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-6 ml-6">
+<button class="relative text-text-muted hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-highlight-gold rounded-full border-2 border-bg-primary"></span>
+</button>
+<button class="text-text-muted hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</button>
+<button class="text-text-muted hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+</header>
+<div class="p-8 max-w-6xl mx-auto w-full">
+<!-- Title & Subtitle -->
+<div class="mb-8">
+<h1 class="text-[28px] font-headline-lg text-primary-container mb-1">Products</h1>
+<p class="text-text-muted font-serif-ui-sm italic">Manage your artisan catalog and sponsored visibility.</p>
+</div>
+<!-- Controls: Search & Tabs -->
+<div class="flex flex-col md:flex-row items-center justify-between gap-6 mb-8 flex-wrap">
+<div class="relative w-full md:w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-faint" data-icon="search">search</span>
+<input id="search-input" class="w-full pl-10 pr-4 py-2 bg-bg-primary border border-sage-soft rounded-lg text-sm focus:ring-2 focus:ring-primary-container outline-none" placeholder="Search by product name or seller…" type="text">
+</div>
+<div class="flex items-center bg-surface-container-low p-1 rounded-full border border-outline-variant">
+<button id="tab-all" class="px-5 py-1.5 rounded-full text-xs font-bold font-accent-caps bg-primary text-on-primary shadow-sm transition-all">All Products</button>
+<button id="tab-sponsored" class="px-5 py-1.5 rounded-full text-xs font-bold font-accent-caps text-text-muted hover:bg-surface-container transition-all">Sponsored Only</button>
+<button id="tab-non-sponsored" class="px-5 py-1.5 rounded-full text-xs font-bold font-accent-caps text-text-muted hover:bg-surface-container transition-all">Non-Sponsored</button>
+</div>
+<button id="add-sponsors-btn" class="flex items-center gap-2 px-6 py-2 bg-primary hover:bg-primary-deep text-on-primary rounded-lg font-bold text-sm shadow-md transition-all whitespace-nowrap">
+    <span class="material-symbols-outlined text-lg" data-icon="add">add</span>
+    Add Sponsors
+</button></div>
+<!-- Products Table -->
+<div class="bg-bg-primary rounded-xl overflow-hidden border border-sage-soft shadow-xl mb-8">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-ivory border-b border-sage-soft">
+<tr>
+<th class="px-6 py-4 text-[10px] font-bold font-accent-caps text-text-faint uppercase tracking-widest">Product</th>
+<th class="px-6 py-4 text-[10px] font-bold font-accent-caps text-text-faint uppercase tracking-widest">Details</th>
+<th class="px-6 py-4 text-[10px] font-bold font-accent-caps text-text-faint uppercase tracking-widest">Seller</th>
+<th class="px-6 py-4 text-[10px] font-bold font-accent-caps text-text-faint uppercase tracking-widest text-center">Category</th>
+<th class="px-6 py-4 text-[10px] font-bold font-accent-caps text-text-faint uppercase tracking-widest text-right">Price</th>
+<th class="px-6 py-4 text-[10px] font-bold font-accent-caps text-text-faint uppercase tracking-widest text-center">Sponsored Status</th>
+<th class="px-6 py-4 text-[10px] font-bold font-accent-caps text-text-faint uppercase tracking-widest text-center">Sponsored</th>
+<th class="px-6 py-4 text-[10px] font-bold font-accent-caps text-text-faint uppercase tracking-widest text-center">Delete</th>
+</tr>
+</thead>
+<tbody id="products-list" class="divide-y divide-sage-soft">
+<!-- Dynamic products list will be loaded here -->
+</tbody>
+</table>
+<div class="px-6 py-4 bg-surface-ivory border-t border-sage-soft flex justify-between items-center">
+<p id="pagination-info" class="text-xs text-text-faint">Showing 0 of 0 artisan products</p>
+<div class="flex gap-2">
+<button id="prev-page" class="p-1 hover:bg-surface-container rounded text-text-muted transition-colors">
+<span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+</button>
+<button id="next-page" class="p-1 hover:bg-surface-container rounded text-text-muted transition-colors">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Sticky Footer / Action Buttons -->
+<div class="flex justify-end gap-4 mb-8">
+  <button id="cancel-changes-btn" class="px-6 py-2 border border-outline-variant hover:bg-surface-container-low transition-colors rounded-lg font-bold text-sm text-text-muted">Cancel Changes</button>
+  <button id="save-changes-btn" class="px-6 py-2 bg-primary hover:bg-primary-deep text-on-primary rounded-lg font-bold text-sm shadow-md transition-all">Save Changes</button>
+</div>
+
+<!-- Summary Section Consolidated -->
+<div class="flex justify-end mb-10">
+<div class="max-w-md w-full p-6 bg-surface-ivory border border-sage-soft rounded-xl shadow-sm relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 opacity-10">
+<span class="material-symbols-outlined text-8xl text-primary" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div class="relative z-10">
+<p class="text-text-default text-lg mb-2">
+                                ✦ <span class="font-data-price text-highlight-gold text-2xl" id="sponsored-count">0</span> <span class="font-serif-ui-md italic">products are currently sponsored and receiving priority placement.</span>
+</p>
+<p class="text-text-muted text-sm font-body-sm pl-6">
+                                These appear at the top of <strong>/browse/home</strong> for all users.
+                            </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Sticky Footer -->
+<!-- NEW TOHFA FOOTER — footer_stitch v1 -->
+<footer style="position:relative;overflow:hidden;background:#14381F;color:#FFF8E7;padding-top:64px;padding-bottom:32px;">
+  <!-- Ghost watermark -->
+  <div style="position:absolute;bottom:-10%;right:-5%;opacity:0.04;pointer-events:none;user-select:none;">
+    <span class="material-symbols-outlined" style="font-size:600px;color:white;">local_florist</span>
+  </div>
+  <!-- Main grid -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:repeat(1,1fr);gap:48px;margin-bottom:80px;position:relative;z-index:10;" class="tohfa-footer-grid">
+    <!-- Brand -->
+    <div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:44px;font-style:italic;color:#14381F;margin-bottom:16px;">Tohfa.</h2>
+      <p style="font-family:'DM Sans',sans-serif;color:#FFF8E7;margin-bottom:8px;font-weight:500;">Thoughtful Gifting, Made Effortless.</p>
+      <p style="font-family:'DM Sans',sans-serif;color:#A8B89A;margin-bottom:32px;line-height:1.6;">India's first home for handcrafted gifts, celebrating the soul of artisanal craftsmanship.</p>
+      
+    </div>
+    <!-- Company -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#14381F;margin-bottom:32px;">Company</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">About Us</a></li>
+        <li><a href="/buyer/our-story.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Our Story</a></li>
+        
+      </ul>
+    </div>
+    <!-- For Sellers -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#14381F;margin-bottom:32px;">For Sellers</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a onclick="handleFooterSellerLink(event)" href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Sell on Tohfa</a></li>
+        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Seller Dashboard</a></li>
+        
+      </ul>
+    </div>
+    <!-- For Buyers -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#14381F;margin-bottom:32px;">For Buyers</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'" onclick="event.preventDefault(); if (window.openTohfaChat) { window.openTohfaChat('Find me a gift'); } else { window.__tohfaChatQueue = window.__tohfaChatQueue || []; window.__tohfaChatQueue.push('Find me a gift'); }">AI Gift Guide</a></li>
+        
+      </ul>
+    </div>
+    <!-- Support -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#14381F;margin-bottom:32px;">Support</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Contact Us</a></li>
+        <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Refunds &amp; Disputes</a></li>
+        <li><a href="/buyer/terms-conditions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Terms and Conditions</a></li>
+        <li><a href="/buyer/faq.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">FAQs</a></li>
+      </ul>
+    </div>
+  </div>
+  <!-- Divider -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;margin-bottom:32px;">
+    <div style="width:100%;height:1px;background:rgba(255,255,255,0.1);position:relative;">
+      <div style="position:absolute;left:50%;top:-8px;transform:translateX(-50%);display:flex;gap:16px;color:rgba(201,151,44,0.3);">
+        <span class="material-symbols-outlined" style="font-size:16px;">stars</span>
+      </div>
+    </div>
+  </div>
+  <!-- Bottom bar -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:flex;flex-direction:column;align-items:center;gap:24px;position:relative;z-index:10;" class="tohfa-footer-bottom">
+    
+    <div style="display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;font-size:14px;color:#FFF8E7;">
+      <span>Made with</span>
+      <span class="material-symbols-outlined" style="color:#14381F;font-size:18px;font-variation-settings:'FILL' 1;">favorite</span>
+      <span>in India</span>
+    </div>
+  </div>
+  <style>
+    @media (min-width: 768px) {
+      .tohfa-footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr 1fr !important; }
+      .tohfa-footer-bottom { flex-direction: row !important; justify-content: space-between !important; }
+    }
+  </style>
+</footer>
+</main>
+</div>
+<script type="module">
+import adminApiClient from '/src/utils/adminApiClient.js';
+import { formatPaise } from '/src/utils/currency.js';
+
+if (!sessionStorage.getItem('tohfa_admin_token')) {
+  // admin login check bypassed
+}
+
+let products = [];
+let currentFilter = 'all';
+let searchQuery = '';
+let currentPage = 1;
+let totalPages = 1;
+
+const listEl = document.getElementById('products-list');
+const searchInput = document.getElementById('search-input');
+const sponsoredCountEl = document.getElementById('sponsored-count');
+const paginationInfo = document.getElementById('pagination-info');
+const prevPageBtn = document.getElementById('prev-page');
+const nextPageBtn = document.getElementById('next-page');
+
+const tabAll = document.getElementById('tab-all');
+const tabSponsored = document.getElementById('tab-sponsored');
+const tabNonSponsored = document.getElementById('tab-non-sponsored');
+
+async function fetchProducts() {
+  try {
+    const response = await adminApiClient.get('/admin/products', {
+      params: {
+        filter: currentFilter,
+        search: searchQuery,
+        page: currentPage,
+        per_page: 10
+      }
+    });
+
+    if (response.data?.success) {
+      const data = response.data.data;
+      products = data.products;
+      totalPages = data.total_pages;
+      sponsoredCountEl.textContent = data.sponsored_count;
+      renderProducts();
+      renderPagination(data.total, data.page, data.per_page);
+    }
+  } catch (error) {
+    console.error('Failed to fetch products:', error);
+  }
+}
+
+function renderProducts() {
+  listEl.innerHTML = '';
+  if (products.length === 0) {
+    listEl.innerHTML = `
+      <tr>
+        <td colspan="8" class="px-6 py-10 text-center text-text-muted text-sm font-serif-ui-sm">
+          No products found.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  products.forEach((product, idx) => {
+    const tr = document.createElement('tr');
+    tr.className = `${product.is_sponsored ? 'bg-surface-ivory border-l-[3px] border-l-highlight-gold ' : 'bg-[#FFF8E7] '}hover:bg-surface-ivory/50 transition-colors`;
+
+    const imageHtml = product.image_url
+      ? `
+      <div class="w-12 h-12 bg-surface-container rounded-lg overflow-hidden border border-outline-variant">
+        <img src="${product.image_url}" alt="${product.name}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<span class=\\'material-symbols-outlined text-[32px] text-text-faint flex items-center justify-center h-full\\'>image</span>'" />
+      </div>
+    `
+      : `
+      <div class="w-12 h-12 bg-surface-container rounded-lg overflow-hidden border border-outline-variant">
+        <span class="material-symbols-outlined text-[32px] text-text-faint flex items-center justify-center h-full">image</span>
+      </div>
+    `;
+
+    const statusBadge = product.is_sponsored
+      ? `<div class="inline-flex items-center gap-1.5 px-3 py-1 bg-gold-soft text-highlight-gold rounded-full">
+           <span class="material-symbols-outlined text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+           <span class="text-[10px] font-bold uppercase tracking-wider">Sponsored</span>
+         </div>`
+      : `<span class="text-text-faint font-data-meta">—</span>`;
+
+    tr.innerHTML = `
+      <td class="px-6 py-4 whitespace-nowrap">
+        ${imageHtml}
+      </td>
+      <td class="px-6 py-4">
+        <a class="text-sm font-bold text-[#14381F] hover:underline font-body-md cursor-pointer" href="/admin/product-detail.html?id=${product.id}">${product.name}</a>
+        <p class="text-xs text-text-faint font-data-meta">${product.sku}</p>
+      </td>
+      <td class="px-6 py-4">
+        <a class="text-sm text-accent-violet hover:underline underline-offset-2" href="/admin/seller-detail.html?id=${product.seller_id}">${product.seller_name}</a>
+      </td>
+      <td class="px-6 py-4 text-center">
+        <span class="px-2 py-1 bg-surface-ivory border border-sage-soft text-[10px] font-bold font-accent-caps text-primary uppercase rounded">${product.category_name}</span>
+      </td>
+      <td class="px-6 py-4 text-right">
+        <span class="font-data-price text-primary">${formatPaise(product.price_paise)}</span>
+      </td>
+      <td class="px-6 py-4 text-center status-cell">
+        ${statusBadge}
+      </td>
+      <td class="px-6 py-4 text-center">
+        <div class="flex justify-center">
+          <input class="hidden switch-input" id="toggle-${product.id}" type="checkbox" ${product.is_sponsored ? 'checked' : ''}>
+          <label class="switch-label relative w-10 h-5 bg-text-faint/30 rounded-full cursor-pointer transition-colors duration-300 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-[#FFF8E7] after:w-4 after:h-4 after:rounded-full after:transition-transform after:duration-300 shadow-inner" for="toggle-${product.id}"></label>
+        </div>
+      </td>
+      <td class="px-6 py-4 text-center">
+        <button class="delete-btn text-red-600 hover:text-red-800 transition-colors duration-200 flex items-center justify-center mx-auto" data-id="${product.id}" title="Delete Product">
+          <span class="material-symbols-outlined text-[20px]">delete</span>
+        </button>
+      </td>
+    `;
+    listEl.appendChild(tr);
+
+    // Toggle event listener
+    const toggleInput = tr.querySelector(`.switch-input`);
+    toggleInput.addEventListener('change', async function() {
+      const isChecked = this.checked;
+      try {
+        const response = await adminApiClient.patch(`/admin/products/${product.id}/sponsored`, {
+          is_sponsored: isChecked
+        });
+        if (response.data?.success) {
+          product.is_sponsored = isChecked;
+          if (isChecked) {
+            tr.className = 'bg-surface-ivory border-l-[3px] border-l-highlight-gold hover:bg-surface-ivory/50 transition-colors';
+            tr.querySelector('.status-cell').innerHTML = `
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-gold-soft text-highlight-gold rounded-full">
+                <span class="material-symbols-outlined text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+                <span class="text-[10px] font-bold uppercase tracking-wider">Sponsored</span>
+              </div>
+            `;
+          } else {
+            tr.className = 'bg-[#FFF8E7] hover:bg-surface-ivory/50 transition-colors';
+            tr.querySelector('.status-cell').innerHTML = `<span class="text-text-faint font-data-meta">—</span>`;
+          }
+          sponsoredCountEl.textContent = response.data.data.sponsored_count;
+        }
+      } catch (err) {
+        this.checked = !isChecked;
+        alert(err.response?.data?.message || 'Failed to update sponsored status');
+      }
+    });
+
+    // Delete event listener
+    const deleteBtn = tr.querySelector('.delete-btn');
+    deleteBtn.addEventListener('click', async () => {
+      const confirmed = confirm(`Are you sure you want to delete the product "${product.name}"? This will archive the product and delete its associated listing.`);
+      if (confirmed) {
+        try {
+          const response = await adminApiClient.delete(`/admin/products/${product.id}`);
+          if (response.data?.success) {
+            alert(response.data.message || 'Product deleted successfully.');
+            fetchProducts();
+          }
+        } catch (err) {
+          console.error(err);
+          alert(err.response?.data?.message || 'Failed to delete product.');
+        }
+      }
+    });
+  });
+}
+
+function renderPagination(total, page, per_page) {
+  const start = (page - 1) * per_page + 1;
+  const end = Math.min(page * per_page, total);
+  paginationInfo.textContent = total > 0 ? `Showing ${start}-${end} of ${total} artisan products` : 'Showing 0 of 0 products';
+
+  prevPageBtn.disabled = page <= 1;
+  prevPageBtn.style.opacity = page <= 1 ? '0.4' : '1';
+  prevPageBtn.style.cursor = page <= 1 ? 'not-allowed' : 'pointer';
+
+  nextPageBtn.disabled = page >= totalPages;
+  nextPageBtn.style.opacity = page >= totalPages ? '0.4' : '1';
+  nextPageBtn.style.cursor = page >= totalPages ? 'not-allowed' : 'pointer';
+}
+
+function updateTabs(activeTab) {
+  [tabAll, tabSponsored, tabNonSponsored].forEach(btn => {
+    btn.className = "px-5 py-1.5 rounded-full text-xs font-bold font-accent-caps text-text-muted hover:bg-surface-container transition-all";
+  });
+  activeTab.className = "px-5 py-1.5 rounded-full text-xs font-bold font-accent-caps bg-primary text-on-primary shadow-sm transition-all";
+}
+
+tabAll.addEventListener('click', () => {
+  currentFilter = 'all';
+  currentPage = 1;
+  updateTabs(tabAll);
+  fetchProducts();
+});
+
+tabSponsored.addEventListener('click', () => {
+  currentFilter = 'sponsored';
+  currentPage = 1;
+  updateTabs(tabSponsored);
+  fetchProducts();
+});
+
+tabNonSponsored.addEventListener('click', () => {
+  currentFilter = 'non_sponsored';
+  currentPage = 1;
+  updateTabs(tabNonSponsored);
+  fetchProducts();
+});
+
+searchInput.addEventListener('input', (e) => {
+  searchQuery = e.target.value;
+  currentPage = 1;
+  fetchProducts();
+});
+
+prevPageBtn.addEventListener('click', () => {
+  if (currentPage > 1) {
+    currentPage--;
+    fetchProducts();
+  }
+});
+
+nextPageBtn.addEventListener('click', () => {
+  if (currentPage < totalPages) {
+    currentPage++;
+    fetchProducts();
+  }
+});
+
+// Add Sponsors button - allows quick entry of product ID
+document.getElementById('add-sponsors-btn').addEventListener('click', async () => {
+  const input = prompt("Enter product ID to sponsor:");
+  if (input) {
+    const id = parseInt(input.trim());
+    if (isNaN(id)) {
+      alert("Invalid product ID");
+      return;
+    }
+    try {
+      await adminApiClient.patch(`/admin/products/${id}/sponsored`, { is_sponsored: true });
+      fetchProducts();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to sponsor product');
+    }
+  }
+});
+
+// Footer buttons
+document.getElementById('cancel-changes-btn').addEventListener('click', () => {
+  currentPage = 1;
+  searchQuery = '';
+  searchInput.value = '';
+  fetchProducts();
+});
+
+document.getElementById('save-changes-btn').addEventListener('click', () => {
+  alert('All visibility settings are automatically saved in real-time.');
+});
+
+// Initial Load
+fetchProducts();
+</script>
+
+
+<script>
+async function handleFooterSellerLink(e) {
+  if (e) e.preventDefault();
+  const isMobile = window.innerWidth < 768;
+  const token = sessionStorage.getItem('tohfa_access_token');
+  if (!token) {
+    sessionStorage.setItem('tohfa_redirect_seller', 'true');
+    sessionStorage.setItem('tohfa_return_to', window.location.pathname + window.location.search); window.location.href = '/auth/login.html';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/profile/me', {
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success) {
+        const role = data.data.role;
+        if (role === 'seller') {
+          window.location.href = isMobile ? '/mobile-seller/dashboard.html' : '/seller/dashboard.html';
+          return;
+        }
+      }
+    }
+  } catch(err) {
+    console.error("Error checking seller status:", err);
+  }
+  
+  window.location.href = isMobile ? '/mobile-buyer/become-seller.html' : '/buyer/become-seller.html';
+}
+
+// Check if we need to auto-redirect back to dashboard/signup after login redirect
+document.addEventListener("DOMContentLoaded", () => {
+  const needsRedirect = sessionStorage.getItem('tohfa_redirect_seller');
+  if (needsRedirect === 'true') {
+    sessionStorage.removeItem('tohfa_redirect_seller');
+    const token = sessionStorage.getItem('tohfa_access_token');
+    if (token) {
+      handleFooterSellerLink();
+    }
+  }
+});
+
+window.openContactModal = function(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const modal = document.getElementById('tohfa-contact-modal');
+  if (modal) {
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeContactModal = function() {
+  const modal = document.getElementById('tohfa-contact-modal');
+  if (modal) {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+};
+
+if (!window.hasContactModalEscListener) {
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      window.closeContactModal();
+    }
+  });
+  window.hasContactModalEscListener = true;
+}
+
+window.openRefundsModal = function(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const modal = document.getElementById('tohfa-refunds-modal');
+  if (modal) {
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeRefundsModal = function() {
+  const modal = document.getElementById('tohfa-refunds-modal');
+  if (modal) {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+};
+
+if (!window.hasRefundsModalEscListener) {
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      window.closeRefundsModal();
+    }
+  });
+  window.hasRefundsModalEscListener = true;
+}
+</script>
+</body></html>

@@ -1,0 +1,205 @@
+/* =============================================================================
+   Tohfa v3 — Design Tokens
+   File: frontend/src/styles/tokens.css
+   Role: Single source of truth for ALL design values.
+         Every color, font, spacing, radius, shadow, and breakpoint.
+         Import this first in every HTML file. Never hardcode values elsewhere.
+
+   PALETTE: Primary Dark Green (#14381F) · Forest Green (#285C3A) · Muted Moss (#587A5B)
+            Soft Sage (#A8BFA5) · Pale Sage (#DCE6D8) · Warm Ivory (#FFF8E7) · Charcoal (#1C1C1A)
+   Typography: Cormorant Garamond / Bodoni Moda (display) · DM Sans / Plus Jakarta Sans (body)
+   =============================================================================
+*/
+
+/* Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;0,6..96,700;1,6..96,400;1,6..96,600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Space+Mono:wght@400;700&display=swap');
+
+:root {
+  /* ---------------------------------------------------------------------------
+     COLOR SYSTEM — Tohfa Brand Palette
+     Ivory (Dominant) -> Dark/Forest Green (Primary Contrast) -> Sage/Moss (Supporting)
+  --------------------------------------------------------------------------- */
+
+  /* Brand core */
+  --color-primary:       #14381F;   /* Primary Dark Green — headings, primary buttons, nav accents, dark sections */
+  --color-forest:        #285C3A;   /* Forest Green — secondary emphasis, cards, hover states */
+  --color-moss:          #587A5B;   /* Muted Moss — secondary accents, supporting text, subtle UI */
+  --color-sage:          #A8BFA5;   /* Soft Sage — soft backgrounds, supporting cards, highlight areas */
+  --color-pale-sage:     #DCE6D8;   /* Pale Sage — background accents, pills, tags, soft cards */
+  --color-background:    #FAF6EE;   /* Soft Ivory — dominant page canvas, creamy light bg */
+  --color-surface:       #FAF6EE;   /* Soft Ivory Tint — card backgrounds, section tints */
+  --color-surface-deep:  #ECE3CD;   /* Deep Warm Surface — callout blocks, highlighted sections */
+  --color-accent:        #C85A32;   /* Terracotta — primary accent */
+  --color-gold:          #285C3A;   /* Primary accent alias (Forest Green) */
+  --color-gold-light:    #DCE6D8;   /* Light accent alias (Pale Sage) */
+  --color-gold-dark:     #14381F;   /* Deep accent alias (Dark Pine) */
+
+  /* Text */
+  --color-text:          #1C1C1A;   /* Charcoal — main body copy, high readability */
+  --color-text-muted:    #587A5B;   /* Muted Moss — secondary labels, descriptions */
+  --color-text-subtle:   rgba(28, 28, 26, 0.45);  /* Subtle text, timestamps, placeholders */
+  --color-text-on-dark:  #FAF6EE;   /* Soft Ivory — text on dark green backgrounds */
+  --color-text-on-gold:  #FAF6EE;   /* Light text on primary buttons */
+
+  /* Borders */
+  --color-border:        rgba(40, 92, 58, 0.15); /* Soft forest-tinted subtle border */
+  --color-border-strong: rgba(20, 56, 31, 0.35); /* Dark green prominent border */
+  --color-border-dark:   rgba(20, 56, 31, 0.12); /* Clean border for light surfaces */
+
+  /* Functional colors (system states only) */
+  --color-error:   #D14B4B;
+  --color-warning: #C87F2A;
+  --color-success: #285C3A;
+  --color-info:    #2A5F9F;
+
+  /* Overlays */
+  --color-overlay:       rgba(20, 56, 31, 0.65);   /* Dark Green modal overlay */
+  --color-overlay-light: rgba(250, 246, 238, 0.88); /* Soft Ivory light overlay */
+
+  /* Gradients */
+  --gradient-hero:      linear-gradient(180deg, rgba(20,56,31,0) 25%, rgba(20,56,31,0.92) 100%);
+  --gradient-gold:      linear-gradient(135deg, #14381F 0%, #285C3A 50%, #14381F 100%);
+  --gradient-gold-h:    linear-gradient(90deg, #14381F 0%, #285C3A 100%);
+  --gradient-charcoal:  linear-gradient(180deg, #14381F 0%, #285C3A 100%);
+  --gradient-cream:     linear-gradient(180deg, #FAF6EE 0%, #F7F1E1 100%);
+  --gradient-sage-card: linear-gradient(145deg, #FAF6EE 0%, #DCE6D8 100%);
+
+  /* ---------------------------------------------------------------------------
+     TYPOGRAPHY
+  --------------------------------------------------------------------------- */
+  --font-display: 'Cormorant Garamond', Georgia, serif;  /* Editorial headings */
+  --font-body:    'DM Sans', system-ui, sans-serif;       /* Body, UI labels */
+  --font-mono:    'Space Mono', 'Courier New', monospace; /* Prices, IDs, codes */
+
+  /* Font Sizes — fluid scale */
+  --text-xs:   0.6875rem;  /* 11px */
+  --text-sm:   0.8125rem;  /* 13px */
+  --text-base: 1rem;       /* 16px */
+  --text-md:   1.125rem;   /* 18px */
+  --text-lg:   1.25rem;    /* 20px */
+  --text-xl:   1.5rem;     /* 24px */
+  --text-2xl:  1.875rem;   /* 30px */
+  --text-3xl:  2.5rem;     /* 40px */
+  --text-4xl:  3.25rem;    /* 52px */
+  --text-5xl:  4rem;       /* 64px */
+  --text-6xl:  5rem;       /* 80px */
+
+  /* Display sizes (for Cormorant which runs large visually) */
+  --text-display-sm: 2rem;    /* 32px */
+  --text-display-md: 2.75rem; /* 44px */
+  --text-display-lg: 3.5rem;  /* 56px */
+  --text-display-xl: 4.5rem;  /* 72px */
+
+  /* Font Weights */
+  --weight-light:    300;
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  /* Line Heights */
+  --leading-tightest: 1.1;
+  --leading-tight:    1.2;
+  --leading-snug:     1.4;
+  --leading-normal:   1.6;
+  --leading-loose:    1.8;
+
+  /* Letter Spacing */
+  --tracking-tightest: -0.04em;
+  --tracking-tight:    -0.02em;
+  --tracking-normal:    0em;
+  --tracking-wide:      0.06em;
+  --tracking-wider:     0.1em;
+  --tracking-widest:    0.16em;  /* For eyebrow labels, all-caps tags */
+
+  /* ---------------------------------------------------------------------------
+     SPACING SCALE
+  --------------------------------------------------------------------------- */
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;
+  --space-8:   32px;
+  --space-10:  40px;
+  --space-12:  48px;
+  --space-16:  64px;
+  --space-20:  80px;
+  --space-24:  96px;
+  --space-32:  128px;
+
+  /* Semantic spacing aliases */
+  --padding-page-x-mobile:  var(--space-4);   /* 16px side padding on mobile */
+  --padding-page-x-tablet:  var(--space-6);   /* 24px side padding on tablet */
+  --padding-page-x-desktop: var(--space-10);  /* 40px side padding on desktop */
+  --padding-section-y:      var(--space-16);  /* 64px vertical section padding */
+  --padding-section-y-sm:   var(--space-10);  /* 40px tighter sections */
+
+  /* ---------------------------------------------------------------------------
+     BORDER RADIUS
+  --------------------------------------------------------------------------- */
+  --radius-xs:   4px;
+  --radius-sm:   8px;
+  --radius-md:   14px;
+  --radius-lg:   22px;
+  --radius-xl:   32px;
+  --radius-2xl:  48px;
+  --radius-pill: 9999px;
+
+  /* ---------------------------------------------------------------------------
+     SHADOWS — soft warm editorial
+  --------------------------------------------------------------------------- */
+  --shadow-xs:    0 1px 3px rgba(20, 56, 31, 0.05);
+  --shadow-sm:    0 2px 8px rgba(20, 56, 31, 0.07);
+  --shadow-card:  0 6px 24px rgba(20, 56, 31, 0.06), 0 1px 3px rgba(40, 92, 58, 0.04);
+  --shadow-card-hover: 0 12px 36px rgba(20, 56, 31, 0.12), 0 2px 6px rgba(40, 92, 58, 0.08);
+  --shadow-md:    0 8px 30px rgba(20, 56, 31, 0.10);
+  --shadow-gold:  0 4px 20px rgba(40, 92, 58, 0.25);
+  --shadow-modal: 0 20px 60px rgba(20, 56, 31, 0.20);
+  --shadow-nav:   0 2px 14px rgba(20, 56, 31, 0.06);
+
+  /* ---------------------------------------------------------------------------
+     TRANSITIONS
+  --------------------------------------------------------------------------- */
+  --transition-fast:   150ms ease;
+  --transition-base:   250ms ease;
+  --transition-slow:   400ms ease;
+  --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-smooth: 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* ---------------------------------------------------------------------------
+     Z-INDEX SCALE
+  --------------------------------------------------------------------------- */
+  --z-below:    -1;
+  --z-base:      0;
+  --z-above:     10;
+  --z-dropdown:  100;
+  --z-sticky:    200;
+  --z-overlay:   300;
+  --z-modal:     400;
+  --z-toast:     500;
+  --z-tanya:     600;   /* Tanya chat bubble always on top */
+
+  /* ---------------------------------------------------------------------------
+     LAYOUT
+  --------------------------------------------------------------------------- */
+  --max-width-content: 1280px;
+  --max-width-narrow:  900px;
+  --max-width-text:    680px;
+  --nav-height-desktop: 68px;
+  --nav-height-mobile:  58px;
+  --bottom-tab-height:  64px;
+
+  /* ---------------------------------------------------------------------------
+     BREAKPOINTS (reference — use in media queries, not as CSS vars)
+     Mobile:  < 768px
+     Tablet:  768px – 1023px
+     Desktop: ≥ 1024px
+  --------------------------------------------------------------------------- */
+}
+
+/* ---------------------------------------------------------------------------
+   Dark-mode (future — scaffold only)
+   @media (prefers-color-scheme: dark) { :root { ... } }
+--------------------------------------------------------------------------- */

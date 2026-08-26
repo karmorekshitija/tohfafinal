@@ -1,0 +1,270 @@
+<!--
+  FILE: auth/login.html
+  PANEL: Auth
+  ROUTE: /auth/login.html
+  PURPOSE: User login — supports buyers and sellers with role-based redirection.
+  AUTH: Public
+  LAST_POLISHED: 2026-08-23
+-->
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Tohfa | Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+  <link rel="stylesheet" href="/src/responsive.css">
+</head>
+<body class="bg-[#FFF8E7] min-h-screen flex flex-col justify-between font-['DM_Sans'] text-[#1C1C1C]">
+
+  <!-- Header -->
+  <header class="w-full px-6 py-5 flex justify-between items-center max-w-7xl mx-auto">
+    <a href="/buyer/home.html" class="font-['Playfair_Display'] text-3xl italic font-bold text-[#14381F]">
+      Tohfa<span class="opacity-60">.</span>
+    </a>
+    <div class="flex items-center gap-3 text-xs sm:text-sm text-[#1C1C1C]/70">
+      <span>New to Tohfa?</span>
+      <a href="/auth/signup-buyer.html" class="text-[#14381F] font-semibold hover:underline">Sign Up</a>
+      <span class="opacity-30">|</span>
+      <a href="/auth/signup-seller.html" class="text-[#14381F] font-semibold hover:underline">Sell as Artisan</a>
+    </div>
+  </header>
+
+  <!-- Login Main Card -->
+  <main class="flex-1 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-[#FFF8E7] rounded-2xl border border-[#14381F]/15 p-6 sm:p-8 shadow-[0_8px_30px_rgba(20,56,31,0.06)]">
+      <div class="text-center mb-6">
+        <h1 class="font-['Playfair_Display'] text-3xl font-bold text-[#14381F] mb-1.5">Welcome Back</h1>
+        <p class="text-sm text-[#1C1C1C]/60">Sign in to your Tohfa account</p>
+      </div>
+
+      <!-- Error Alert -->
+      <div id="error-alert" class="hidden mb-5 p-3.5 bg-[#C0392B]/10 border border-[#C0392B]/30 text-[#C0392B] rounded-xl flex items-start gap-2.5 text-xs font-medium">
+        <span class="material-symbols-outlined text-[18px] text-[#C0392B] shrink-0 mt-0.5">warning</span>
+        <span id="error-alert-text"></span>
+      </div>
+      <div id="loginErrorMessage" class="hidden mb-5 p-3.5 bg-[#C0392B]/10 border border-[#C0392B]/30 text-[#C0392B] rounded-xl flex items-start gap-2.5 text-xs font-medium"></div>
+
+      <!-- Login Form -->
+      <form id="loginForm" class="space-y-4" novalidate>
+        <div>
+          <label id="identifier-label" for="email" class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1.5">
+            Email Address
+          </label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#1C1C1C]/40 text-[20px]">mail</span>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              required 
+              placeholder="name@example.com" 
+              class="w-full pl-10 pr-4 py-3 bg-[#FFF8E7] border border-[#14381F]/20 rounded-xl text-base outline-none focus:border-[#14381F] focus:ring-2 focus:ring-[#14381F]/10 transition-all"
+            />
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-1.5">
+            <label for="password" class="text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider">
+              Password
+            </label>
+            <a href="/auth/forgot-password.html" class="text-xs text-[#14381F] font-semibold hover:underline">
+              Forgot?
+            </a>
+          </div>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#1C1C1C]/40 text-[20px]">lock</span>
+            <input 
+              type="password" 
+              id="password" 
+              name="password" 
+              required 
+              placeholder="••••••••" 
+              class="w-full pl-10 pr-10 py-3 bg-[#FFF8E7] border border-[#14381F]/20 rounded-xl text-base outline-none focus:border-[#14381F] focus:ring-2 focus:ring-[#14381F]/10 transition-all"
+            />
+            <button type="button" id="toggle-pw-btn" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#1C1C1C]/40 hover:text-[#14381F] transition-colors" aria-label="Toggle password visibility">
+              <span id="password-toggle-icon" class="material-symbols-outlined text-[20px]">visibility</span>
+            </button>
+          </div>
+        </div>
+
+        <button 
+          type="submit" 
+          id="loginSubmitBtn" 
+          class="w-full py-3.5 bg-[#14381F] text-[#FFF8E7] rounded-xl text-sm font-bold hover:bg-[#0D2614] active:scale-[0.99] transition-all shadow-sm mt-2"
+        >
+          Sign In
+        </button>
+      </form>
+
+      <div class="mt-5 text-center text-xs text-[#1C1C1C]/60">
+        Looking to sell handcrafted items? 
+        <a href="/auth/signup-seller.html" class="text-[#14381F] font-bold hover:underline ml-1">Apply as an Artisan</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="py-5 text-center text-xs text-[#1C1C1C]/60">
+    &copy; 2026 Tohfa Marketplace. Handcrafted with care.
+  </footer>
+
+  <script type="module">
+    import apiClient from '/src/utils/apiClient.js';
+    import { authStorage, redirectUserByRole } from '/src/utils/auth.js';
+
+    const togglePwBtn = document.getElementById('toggle-pw-btn');
+
+    togglePwBtn?.addEventListener('click', () => {
+      const input = document.getElementById('password');
+      const icon = document.getElementById('password-toggle-icon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.textContent = 'visibility_off';
+      } else {
+        input.type = 'password';
+        icon.textContent = 'visibility';
+      }
+    });
+
+    const form = document.getElementById('loginForm');
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const alertEl = document.getElementById('error-alert');
+      const alertText = document.getElementById('error-alert-text');
+      const submitBtn = document.getElementById('loginSubmitBtn');
+      
+      if (alertEl) alertEl.classList.add('hidden');
+      if (alertText) alertText.textContent = '';
+
+      const emailInput = document.getElementById('email');
+      const email = emailInput ? emailInput.value.trim() : '';
+      const password = document.getElementById('password').value;
+
+      if (!email || !password) {
+        const msg = 'Please enter both email address and password.';
+        if (alertText) alertText.textContent = msg;
+        if (alertEl) alertEl.classList.remove('hidden');
+        return;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Signing in...';
+      }
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || data.error || 'Invalid email or password');
+        }
+
+        const token = data.token || data.accessToken || data.data?.access_token || data.data?.token;
+        const refreshToken = data.refreshToken || data.refresh_token || data.data?.refresh_token;
+        const user = data.user || data.data?.user;
+
+        if (token) {
+          authStorage.setToken(token);
+        }
+
+        if (refreshToken) {
+          localStorage.setItem('tohfa_refresh_token', refreshToken);
+          sessionStorage.setItem('tohfa_refresh_token', refreshToken);
+        }
+
+        if (user) {
+          authStorage.setUser(user);
+        }
+
+        const pendingActionStr = sessionStorage.getItem('tohfa_pending_action');
+        sessionStorage.removeItem('tohfa_pending_action');
+
+        // Merge Guest Cart (AUTH-05 / CHK-12)
+        const guestCartRaw = sessionStorage.getItem('tohfa_guest_cart') ||
+                             localStorage.getItem('tohfa_guest_cart') ||
+                             sessionStorage.getItem('guest_cart') ||
+                             localStorage.getItem('guest_cart');
+        if (guestCartRaw) {
+          try {
+            const parsed = JSON.parse(guestCartRaw);
+            const guestItems = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.items) ? parsed.items : []);
+            if (guestItems.length > 0) {
+              try {
+                await fetch('/api/cart/merge', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                  },
+                  body: JSON.stringify({ items: guestItems })
+                });
+              } catch (mergeErr) {
+                for (const item of guestItems) {
+                  try {
+                    await apiClient.post('/cart/items', {
+                      product_id: Number(item.product_id || item.productId),
+                      variant_id: item.variant_id || item.variantId || null,
+                      quantity: Number(item.quantity) || 1,
+                      customization_data: item.customization_data || item.customizationData || null
+                    });
+                  } catch (e) {
+                    console.error('Failed to merge guest cart item on login:', e);
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            console.error('Failed to parse guest cart on login:', e);
+          } finally {
+            sessionStorage.removeItem('tohfa_guest_cart');
+            localStorage.removeItem('tohfa_guest_cart');
+            sessionStorage.removeItem('guest_cart');
+            localStorage.removeItem('guest_cart');
+          }
+        }
+
+        if (pendingActionStr) {
+          try {
+            const action = JSON.parse(pendingActionStr);
+            if (action.type === 'add_to_cart' && action.productId) {
+              await apiClient.post('/cart/items', {
+                product_id: Number(action.productId),
+                variant_id: action.variantId || null,
+                quantity: action.quantity || 1
+              });
+            }
+          } catch (replayErr) {
+            console.error('Failed to replay pending action:', replayErr);
+          }
+        }
+
+        // Unified Role-Based Redirection
+        redirectUserByRole(user);
+      } catch (err) {
+        console.error('Login error:', err);
+        const msg = err.message || 'Unable to log in. Please try again.';
+        if (alertText) alertText.textContent = msg;
+        if (alertEl) alertEl.classList.remove('hidden');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Sign In';
+        }
+      }
+    });
+  </script>
+</body>
+</html>

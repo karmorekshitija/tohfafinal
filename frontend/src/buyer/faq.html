@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Frequently Asked Questions | Tohfa</title>
+  <meta name="description" content="Find answers to common questions about orders, artisanal craftsmanship, custom gifts, shipping, and seller onboarding on Tohfa."/>
+  
+  <script type="module" src="/src/components/ReportWidget.js" defer></script>
+  <script type="module" src="/src/components/ProtectedRoute.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,600;0,6..96,700;1,6..96,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  
+  <link rel="stylesheet" href="/src/tailwind.css">
+  <link rel="stylesheet" href="/src/responsive.css">
+
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 350, 'GRAD' 0, 'opsz' 24;
+    }
+    .faq-item {
+      transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+    }
+    .faq-item.is-open {
+      border-color: #285C3A;
+      background-color: #FAF6EE;
+      box-shadow: 0 4px 20px rgba(20, 56, 31, 0.06);
+    }
+    .faq-item.is-open .faq-icon {
+      transform: rotate(45deg);
+      color: #14381F;
+    }
+    .faq-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin-top 0.3s ease;
+      opacity: 0;
+    }
+    .faq-item.is-open .faq-content {
+      max-height: 500px;
+      opacity: 1;
+      margin-top: 14px;
+    }
+    .category-chip.active {
+      background-color: #14381F;
+      color: #FFF8E7;
+      border-color: #14381F;
+      box-shadow: 0 2px 8px rgba(20, 56, 31, 0.18);
+    }
+  </style>
+</head>
+
+<body class="bg-[#FFF8E7] text-[#1C1C1A] min-h-screen font-['DM_Sans'] flex flex-col justify-between antialiased selection:bg-[#DCE6D8] selection:text-[#14381F]">
+
+  <!-- Top Navigation Bar (LOCKED) -->
+  <header
+    class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-4 md:px-8 lg:px-12 h-16 md:h-20 transition-colors"
+    style="background-color: #273328; background-image: url('/img/taskbar-texture.png'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
+  >
+    <!-- Brand Logo -->
+    <div class="flex items-center flex-1">
+      <a
+        href="/buyer/home.html"
+        class="select-none"
+        style="font-family: 'Playfair Display', serif; font-size: clamp(24px, 4vw, 32px); font-style: italic; color: #FAF6EE; text-decoration: none;"
+      >
+        Tohfa<span style="color: #FAF6EE; opacity: 0.7;">.</span>
+      </a>
+    </div>
+
+    <!-- Desktop Navigation Links -->
+    <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+      <a
+        href="/buyer/home.html"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      >
+        <span class="material-symbols-outlined text-[20px]">home</span>
+        <span>Home</span>
+      </a>
+      <a
+        href="/buyer/categories.html"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      >
+        <span class="material-symbols-outlined text-[20px]">category</span>
+        <span>Category</span>
+      </a>
+      <a
+        href="/buyer/zip-gift.html"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      >
+        <span class="material-symbols-outlined text-[20px]">bolt</span>
+        <span>ZipGift</span>
+      </a>
+      <a
+        href="/buyer/profile.html"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      >
+        <span class="material-symbols-outlined text-[20px]">person</span>
+        <span>Profile</span>
+      </a>
+    </nav>
+
+    <!-- Right side items -->
+    <div class="flex items-center justify-end flex-1 gap-1 sm:gap-2">
+      <!-- Search Button -->
+      <a
+        href="/buyer/search.html?focus=true"
+        id="header-search-btn"
+        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+        title="Search"
+      >
+        <span class="material-symbols-outlined text-[22px]">search</span>
+      </a>
+
+      <!-- Wishlist Button -->
+      <a
+        href="/buyer/wishlist.html"
+        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+        title="Wishlist"
+      >
+        <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+        <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+      </a>
+
+      <!-- Cart Button -->
+      <a
+        href="/buyer/cart.html"
+        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+        title="Shopping Cart"
+      >
+        <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
+        <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+      </a>
+
+      <!-- Notifications Button -->
+      <a
+        href="/buyer/notifications.html"
+        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+        title="Notifications"
+      >
+        <span class="material-symbols-outlined text-[22px]">notifications</span>
+        <span id="nav-notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
+      </a>
+
+      <!-- Auth Container -->
+      <div id="auth-buttons-container" class="flex items-center gap-2 ml-2 md:ml-4">
+        <a href="/auth/login.html" class="text-sm font-semibold text-[#FAF6EE] hover:text-white hover:underline no-underline" style="font-family: 'DM Sans', sans-serif;">Login</a>
+        <a href="/auth/signup-buyer.html" class="text-[#14381F] text-sm font-semibold px-3.5 py-1.5 rounded-lg bg-[#FAF6EE] hover:bg-white transition-all no-underline shadow-sm" style="font-family: 'DM Sans', sans-serif;">Sign Up</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Header Section -->
+  <section class="relative pt-12 md:pt-16 pb-10 px-4 md:px-8 text-center max-w-4xl mx-auto">
+    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#DCE6D8] text-[#14381F] text-xs font-semibold tracking-wider uppercase mb-4" style="font-family: 'Space Mono', monospace;">
+      <span class="material-symbols-outlined text-sm">help_outline</span>
+      <span>Help & Concierge</span>
+    </div>
+    <h1 class="text-3xl sm:text-4xl md:text-5xl font-normal text-[#14381F] tracking-tight mb-4" style="font-family: 'Cormorant Garamond', Georgia, serif;">
+      Frequently Asked Questions
+    </h1>
+    <p class="text-base sm:text-lg text-[#587A5B] max-w-2xl mx-auto font-light leading-relaxed">
+      Everything you need to know about our handcrafted products, customized gifting, delivery timelines, and artisan community.
+    </p>
+
+    <!-- Search Input -->
+    <div class="mt-8 max-w-xl mx-auto relative">
+      <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#587A5B] text-xl pointer-events-none">search</span>
+      <input
+        type="text"
+        id="faq-search-input"
+        placeholder="Search questions (e.g. shipping, returns, custom engraving)..."
+        class="w-full pl-12 pr-10 py-3.5 rounded-full bg-white/90 border border-[#285C3A]/20 text-[#1C1C1A] text-sm md:text-base placeholder:text-[#587A5B]/70 shadow-sm focus:outline-none focus:border-[#14381F] focus:ring-2 focus:ring-[#14381F]/15 transition-all"
+      />
+      <button id="clear-search-btn" class="absolute right-4 top-1/2 -translate-y-1/2 text-[#587A5B] hover:text-[#14381F] hidden text-sm">
+        <span class="material-symbols-outlined text-base">close</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Category Filter Pills -->
+  <section class="max-w-4xl mx-auto px-4 mb-8">
+    <div class="flex items-center justify-start sm:justify-center gap-2 sm:gap-3 overflow-x-auto pb-2 no-scrollbar" id="category-pills">
+      <button class="category-chip active px-4 py-2 rounded-full border border-[#285C3A]/20 bg-white text-xs sm:text-sm font-medium whitespace-nowrap transition-all" data-category="all">
+        All Questions
+      </button>
+      <button class="category-chip px-4 py-2 rounded-full border border-[#285C3A]/20 bg-white text-xs sm:text-sm font-medium whitespace-nowrap transition-all" data-category="orders">
+        Orders & Shipping
+      </button>
+      <button class="category-chip px-4 py-2 rounded-full border border-[#285C3A]/20 bg-white text-xs sm:text-sm font-medium whitespace-nowrap transition-all" data-category="customisation">
+        Customisation
+      </button>
+      <button class="category-chip px-4 py-2 rounded-full border border-[#285C3A]/20 bg-white text-xs sm:text-sm font-medium whitespace-nowrap transition-all" data-category="returns">
+        Returns & Refunds
+      </button>
+      <button class="category-chip px-4 py-2 rounded-full border border-[#285C3A]/20 bg-white text-xs sm:text-sm font-medium whitespace-nowrap transition-all" data-category="artisans">
+        Artisan Quality
+      </button>
+      <button class="category-chip px-4 py-2 rounded-full border border-[#285C3A]/20 bg-white text-xs sm:text-sm font-medium whitespace-nowrap transition-all" data-category="sellers">
+        For Sellers
+      </button>
+    </div>
+  </section>
+
+  <!-- FAQ List Container -->
+  <main class="max-w-4xl mx-auto px-4 md:px-8 pb-16 flex-grow w-full">
+    <div id="faq-list" class="space-y-3.5">
+      <!-- FAQ cards rendered dynamically -->
+    </div>
+
+    <!-- Empty search state -->
+    <div id="faq-empty" class="hidden text-center py-16 px-4">
+      <span class="material-symbols-outlined text-4xl text-[#587A5B] mb-2">sentiment_dissatisfied</span>
+      <h3 class="text-xl font-medium text-[#14381F] mb-1" style="font-family: 'Cormorant Garamond', serif;">No matching questions found</h3>
+      <p class="text-sm text-[#587A5B] max-w-md mx-auto mb-6">We couldn't find any questions matching your query. Reach out to our concierge team directly!</p>
+      <button onclick="window.openContactModal ? window.openContactModal(event) : null" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#14381F] text-[#FFF8E7] text-sm font-semibold hover:bg-[#285C3A] transition-all">
+        <span class="material-symbols-outlined text-base">support_agent</span>
+        <span>Contact Concierge</span>
+      </button>
+    </div>
+
+    <!-- Need More Help Banner -->
+    <div class="mt-14 relative overflow-hidden bg-[#14381F] rounded-2xl p-8 md:p-10 text-[#FFF8E7] shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="relative z-10 text-center md:text-left max-w-md">
+        <span class="text-xs uppercase tracking-widest text-[#A8BFA5] font-semibold block mb-1" style="font-family: 'Space Mono', monospace;">Direct Support</span>
+        <h2 class="text-2xl sm:text-3xl font-normal mb-2" style="font-family: 'Cormorant Garamond', Georgia, serif;">Still have a question?</h2>
+        <p class="text-sm text-[#DCE6D8]/80 leading-relaxed">Our concierge team is available 7 days a week to guide your handcrafted gifting journey.</p>
+      </div>
+      <div class="relative z-10 flex flex-wrap gap-3 justify-center">
+        <a href="javascript:void(0)" onclick="openContactModal(event)" class="px-6 py-3 rounded-full bg-[#FFF8E7] text-[#14381F] text-sm font-bold hover:bg-white transition-all shadow-md flex items-center gap-2 no-underline">
+          <span class="material-symbols-outlined text-base">mail</span>
+          <span>Contact Us</span>
+        </a>
+        <a href="/buyer/our-story.html" class="px-6 py-3 rounded-full border border-[#FFF8E7]/40 text-[#FFF8E7] text-sm font-semibold hover:bg-white/10 transition-all flex items-center gap-2 no-underline">
+          <span class="material-symbols-outlined text-base">auto_stories</span>
+          <span>Our Story</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Shared Footer -->
+  <div id="tohfa-footer"></div>
+  <script type="module" src="/src/components/tohfa-include.js"></script>
+
+  <script type="module">
+    import { initSearchOverlay } from '/buyer/searchOverlay.js';
+    initSearchOverlay();
+
+    const faqs = [
+      // Orders & Shipping
+      {
+        category: 'orders',
+        q: 'What is Tohfa and how does it work?',
+        a: 'Tohfa is India\'s curated marketplace for authentic handcrafted gifts and artisanal treasures. You discover verified master artisans, explore unique handcrafted creations, request bespoke customizations, and have them packaged and delivered securely to your doorstep.'
+      },
+      {
+        category: 'orders',
+        q: 'What are the shipping charges across India?',
+        a: 'We offer standard flat-rate shipping of ₹89 across all serviceable pincodes in India. Orders above ₹999 qualify for complimentary free shipping.'
+      },
+      {
+        category: 'orders',
+        q: 'How long does delivery take for handcrafted items?',
+        a: 'Standard ready-stock items typically arrive within 4–7 business days. Handcrafted and customized items require time for the artisan to make your piece with care; their turnaround is displayed on the product page and generally takes 7–12 business days.'
+      },
+      {
+        category: 'orders',
+        q: 'How can I track my order status?',
+        a: 'Once your order is confirmed, you can track live dispatch and logistics updates by heading to your Profile > Orders page, or by clicking the tracking link sent to your registered email and SMS.'
+      },
+      {
+        category: 'orders',
+        q: 'What payment methods are accepted on Tohfa?',
+        a: 'We accept all major secure payment methods via Razorpay, including UPI (GPay, PhonePe, Paytm), Credit/Debit Cards (Visa, Mastercard, RuPay), and Net Banking.'
+      },
+
+      // Customisation
+      {
+        category: 'customisation',
+        q: 'Can I personalize or customize my gift?',
+        a: 'Yes! Personalization is at the heart of Tohfa. Products with the "Customisable" badge allow you to specify names, initials, color palettes, custom dates, or even upload reference images and notes for the maker during checkout.'
+      },
+      {
+        category: 'customisation',
+        q: 'What is the "Open Customization" quote system?',
+        a: 'For one-of-a-kind bespoke commissions, you can submit an open request with your design requirements. The maker will review your brief and send you a transparent quote and turnaround estimate for your approval before work begins.'
+      },
+      {
+        category: 'customisation',
+        q: 'Do you offer premium gift packaging and handwritten notes?',
+        a: 'Yes. Every Tohfa package includes the option for eco-friendly, artisanal gift wrapping and a complimentary handwritten wax-sealed message card.'
+      },
+
+      // Returns & Refunds
+      {
+        category: 'returns',
+        q: 'What is Tohfa\'s Return & Refund policy?',
+        a: 'If your item arrives damaged, defective, or incorrect, you can request a replacement or full refund within 48 hours of delivery through our online resolution center. Because customized products are created specifically for you, non-defective returns are not accepted once crafted.'
+      },
+      {
+        category: 'returns',
+        q: 'How do refunds get processed?',
+        a: 'Approved refunds are automatically credited back to your original payment method (UPI, Card, or Bank) within 5–7 business days.'
+      },
+      {
+        category: 'returns',
+        q: 'Can I cancel an order after placing it?',
+        a: 'Orders for ready items can be cancelled within 12 hours of placement before the artisan packs the parcel. For bespoke custom orders, cancellation is permitted before the artisan begins custom crafting.'
+      },
+
+      // Artisan Quality
+      {
+        category: 'artisans',
+        q: 'Are the products genuinely handmade by Indian artisans?',
+        a: 'Absolutely. Every artisan on Tohfa undergoes a careful verification process to validate their craftsmanship heritage, ethical practices, and material authenticity. No mass-produced plastic factory replicas are permitted.'
+      },
+      {
+        category: 'artisans',
+        q: 'How do I care for my handmade products?',
+        a: 'Specific care guidelines (such as cleaning instructions for brass, hand-wash rules for handloom textiles, or resin care) are detailed on each product page and enclosed in your parcel packaging.'
+      },
+
+      // For Sellers
+      {
+        category: 'sellers',
+        q: 'How do I apply to sell on Tohfa?',
+        a: 'Independent creators, studios, and heritage craft collectives can apply directly by visiting the "Sell on Tohfa" page. Our curation team reviews your portfolio within 48 hours.'
+      },
+      {
+        category: 'sellers',
+        q: 'What are the fees for sellers?',
+        a: 'Joining Tohfa and listing your creations is completely free of upfront cost. We only charge a small platform commission on successfully delivered orders.'
+      },
+      {
+        category: 'sellers',
+        q: 'How and when do sellers receive payouts?',
+        a: 'Payouts are settled directly to your verified bank account via automated NEFT/IMPS 7 days after successful order delivery.'
+      }
+    ];
+
+    let currentCategory = 'all';
+    let searchQuery = '';
+
+    function renderFAQs() {
+      const container = document.getElementById('faq-list');
+      const emptyState = document.getElementById('faq-empty');
+      if (!container) return;
+
+      const filtered = faqs.filter(item => {
+        const matchesCategory = (currentCategory === 'all' || item.category === currentCategory);
+        const matchesQuery = !searchQuery || 
+          item.q.toLowerCase().includes(searchQuery) || 
+          item.a.toLowerCase().includes(searchQuery);
+        return matchesCategory && matchesQuery;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      container.innerHTML = filtered.map((item, index) => `
+        <div class="faq-item bg-white border border-[#285C3A]/15 rounded-xl p-5 md:p-6 cursor-pointer" onclick="toggleFaq(this)">
+          <div class="flex justify-between items-center gap-4 select-none">
+            <h3 class="text-base sm:text-lg font-semibold text-[#14381F] flex-1 leading-snug">
+              ${item.q}
+            </h3>
+            <span class="faq-icon material-symbols-outlined text-[#285C3A] text-xl flex-shrink-0 transition-transform duration-300">
+              add
+            </span>
+          </div>
+          <div class="faq-content text-sm sm:text-base text-[#1C1C1A]/80 leading-relaxed font-light">
+            ${item.a}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.toggleFaq = function(element) {
+      const isOpen = element.classList.contains('is-open');
+      document.querySelectorAll('.faq-item.is-open').forEach(el => {
+        if (el !== element) el.classList.remove('is-open');
+      });
+      if (isOpen) {
+        element.classList.remove('is-open');
+      } else {
+        element.classList.add('is-open');
+      }
+    };
+
+    // Category pill listeners
+    document.querySelectorAll('.category-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.category-chip').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentCategory = btn.getAttribute('data-category');
+        renderFAQs();
+      });
+    });
+
+    // Search filter listener
+    const searchInput = document.getElementById('faq-search-input');
+    const clearBtn = document.getElementById('clear-search-btn');
+
+    searchInput?.addEventListener('input', (e) => {
+      searchQuery = e.target.value.toLowerCase().trim();
+      if (searchQuery) {
+        clearBtn?.classList.remove('hidden');
+      } else {
+        clearBtn?.classList.add('hidden');
+      }
+      renderFAQs();
+    });
+
+    clearBtn?.addEventListener('click', () => {
+      searchInput.value = '';
+      searchQuery = '';
+      clearBtn.classList.add('hidden');
+      renderFAQs();
+    });
+
+    // Initial render
+    renderFAQs();
+
+    // Check Auth State for Navbar
+    function checkAuthState() {
+      const token = sessionStorage.getItem('tohfa_access_token');
+      const authContainer = document.getElementById('auth-buttons-container');
+      if (token) {
+        const cachedUser = sessionStorage.getItem('tohfa_user');
+        let initial = 'U';
+        if (cachedUser) {
+          try {
+            const u = JSON.parse(cachedUser);
+            if (u.name) initial = u.name.charAt(0).toUpperCase();
+            else if (u.full_name) initial = u.full_name.charAt(0).toUpperCase();
+          } catch(e) {}
+        }
+        if (authContainer) {
+          authContainer.innerHTML = `<a href="/buyer/profile.html" class="w-9 h-9 rounded-full bg-[#FAF6EE] text-[#14381F] flex items-center justify-center font-bold text-sm overflow-hidden flex-shrink-0 shadow-sm no-underline hover:bg-white">${initial}</a>`;
+        }
+      }
+    }
+    checkAuthState();
+  </script>
+</body>
+</html>

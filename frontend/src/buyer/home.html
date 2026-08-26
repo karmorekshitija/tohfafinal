@@ -1,0 +1,1983 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <script type="module" src="/src/components/ReportWidget.js" defer></script>
+  <script type="module" src="/src/components/ProtectedRoute.js"></script>
+  <meta charset="utf-8"/>
+  <title>Tohfa | Handcrafted Treasures</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+
+  <style>
+    :root {
+      --color-pine: #14381F;
+      --color-ivory: #FAF6EE;
+      --color-terracotta: #C85A32;
+    }
+
+    body {
+      background-color: #FAF6EE;
+      color: #1C1C1A;
+      font-family: 'DM Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .fill-icon {
+      font-variation-settings: 'FILL' 1 !important;
+    }
+
+    /* Ribbon / Pill Tags */
+    .ribbon-wrapper {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    .ribbon-tag {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #ffffff;
+      line-height: 1;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      display: inline-block;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+    }
+
+    .ribbon-sponsored {
+      background: linear-gradient(120deg, #d97706, #f59e0b, #d97706);
+    }
+    .ribbon-bestseller {
+      background: #C85A32;
+    }
+    .ribbon-custom {
+      background: #B492B7;
+    }
+
+    /* Shimmer Animation for Skeletons */
+    .shimmer {
+      background: linear-gradient(90deg, #f0eae1 25%, #e2dacd 50%, #f0eae1 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite linear;
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .scrollbar-none::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-none {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Line Clamp fallback */
+    .line-clamp-1 {
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Hero Slideshow Dot Indicators */
+    #hero-slide-dots button {
+      min-width: 0 !important;
+      min-height: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border: none !important;
+      outline: none !important;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    @media (min-width: 768px) {
+      .tohfa-footer-inner {
+        grid-template-columns: 2fr 1fr 1fr 1fr 1fr !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-[#FAF6EE] text-[#1C1C1A]">
+
+<!-- Top Navigation Bar -->
+<header
+  class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-4 md:px-8 lg:px-12 h-16 md:h-20 transition-colors"
+  style="background-color: #273328; background-image: url('/img/taskbar-texture.png'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
+>
+  <!-- Brand Logo -->
+  <div class="flex items-center flex-1">
+    <a
+      href="/buyer/home.html"
+      class="select-none"
+      style="font-family: 'Playfair Display', serif; font-size: clamp(24px, 4vw, 32px); font-style: italic; color: #FAF6EE; text-decoration: none;"
+    >
+      Tohfa<span style="color: #FAF6EE; opacity: 0.7;">.</span>
+    </a>
+  </div>
+
+  <!-- Desktop Navigation Links -->
+  <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+    <a
+      href="/buyer/home.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE] border-b-2 border-[#FAF6EE] no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">home</span>
+      <span>Home</span>
+    </a>
+    <a
+      href="/buyer/categories.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">category</span>
+      <span>Category</span>
+    </a>
+    <a
+      href="/buyer/zip-gift.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">bolt</span>
+      <span>ZipGift</span>
+    </a>
+    <a
+      href="/buyer/profile.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <!-- Right side items -->
+  <div class="flex items-center justify-end flex-1 gap-1 sm:gap-2">
+    <!-- Search Button -->
+    <a
+      href="/buyer/search.html?focus=true"
+      id="header-search-btn"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+      title="Search"
+    >
+      <span class="material-symbols-outlined text-[22px]">search</span>
+    </a>
+
+    <!-- Wishlist Button -->
+    <a
+      href="/buyer/wishlist.html"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      title="Saved Makes"
+    >
+      <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+      <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#14381F] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+    </a>
+
+    <!-- Cart Button -->
+    <a
+      href="/buyer/cart.html"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      title="Shopping Cart"
+    >
+      <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
+      <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#14381F] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+    </a>
+
+    <!-- Notifications Button -->
+    <a
+      href="/buyer/notifications.html"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      title="Notifications"
+    >
+      <span class="material-symbols-outlined text-[22px]">notifications</span>
+      <span id="nav-notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
+      <span id="nav-notif-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
+    </a>
+
+    <!-- Auth Container -->
+    <div id="auth-buttons-container" class="flex items-center gap-2 ml-2 md:ml-4"></div>
+  </div>
+</header>
+
+<main class="relative overflow-hidden">
+  <!-- 1. BOTANICAL DISPLAY BANNER -->
+  <section
+    class="relative w-full overflow-hidden"
+    style="height: clamp(190px, 24vw, 320px);"
+  >
+    <!-- Botanical Image (Pasted as is, neatly cropped) -->
+    <img
+      src="/img/botanical-hero.png"
+      alt="Botanical hanging greenery arrangement"
+      class="w-full h-full object-cover select-none pointer-events-none"
+      style="object-position: center top;"
+      loading="eager"
+    />
+
+    <!-- Elegant Compact Tohfa Serif Wordmark -->
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+      <h1
+        class="text-center tracking-wide"
+        style="font-family: 'Playfair Display', serif; font-size: clamp(40px, 6vw, 76px); font-style: italic; font-weight: 400; color: #FAF6EE; line-height: 1; letter-spacing: -0.01em; text-shadow: 0 2px 16px rgba(0,0,0,0.55);"
+      >
+        Tohfa
+      </h1>
+    </div>
+  </section>
+
+  <!-- 2. OCCASION-BASED QUICK LINKS (Round & Horizontally Scrollable) -->
+  <section class="mt-8 md:mt-10 px-4 md:px-8 lg:px-12 max-w-[1440px] mx-auto">
+    <div class="flex items-end justify-between mb-5 md:mb-6">
+      <div>
+        <h3
+          class="font-semibold"
+          style="font-family: 'Playfair Display', serif; font-size: clamp(18px, 3vw, 26px); color: #14381F;"
+        >
+          Shop by Occasion
+        </h3>
+        <p class="mt-1 text-sm" style="font-family: 'DM Sans', sans-serif; color: #7a7a6e;">
+          Find the perfect gift for every milestone
+        </p>
+      </div>
+
+      <!-- Left / Right scroll navigation arrows -->
+      <div class="hidden sm:flex items-center gap-2">
+        <button
+          type="button"
+          id="occasions-scroll-left"
+          class="w-9 h-9 rounded-full border border-[#14381F]/20 bg-white/80 hover:bg-[#14381F] text-[#14381F] hover:text-[#FAF6EE] flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer"
+          aria-label="Scroll occasions left"
+        >
+          <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+        </button>
+        <button
+          type="button"
+          id="occasions-scroll-right"
+          class="w-9 h-9 rounded-full border border-[#14381F]/20 bg-white/80 hover:bg-[#14381F] text-[#14381F] hover:text-[#FAF6EE] flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer"
+          aria-label="Scroll occasions right"
+        >
+          <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Scrollable container for round occasion items -->
+    <div
+      id="occasions-scroll-container"
+      class="flex items-start gap-4 sm:gap-6 md:gap-7 overflow-x-auto pb-4 pt-1 px-1 scrollbar-none scroll-smooth"
+      style="-webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none;"
+    >
+      <!-- Anniversary -->
+      <a
+        href="/buyer/search.html?occasion=anniversary&mode=results"
+        class="group flex flex-col items-center flex-shrink-0 w-24 sm:w-28 md:w-32 no-underline text-center transition-transform duration-200 hover:-translate-y-1"
+      >
+        <div class="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full p-[3px] border-2 border-[#14381F]/15 group-hover:border-[#14381F] group-hover:ring-4 group-hover:ring-[#14381F]/10 transition-all duration-300 shadow-sm group-hover:shadow-md bg-white">
+          <div class="w-full h-full rounded-full overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1553578622-34d24027ce18?w=400&q=70"
+              alt="Anniversary Gifts"
+              class="w-full h-full object-cover rounded-full transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
+            />
+          </div>
+        </div>
+        <span class="mt-2.5 text-xs sm:text-sm font-semibold text-[#14381F] group-hover:text-[#273328] tracking-tight leading-tight block" style="font-family: 'DM Sans', sans-serif;">
+          Anniversary
+        </span>
+      </a>
+
+      <!-- Birthday -->
+      <a
+        href="/buyer/search.html?occasion=birthday&mode=results"
+        class="group flex flex-col items-center flex-shrink-0 w-24 sm:w-28 md:w-32 no-underline text-center transition-transform duration-200 hover:-translate-y-1"
+      >
+        <div class="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full p-[3px] border-2 border-[#14381F]/15 group-hover:border-[#14381F] group-hover:ring-4 group-hover:ring-[#14381F]/10 transition-all duration-300 shadow-sm group-hover:shadow-md bg-white">
+          <div class="w-full h-full rounded-full overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1545696563-af8f6ec2295a?w=400&q=70"
+              alt="Birthday Gifts"
+              class="w-full h-full object-cover rounded-full transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
+            />
+          </div>
+        </div>
+        <span class="mt-2.5 text-xs sm:text-sm font-semibold text-[#14381F] group-hover:text-[#273328] tracking-tight leading-tight block" style="font-family: 'DM Sans', sans-serif;">
+          Birthday
+        </span>
+      </a>
+
+      <!-- Rakhi -->
+      <a
+        href="/buyer/search.html?occasion=rakhi&mode=results"
+        class="group flex flex-col items-center flex-shrink-0 w-24 sm:w-28 md:w-32 no-underline text-center transition-transform duration-200 hover:-translate-y-1"
+      >
+        <div class="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full p-[3px] border-2 border-[#14381F]/15 group-hover:border-[#14381F] group-hover:ring-4 group-hover:ring-[#14381F]/10 transition-all duration-300 shadow-sm group-hover:shadow-md bg-white">
+          <div class="w-full h-full rounded-full overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1629649213060-4874f8f6bce3?w=400&q=70"
+              alt="Rakhi Gifts"
+              class="w-full h-full object-cover rounded-full transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
+            />
+          </div>
+        </div>
+        <span class="mt-2.5 text-xs sm:text-sm font-semibold text-[#14381F] group-hover:text-[#273328] tracking-tight leading-tight block" style="font-family: 'DM Sans', sans-serif;">
+          Rakhi
+        </span>
+      </a>
+
+      <!-- Wedding -->
+      <a
+        href="/buyer/search.html?occasion=wedding&mode=results"
+        class="group flex flex-col items-center flex-shrink-0 w-24 sm:w-28 md:w-32 no-underline text-center transition-transform duration-200 hover:-translate-y-1"
+      >
+        <div class="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full p-[3px] border-2 border-[#14381F]/15 group-hover:border-[#14381F] group-hover:ring-4 group-hover:ring-[#14381F]/10 transition-all duration-300 shadow-sm group-hover:shadow-md bg-white">
+          <div class="w-full h-full rounded-full overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1740674570259-a47d713a2976?w=400&q=70"
+              alt="Wedding Gifts"
+              class="w-full h-full object-cover rounded-full transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
+            />
+          </div>
+        </div>
+        <span class="mt-2.5 text-xs sm:text-sm font-semibold text-[#14381F] group-hover:text-[#273328] tracking-tight leading-tight block" style="font-family: 'DM Sans', sans-serif;">
+          Wedding
+        </span>
+      </a>
+
+      <!-- Friendship -->
+      <a
+        href="/buyer/search.html?occasion=friendship&mode=results"
+        class="group flex flex-col items-center flex-shrink-0 w-24 sm:w-28 md:w-32 no-underline text-center transition-transform duration-200 hover:-translate-y-1"
+      >
+        <div class="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full p-[3px] border-2 border-[#14381F]/15 group-hover:border-[#14381F] group-hover:ring-4 group-hover:ring-[#14381F]/10 transition-all duration-300 shadow-sm group-hover:shadow-md bg-white">
+          <div class="w-full h-full rounded-full overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1784292765863-20dddb419e67?w=400&q=70"
+              alt="Friendship Gifts"
+              class="w-full h-full object-cover rounded-full transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
+            />
+          </div>
+        </div>
+        <span class="mt-2.5 text-xs sm:text-sm font-semibold text-[#14381F] group-hover:text-[#273328] tracking-tight leading-tight block" style="font-family: 'DM Sans', sans-serif;">
+          Friendship
+        </span>
+      </a>
+
+      <!-- Mother's Day -->
+      <a
+        href="/buyer/search.html?occasion=mothers-day&mode=results"
+        class="group flex flex-col items-center flex-shrink-0 w-24 sm:w-28 md:w-32 no-underline text-center transition-transform duration-200 hover:-translate-y-1"
+      >
+        <div class="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full p-[3px] border-2 border-[#14381F]/15 group-hover:border-[#14381F] group-hover:ring-4 group-hover:ring-[#14381F]/10 transition-all duration-300 shadow-sm group-hover:shadow-md bg-white">
+          <div class="w-full h-full rounded-full overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1582794543139-8ac9cb0f7b11?w=400&q=70"
+              alt="Mother's Day Gifts"
+              class="w-full h-full object-cover rounded-full transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
+            />
+          </div>
+        </div>
+        <span class="mt-2.5 text-xs sm:text-sm font-semibold text-[#14381F] group-hover:text-[#273328] tracking-tight leading-tight block" style="font-family: 'DM Sans', sans-serif;">
+          Mother's Day
+        </span>
+      </a>
+
+      <!-- Father's Day -->
+      <a
+        href="/buyer/search.html?occasion=fathers-day&mode=results"
+        class="group flex flex-col items-center flex-shrink-0 w-24 sm:w-28 md:w-32 no-underline text-center transition-transform duration-200 hover:-translate-y-1"
+      >
+        <div class="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full p-[3px] border-2 border-[#14381F]/15 group-hover:border-[#14381F] group-hover:ring-4 group-hover:ring-[#14381F]/10 transition-all duration-300 shadow-sm group-hover:shadow-md bg-white">
+          <div class="w-full h-full rounded-full overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1609881583302-61548332039c?w=400&q=70"
+              alt="Father's Day Gifts"
+              class="w-full h-full object-cover rounded-full transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
+            />
+          </div>
+        </div>
+        <span class="mt-2.5 text-xs sm:text-sm font-semibold text-[#14381F] group-hover:text-[#273328] tracking-tight leading-tight block" style="font-family: 'DM Sans', sans-serif;">
+          Father's Day
+        </span>
+      </a>
+
+      <!-- Valentine's Day -->
+      <a
+        href="/buyer/search.html?occasion=valentines-day&mode=results"
+        class="group flex flex-col items-center flex-shrink-0 w-24 sm:w-28 md:w-32 no-underline text-center transition-transform duration-200 hover:-translate-y-1"
+      >
+        <div class="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full p-[3px] border-2 border-[#14381F]/15 group-hover:border-[#14381F] group-hover:ring-4 group-hover:ring-[#14381F]/10 transition-all duration-300 shadow-sm group-hover:shadow-md bg-white">
+          <div class="w-full h-full rounded-full overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&q=70"
+              alt="Valentine's Day Gifts"
+              class="w-full h-full object-cover rounded-full transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
+            />
+          </div>
+        </div>
+        <span class="mt-2.5 text-xs sm:text-sm font-semibold text-[#14381F] group-hover:text-[#273328] tracking-tight leading-tight block" style="font-family: 'DM Sans', sans-serif;">
+          Valentine's Day
+        </span>
+      </a>
+
+      <!-- Housewarming -->
+      <a
+        href="/buyer/search.html?occasion=housewarming&mode=results"
+        class="group flex flex-col items-center flex-shrink-0 w-24 sm:w-28 md:w-32 no-underline text-center transition-transform duration-200 hover:-translate-y-1"
+      >
+        <div class="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full p-[3px] border-2 border-[#14381F]/15 group-hover:border-[#14381F] group-hover:ring-4 group-hover:ring-[#14381F]/10 transition-all duration-300 shadow-sm group-hover:shadow-md bg-white">
+          <div class="w-full h-full rounded-full overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1513694203232-719a280e022f?w=400&q=70"
+              alt="Housewarming Gifts"
+              class="w-full h-full object-cover rounded-full transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
+            />
+          </div>
+        </div>
+        <span class="mt-2.5 text-xs sm:text-sm font-semibold text-[#14381F] group-hover:text-[#273328] tracking-tight leading-tight block" style="font-family: 'DM Sans', sans-serif;">
+          Housewarming
+        </span>
+      </a>
+
+      <!-- Baby Shower -->
+      <a
+        href="/buyer/search.html?occasion=baby-shower&mode=results"
+        class="group flex flex-col items-center flex-shrink-0 w-24 sm:w-28 md:w-32 no-underline text-center transition-transform duration-200 hover:-translate-y-1"
+      >
+        <div class="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full p-[3px] border-2 border-[#14381F]/15 group-hover:border-[#14381F] group-hover:ring-4 group-hover:ring-[#14381F]/10 transition-all duration-300 shadow-sm group-hover:shadow-md bg-white">
+          <div class="w-full h-full rounded-full overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1519689680058-324335c77eba?w=400&q=70"
+              alt="Baby Shower Gifts"
+              class="w-full h-full object-cover rounded-full transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
+            />
+          </div>
+        </div>
+        <span class="mt-2.5 text-xs sm:text-sm font-semibold text-[#14381F] group-hover:text-[#273328] tracking-tight leading-tight block" style="font-family: 'DM Sans', sans-serif;">
+          Baby Shower
+        </span>
+      </a>
+    </div>
+  </section>
+
+
+
+
+
+  <!-- Seasonal Banner Section (Optional from Admin UI Settings) -->
+  <section id="seasonal-banner-container" class="px-4 md:px-8 lg:px-12 max-w-[1440px] mx-auto mt-8 hidden">
+    <div class="relative rounded-2xl overflow-hidden shadow-md border border-[#14381F]/20 bg-[#FAF6EE] flex flex-col md:flex-row items-center">
+      <img id="seasonal-banner-image" class="w-full md:w-2/3 h-[200px] md:h-[280px] object-cover" src="" alt="Seasonal Banner">
+      <div class="p-6 md:p-8 flex flex-col justify-center items-start w-full md:w-1/3">
+        <span class="text-xs font-mono font-bold uppercase tracking-wider text-[#14381F] bg-[#14381F]/10 px-3 py-1 rounded-full mb-3">Seasonal Highlight</span>
+        <h3 id="seasonal-banner-label" class="font-['Playfair_Display'] text-2xl md:text-3xl font-bold text-[#14381F] mb-4"></h3>
+        <button onclick="document.getElementById('for-you-section')?.scrollIntoView({ behavior: 'smooth' })" class="bg-[#14381F] text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-all">Explore Collection</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. SPONSORED SECTION -->
+  <section class="mt-10 px-4 md:px-8 lg:px-12 max-w-[1440px] mx-auto">
+    <div
+      class="rounded-xl border p-4 sm:p-5 md:p-6"
+      style="background-color: #FAF6EE; border-color: rgba(20,56,31,0.15);"
+    >
+      <div class="flex justify-between items-end mb-4 sm:mb-5">
+        <div>
+          <h3
+            class="font-semibold flex items-center gap-2"
+            style="font-family: 'Playfair Display', serif; font-size: clamp(16px, 2.5vw, 22px); color: #14381F;"
+          >
+            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1; color: #14381F;">star</span>
+            <span>Sponsored</span>
+          </h3>
+          <p class="text-xs sm:text-sm mt-0.5" style="font-family: 'DM Sans', sans-serif; color: #7a7a6e;">
+            Featured treasures from our creative community
+          </p>
+        </div>
+
+        <!-- Carousel navigation arrows -->
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <button
+            type="button"
+            id="sponsored-prev-btn"
+            class="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-[#14381F]/20 bg-white hover:bg-[#14381F] text-[#14381F] hover:text-[#FAF6EE] flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer"
+            aria-label="Previous sponsored items"
+          >
+            <span class="material-symbols-outlined text-[18px] sm:text-[20px]">chevron_left</span>
+          </button>
+          <button
+            type="button"
+            id="sponsored-next-btn"
+            class="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-[#14381F]/20 bg-white hover:bg-[#14381F] text-[#14381F] hover:text-[#FAF6EE] flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer"
+            aria-label="Next sponsored items"
+          >
+            <span class="material-symbols-outlined text-[18px] sm:text-[20px]">chevron_right</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sponsored Product Carousel -->
+      <div id="sponsored-carousel-wrapper" class="relative overflow-hidden w-full py-1">
+        <div id="sponsored-product-grid" class="flex transition-transform duration-300 ease-in-out gap-3 sm:gap-4">
+          <!-- Dynamic sponsored product cards load here -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured by Tohfa Section (Optional Admin Curation) -->
+  <section id="admin-featured-section" class="mt-12 md:mt-16 px-4 md:px-8 lg:px-12 max-w-[1440px] mx-auto hidden">
+    <div class="flex justify-between items-end mb-5 md:mb-6">
+      <div>
+        <h3
+          class="font-semibold flex items-center gap-2"
+          style="font-family: 'Playfair Display', serif; font-size: clamp(18px, 3vw, 26px); color: #14381F;"
+        >
+          <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1; color: #14381F;">workspace_premium</span>
+          <span>Featured by Tohfa</span>
+        </h3>
+        <p class="text-sm mt-0.5" style="font-family: 'DM Sans', sans-serif; color: #7a7a6e;">
+          Handpicked signature items curated by our editors
+        </p>
+      </div>
+    </div>
+
+    <div id="admin-featured-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-5 relative">
+      <!-- Dynamic featured products load here -->
+    </div>
+  </section>
+
+  <!-- 7. FOR YOU SECTION -->
+  <section id="for-you-section" class="mt-12 md:mt-16 px-4 md:px-8 lg:px-12 max-w-[1440px] mx-auto">
+    <div class="flex justify-between items-end mb-5 md:mb-6">
+      <div>
+        <h3
+          style="font-family: 'Playfair Display', serif; font-size: clamp(18px, 3vw, 26px); color: #14381F; font-weight: 600;"
+        >
+          For You
+        </h3>
+        <p class="text-sm mt-0.5" style="font-family: 'DM Sans', sans-serif; color: #7a7a6e;">
+          Handpicked treasures just for you
+        </p>
+      </div>
+    </div>
+
+    <!-- Product Feed Grid: 2 cols mobile, 3 cols tablet, 4 cols desktop -->
+    <div id="product-feed-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-5 relative">
+      <!-- Product cards will load here dynamically -->
+    </div>
+
+    <!-- Skeleton Loaders -->
+    <div id="feed-skeletons" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-5 mt-4 hidden">
+      <div class="rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-3 md:p-4 flex flex-col justify-between min-h-[320px]">
+        <div class="aspect-square rounded-lg shimmer mb-3 w-full"></div>
+        <div class="h-4 w-1/3 shimmer mb-2 rounded"></div>
+        <div class="h-5 w-3/4 shimmer mb-1 rounded"></div>
+        <div class="h-4 w-1/2 shimmer mb-3 rounded"></div>
+        <div class="h-9 w-full shimmer rounded-lg"></div>
+      </div>
+      <div class="rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-3 md:p-4 flex flex-col justify-between min-h-[320px]">
+        <div class="aspect-square rounded-lg shimmer mb-3 w-full"></div>
+        <div class="h-4 w-1/3 shimmer mb-2 rounded"></div>
+        <div class="h-5 w-3/4 shimmer mb-1 rounded"></div>
+        <div class="h-4 w-1/2 shimmer mb-3 rounded"></div>
+        <div class="h-9 w-full shimmer rounded-lg"></div>
+      </div>
+      <div class="rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-3 md:p-4 flex flex-col justify-between min-h-[320px]">
+        <div class="aspect-square rounded-lg shimmer mb-3 w-full"></div>
+        <div class="h-4 w-1/3 shimmer mb-2 rounded"></div>
+        <div class="h-5 w-3/4 shimmer mb-1 rounded"></div>
+        <div class="h-4 w-1/2 shimmer mb-3 rounded"></div>
+        <div class="h-9 w-full shimmer rounded-lg"></div>
+      </div>
+      <div class="rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-3 md:p-4 flex flex-col justify-between min-h-[320px]">
+        <div class="aspect-square rounded-lg shimmer mb-3 w-full"></div>
+        <div class="h-4 w-1/3 shimmer mb-2 rounded"></div>
+        <div class="h-5 w-3/4 shimmer mb-1 rounded"></div>
+        <div class="h-4 w-1/2 shimmer mb-3 rounded"></div>
+        <div class="h-9 w-full shimmer rounded-lg"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. BOTANICAL DIVIDER -->
+  <div class="relative w-full overflow-hidden mt-14 md:mt-16" style="height: 56px;">
+    <img
+      src="/img/botanical-hero.png"
+      alt=""
+      aria-hidden="true"
+      class="absolute top-0 left-0 w-full object-cover"
+      style="height: 120px; object-position: center top; opacity: 0.18; filter: saturate(0.8);"
+      loading="lazy"
+    />
+    <div
+      class="absolute inset-0"
+      style="background: linear-gradient(to bottom, #FAF6EE 0%, transparent 30%, transparent 70%, #FAF6EE 100%);"
+    ></div>
+  </div>
+
+  <!-- 8. CATEGORY ROWS SECTION -->
+  <section class="mt-14 md:mt-16 px-4 md:px-8 lg:px-12 max-w-[1440px] mx-auto">
+    <div id="category-rows-container" class="flex flex-col gap-12">
+      <!-- Dynamic category strips will load here -->
+    </div>
+  </section>
+
+  <!-- 9. BOTANICAL DIVIDER -->
+  <div class="relative w-full overflow-hidden mt-14 md:mt-16" style="height: 56px;">
+    <img
+      src="/img/botanical-hero.png"
+      alt=""
+      aria-hidden="true"
+      class="absolute top-0 left-0 w-full object-cover"
+      style="height: 120px; object-position: center top; opacity: 0.18; filter: saturate(0.8);"
+      loading="lazy"
+    />
+    <div
+      class="absolute inset-0"
+      style="background: linear-gradient(to bottom, #FAF6EE 0%, transparent 30%, transparent 70%, #FAF6EE 100%);"
+    ></div>
+  </div>
+
+  <!-- 10. HERO SLIDESHOW SECTION -->
+  <section class="mt-14 md:mt-16 mb-8 md:mb-12 px-4 md:px-8 lg:px-12 max-w-[1440px] mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
+      <!-- Slideshow Container -->
+      <div class="lg:col-span-7 relative">
+        <div
+          id="hero-slideshow-container"
+          class="rounded-xl overflow-hidden shadow-xl relative group aspect-[16/10]"
+        >
+          <!-- Dynamic slides wrapper -->
+          <div id="hero-slides-wrapper" class="w-full h-full relative">
+            <div class="absolute inset-0 bg-[#f0eae1] animate-pulse"></div>
+          </div>
+
+          <!-- Left Navigation Arrow -->
+          <button
+            type="button"
+            id="hero-slide-prev"
+            class="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-md flex items-center justify-center"
+            style="background-color: rgba(250,246,238,0.85); color: #14381F;"
+            aria-label="Previous Slide"
+          >
+            <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+          </button>
+
+          <!-- Right Navigation Arrow -->
+          <button
+            type="button"
+            id="hero-slide-next"
+            class="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-md flex items-center justify-center"
+            style="background-color: rgba(250,246,238,0.85); color: #14381F;"
+            aria-label="Next Slide"
+          >
+            <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+          </button>
+
+          <!-- Dot Indicators -->
+          <div id="hero-slide-dots" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10"></div>
+        </div>
+
+        <!-- Floating Quote Card -->
+        <div
+          class="hidden md:block absolute -bottom-8 right-4 lg:-right-8 p-5 rounded-xl shadow-lg max-w-[240px] lg:max-w-xs z-20 border"
+          style="background-color: #FAF6EE; border-color: rgba(20,56,31,0.15);"
+        >
+          <p
+            class="leading-relaxed"
+            style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 13px; color: #605e57;"
+          >
+            "Every piece tells a story of the hands that shaped it."
+          </p>
+        </div>
+      </div>
+
+      <!-- Hero Copy -->
+      <div class="lg:col-span-5 lg:pl-8 pt-4 md:pt-10 lg:pt-0">
+        <h2
+          class="mb-4 md:mb-6 leading-tight"
+          style="font-family: 'Playfair Display', serif; font-size: clamp(24px, 4vw, 40px); font-weight: 600; color: #14381F;"
+        >
+          Artisan crafts for a <span class="italic font-normal">slower, intentional</span> life.
+        </h2>
+        <p
+          class="mb-6 md:mb-8 leading-relaxed text-[15px]"
+          style="font-family: 'DM Sans', sans-serif; color: #605e57;"
+        >
+          Discover our curated collection of hand-carved ceramics, sustainable textiles, and handcrafted stationery made by local artisans.
+        </p>
+        <div class="flex gap-3">
+          <button
+            type="button"
+            onclick="document.getElementById('for-you-section')?.scrollIntoView({ behavior: 'smooth' })"
+            class="px-5 py-2.5 rounded-lg font-semibold text-sm transition-opacity hover:opacity-90 active:scale-[0.98]"
+            style="background-color: #14381F; color: #FAF6EE; font-family: 'DM Sans', sans-serif;"
+          >
+            Explore Collection
+          </button>
+          <button
+            type="button"
+            onclick="window.location.href='/buyer/our-story.html'"
+            class="px-5 py-2.5 rounded-lg font-semibold text-sm transition-colors hover:bg-[rgba(20,56,31,0.06)] active:scale-[0.98]"
+            style="border: 1px solid rgba(20,56,31,0.3); color: #14381F; font-family: 'DM Sans', sans-serif;"
+          >
+            Our Story
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- 10. FOOTER -->
+<footer class="relative overflow-hidden mt-16" style="background-color: #273328; color: #FAF6EE;">
+  <!-- Ghost watermark -->
+  <div class="absolute bottom-[-10%] right-[-5%] opacity-[0.04] pointer-events-none select-none">
+    <span class="material-symbols-outlined" style="font-size: 500px; color: white;">local_florist</span>
+  </div>
+
+  <!-- Botanical accent top -->
+  <div class="relative w-full overflow-hidden" style="height: 60px;">
+    <img
+      src="/img/botanical-hero.png"
+      alt=""
+      aria-hidden="true"
+      class="absolute top-0 left-0 w-full object-cover"
+      style="height: 120px; object-position: center top; opacity: 0.12; filter: saturate(0.6);"
+      loading="lazy"
+    />
+    <div
+      class="absolute inset-0"
+      style="background: linear-gradient(to bottom, #273328 0%, transparent 50%, #273328 100%);"
+    ></div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="max-w-[1280px] mx-auto px-6 pt-10 pb-8 relative z-10">
+    <div class="tohfa-footer-inner grid gap-10 mb-12" style="grid-template-columns: repeat(1, 1fr);">
+      <!-- Brand column -->
+      <div>
+        <h2
+          style="font-family: 'Playfair Display', serif; font-size: 40px; font-style: italic; color: #FAF6EE; margin-bottom: 12px;"
+        >
+          Tohfa.
+        </h2>
+        <p style="font-family: 'DM Sans', sans-serif; color: #FAF6EE; margin-bottom: 6px; font-weight: 500;">
+          Thoughtful Gifting, Made Effortless.
+        </p>
+        <p style="font-family: 'DM Sans', sans-serif; color: #A8B89A; line-height: 1.6; font-size: 14px;">
+          India's first home for handcrafted gifts, celebrating the soul of artisanal craftsmanship.
+        </p>
+      </div>
+
+      <!-- Company links -->
+      <div>
+        <h3
+          class="mb-4"
+          style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(168,191,165,0.7);"
+        >
+          Company
+        </h3>
+        <ul class="flex flex-col gap-2.5 list-none p-0 m-0">
+          <li><a href="#" class="text-sm transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline" style="font-family: 'DM Sans', sans-serif;">About Us</a></li>
+          <li><a href="/buyer/our-story.html" class="text-sm transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline" style="font-family: 'DM Sans', sans-serif;">Our Story</a></li>
+        </ul>
+      </div>
+
+      <!-- For Sellers -->
+      <div>
+        <h3
+          class="mb-4"
+          style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(168,191,165,0.7);"
+        >
+          For Sellers
+        </h3>
+        <ul class="flex flex-col gap-2.5 list-none p-0 m-0">
+          <li><a href="#" onclick="handleFooterSellerLink(event)" class="text-sm transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline" style="font-family: 'DM Sans', sans-serif;">Sell on Tohfa</a></li>
+          <li><a href="/seller/dashboard.html" class="text-sm transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline" style="font-family: 'DM Sans', sans-serif;">Seller Dashboard</a></li>
+        </ul>
+      </div>
+
+      <!-- For Buyers -->
+      <div>
+        <h3
+          class="mb-4"
+          style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(168,191,165,0.7);"
+        >
+          For Buyers
+        </h3>
+        <ul class="flex flex-col gap-2.5 list-none p-0 m-0">
+          <li>
+            <a
+              href="#"
+              onclick="event.preventDefault(); if (window.openTohfaChat) { window.openTohfaChat('Find me a gift'); } else { window.__tohfaChatQueue = window.__tohfaChatQueue || []; window.__tohfaChatQueue.push('Find me a gift'); }"
+              class="text-sm transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline"
+              style="font-family: 'DM Sans', sans-serif;"
+            >
+              AI Gift Guide
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Support -->
+      <div>
+        <h3
+          class="mb-4"
+          style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(168,191,165,0.7);"
+        >
+          Support
+        </h3>
+        <ul class="flex flex-col gap-2.5 list-none p-0 m-0">
+          <li><a href="javascript:void(0)" onclick="openContactModal(event)" class="text-sm transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline" style="font-family: 'DM Sans', sans-serif;">Contact Us</a></li>
+          <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" class="text-sm transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline" style="font-family: 'DM Sans', sans-serif;">Refunds &amp; Disputes</a></li>
+          <li><a href="/buyer/terms-conditions.html" class="text-sm transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline" style="font-family: 'DM Sans', sans-serif;">Terms and Conditions</a></li>
+          <li><a href="/buyer/faq.html" class="text-sm transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline" style="font-family: 'DM Sans', sans-serif;">FAQs</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="w-full h-px mb-8 relative" style="background-color: rgba(255,255,255,0.1);">
+      <div class="absolute left-1/2 top-[-8px] -translate-x-1/2 flex gap-4 text-[rgba(201,151,44,0.4)]">
+        <span class="material-symbols-outlined text-[16px]">stars</span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+      <p
+        class="text-sm flex items-center gap-1.5"
+        style="font-family: 'DM Sans', sans-serif; color: rgba(250,246,238,0.7);"
+      >
+        Made with
+        <span class="material-symbols-outlined text-[16px] text-[#C85A32]" style="font-variation-settings: 'FILL' 1;">
+          favorite
+        </span>
+        in India
+      </p>
+    </div>
+  </div>
+
+  <!-- Botanical bottom accent -->
+  <div class="relative w-full overflow-hidden" style="height: 50px;">
+    <img
+      src="/img/botanical-hero.png"
+      alt=""
+      aria-hidden="true"
+      class="absolute w-full object-cover"
+      style="bottom: 0; height: 100px; object-position: center top; opacity: 0.08;"
+      loading="lazy"
+    />
+    <div
+      class="absolute inset-0"
+      style="background: linear-gradient(to bottom, #273328 0%, transparent 100%);"
+    ></div>
+  </div>
+</footer>
+
+<!-- Modals & Scripts -->
+<div id="tohfa-contact-modal" class="fixed inset-0 z-[1000] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  <div class="bg-[#FAF6EE] border border-[#14381F]/20 rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
+    <button onclick="closeContactModal()" class="absolute top-4 right-4 text-[#14381F] p-1 rounded-full hover:bg-[#14381F]/10">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <h3 class="font-['Playfair_Display'] text-2xl font-bold text-[#14381F] mb-2">Contact Us</h3>
+    <p class="text-sm text-[#605e57] mb-4">We would love to hear from you. Reach out to our support team directly.</p>
+    <div class="space-y-3 text-sm text-[#1C1C1A]">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-[#14381F]">mail</span>
+        <span>support@tohfa.in</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-[#14381F]">call</span>
+        <span>+91 (0) 80 4000 1234</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-[#14381F]">location_on</span>
+        <span>Bengaluru, Karnataka, India</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tohfa-refunds-modal" class="fixed inset-0 z-[1000] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  <div class="bg-[#FAF6EE] border border-[#14381F]/20 rounded-2xl p-6 max-w-lg w-full shadow-2xl relative max-h-[85vh] overflow-y-auto">
+    <button onclick="closeRefundsModal()" class="absolute top-4 right-4 text-[#14381F] p-1 rounded-full hover:bg-[#14381F]/10">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <h3 class="font-['Playfair_Display'] text-2xl font-bold text-[#14381F] mb-2">Refunds &amp; Disputes</h3>
+    <div class="text-sm text-[#605e57] space-y-3 leading-relaxed">
+      <p>At Tohfa, every item is crafted with love and care by independent artisans across India. Because many pieces are custom-made or personalized, our policies protect both creators and buyers.</p>
+      <h4 class="font-bold text-[#14381F] text-base mt-3">Custom &amp; Bespoke Items</h4>
+      <p>Customized products are non-refundable once production has begun, unless the item arrives damaged or materially different from approved specifications.</p>
+      <h4 class="font-bold text-[#14381F] text-base mt-3">Standard Catalog Items</h4>
+      <p>Standard items can be returned within 7 days of delivery in original condition and packaging.</p>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import apiClient from '/src/utils/apiClient.js';
+  import { logout } from '/src/utils/auth.js';
+  import { initSearchOverlay } from '/buyer/searchOverlay.js';
+
+  initSearchOverlay();
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function isProductOwned(sellerId) {
+    try {
+      const user = JSON.parse(sessionStorage.getItem('tohfa_user'));
+      return user && Number(user.id) === Number(sellerId);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  const grid = document.getElementById('product-feed-grid');
+  const skeletons = document.getElementById('feed-skeletons');
+
+  function getRibbonHtml(product) {
+    if (product && product.type === 'sponsored') {
+      return `
+        <div class="ribbon-wrapper">
+          <span class="ribbon-tag ribbon-sponsored">Sponsored</span>
+        </div>
+      `;
+    }
+    if (product && product.is_bestseller && product.listing_type === 'custom') {
+      return `
+        <div class="ribbon-wrapper">
+          <span class="ribbon-tag ribbon-bestseller">Best Seller</span>
+          <span class="ribbon-tag ribbon-custom">Custom</span>
+        </div>
+      `;
+    }
+    if (product && product.is_bestseller) {
+      return `
+        <div class="ribbon-wrapper">
+          <span class="ribbon-tag ribbon-bestseller">Best Seller</span>
+        </div>
+      `;
+    }
+    if (product && product.listing_type === 'custom') {
+      return `
+        <div class="ribbon-wrapper">
+          <span class="ribbon-tag ribbon-custom">Custom</span>
+        </div>
+      `;
+    }
+    return '';
+  }
+
+  const isWishlistUpdating = {};
+
+  async function handleTalkToSeller(productId, btn) {
+    if (!isLoggedIn) {
+      window.Toast?.show("Please log in to contact the seller", "error");
+      setTimeout(() => {
+        window.location.href = '/auth/login.html';
+      }, 1500);
+      return;
+    }
+
+    btn.disabled = true;
+    const originalText = btn.innerText;
+    btn.innerText = 'Starting chat...';
+
+    try {
+      const res = await apiClient.post('/requests', {
+        listing_id: Number(productId),
+        request_type: 'customization',
+        quantity: 1
+      });
+      if (res.data && res.data.success) {
+        const convId = res.data.conversation_id;
+        window.location.href = `/buyer/chat.html?conversationId=${convId}`;
+      } else {
+        throw new Error("Invalid response");
+      }
+    } catch (err) {
+      console.error("Failed to start customization request:", err);
+      window.Toast?.show("Failed to start chat. Please try again.", "error");
+      btn.disabled = false;
+      btn.innerText = originalText;
+    }
+  }
+
+  async function handleAddToCart(productId) {
+    if (!isLoggedIn) {
+      window.Toast?.show("Please log in to purchase items", "error");
+      setTimeout(() => {
+        window.location.href = '/auth/login.html';
+      }, 1500);
+      return;
+    }
+
+    try {
+      const res = await apiClient.post('/cart/items', { product_id: Number(productId), quantity: 1 });
+      if (res.data && res.data.success) {
+        window.Toast?.show("Added to cart successfully!", "success");
+        await updateCartBadge();
+      }
+    } catch (err) {
+      console.error("Cart error:", err);
+    }
+  }
+
+  async function updateCartBadge() {
+    try {
+      const badge = document.getElementById('nav-cart-badge');
+      if (!badge) return;
+      const res = await apiClient.get('/cart');
+      if (res.data && res.data.success) {
+        const count = res.data.data.items?.length || 0;
+        if (count > 0) {
+          badge.textContent = count;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      }
+    } catch (e) {}
+  }
+
+  async function handleToggleWishlist(productId, isWishlisted, btn) {
+    if (!isLoggedIn) {
+      window.Toast?.show("Please log in to add to wishlist", "error");
+      setTimeout(() => {
+        window.location.href = '/auth/login.html';
+      }, 1500);
+      return;
+    }
+
+    if (isWishlistUpdating[productId]) return;
+    isWishlistUpdating[productId] = true;
+
+    try {
+      const iconEl = btn.querySelector('.material-symbols-outlined');
+      if (isWishlisted) {
+        const res = await apiClient.delete(`/wishlist/${productId}`);
+        if (res.data && res.data.success) {
+          btn.setAttribute('data-wishlisted', 'false');
+          if (iconEl) {
+            iconEl.classList.remove('fill-icon', 'text-red-500');
+            iconEl.classList.add('text-[#14381F]');
+            iconEl.style.fontVariationSettings = "'FILL' 0";
+          }
+          window.Toast?.show("Removed from wishlist!", "success");
+        }
+      } else {
+        const res = await apiClient.post(`/wishlist/${productId}`);
+        if (res.data && res.data.success) {
+          btn.setAttribute('data-wishlisted', 'true');
+          if (iconEl) {
+            iconEl.classList.add('fill-icon', 'text-red-500');
+            iconEl.classList.remove('text-[#14381F]');
+            iconEl.style.fontVariationSettings = "'FILL' 1";
+          }
+          window.Toast?.show("Added to wishlist!", "success");
+        }
+      }
+      if (window.updateWishlistBadge) {
+        await window.updateWishlistBadge();
+      }
+    } catch (err) {
+      console.error("Wishlist error:", err);
+    } finally {
+      isWishlistUpdating[productId] = false;
+    }
+  }
+
+  // Helper to create product card template matching new design
+  function createProductCard(product, extraClasses = '') {
+    const card = document.createElement('div');
+    card.className = `group rounded-xl border flex flex-col justify-between overflow-hidden cursor-pointer transition-shadow duration-300 hover:shadow-md bg-[#FAF6EE] border-[rgba(20,56,31,0.15)] ${extraClasses}`;
+    card.onclick = () => window.location.href = `/buyer/product.html?id=${product.id}`;
+
+    const ribbonHtml = getRibbonHtml(product);
+    const formattedPrice = `₹${(product.price_paise / 100).toLocaleString('en-IN')}`;
+    const isWishlisted = !!product.is_wishlisted;
+
+    const isOwner = isProductOwned(product.seller_id);
+    const wishlistBtnHtml = isOwner
+      ? `<button class="absolute top-2 right-2 p-1.5 rounded-full bg-[rgba(250,246,238,0.85)] opacity-50 cursor-not-allowed z-10 flex items-center justify-center" disabled onclick="event.stopPropagation();">
+           <span class="material-symbols-outlined text-[18px] text-[#14381F]" style="font-variation-settings: 'FILL' 0;">favorite</span>
+         </button>`
+      : `<button class="absolute top-2 right-2 p-1.5 rounded-full bg-[rgba(250,246,238,0.85)] transition-all duration-200 hover:scale-110 active:scale-95 toggle-wishlist-btn z-10 flex items-center justify-center cursor-pointer" data-id="${product.id}" data-wishlisted="${isWishlisted}" onclick="event.stopPropagation();" title="Wishlist">
+           <span class="material-symbols-outlined text-[18px] ${isWishlisted ? 'fill-icon text-red-500' : 'text-[#14381F]'}" style="font-variation-settings: 'FILL' ${isWishlisted ? 1 : 0};">favorite</span>
+         </button>`;
+
+    const isCustomized = product.listing_type === 'custom';
+    const actionBtnHtml = isOwner
+      ? `<button class="w-full py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm bg-[#14381F]/20 text-[#605e57] opacity-60 cursor-not-allowed" disabled onclick="event.stopPropagation();">
+           Own Product
+         </button>`
+      : isCustomized
+        ? `<button class="w-full py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm text-white bg-[#14381F] transition-opacity hover:opacity-90 active:scale-[0.98] talk-to-seller-btn" data-id="${product.id}" onclick="event.stopPropagation();">
+             Talk to Seller
+           </button>`
+        : `<button class="w-full py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm text-white bg-[#14381F] transition-opacity hover:opacity-90 active:scale-[0.98] add-to-cart-btn" data-id="${product.id}" onclick="event.stopPropagation();">
+             Add to Cart
+           </button>`;
+
+    card.innerHTML = `
+      <div>
+        <div class="relative overflow-hidden aspect-square">
+          ${ribbonHtml}
+          <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" src="${product.image_url || '/img/incense_holder.jpg'}" alt="${product.name}" loading="lazy">
+          ${wishlistBtnHtml}
+        </div>
+        <div class="p-2.5 sm:p-3 md:p-4 flex flex-col gap-0.5 sm:gap-1">
+          <div class="flex items-center justify-between gap-1.5 sm:gap-2">
+            <span class="font-bold text-xs sm:text-sm md:text-[15px] text-[#14381F]" style="font-family: 'DM Sans', sans-serif;">${formattedPrice}</span>
+            ${parseInt(product.review_count || 0, 10) > 0
+              ? `<div class="flex items-center gap-0.5 text-[11px] sm:text-xs text-[#605e57]">
+                   <span class="text-[#14381F]">★</span>
+                   <span class="font-semibold text-[#1C1C1A]">${parseFloat(product.avg_rating).toFixed(1)}</span>
+                   <span>(${parseInt(product.review_count, 10)})</span>
+                 </div>`
+              : `<span class="bg-[#14381F]/10 text-[#14381F] text-[9px] sm:text-[10px] font-mono font-bold px-1.5 sm:px-2 py-0.5 rounded tracking-wider uppercase">New</span>`}
+          </div>
+          <h4 class="font-bold text-[13px] sm:text-[14px] leading-snug text-[#1C1C1A] line-clamp-1" style="font-family: 'Playfair Display', serif;">${escapeHtml(product.name)}</h4>
+          <span class="text-[11px] sm:text-xs text-[#7a7a6e] hover:underline cursor-pointer truncate block" onclick="event.stopPropagation(); window.location.href='/buyer/seller-profile.html?id=${product.seller_id}'" style="font-family: 'DM Sans', sans-serif;">By ${escapeHtml(product.seller_name || 'Artisan Studio')}</span>
+        </div>
+      </div>
+      <div class="px-2.5 pb-2.5 sm:px-3 sm:pb-3 md:px-4 md:pb-4 pt-0.5 sm:pt-1">
+        ${actionBtnHtml}
+      </div>
+    `;
+
+    // Bind event listeners
+    const wishlistBtn = card.querySelector('.toggle-wishlist-btn');
+    if (wishlistBtn) {
+      wishlistBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const wishlisted = wishlistBtn.getAttribute('data-wishlisted') === 'true';
+        await handleToggleWishlist(product.id, wishlisted, wishlistBtn);
+      });
+    }
+
+    const addToCartBtn = card.querySelector('.add-to-cart-btn');
+    if (addToCartBtn) {
+      addToCartBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await handleAddToCart(product.id);
+      });
+    }
+
+    const talkToSellerBtn = card.querySelector('.talk-to-seller-btn');
+    if (talkToSellerBtn) {
+      talkToSellerBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await handleTalkToSeller(product.id, talkToSellerBtn);
+      });
+    }
+
+    return card;
+  }
+
+  // --- For You Products Loader ---
+  const FALLBACK_FEED = [
+    { id: 1, name: "Handcrafted Ceramic Bowl", seller_name: "Earth & Clay Studio", price_paise: 185000, image_url: "https://images.unsplash.com/photo-1595351298020-038700609878?w=400&q=70", avg_rating: 4.8, review_count: 23, is_bestseller: true, listing_type: "standard" },
+    { id: 2, name: "Hand-Woven Linen Journal", seller_name: "The Paper Loom", price_paise: 95000, image_url: "https://images.unsplash.com/photo-1609881583302-61548332039c?w=400&q=70", avg_rating: 4.6, review_count: 12, is_bestseller: false, listing_type: "custom" },
+    { id: 3, name: "Terracotta Incense Holder", seller_name: "Aura Metals", price_paise: 120000, image_url: "https://images.unsplash.com/photo-1590605095243-072811dbe64c?w=400&q=70", avg_rating: 4.9, review_count: 45, is_bestseller: true, listing_type: "standard" },
+    { id: 4, name: "Minimalist Stoneware Vase", seller_name: "Nordic Craft Co.", price_paise: 240000, image_url: "https://images.unsplash.com/photo-1612945578381-6481cdd73b0a?w=400&q=70", avg_rating: 0, review_count: 0, is_bestseller: false, listing_type: "standard" },
+    { id: 5, name: "Block Print Silk Scarf", seller_name: "Jaipuri Threads", price_paise: 149000, image_url: "https://images.unsplash.com/photo-1629649213060-4874f8f6bce3?w=400&q=70", avg_rating: 4.5, review_count: 8, is_bestseller: false, listing_type: "custom" },
+    { id: 6, name: "Hand-turned Wooden Bowl", seller_name: "Forest & Form", price_paise: 320000, image_url: "https://images.unsplash.com/photo-1595351298020-038700609878?w=400&q=70", avg_rating: 4.9, review_count: 18, is_bestseller: true, listing_type: "standard" },
+    { id: 7, name: "Macramé Wall Hanging", seller_name: "Knot & Grain", price_paise: 175000, image_url: "https://images.unsplash.com/photo-1590605095243-072811dbe64c?w=400&q=70", avg_rating: 0, review_count: 0, is_bestseller: false, listing_type: "standard" },
+    { id: 8, name: "Raku Fired Tea Set", seller_name: "Earth & Clay Studio", price_paise: 480000, image_url: "https://images.unsplash.com/photo-1609881583302-61548332039c?w=400&q=70", avg_rating: 4.7, review_count: 31, is_bestseller: false, listing_type: "standard" },
+  ];
+
+  async function loadForYouProducts() {
+    skeletons.classList.remove('hidden');
+    try {
+      const response = await apiClient.get('/products/feed?page=1&limit=30');
+      const { products } = response.data.data;
+      const filteredProducts = products.filter(product => product.type !== 'sponsored');
+      const forYouProducts = filteredProducts.slice(0, 16);
+
+      grid.innerHTML = '';
+      if (forYouProducts.length > 0) {
+        forYouProducts.forEach(product => {
+          const card = createProductCard(product);
+          grid.appendChild(card);
+        });
+      } else {
+        FALLBACK_FEED.forEach(product => {
+          const card = createProductCard(product);
+          grid.appendChild(card);
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load For You products, using fallbacks:', error);
+      grid.innerHTML = '';
+      FALLBACK_FEED.forEach(product => {
+        const card = createProductCard(product);
+        grid.appendChild(card);
+      });
+    } finally {
+      skeletons.classList.add('hidden');
+    }
+  }
+
+  // --- Public UI Settings ---
+  let publicUiSettings = null;
+  async function fetchPublicUiSettings() {
+    if (publicUiSettings) return publicUiSettings;
+    try {
+      const res = await apiClient.get('/ui-settings/public');
+      if (res.data && res.data.success) {
+        publicUiSettings = res.data.data;
+      }
+    } catch (err) {
+      console.error("Failed to fetch public UI settings:", err);
+      publicUiSettings = {};
+    }
+    return publicUiSettings || {};
+  }
+
+  async function loadSeasonalBanner() {
+    const container = document.getElementById('seasonal-banner-container');
+    const img = document.getElementById('seasonal-banner-image');
+    const label = document.getElementById('seasonal-banner-label');
+    if (!container || !img || !label) return;
+
+    const settings = await fetchPublicUiSettings();
+    const banner = settings.home_seasonal_banner;
+    if (banner && banner.content_url) {
+      img.src = banner.content_url;
+      label.textContent = banner.label || 'Special Seasonal Showcase';
+      container.classList.remove('hidden');
+    } else {
+      container.classList.add('hidden');
+    }
+  }
+
+  async function loadAdminFeaturedProducts() {
+    const section = document.getElementById('admin-featured-section');
+    const grid = document.getElementById('admin-featured-grid');
+    if (!section || !grid) return;
+
+    const settings = await fetchPublicUiSettings();
+    const featuredSlots = [
+      settings.home_featured_product_1,
+      settings.home_featured_product_2,
+      settings.home_featured_product_3,
+      settings.home_featured_product_4,
+      settings.home_featured_product_5,
+      settings.home_featured_product_6
+    ];
+
+    const liveProducts = featuredSlots
+      .filter(slot => slot && slot.resolved_content)
+      .map(slot => slot.resolved_content);
+
+    if (liveProducts.length === 0) {
+      section.classList.add('hidden');
+      return;
+    }
+
+    section.classList.remove('hidden');
+    grid.innerHTML = '';
+    liveProducts.forEach(product => {
+      const card = createProductCard(product);
+      grid.appendChild(card);
+    });
+  }
+
+  // --- Category Rows ---
+  async function loadCategoryRows() {
+    const container = document.getElementById('category-rows-container');
+    if (!container) return;
+
+    try {
+      const settings = await fetchPublicUiSettings();
+      const spotlightSlots = [
+        settings.home_category_spotlight_1,
+        settings.home_category_spotlight_2,
+        settings.home_category_spotlight_3,
+        settings.home_category_spotlight_4
+      ];
+
+      const liveSpotlights = spotlightSlots
+        .filter(slot => slot && slot.resolved_content)
+        .map(slot => slot.resolved_content);
+
+      if (liveSpotlights.length > 0) {
+        const spotlightSection = document.createElement('div');
+        spotlightSection.className = 'p-6 bg-[#FAF6EE] rounded-2xl border border-[#14381F]/20 shadow-sm';
+        spotlightSection.innerHTML = `
+          <div class="flex items-center gap-2 mb-4">
+            <span class="material-symbols-outlined text-[#14381F]" style="font-variation-settings: 'FILL' 1;">stars</span>
+            <h3 class="font-['Playfair_Display'] text-xl font-bold text-[#14381F]">Spotlight Categories</h3>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            ${liveSpotlights.map(cat => `
+              <a href="/buyer/category.html?slug=${cat.slug}" class="group relative rounded-xl overflow-hidden aspect-[4/3] border border-[#14381F]/20 shadow-sm hover:shadow-md transition-all duration-300 no-underline">
+                <img src="${cat.image_url || '/img/ceramic_bowls.jpg'}" alt="${escapeHtml(cat.display_name)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-4">
+                  <span class="text-white font-['Playfair_Display'] font-bold text-lg group-hover:text-[#A8BFA5] transition-colors">${escapeHtml(cat.display_name)}</span>
+                  <span class="text-white/80 text-xs font-mono">${cat.product_count || ''} items</span>
+                </div>
+              </a>
+            `).join('')}
+          </div>
+        `;
+        container.appendChild(spotlightSection);
+      }
+
+      const categoriesRes = await apiClient.get('/categories');
+      const categories = (categoriesRes.data && categoriesRes.data.success) ? categoriesRes.data.data.categories : [
+        { display_name: "Ceramics & Pottery", slug: "ceramics" },
+        { display_name: "Textiles & Weaves", slug: "textiles" },
+        { display_name: "Stationery & Paper", slug: "stationery" }
+      ];
+
+      for (const category of categories) {
+        const rowWrapper = document.createElement('div');
+        rowWrapper.className = 'category-row-wrapper relative mb-4';
+
+        rowWrapper.innerHTML = `
+          <div class="flex justify-between items-baseline mb-4 md:mb-5">
+            <h3 class="font-semibold text-[#14381F]" style="font-family: 'Playfair Display', serif; font-size: clamp(16px, 2.5vw, 22px);">${category.display_name}</h3>
+            <a href="/buyer/category.html?slug=${category.slug}" class="text-sm font-semibold flex items-center gap-1 text-[#14381F] hover:underline no-underline" style="font-family: 'DM Sans', sans-serif;">
+              <span>View All</span>
+              <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+            </a>
+          </div>
+          <div class="relative group">
+            <!-- Scroll Left Button -->
+            <button class="absolute left-[-14px] top-1/2 -translate-y-1/2 p-2 rounded-full border shadow-md z-10 opacity-0 group-hover:opacity-100 transition-all duration-200 active:scale-95 hidden lg:flex items-center justify-center scroll-left-btn bg-[#FAF6EE] text-[#14381F] border-[rgba(20,56,31,0.2)]">
+              <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+            </button>
+            
+            <!-- Horizontally Scrollable Content -->
+            <div class="flex gap-4 overflow-x-auto scroll-smooth pb-3 snap-x snap-mandatory scrollbar-none" style="display: flex !important;">
+              <!-- Skeleton Placeholders -->
+              <div class="w-[240px] h-[340px] bg-[#f0eae1] animate-pulse rounded-xl border border-[rgba(20,56,31,0.15)] flex-shrink-0"></div>
+              <div class="w-[240px] h-[340px] bg-[#f0eae1] animate-pulse rounded-xl border border-[rgba(20,56,31,0.15)] flex-shrink-0"></div>
+              <div class="w-[240px] h-[340px] bg-[#f0eae1] animate-pulse rounded-xl border border-[rgba(20,56,31,0.15)] flex-shrink-0"></div>
+            </div>
+
+            <!-- Scroll Right Button -->
+            <button class="absolute right-[-14px] top-1/2 -translate-y-1/2 p-2 rounded-full border shadow-md z-10 opacity-0 group-hover:opacity-100 transition-all duration-200 active:scale-95 hidden lg:flex items-center justify-center scroll-right-btn bg-[#FAF6EE] text-[#14381F] border-[rgba(20,56,31,0.2)]">
+              <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+            </button>
+          </div>
+        `;
+
+        container.appendChild(rowWrapper);
+
+        const scrollContent = rowWrapper.querySelector('.scrollbar-none');
+        const leftBtn = rowWrapper.querySelector('.scroll-left-btn');
+        const rightBtn = rowWrapper.querySelector('.scroll-right-btn');
+
+        let isLoaded = false;
+        const observer = new IntersectionObserver(async (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting && !isLoaded) {
+              isLoaded = true;
+              observer.disconnect();
+
+              try {
+                const productsRes = await apiClient.get(`/categories/${category.slug}/products?limit=12`);
+                let products = [];
+                if (productsRes.data && productsRes.data.success && productsRes.data.data.products?.length > 0) {
+                  products = productsRes.data.data.products;
+                } else {
+                  // Fallback sample items for category
+                  products = FALLBACK_FEED.map((item, idx) => ({
+                    ...item,
+                    id: item.id + idx * 100,
+                    name: `${category.display_name} Piece #${idx + 1}`
+                  }));
+                }
+
+                scrollContent.innerHTML = '';
+                products.forEach(product => {
+                  const card = createProductCard(product, 'w-[230px] sm:w-[260px] flex-shrink-0 snap-start');
+                  scrollContent.appendChild(card);
+                });
+
+                const getPageWidth = () => scrollContent.clientWidth > 0 ? (scrollContent.clientWidth - 40) : 600;
+
+                leftBtn.onclick = () => {
+                  scrollContent.scrollBy({ left: -getPageWidth(), behavior: 'smooth' });
+                };
+
+                rightBtn.onclick = () => {
+                  scrollContent.scrollBy({ left: getPageWidth(), behavior: 'smooth' });
+                };
+              } catch (err) {
+                console.error(`Failed to load products for category ${category.slug}:`, err);
+                scrollContent.innerHTML = '';
+                FALLBACK_FEED.forEach(product => {
+                  const card = createProductCard(product, 'w-[230px] sm:w-[260px] flex-shrink-0 snap-start');
+                  scrollContent.appendChild(card);
+                });
+              }
+            }
+          }
+        }, { rootMargin: '200px 0px' });
+
+        observer.observe(rowWrapper);
+      }
+    } catch (error) {
+      console.error('Failed to load category rows:', error);
+    }
+  }
+
+  // --- Hero Slideshow Logic ---
+  let currentSlide = 0;
+  let slides = [];
+  let slideInterval;
+  const SLIDE_DURATION = 4000;
+
+  const wrapper = document.getElementById('hero-slides-wrapper');
+  const dotsContainer = document.getElementById('hero-slide-dots');
+  const prevBtn = document.getElementById('hero-slide-prev');
+  const nextBtn = document.getElementById('hero-slide-next');
+
+  async function loadHeroSlides() {
+    let customSlides = [];
+    try {
+      const settings = await fetchPublicUiSettings();
+      if (settings.home_hero_primary && settings.home_hero_primary.content_url) {
+        customSlides.push({
+          id: 'hero-primary',
+          image_url: settings.home_hero_primary.content_url,
+          alt_text: settings.home_hero_primary.label || 'Primary Hero Feature'
+        });
+      }
+      if (settings.home_hero_secondary && settings.home_hero_secondary.content_url) {
+        customSlides.push({
+          id: 'hero-secondary',
+          image_url: settings.home_hero_secondary.content_url,
+          alt_text: settings.home_hero_secondary.label || 'Secondary Hero Feature'
+        });
+      }
+    } catch (e) {}
+
+    if (customSlides.length > 0) {
+      slides = customSlides;
+    } else {
+      try {
+        const response = await apiClient.get('/hero-slides');
+        if (response.data && response.data.success && response.data.data.slides && response.data.data.slides.length > 0) {
+          slides = response.data.data.slides;
+        } else {
+          slides = [];
+        }
+      } catch (error) {
+        slides = [];
+      }
+    }
+
+    const FALLBACK_SLIDES = [
+      { image_url: "https://images.unsplash.com/photo-1595351298020-038700609878?w=1200&q=75", alt_text: "Handcrafted Pottery", product_id: 1 },
+      { image_url: "https://images.unsplash.com/photo-1590605095243-072811dbe64c?w=1200&q=75", alt_text: "Artisan Ceramics", product_id: 2 },
+      { image_url: "https://images.unsplash.com/photo-1609881583302-61548332039c?w=1200&q=75", alt_text: "Handmade Craft", product_id: 3 }
+    ];
+
+    if (slides.length === 0) {
+      slides = FALLBACK_SLIDES;
+    }
+
+    renderSlides();
+    startSlideshow();
+  }
+
+  function renderSlides() {
+    wrapper.innerHTML = '';
+    dotsContainer.innerHTML = '';
+
+    slides.forEach((slide, index) => {
+      const img = document.createElement('img');
+      img.src = slide.imageUrl || slide.image_url || slide.image;
+      img.alt = slide.altText || slide.alt_text || 'Artisan Craft';
+      img.className = `absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out cursor-pointer ${index === 0 ? 'opacity-100' : 'opacity-0'}`;
+      img.id = `hero-slide-${index}`;
+      img.onclick = () => {
+        const prodId = slide.productId || slide.product_id || slide.id;
+        if (prodId && typeof prodId === 'number') {
+          window.location.href = `/buyer/product.html?id=${prodId}`;
+        }
+      };
+      wrapper.appendChild(img);
+
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = `rounded-full transition-all duration-300 ${index === 0 ? 'w-5 h-1.5 bg-[#FAF6EE]' : 'w-1.5 h-1.5 bg-[#FAF6EE]/50'}`;
+      dot.style.cssText = 'min-width: 0 !important; min-height: 0 !important; padding: 0 !important; border: none !important; cursor: pointer;';
+      dot.setAttribute('aria-label', `Slide ${index + 1}`);
+      dot.onclick = () => goToSlide(index);
+      dotsContainer.appendChild(dot);
+    });
+  }
+
+  function goToSlide(index) {
+    if (slides.length === 0) return;
+
+    document.getElementById(`hero-slide-${currentSlide}`)?.classList.replace('opacity-100', 'opacity-0');
+    if (dotsContainer.children[currentSlide]) {
+      dotsContainer.children[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-[#FAF6EE]/50';
+      dotsContainer.children[currentSlide].style.cssText = 'min-width: 0 !important; min-height: 0 !important; padding: 0 !important; border: none !important; cursor: pointer;';
+    }
+
+    currentSlide = ((index % slides.length) + slides.length) % slides.length;
+
+    document.getElementById(`hero-slide-${currentSlide}`)?.classList.replace('opacity-0', 'opacity-100');
+    if (dotsContainer.children[currentSlide]) {
+      dotsContainer.children[currentSlide].className = 'w-5 h-1.5 rounded-full transition-all duration-300 bg-[#FAF6EE]';
+      dotsContainer.children[currentSlide].style.cssText = 'min-width: 0 !important; min-height: 0 !important; padding: 0 !important; border: none !important; cursor: pointer;';
+    }
+
+    resetSlideshow();
+  }
+
+  function nextSlide() {
+    goToSlide(currentSlide + 1);
+  }
+
+  function prevSlide() {
+    goToSlide(currentSlide - 1);
+  }
+
+  function startSlideshow() {
+    slideInterval = setInterval(nextSlide, SLIDE_DURATION);
+  }
+
+  function resetSlideshow() {
+    clearInterval(slideInterval);
+    startSlideshow();
+  }
+
+  prevBtn.addEventListener('click', prevSlide);
+  nextBtn.addEventListener('click', nextSlide);
+
+  // --- Sponsored Carousel ---
+  const FALLBACK_SPONSORED = [
+    { id: 101, name: "Handcrafted Ceramic Bowls (Set of 2)", seller_name: "Earth & Clay Studio", price_paise: 185000, image_url: "https://images.unsplash.com/photo-1595351298020-038700609878?w=400&q=70", avg_rating: 4.8, review_count: 23, listing_type: "standard", type: "sponsored" },
+    { id: 102, name: "Handmade Linen Journal", seller_name: "The Paper Loom", price_paise: 95000, image_url: "https://images.unsplash.com/photo-1609881583302-61548332039c?w=400&q=70", avg_rating: 4.6, review_count: 12, listing_type: "custom", type: "sponsored" },
+    { id: 103, name: "Solid Brass Incense Holder", seller_name: "Aura Metals", price_paise: 120000, image_url: "https://images.unsplash.com/photo-1590605095243-072811dbe64c?w=400&q=70", avg_rating: 4.9, review_count: 45, listing_type: "standard", type: "sponsored" },
+    { id: 104, name: "Minimalist Stoneware Vase", seller_name: "Nordic Craft Co.", price_paise: 240000, image_url: "https://images.unsplash.com/photo-1612945578381-6481cdd73b0a?w=400&q=70", avg_rating: 4.7, review_count: 18, listing_type: "standard", type: "sponsored" },
+    { id: 105, name: "Handwoven Cotton Throw", seller_name: "Heritage Weaves", price_paise: 165000, image_url: "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=400&q=70", avg_rating: 4.8, review_count: 31, listing_type: "standard", type: "sponsored" },
+    { id: 106, name: "Botanical Scented Soy Candle", seller_name: "Bloom & Glow", price_paise: 75000, image_url: "https://images.unsplash.com/photo-1603006905003-be475563bc59?w=400&q=70", avg_rating: 4.9, review_count: 56, listing_type: "standard", type: "sponsored" }
+  ];
+
+  async function loadSponsoredProducts() {
+    const sponsoredGrid = document.getElementById('sponsored-product-grid');
+    if (!sponsoredGrid) return;
+
+    let sponsoredProducts = [];
+    try {
+      const response = await apiClient.get('/products/feed?page=1&limit=24');
+      if (response.data && response.data.success && response.data.data && response.data.data.products) {
+        const products = response.data.data.products;
+        sponsoredProducts = products.filter(p => p.type === 'sponsored');
+      }
+    } catch (error) {
+      console.error('Failed to load sponsored products:', error);
+    }
+
+    if (sponsoredProducts.length === 0) {
+      sponsoredProducts = FALLBACK_SPONSORED;
+    }
+
+    sponsoredGrid.innerHTML = '';
+    sponsoredProducts.forEach(product => {
+      const cardWrapper = document.createElement('div');
+      cardWrapper.className = 'sponsored-item flex-shrink-0';
+      const card = createProductCard(product);
+      cardWrapper.appendChild(card);
+      sponsoredGrid.appendChild(cardWrapper);
+    });
+
+    initSponsoredCarousel(sponsoredProducts.length);
+  }
+
+  function initSponsoredCarousel(totalItems) {
+    const sponsoredGrid = document.getElementById('sponsored-product-grid');
+    const wrapper = document.getElementById('sponsored-carousel-wrapper');
+    const prevBtn = document.getElementById('sponsored-prev-btn');
+    const nextBtn = document.getElementById('sponsored-next-btn');
+    if (!sponsoredGrid || totalItems === 0) return;
+
+    let currentIndex = 0;
+    let autoPlayTimer = null;
+    let isPaused = false;
+    let touchStartX = 0;
+    let touchDeltaX = 0;
+
+    function getGap() {
+      if (window.innerWidth >= 640) return 16;
+      return 12;
+    }
+
+    function getItemsPerView() {
+      if (window.innerWidth >= 1024) return 4;
+      if (window.innerWidth >= 768) return 3;
+      return 2;
+    }
+
+    function getMaxIndex() {
+      return Math.max(0, totalItems - getItemsPerView());
+    }
+
+    function applyItemWidths() {
+      const perView = getItemsPerView();
+      const gap = getGap();
+      const items = sponsoredGrid.querySelectorAll('.sponsored-item');
+      items.forEach(item => {
+        item.style.width = `calc((100% - ${(perView - 1) * gap}px) / ${perView})`;
+      });
+    }
+
+    function updateCarousel() {
+      applyItemWidths();
+      const perView = getItemsPerView();
+      const gap = getGap();
+      const maxIndex = getMaxIndex();
+      if (currentIndex > maxIndex) currentIndex = maxIndex;
+
+      sponsoredGrid.style.transform = `translateX(calc(-${currentIndex} * (100% + ${gap}px) / ${perView}))`;
+
+      if (prevBtn) {
+        prevBtn.style.opacity = currentIndex === 0 ? '0.5' : '1';
+        prevBtn.style.cursor = currentIndex === 0 ? 'default' : 'pointer';
+      }
+      if (nextBtn) {
+        nextBtn.style.opacity = currentIndex >= maxIndex ? '0.5' : '1';
+        nextBtn.style.cursor = currentIndex >= maxIndex ? 'default' : 'pointer';
+      }
+    }
+
+    function nextSlide() {
+      const maxIndex = getMaxIndex();
+      if (maxIndex <= 0) return;
+      currentIndex = (currentIndex >= maxIndex) ? 0 : currentIndex + 1;
+      updateCarousel();
+    }
+
+    function prevSlide() {
+      const maxIndex = getMaxIndex();
+      if (maxIndex <= 0) return;
+      currentIndex = (currentIndex <= 0) ? maxIndex : currentIndex - 1;
+      updateCarousel();
+    }
+
+    if (prevBtn) {
+      prevBtn.onclick = (e) => {
+        e.preventDefault();
+        prevSlide();
+      };
+    }
+
+    if (nextBtn) {
+      nextBtn.onclick = (e) => {
+        e.preventDefault();
+        nextSlide();
+      };
+    }
+
+    function startTimer() {
+      stopTimer();
+      if (isPaused || getMaxIndex() <= 0) return;
+      autoPlayTimer = setInterval(nextSlide, 3500);
+    }
+
+    function stopTimer() {
+      if (autoPlayTimer) {
+        clearInterval(autoPlayTimer);
+        autoPlayTimer = null;
+      }
+    }
+
+    if (wrapper) {
+      wrapper.addEventListener('mouseenter', () => {
+        isPaused = true;
+        stopTimer();
+      });
+      wrapper.addEventListener('mouseleave', () => {
+        isPaused = false;
+        startTimer();
+      });
+      wrapper.addEventListener('touchstart', (e) => {
+        isPaused = true;
+        stopTimer();
+        if (e.touches && e.touches.length > 0) {
+          touchStartX = e.touches[0].clientX;
+          touchDeltaX = 0;
+        }
+      }, { passive: true });
+      wrapper.addEventListener('touchmove', (e) => {
+        if (!touchStartX || !e.touches || e.touches.length === 0) return;
+        touchDeltaX = e.touches[0].clientX - touchStartX;
+      }, { passive: true });
+      wrapper.addEventListener('touchend', () => {
+        if (Math.abs(touchDeltaX) > 40) {
+          if (touchDeltaX < 0) nextSlide();
+          else prevSlide();
+        }
+        touchStartX = 0;
+        touchDeltaX = 0;
+        isPaused = false;
+        startTimer();
+      });
+    }
+
+    window.addEventListener('resize', updateCarousel);
+    updateCarousel();
+    startTimer();
+  }
+
+  // --- Auth State ---
+  let isLoggedIn = false;
+  async function checkAuthState() {
+    const token = sessionStorage.getItem('tohfa_access_token');
+    const authContainer = document.getElementById('auth-buttons-container');
+
+    if (token) {
+      isLoggedIn = true;
+      try {
+        let avatarUrl = null;
+        let initial = 'A';
+
+        const cachedUser = sessionStorage.getItem('tohfa_user');
+        if (cachedUser) {
+          try {
+            const user = JSON.parse(cachedUser);
+            avatarUrl = user.avatar_url;
+            if (user.full_name) {
+              initial = user.full_name.charAt(0).toUpperCase();
+            }
+          } catch (e) {}
+        }
+
+        if (!avatarUrl) {
+          try {
+            const res = await apiClient.get('/profile/me');
+            if (res.data && res.data.success) {
+              avatarUrl = res.data.data.avatar_url;
+              if (res.data.data.full_name) {
+                initial = res.data.data.full_name.charAt(0).toUpperCase();
+              }
+              sessionStorage.setItem('tohfa_user', JSON.stringify(res.data.data));
+            }
+          } catch (err) {}
+        }
+
+        let avatarHtml = '';
+        if (avatarUrl) {
+          avatarHtml = `<img src="${avatarUrl}" alt="Profile" class="w-9 h-9 rounded-full border border-[#FAF6EE]/40 object-cover cursor-pointer hover:scale-105 transition-transform" onclick="window.location.href='/buyer/profile.html'" loading="lazy" />`;
+        } else {
+          avatarHtml = `
+            <a href="/buyer/profile.html" class="w-9 h-9 rounded-full bg-[#FAF6EE] flex items-center justify-center text-[#14381F] font-bold border border-[#FAF6EE]/30 text-sm overflow-hidden flex-shrink-0 cursor-pointer no-underline hover:opacity-90 transition-opacity">
+              ${initial}
+            </a>
+          `;
+        }
+
+        if (authContainer) authContainer.innerHTML = avatarHtml;
+        updateCartBadge();
+      } catch (e) {
+        logout();
+      }
+    } else {
+      isLoggedIn = false;
+      if (authContainer) {
+        authContainer.innerHTML = `
+          <a href="/auth/login.html" class="text-sm font-semibold text-[#FAF6EE] hover:text-white hover:underline no-underline" style="font-family: 'DM Sans', sans-serif;">Login</a>
+          <a href="/auth/signup-buyer.html" class="text-[#14381F] text-sm font-semibold px-3.5 py-1.5 rounded-lg bg-[#FAF6EE] hover:bg-white transition-all no-underline shadow-sm" style="font-family: 'DM Sans', sans-serif;">Sign Up</a>
+        `;
+      }
+    }
+  }
+
+  function initOccasionsScroller() {
+    const container = document.getElementById('occasions-scroll-container');
+    const leftBtn = document.getElementById('occasions-scroll-left');
+    const rightBtn = document.getElementById('occasions-scroll-right');
+    if (!container) return;
+
+    if (leftBtn) {
+      leftBtn.addEventListener('click', () => {
+        container.scrollBy({ left: -260, behavior: 'smooth' });
+      });
+    }
+
+    if (rightBtn) {
+      rightBtn.addEventListener('click', () => {
+        container.scrollBy({ left: 260, behavior: 'smooth' });
+      });
+    }
+
+    // Drag to scroll for desktop mouse users
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+
+    container.addEventListener('mousedown', (e) => {
+      isDown = true;
+      startX = e.pageX - container.offsetLeft;
+      scrollLeft = container.scrollLeft;
+      container.style.cursor = 'grabbing';
+    });
+
+    container.addEventListener('mouseleave', () => {
+      isDown = false;
+      container.style.cursor = '';
+    });
+
+    container.addEventListener('mouseup', () => {
+      isDown = false;
+      container.style.cursor = '';
+    });
+
+    container.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - container.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      container.scrollLeft = scrollLeft - walk;
+    });
+  }
+
+  // --- Initial Invocations ---
+  loadHeroSlides();
+  loadSeasonalBanner();
+  loadSponsoredProducts();
+  loadAdminFeaturedProducts();
+  loadForYouProducts();
+  loadCategoryRows();
+  initOccasionsScroller();
+  checkAuthState();
+</script>
+
+<script>
+  async function handleFooterSellerLink(e) {
+    if (e) e.preventDefault();
+    const isMobile = window.innerWidth < 768;
+    const token = sessionStorage.getItem('tohfa_access_token');
+    if (!token) {
+      sessionStorage.setItem('tohfa_redirect_seller', 'true');
+      sessionStorage.setItem('tohfa_return_to', window.location.pathname + window.location.search);
+      window.location.href = '/auth/login.html';
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/profile/me', {
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.success) {
+          const role = data.data.role;
+          if (role === 'seller') {
+            window.location.href = '/seller/dashboard.html';
+            return;
+          }
+        }
+      }
+    } catch(err) {
+      console.error("Error checking seller status:", err);
+    }
+
+    window.location.href = '/buyer/become-seller.html';
+  }
+
+  window.openContactModal = function(e) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    const modal = document.getElementById('tohfa-contact-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+    }
+  };
+
+  window.closeContactModal = function() {
+    const modal = document.getElementById('tohfa-contact-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.style.overflow = '';
+    }
+  };
+
+  window.openRefundsModal = function(e) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    const modal = document.getElementById('tohfa-refunds-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+    }
+  };
+
+  window.closeRefundsModal = function() {
+    const modal = document.getElementById('tohfa-refunds-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.style.overflow = '';
+    }
+  };
+
+  if (!window.hasContactModalEscListener) {
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        window.closeContactModal();
+        window.closeRefundsModal();
+      }
+    });
+    window.hasContactModalEscListener = true;
+  }
+</script>
+</body>
+</html>

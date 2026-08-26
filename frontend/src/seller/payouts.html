@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+      <script type="module" src="/src/components/ReportWidget.js" defer></script>
+    <script type="module" src="/src/components/ProtectedRoute.js"></script>
+    <meta charset="utf-8"/>
+    <title>Payments & Settlements | Seller Studio | Tohfa</title>
+    <!-- Google Fonts -->
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+    <script type="module" src="/components/seller-components.js"></script>
+    <script src="/seller/js/seller-utils.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #FFF8E7;
+            color: #1A1A1A;
+        }
+        h1, h2, h3, h4, .font-heading {
+            font-family: 'Playfair Display', serif;
+        }
+        .font-mono {
+            font-family: 'Space Mono', monospace;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        @keyframes shimmer {
+            0% { background-position: -400px 0; }
+            100% { background-position: 400px 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #EFE7DD 25%, #E0D9CF 50%, #EFE7DD 75%);
+            background-size: 400px 100%;
+            animation: shimmer 1.4s infinite;
+        }
+        input, select, textarea {
+            transition: all 0.2s ease;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #14381F !important;
+            box-shadow: 0 0 0 2px rgba(61, 107, 79, 0.2) !important;
+        }
+        button, a {
+            transition: all 0.2s ease;
+        }
+        button:hover, a:hover {
+            opacity: 0.9;
+        }
+    </style>
+
+<!-- Mobile Style Overrides -->
+<style>
+  @media (max-width: 768px) {
+    /* Stack grid & flex items */
+    .grid, [class*="grid-cols-"], .flex-row, .md\:flex-row {
+      display: flex !important;
+      flex-direction: column !important;
+      width: 100% !important;
+    }
+    /* Let card items span full width */
+    .col-span-1, .col-span-2, .col-span-3, .col-span-4, .col-span-5, .col-span-6,
+    .col-span-7, .col-span-8, .col-span-9, .col-span-10, .col-span-11, .col-span-12,
+    .lg\:col-span-1, .lg\:col-span-2, .lg\:col-span-3, .lg\:col-span-4,
+    .lg\:col-span-5, .lg\:col-span-6, .lg\:col-span-7, .lg\:col-span-8,
+    .lg\:col-span-9, .lg\:col-span-10, .lg\:col-span-11, .lg\:col-span-12 {
+      grid-column: span 12 / span 12 !important;
+      width: 100% !important;
+    }
+    /* Set min spacing */
+    .grid > div, .flex > div, .space-y-lg > div, .space-y-md > div {
+      margin-top: 12px;
+    }
+    /* Enforce playfair display for headings */
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Playfair Display', serif !important;
+    }
+  }
+</style>
+
+<!-- Payments Mobile Custom Styling -->
+<style>
+  @media (max-width: 768px) {
+    #revenue-chart, #revenue-chart-container, .chart-section,
+    [id*="chart"], [class*="chart-wrap"], canvas {
+      width: 100% !important;
+      height: 220px !important;
+    }
+    .stat-cards-row, .metrics-row, [class*="stats-grid"], .grid-cols-3 {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 12px !important;
+    }
+    .stat-card, .metric-card, [class*="stat-card"] {
+      width: 100% !important;
+      margin-top: 0 !important;
+    }
+    .payout-section + .payout-section {
+      border-top: 1px solid #FFF8E7 !important;
+      margin-top: 20px !important;
+      padding-top: 20px !important;
+    }
+  }
+</style>
+
+</head>
+<body class="min-h-screen bg-[#FFF8E7]" id="body-content">
+
+<seller-layout active-tab="payments">
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed top-20 right-6 z-[2000] flex items-center gap-3 px-5 py-3 rounded-xl shadow-premium text-sm font-semibold transition-all duration-300">
+        <span id="toast-icon" class="material-symbols-outlined text-lg"></span>
+        <span id="toast-msg"></span>
+    </div>
+
+    <!-- Header -->
+    <header class="mb-8 flex items-center gap-4">
+        <a href="/seller/dashboard.html" class="p-2 hover:bg-sage/10 rounded-full transition-colors flex items-center justify-center">
+            <span class="material-symbols-outlined text-forest text-3xl">arrow_back</span>
+        </a>
+        <div>
+            <h1 class="text-4xl font-bold text-forest">Settlements & Payments</h1>
+            <p class="text-base text-forest">Manage your direct-to-bank earnings, tax configurations, and transaction logs.</p>
+        </div>
+    </header>
+
+    <!-- Global Loading State -->
+    <div id="loading-state" class="space-y-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="skeleton h-24 rounded-card"></div>
+            <div class="skeleton h-24 rounded-card"></div>
+            <div class="skeleton h-24 rounded-card"></div>
+            <div class="skeleton h-24 rounded-card"></div>
+        </div>
+        <div class="skeleton h-80 rounded-card"></div>
+    </div>
+
+    <!-- Main Content Panel (initially hidden) -->
+    <div id="payments-content" class="hidden space-y-8">
+        
+        <!-- SECTION 1: Earnings Overview -->
+        <section class="space-y-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Card 1: Total Earnings -->
+                <div class="bg-[#FFF8E7] p-6 rounded-card border border-sage/20 shadow-premium relative" style="background-color: #FDF6EC; border-left: 4px solid #B5813A;">
+                    <span class="material-symbols-outlined text-2xl absolute top-6 right-6" style="color: #B5813A;">payments</span>
+                    <p class="text-sm font-bold uppercase tracking-wider mb-2" style="color: rgba(181, 129, 58, 0.7);">Total Earnings</p>
+                    <h3 id="stat-total-earnings" class="text-3xl font-bold font-mono" style="color: #B5813A;">₹0.00</h3>
+                </div>
+                <!-- Card 2: This Month -->
+                <div class="bg-[#FFF8E7] p-6 rounded-card border border-sage/20 shadow-premium relative" style="background-color: #EDF5F0; border-left: 4px solid #14381F;">
+                    <span class="material-symbols-outlined text-2xl absolute top-6 right-6" style="color: #14381F;">calendar_month</span>
+                    <p class="text-sm font-bold uppercase tracking-wider mb-2" style="color: rgba(61, 107, 79, 0.7);">This Month</p>
+                    <h3 id="stat-month-earnings" class="text-3xl font-bold font-mono" style="color: #14381F;">₹0.00</h3>
+                </div>
+                <!-- Card 3: This Week -->
+                <div class="bg-[#FFF8E7] p-6 rounded-card border border-sage/20 shadow-premium relative" style="background-color: #EDF2FA; border-left: 4px solid #4A6FA5;">
+                    <span class="material-symbols-outlined text-2xl absolute top-6 right-6" style="color: #4A6FA5;">date_range</span>
+                    <p class="text-sm font-bold uppercase tracking-wider mb-2" style="color: rgba(74, 111, 165, 0.7);">This Week</p>
+                    <h3 id="stat-week-earnings" class="text-3xl font-bold font-mono" style="color: #4A6FA5;">₹0.00</h3>
+                </div>
+                <!-- Card 4: Available Payout Balance -->
+                <div class="bg-[#FFF8E7] p-6 rounded-card border border-sage/20 shadow-premium relative flex flex-col justify-between" style="background-color: #EDF8F7; border-left: 4px solid #3A7D77;">
+                    <div>
+                        <span class="material-symbols-outlined text-2xl absolute top-6 right-6" style="color: #3A7D77;">account_balance</span>
+                        <p class="text-sm font-bold uppercase tracking-wider mb-2" style="color: rgba(58, 125, 119, 0.7);">Available Balance</p>
+                        <h3 id="stat-pending-payout" class="text-3xl font-bold font-mono" style="color: #3A7D77;">₹0.00</h3>
+                        <div id="hold-badge-container" class="mt-2 hidden">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold uppercase tracking-wider">
+                                <span class="material-symbols-outlined text-xs">lock_clock</span>
+                                <span id="hold-badge-text">₹0.00 on hold (7-day escrow)</span>
+                            </span>
+                        </div>
+                    </div>
+                    <button id="withdraw-funds-btn" class="mt-4 w-full py-2 bg-[#14381F] text-white rounded-lg text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-all flex items-center justify-center gap-1">
+                        <span class="material-symbols-outlined text-sm">payments</span> Request Payout
+                    </button>
+                </div>
+            </div>
+
+            <!-- Earnings Graph -->
+            <div class="p-6 rounded-card border shadow-premium" style="background: linear-gradient(135deg, #FDF8F2 0%, #EDF5F0 100%); border-color: rgba(20,56,31,0.2);">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-forest" style="border-left: 4px solid #14381F; padding-left: 10px;">Earnings Trend</h3>
+                    <div class="flex gap-2">
+                        <button onclick="changeGraphRange('7d')" id="range-btn-7d" class="px-4 py-2 rounded-btn text-sm font-bold transition-all border border-forest bg-forest text-white">7 Days</button>
+                        <button onclick="changeGraphRange('30d')" id="range-btn-30d" class="px-4 py-2 rounded-btn text-sm font-bold transition-all border border-sage/40 hover:border-forest text-forest">30 Days</button>
+                        <button onclick="changeGraphRange('3m')" id="range-btn-3m" class="px-4 py-2 rounded-btn text-sm font-bold transition-all border border-sage/40 hover:border-forest text-forest">3 Months</button>
+                    </div>
+                </div>
+                <div class="relative h-64 w-full">
+                    <canvas id="earningsChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: Receiving Bank Details Configuration & Recent Payments -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Receiving Bank Details Form -->
+            <div class="bg-[#FFF8E7] p-6 rounded-card border border-sage/20 shadow-premium space-y-6">
+                <div>
+                    <h3 class="text-xl font-bold text-forest" style="border-left: 4px solid #14381F; padding-left: 10px;">Receiving Bank Details</h3>
+                    <p class="text-sm text-forest/80">Configure where you receive direct settlements (minus commissions/fees).</p>
+                </div>
+                
+                <div class="flex border-b border-sage/10 bg-parchment/20 rounded-t-lg overflow-hidden">
+                    <button onclick="setDetailsTab('BANK')" id="tab-BANK" class="flex-1 py-3 text-center text-sm font-bold text-forest border-b-2 border-forest">Bank Account</button>
+                    <button onclick="setDetailsTab('UPI')" id="tab-UPI" class="flex-1 py-3 text-center text-sm font-bold text-forest/60 border-b-2 border-transparent">UPI VPA</button>
+                </div>
+
+                <form id="receiving-details-form" onsubmit="saveReceivingDetails(event)" class="space-y-4">
+                    <input type="hidden" id="details-type" value="BANK" />
+                    
+                    <!-- Bank Fields -->
+                    <div id="bank-fields" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-forest mb-1">Account Holder Name</label>
+                            <input type="text" id="bank-holder" class="w-full px-3 py-2 bg-parchment/20 border border-sage/30 rounded-btn text-sm text-forest font-medium" placeholder="Amit Sharma" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-forest mb-1">Bank Name</label>
+                            <input type="text" id="bank-name" class="w-full px-3 py-2 bg-parchment/20 border border-sage/30 rounded-btn text-sm text-forest font-medium" placeholder="State Bank of India" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-forest mb-1">Account Number</label>
+                            <input type="password" id="bank-acc" class="w-full px-3 py-2 bg-parchment/20 border border-sage/30 rounded-btn text-sm text-forest font-mono font-medium" placeholder="••••••••••••" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-forest mb-1">Confirm Account Number</label>
+                            <input type="text" id="bank-confirm-acc" class="w-full px-3 py-2 bg-parchment/20 border border-sage/30 rounded-btn text-sm text-forest font-mono font-medium" placeholder="Re-enter Account Number" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-forest mb-1">IFSC Code</label>
+                            <input type="text" id="bank-ifsc" class="w-full px-3 py-2 bg-parchment/20 border border-sage/30 rounded-btn text-sm text-forest uppercase font-mono font-medium" placeholder="SBIN0001234" />
+                        </div>
+                    </div>
+
+                    <!-- UPI Fields -->
+                    <div id="upi-fields" class="space-y-4 hidden">
+                        <div>
+                            <label class="block text-sm font-bold text-forest mb-1">UPI Account Holder Name</label>
+                            <input type="text" id="upi-holder" class="w-full px-3 py-2 bg-parchment/20 border border-sage/30 rounded-btn text-sm text-forest font-medium" placeholder="Amit Sharma" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-forest mb-1">UPI ID (VPA)</label>
+                            <input type="text" id="upi-id" class="w-full px-3 py-2 bg-parchment/20 border border-sage/30 rounded-btn text-sm text-forest font-mono font-medium" placeholder="amit@upi" />
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-forest hover:bg-forest/90 text-white font-bold text-sm rounded-btn shadow-md transition-colors">
+                        Save Settlement Details
+                    </button>
+                </form>
+            </div>
+
+            <!-- Recent Payments -->
+            <div class="bg-[#FFF8E7] p-6 rounded-card border border-sage/20 shadow-premium flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-forest" style="border-left: 4px solid #14381F; padding-left: 10px;">Recent Settlements</h3>
+                        <a href="/seller/payment-history.html" class="flex items-center gap-1 text-sm font-bold text-violet hover:underline">
+                            View Payments <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                        </a>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="text-sm font-bold uppercase tracking-wider text-forest border-b border-sage/10">
+                                <tr>
+                                    <th class="py-3 px-2">Date</th>
+                                    <th class="py-3 px-2">Buyer</th>
+                                    <th class="py-3 px-2">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-payments-tbody" class="divide-y divide-sage/10 text-sm font-medium text-forest">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- SECTION 5: Tax & GST -->
+            <div class="bg-[#FFF8E7] p-6 rounded-card border border-sage/20 shadow-premium space-y-6">
+                <div>
+                    <h3 class="text-xl font-bold text-forest" style="border-left: 4px solid #14381F; padding-left: 10px;">Tax & GST Settings</h3>
+                    <p class="text-sm text-forest/80">Configure your business taxes and download TDS sheets.</p>
+                </div>
+
+                <form id="tax-form" onsubmit="saveTaxInfo(event)" class="space-y-4">
+                    <div class="flex items-center justify-between py-3 border-b border-sage/10">
+                        <div>
+                            <span class="text-base font-semibold text-forest">GST Registered?</span>
+                            <p class="text-sm text-forest/80">Toggle if you possess a valid GSTIN registration.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="tax-gst-registered" class="sr-only peer" onchange="toggleGstinField()" />
+                            <div class="w-11 h-6 bg-parchment peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#FFF8E7] after:border-sage/40 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-forest"></div>
+                        </label>
+                    </div>
+
+                    <div id="gstin-container" class="hidden">
+                        <label class="block text-sm font-bold text-forest mb-1">GSTIN Number</label>
+                        <input type="text" id="tax-gstin" class="w-full px-3 py-2 bg-parchment/20 border border-sage/30 rounded-btn text-sm text-forest focus:ring-1 focus:ring-forest outline-none uppercase font-mono font-medium" placeholder="22AAAAA0000A1Z5" />
+                        <span id="gstin-error" class="text-sm text-error font-medium hidden"></span>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-forest mb-1">PAN Number</label>
+                        <input type="text" id="tax-pan" required class="w-full px-3 py-2 bg-parchment/20 border border-sage/30 rounded-btn text-sm text-forest focus:ring-1 focus:ring-forest outline-none uppercase font-mono font-medium" placeholder="ABCDE1234F" />
+                    </div>
+
+                    <div class="flex items-center justify-between py-3 border-b border-sage/10">
+                        <div>
+                            <span class="text-base font-semibold text-forest">TDS Applicable</span>
+                            <p class="text-sm text-forest/80">Select if standard government TDS is deducted.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="tax-tds-applicable" class="sr-only peer" />
+                            <div class="w-11 h-6 bg-parchment peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#FFF8E7] after:border-sage/40 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-forest"></div>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="px-6 py-3 bg-forest hover:bg-forest/90 transition-colors text-white font-bold text-sm rounded-btn shadow-md">
+                        Save Tax Settings
+                    </button>
+                </form>
+            </div>
+
+            <!-- SECTION 6: Invoices & Documents -->
+            <div class="bg-[#FFF8E7] p-6 rounded-card border border-sage/20 shadow-premium space-y-6">
+                <div>
+                    <h3 class="text-xl font-bold text-forest" style="border-left: 4px solid #14381F; padding-left: 10px;">Invoices & Statements</h3>
+                    <p class="text-sm text-forest/80">Historical settlement logs.</p>
+                </div>
+
+                <div id="invoices-list" class="space-y-3 max-h-60 overflow-y-auto pr-2">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 7: Refunds & Disputes Overview -->
+        <section class="bg-[#FFF8E7] p-6 rounded-card border border-sage/20 shadow-premium space-y-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-xl font-bold text-forest" style="border-left: 4px solid #14381F; padding-left: 10px;">Refunds & Disputes</h3>
+                    <p class="text-sm text-forest/80">Review recent claims or issues flagged by buyers.</p>
+                </div>
+                <a href="#refund-disputes-list" class="flex items-center gap-1 px-4 py-2 bg-violet hover:bg-violet/90 text-white text-sm font-bold rounded-btn shadow-md">
+                    View Disputes <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </a>
+            </div>
+
+            <div id="refund-disputes-list" class="space-y-4 max-h-[340px] overflow-y-auto pr-2">
+                <!-- Dynamic disputes list -->
+            </div>
+        </section>
+
+    <!-- Footer -->
+    <!-- NEW TOHFA FOOTER — footer_stitch v1 -->
+
+<footer style="position:relative;overflow:hidden;background:#14381F;color:#FFF8E7;padding-top:64px;padding-bottom:32px;">
+  <!-- Ghost watermark -->
+  <div style="position:absolute;bottom:-10%;right:-5%;opacity:0.04;pointer-events:none;user-select:none;">
+    <span class="material-symbols-outlined" style="font-size:600px;color:white;">local_florist</span>
+  </div>
+  <!-- Main grid -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:repeat(1,1fr);gap:48px;margin-bottom:80px;position:relative;z-index:10;" class="tohfa-footer-grid">
+    <!-- Brand -->
+    <div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:44px;font-style:italic;color:#14381F;margin-bottom:16px;">Tohfa.</h2>
+      <p style="font-family:'DM Sans',sans-serif;color:#FFF8E7;margin-bottom:8px;font-weight:500;">Thoughtful Gifting, Made Effortless.</p>
+      <p style="font-family:'DM Sans',sans-serif;color:#A8B89A;margin-bottom:32px;line-height:1.6;">India's first home for handcrafted gifts, celebrating the soul of artisanal craftsmanship.</p>
+      
+    </div>
+    <!-- Company -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#14381F;margin-bottom:32px;">Company</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a href="/buyer/our-story.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">About Us</a></li>
+        <li><a href="/buyer/our-story.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Our Story</a></li>
+        <li><a href="/buyer/terms-conditions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Terms &amp; Conditions</a></li>
+      </ul>
+    </div>
+    <!-- For Sellers -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#14381F;margin-bottom:32px;">For Sellers</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a onclick="handleFooterSellerLink(event)" href="/buyer/become-seller.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Sell on Tohfa</a></li>
+        <li><a href="/seller/dashboard.html" onclick="handleFooterSellerLink(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Seller Studio</a></li>
+      </ul>
+    </div>
+    <!-- For Buyers -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#14381F;margin-bottom:32px;">For Buyers</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a href="javascript:void(0)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'" onclick="event.preventDefault(); if (window.openTohfaChat) { window.openTohfaChat('Find me a gift'); } else if (window.openTanya) { window.openTanya(); } else { window.__tohfaChatQueue = window.__tohfaChatQueue || []; window.__tohfaChatQueue.push('Find me a gift'); }">AI Gift Guide</a></li>
+        <li><a href="/buyer/occasions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Occasions</a></li>
+        <li><a href="/buyer/zip-gift.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Zip Gift ✨</a></li>
+      </ul>
+    </div>
+    <!-- Support -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#14381F;margin-bottom:32px;">Support</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a href="javascript:void(0)" onclick="openContactModal(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Contact Us</a></li>
+        <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Refunds &amp; Disputes</a></li>
+        <li><a href="/buyer/terms-conditions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Terms and Conditions</a></li>
+        <li><a href="/buyer/faq.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">FAQs</a></li>
+      </ul>
+    </div>
+  </div>
+  <!-- Divider -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;margin-bottom:32px;">
+    <div style="width:100%;height:1px;background:rgba(255,255,255,0.1);position:relative;">
+      <div style="position:absolute;left:50%;top:-8px;transform:translateX(-50%);display:flex;gap:16px;color:rgba(201,151,44,0.3);">
+        <span class="material-symbols-outlined" style="font-size:16px;">stars</span>
+      </div>
+    </div>
+  </div>
+  <!-- Bottom bar -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:flex;flex-direction:column;align-items:center;gap:24px;position:relative;z-index:10;" class="tohfa-footer-bottom">
+    
+    <div style="display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;font-size:14px;color:#FFF8E7;">
+      <span>Made with</span>
+      <span class="material-symbols-outlined" style="color:#14381F;font-size:18px;font-variation-settings:'FILL' 1;">favorite</span>
+      <span>in India</span>
+    </div>
+  </div>
+  <style>
+    @media (min-width: 768px) {
+      .tohfa-footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr 1fr !important; }
+      .tohfa-footer-bottom { flex-direction: row !important; justify-content: space-between !important; }
+    }
+  </style>
+</footer>
+
+</seller-layout>
+
+<script>
+    const API_BASE = window.location.origin;
+    
+    async function fetchAPI(url, options = {}) {
+        const res = await fetch(url, options);
+        if (res.status === 401 || res.status === 403) {
+            sessionStorage.clear();
+            window.location.href = '/auth/login.html';
+            throw new Error('Unauthorized session, redirecting to login.');
+        }
+        return res;
+    }
+
+    let currentGraphRange = '7d';
+    let chartInstance = null;
+
+    // Toast UI helpers
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast');
+        const icon = document.getElementById('toast-icon');
+        const text = document.getElementById('toast-msg');
+
+        icon.textContent = type === 'success' ? 'check_circle' : 'error';
+        text.textContent = msg;
+
+        t.className = `fixed top-20 right-6 z-[2000] flex items-center gap-3 px-5 py-3 rounded-xl shadow-premium text-sm font-bold ${
+            type === 'success' ? 'bg-forest text-white border border-forest' : 'bg-error text-white border border-error'
+        }`;
+        
+        t.classList.remove('hidden');
+        setTimeout(() => t.classList.add('hidden'), 3500);
+    }
+
+    // Number format in Indian style: X,XX,XXX
+    function formatINR(amount) {
+        if (amount == null) return '₹0.00';
+        return '₹' + Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatDate(dt) {
+        if (!dt) return '—';
+        return new Date(dt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function getAuthHeaders() {
+        const token = localStorage.getItem('token') || localStorage.getItem('accessToken') || sessionStorage.getItem('tohfa_access_token');
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        };
+    }
+
+    // Tab switcher for receiving bank details
+    function setDetailsTab(method) {
+        document.getElementById('details-type').value = method;
+        const bankTab = document.getElementById('tab-BANK');
+        const upiTab = document.getElementById('tab-UPI');
+        
+        if (method === 'BANK') {
+            bankTab.className = "flex-1 py-3 text-center text-sm font-bold text-forest border-b-2 border-forest";
+            upiTab.className = "flex-1 py-3 text-center text-sm font-bold text-forest/60 border-b-2 border-transparent";
+            document.getElementById('bank-fields').classList.remove('hidden');
+            document.getElementById('upi-fields').classList.add('hidden');
+            document.getElementById('bank-holder').required = true;
+            document.getElementById('bank-acc').required = true;
+            document.getElementById('bank-confirm-acc').required = true;
+            document.getElementById('bank-ifsc').required = true;
+            document.getElementById('upi-holder').required = false;
+            document.getElementById('upi-id').required = false;
+        } else {
+            upiTab.className = "flex-1 py-3 text-center text-sm font-bold text-forest border-b-2 border-forest";
+            bankTab.className = "flex-1 py-3 text-center text-sm font-bold text-forest/60 border-b-2 border-transparent";
+            document.getElementById('bank-fields').classList.add('hidden');
+            document.getElementById('upi-fields').classList.remove('hidden');
+            document.getElementById('bank-holder').required = false;
+            document.getElementById('bank-acc').required = false;
+            document.getElementById('bank-confirm-acc').required = false;
+            document.getElementById('bank-ifsc').required = false;
+            document.getElementById('upi-holder').required = true;
+            document.getElementById('upi-id').required = true;
+        }
+    }
+
+    // Mock data inject for dev
+    function injectMockData() {
+        document.getElementById('stat-total-earnings').textContent = '₹1,24,800.00';
+        document.getElementById('stat-month-earnings').textContent = '₹18,450.00';
+        document.getElementById('stat-week-earnings').textContent = '₹4,200.00';
+        document.getElementById('stat-pending-payout').textContent = '₹1,02,150.00';
+
+        const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const values = [1200, 3400, 2800, 5600, 4100, 7200, 4200];
+        renderChart(labels.map((l, i) => ({ date: l, amount: values[i] })));
+
+        document.getElementById('recent-payments-tbody').innerHTML = `
+            <tr>
+                <td class="py-3 px-2">12 Jun 2026</td>
+                <td class="py-3 px-2">Kavitha S.</td>
+                <td class="py-3 px-2 font-mono">₹1,400.00</td>
+            </tr>
+            <tr>
+                <td class="py-3 px-2">10 Jun 2026</td>
+                <td class="py-3 px-2">Arjun M.</td>
+                <td class="py-3 px-2 font-mono">₹850.00</td>
+            </tr>
+        `;
+
+
+
+        document.getElementById('invoices-list').innerHTML = `
+            <div class="flex items-center justify-between p-3 border border-sage/10 rounded-btn bg-parchment/10">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-forest text-lg">description</span>
+                    <div>
+                        <p class="font-bold text-sm text-forest">June 2026 Settlement Summary</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('refund-disputes-list').innerHTML = `
+            <div class="border border-sage/20 rounded-card bg-parchment/15 p-4 flex items-center justify-between">
+                <div>
+                    <span class="font-bold text-xs text-forest font-mono">DSP-0041</span>
+                    <p class="text-sm font-semibold text-forest">Kavitha S. · Item not as described</p>
+                </div>
+                <span class="font-mono text-sm font-bold text-forest">₹1,400.00</span>
+            </div>
+        `;
+    }
+
+    // Load initial data
+    async function loadInitialData() {
+        const loading = document.getElementById('loading-state');
+        const content = document.getElementById('payments-content');
+
+        loading.classList.remove('hidden');
+        content.classList.add('hidden');
+
+        try {
+            await Promise.all([
+                loadEarnings(),
+                loadGraphData('7d'),
+                loadReceivingDetails(),
+                loadRecentPayments(),
+                loadTaxInfo(),
+                loadInvoices(),
+                loadRefundDisputes()
+            ]);
+        } catch (err) {
+            console.warn('API unavailable, using mock data for preview:', err.message);
+            injectMockData();
+        }
+
+        loading.classList.add('hidden');
+        content.classList.remove('hidden');
+        document.getElementById('body-content').classList.remove('opacity-0');
+    }
+
+    // Load earnings statistics
+    async function loadEarnings() {
+        try {
+            // First attempt: /api/seller/payouts (escrow model)
+            const pRes = await fetchAPI(`${API_BASE}/api/seller/payouts`, { headers: getAuthHeaders() });
+            if (pRes.ok) {
+                const pResp = await pRes.json();
+                const pData = pResp.data || pResp;
+                if (pData) {
+                    const eligibleBal = pData.eligible_balance != null ? pData.eligible_balance : pData.available_balance || 0;
+                    const holdingBal = pData.holding_balance != null ? pData.holding_balance : pData.pending_balance || 0;
+                    const totalPaid = pData.total_paid_out != null ? pData.total_paid_out : pData.total_earned || 0;
+
+                    const totalEl = document.getElementById('stat-total-earnings');
+                    if (totalEl) totalEl.textContent = formatINR(totalPaid / 100);
+
+                    const pendingEl = document.getElementById('stat-pending-payout');
+                    if (pendingEl) pendingEl.textContent = formatINR(eligibleBal / 100);
+
+                    const holdContainer = document.getElementById('hold-badge-container');
+                    const holdText = document.getElementById('hold-badge-text');
+
+                    if (holdingBal > 0) {
+                        if (holdContainer) holdContainer.classList.remove('hidden');
+                        if (holdText) holdText.textContent = `${formatINR(holdingBal / 100)} on hold (7-day escrow)`;
+                    } else {
+                        if (holdContainer) holdContainer.classList.add('hidden');
+                    }
+                    return;
+                }
+            }
+
+            // Fallback: /api/payments/earnings
+            const res = await fetchAPI(`${API_BASE}/api/payments/earnings`, { headers: getAuthHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const resp = await res.json();
+            const data = resp.data || {};
+
+            const totalEl = document.getElementById('stat-total-earnings');
+            if (totalEl) totalEl.textContent = formatINR((data.total_earned || 0) / 100);
+
+            const monthEl = document.getElementById('stat-month-earnings');
+            if (monthEl) monthEl.textContent = formatINR((data.this_month_earned || 0) / 100);
+
+            const weekEl = document.getElementById('stat-week-earnings');
+            if (weekEl) weekEl.textContent = formatINR((data.this_week_earned || 0) / 100);
+
+            const pendingEl = document.getElementById('stat-pending-payout');
+            if (pendingEl) pendingEl.textContent = formatINR((data.total_earned || 0) / 100);
+
+            const holdContainer = document.getElementById('hold-badge-container');
+            const holdText = document.getElementById('hold-badge-text');
+
+            if (data.on_hold_amount > 0) {
+                if (holdContainer) holdContainer.classList.remove('hidden');
+                if (holdText) holdText.textContent = `${formatINR(data.on_hold_amount / 100)} on hold`;
+            } else {
+                if (holdContainer) holdContainer.classList.add('hidden');
+            }
+        } catch (err) {
+            console.warn('loadEarnings error:', err);
+        }
+    }
+
+    // Load graph data
+    async function loadGraphData(range) {
+        try {
+            const res = await fetchAPI(`${API_BASE}/api/payments/earnings/graph?range=${range}`, { headers: getAuthHeaders() });
+            if (!res.ok) return;
+            const resp = await res.json();
+            renderChart(resp.data || []);
+        } catch (err) {
+            console.warn('loadGraphData error:', err);
+        }
+    }
+
+    function renderChart(data) {
+        const chartCanvas = document.getElementById('earningsChart');
+        if (!chartCanvas) return;
+
+        if (chartInstance) {
+            chartInstance.destroy();
+            chartInstance = null;
+        }
+
+        if (!data || data.length === 0) {
+            const ctx = chartCanvas.getContext('2d');
+            ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
+            return;
+        }
+
+        const ctx = chartCanvas.getContext('2d');
+        const labels = data.map(item => item.date.length <= 5 ? item.date : formatDate(item.date));
+        const values = data.map(item => item.amount || 0);
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Settled Earnings (₹)',
+                    data: values,
+                    borderColor: '#14381F',
+                    backgroundColor: 'rgba(143, 175, 130, 0.15)',
+                    fill: true,
+                    tension: 0.3,
+                    borderWidth: 2,
+                    pointBackgroundColor: '#14381F',
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: 'DM Sans', size: 11 }, color: '#14381F' }
+                    },
+                    y: {
+                        grid: { color: 'rgba(143, 175, 130, 0.1)' },
+                        ticks: { font: { family: 'Space Mono', size: 11 }, color: '#14381F' }
+                    }
+                }
+            }
+        });
+    }
+
+    function changeGraphRange(range) {
+        currentGraphRange = range;
+        ['7d', '30d', '3m'].forEach(r => {
+            const btn = document.getElementById(`range-btn-${r}`);
+            if (btn) {
+                if (r === range) {
+                    btn.className = "px-4 py-2 rounded-btn text-sm font-bold transition-all border border-forest bg-forest text-white";
+                } else {
+                    btn.className = "px-4 py-2 rounded-btn text-sm font-bold transition-all border border-sage/40 hover:border-forest text-forest";
+                }
+            }
+        });
+        loadGraphData(range);
+    }
+
+    // Load Receiving bank/UPI details
+    async function loadReceivingDetails() {
+        try {
+            const res = await fetchAPI(`${API_BASE}/api/payments/receiving-details`, { headers: getAuthHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const resp = await res.json();
+            const data = resp.data || {};
+
+            const bankHolder = document.getElementById('bank-holder');
+            const bankName   = document.getElementById('bank-name');
+            const bankAcc    = document.getElementById('bank-acc');
+            const bankConfirmAcc = document.getElementById('bank-confirm-acc');
+            const bankIfsc   = document.getElementById('bank-ifsc');
+
+            if (data.bank) {
+                if (bankHolder) bankHolder.value = data.bank.account_holder_name || '';
+                if (bankName) bankName.value = data.bank.bank_name || '';
+                if (bankAcc) bankAcc.value = data.bank.account_number || '';
+                if (bankConfirmAcc) bankConfirmAcc.value = data.bank.account_number || '';
+                if (bankIfsc) bankIfsc.value = data.bank.ifsc_code || '';
+            } else {
+                if (bankHolder) bankHolder.value = '';
+                if (bankName) bankName.value = '';
+                if (bankAcc) bankAcc.value = '';
+                if (bankConfirmAcc) bankConfirmAcc.value = '';
+                if (bankIfsc) bankIfsc.value = '';
+            }
+
+            const upiHolder = document.getElementById('upi-holder');
+            const upiId     = document.getElementById('upi-id');
+
+            if (data.upi) {
+                if (upiHolder) upiHolder.value = data.upi.account_holder_name || '';
+                if (upiId) upiId.value = data.upi.upi_id || '';
+            } else {
+                if (upiHolder) upiHolder.value = '';
+                if (upiId) upiId.value = '';
+            }
+        } catch (err) {
+            console.warn('loadReceivingDetails error:', err);
+        }
+    }
+
+    // Save Receiving bank/UPI details
+    async function saveReceivingDetails(event) {
+        event.preventDefault();
+        const type = document.getElementById('details-type').value;
+
+        let payload = { type };
+        if (type === 'BANK') {
+            const acc = document.getElementById('bank-acc').value;
+            const confirmAcc = document.getElementById('bank-confirm-acc').value;
+            if (acc !== confirmAcc) {
+                showToast("Account numbers do not match!", "error");
+                return;
+            }
+            const ifsc = document.getElementById('bank-ifsc').value.toUpperCase().trim();
+            const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+            if (!ifscRegex.test(ifsc)) {
+                showToast("Invalid IFSC code format (e.g. SBIN0001234)", "error");
+                return;
+            }
+            payload.account_holder_name = document.getElementById('bank-holder').value;
+            payload.bank_name = document.getElementById('bank-name').value;
+            payload.account_number = acc;
+            payload.ifsc_code = ifsc;
+        } else {
+            payload.account_holder_name = document.getElementById('upi-holder').value;
+            payload.upi_id = document.getElementById('upi-id').value;
+        }
+
+        const res = await fetchAPI(`${API_BASE}/api/payments/receiving-details`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            showToast("Receiving details updated successfully.");
+            loadReceivingDetails();
+        } else {
+            const err = await res.json();
+            showToast(err.message || "Failed to update details.", "error");
+        }
+    }
+
+    // Load recent payments
+    async function loadRecentPayments() {
+        const res = await fetchAPI(`${API_BASE}/api/payments/history/all?limit=5`, { headers: getAuthHeaders() });
+        if (!res.ok) throw new Error();
+        const resp = await res.json();
+        const items = resp.data.items || [];
+
+        const tbody = document.getElementById('recent-payments-tbody');
+        if (items.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" class="py-4 text-center text-sm text-forest/70">No settlements processed yet.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = items.map(p => `
+            <tr>
+                <td class="py-3 px-2">${formatDate(p.date)}</td>
+                <td class="py-3 px-2">${p.buyer_name}</td>
+                <td class="py-3 px-2 font-mono font-bold">${formatINR(p.amount)}</td>
+            </tr>
+        `).join('');
+    }
+
+
+
+    // Load Tax Settings
+    async function loadTaxInfo() {
+        const res = await fetchAPI(`${API_BASE}/api/payments/tax`, { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const resp = await res.json();
+        const data = resp.data || {};
+
+        const gstReg = document.getElementById('tax-gst-registered');
+        gstReg.checked = !!data.is_gst_registered;
+        document.getElementById('tax-gstin').value = data.gstin || '';
+        document.getElementById('tax-pan').value = data.pan_number || '';
+        document.getElementById('tax-tds-applicable').checked = !!data.tds_applicable;
+
+        toggleGstinField();
+    }
+
+    function toggleGstinField() {
+        const registered = document.getElementById('tax-gst-registered').checked;
+        const container = document.getElementById('gstin-container');
+        const input = document.getElementById('tax-gstin');
+        
+        if (registered) {
+            container.classList.remove('hidden');
+            input.required = true;
+        } else {
+            container.classList.add('hidden');
+            input.required = false;
+        }
+    }
+
+    async function saveTaxInfo(event) {
+        event.preventDefault();
+        const isGst = document.getElementById('tax-gst-registered').checked;
+        const gstin = document.getElementById('tax-gstin').value.toUpperCase().trim();
+        const pan = document.getElementById('tax-pan').value.toUpperCase().trim();
+        const tds = document.getElementById('tax-tds-applicable').checked;
+
+        if (isGst) {
+            const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+            if (!gstinRegex.test(gstin)) {
+                showToast("Invalid GSTIN structure format", "error");
+                return;
+            }
+        }
+
+        const res = await fetchAPI(`${API_BASE}/api/payments/tax`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+                is_gst_registered: isGst,
+                gstin: isGst ? gstin : null,
+                pan_number: pan,
+                tds_applicable: tds
+            })
+        });
+
+        if (res.ok) {
+            showToast("Tax settings saved successfully.");
+            loadTaxInfo();
+        } else {
+            const err = await res.json();
+            showToast(err.message || "Failed to update tax details.", "error");
+        }
+    }
+
+    // Invoices & Statements
+    async function loadInvoices() {
+        const res = await fetchAPI(`${API_BASE}/api/payments/invoices/all`, { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const resp = await res.json();
+        const list = resp.data || [];
+
+        const container = document.getElementById('invoices-list');
+        if (list.length === 0) {
+            container.innerHTML = `<p class="text-sm text-forest/70 py-3 text-center">No invoices generated yet.</p>`;
+            return;
+        }
+
+        container.innerHTML = list.map(inv => `
+            <div class="flex items-center justify-between p-3 border border-sage/10 rounded-btn bg-parchment/10 hover:border-forest transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-forest text-lg">description</span>
+                    <div>
+                        <p class="font-bold text-sm text-forest">${inv.month_name} Settlements</p>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Load recent disputes
+    async function loadRefundDisputes() {
+        const res = await fetchAPI(`${API_BASE}/api/payments/disputes/all`, { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const resp = await res.json();
+        const list = resp.data || [];
+
+        const container = document.getElementById('refund-disputes-list');
+        if (list.length === 0) {
+            container.innerHTML = `<p class="text-sm text-forest/70 py-3 text-center">No active refund disputes reported.</p>`;
+            return;
+        }
+
+        container.innerHTML = list.slice(0, 3).map(disp => `
+            <div class="border border-sage/20 rounded-card bg-parchment/15 p-4 flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-xs text-forest font-mono">Dispute ID: #${disp.id}</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                            disp.status === 'OPEN' ? 'bg-amber-100 text-amber-800' :
+                            disp.status === 'ACCEPTED' ? 'bg-forest/10 text-forest' : 'bg-violet/10 text-violet'
+                        }">${disp.status}</span>
+                    </div>
+                    <p class="text-sm font-semibold text-forest mt-1">Order Ref: ${disp.order_ref} · Buyer: ${disp.buyer_name}</p>
+                </div>
+                <span class="font-mono text-base font-bold text-forest">${formatINR(disp.amount)}</span>
+            </div>
+        `).join('');
+    }
+
+
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = sessionStorage.getItem('tohfa_access_token');
+        if (!token) {
+            window.location.href = '/auth/login.html';
+            return;
+        }
+        loadInitialData();
+
+        const withdrawBtn = document.getElementById('withdraw-funds-btn');
+        if (withdrawBtn) {
+            withdrawBtn.addEventListener('click', async () => {
+                withdrawBtn.disabled = true;
+                withdrawBtn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> Requesting…';
+                try {
+                    const res = await fetch(`${API_BASE}/api/seller/payouts/request`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({})
+                    });
+                    const d = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(d.message || 'Failed to request payout withdrawal.');
+                    showToast('Payout request submitted successfully!', 'success');
+                    loadEarnings();
+                } catch (err) {
+                    showToast(err.message, 'error');
+                } finally {
+                    withdrawBtn.disabled = false;
+                    withdrawBtn.innerHTML = '<span class="material-symbols-outlined text-sm">payments</span> Request Payout';
+                }
+            });
+        }
+    });
+</script>
+
+<!-- Mobile Nav Injection -->
+<script type="module">
+</script>
+
+
+
+<script>
+async function handleFooterSellerLink(e) {
+  if (e) e.preventDefault();
+  const isMobile = window.innerWidth < 768;
+  const token = sessionStorage.getItem('tohfa_access_token');
+  if (!token) {
+    sessionStorage.setItem('tohfa_redirect_seller', 'true');
+    window.location.href = '/auth/login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/profile/me', {
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success) {
+        const role = data.data.role;
+        if (role === 'seller') {
+          window.location.href = isMobile ? '/mobile-seller/dashboard.html' : '/seller/dashboard.html';
+          return;
+        }
+      }
+    }
+  } catch(err) {
+    console.error("Error checking seller status:", err);
+  }
+  
+  window.location.href = isMobile ? '/mobile-buyer/become-seller.html' : '/buyer/become-seller.html';
+}
+
+// Check if we need to auto-redirect back to dashboard/signup after login redirect
+document.addEventListener("DOMContentLoaded", () => {
+  const needsRedirect = sessionStorage.getItem('tohfa_redirect_seller');
+  if (needsRedirect === 'true') {
+    sessionStorage.removeItem('tohfa_redirect_seller');
+    const token = sessionStorage.getItem('tohfa_access_token');
+    if (token) {
+      handleFooterSellerLink();
+    }
+  }
+});
+
+window.openContactModal = function(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const modal = document.getElementById('tohfa-contact-modal');
+  if (modal) {
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeContactModal = function() {
+  const modal = document.getElementById('tohfa-contact-modal');
+  if (modal) {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+};
+
+if (!window.hasContactModalEscListener) {
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      window.closeContactModal();
+    }
+  });
+  window.hasContactModalEscListener = true;
+}
+
+window.openRefundsModal = function(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const modal = document.getElementById('tohfa-refunds-modal');
+  if (modal) {
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeRefundsModal = function() {
+  const modal = document.getElementById('tohfa-refunds-modal');
+  if (modal) {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+};
+
+if (!window.hasRefundsModalEscListener) {
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      window.closeRefundsModal();
+    }
+  });
+  window.hasRefundsModalEscListener = true;
+}
+</script>
+</body>
+</html>

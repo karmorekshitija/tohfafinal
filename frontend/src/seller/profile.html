@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <script type="module" src="/src/components/ReportWidget.js" defer></script>
+<script type="module" src="/src/components/ProtectedRoute.js"></script>
+<meta charset="utf-8"/>
+<title>Profile & Settings | Seller Studio | Tohfa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+<script type="module" src="/components/seller-components.js"></script>
+<script src="/seller/js/seller-utils.js"></script>
+
+<style>
+  body { font-family: 'Be Vietnam Pro', sans-serif; background-color: #FFF8E7; color: #1e1b15; }
+  h1, h2, h3, .font-headline { font-family: 'EB Garamond', serif; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+
+  /* Tab bar */
+  .tab-btn { position:relative; padding: 10px 24px; font-size:14px; font-weight:600; color:#45483f; letter-spacing:0.04em; transition:color .2s; cursor:pointer; background:none; border:none; }
+  .tab-btn::after { content:''; position:absolute; bottom:0; left:16px; right:16px; height:2px; background:transparent; border-radius:2px; transition:background .2s; }
+  .tab-btn.active { color:#576242; }
+  .tab-btn.active::after { background:#576242; }
+  .tab-btn:hover { color:#576242; }
+
+  /* Badge chip */
+  .badge-chip { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:999px; font-size:12px; font-weight:600; letter-spacing:.04em; cursor:pointer; transition:all .2s; border:1.5px solid #c6c7bb; color:#45483f; background:transparent; }
+  .badge-chip.active { background:#a8b48e; border-color:#a8b48e; color:#ffffff; }
+  .badge-chip:hover { border-color:#576242; }
+
+  /* Skeleton */
+  @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+  .skeleton { background:linear-gradient(90deg,#efe7dd 25%,#e0d9cf 50%,#efe7dd 75%); background-size:400px 100%; animation:shimmer 1.4s infinite; border-radius:8px; }
+
+  /* Toast */
+  #toast { transition:all .3s ease; }
+
+  /* Drag drop zone */
+  .drop-zone { border:2px dashed #c6c7bb; border-radius:12px; padding:32px; text-align:center; transition:all .2s; cursor:pointer; }
+  .drop-zone.drag-over { border-color:#576242; background:#f4ede3; }
+  .drop-zone:hover { border-color:#76786e; }
+
+  /* Modal */
+  .modal-overlay { position:fixed; inset:0; background:rgba(30,27,21,.45); z-index:200; display:flex; align-items:center; justify-content:center; padding:16px; }
+
+  /* Progress bar */
+  .progress-bar-track { height:4px; background:#e9e1d8; border-radius:4px; overflow:hidden; margin-top:6px; }
+  .progress-bar-fill { height:100%; background:#a8b48e; border-radius:4px; transition:width .4s; }
+
+  body { font-family: 'DM Sans', sans-serif; background-color: #FFF8E7; color: #211b11; }
+  h1, h2, h3, .font-headline { font-family: 'Playfair Display', serif; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+
+  /* Card section — matches other tabs */
+  .card-section {
+    background: #FFF8E7;
+    border: 1px solid rgba(193,201,192,.4);
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 2px 12px rgba(37,83,56,.07);
+  }
+
+  /* Input style — matches other tabs */
+  .field-input {
+    width: 100%;
+    background: #FFF8E7;
+    border: 1px solid #FFF8E7;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: #211b11;
+    font-family: 'DM Sans', sans-serif;
+    transition: border-color .15s, box-shadow .15s;
+    outline: none;
+  }
+  .field-input:focus { border-color: #14381F; box-shadow: 0 0 0 3px rgba(37,83,56,.10); }
+  .field-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #414942;
+    margin-bottom: 5px;
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .field-error { font-size: 11px; color: #14381F; margin-top: 3px; min-height: 16px; }
+
+  /* Tab indicator — matches filter tabs in reviews/analytics */
+  .tab-btn {
+    padding: 10px 24px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    color: #414942;
+    background: transparent;
+    border: 1px solid rgba(193, 201, 192, 0.4);
+    border-radius: 999px;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(61, 107, 79, 0.04);
+  }
+  .tab-btn:hover {
+    color: #14381F;
+    border-color: rgba(20,56,31,0.2);
+    background: rgba(247, 243, 236, 0.6);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(61, 107, 79, 0.08);
+  }
+  .tab-btn.active {
+    background: #14381F;
+    color: #FFFFFF;
+    border-color: #14381F;
+    box-shadow: 0 4px 12px rgba(61, 107, 79, 0.2);
+    transform: translateY(-2px);
+  }
+
+  /* Badge chips */
+  .badge-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    border: 1.5px solid #FFF8E7;
+    border-radius: 999px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    color: #414942;
+    background: #FFF8E7;
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  .badge-chip:hover { border-color: rgba(20,56,31,0.2); color: #14381F; background: #f9ecdc; }
+  .badge-chip.active {
+    background: #14381F;
+    color: #ffffff;
+    border-color: #14381F;
+  }
+  .badge-chip.active .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+
+  /* Address card */
+  .address-card {
+    background: #FFF8E7;
+    border: 1px solid #FFF8E7;
+    border-radius: 10px;
+    padding: 16px;
+    position: relative;
+  }
+
+  /* Drag-drop zone */
+  .drop-zone {
+    border: 2px dashed #FFF8E7;
+    border-radius: 10px;
+    padding: 32px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: rgba(20,56,31,0.2);
+    background: #f9ecdc;
+  }
+
+  /* Embed preview */
+  .embed-preview { width: 100%; border-radius: 10px; overflow: hidden; background: #FFF8E7; aspect-ratio: 16/9; }
+
+  /* Char counter */
+  .char-counter { font-size: 11px; color: #717972; text-align: right; margin-top: 3px; }
+  .char-counter.warn { color: #14381F; }
+
+  /* Modal overlay */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(33,27,17,.45);
+    backdrop-filter: blur(4px); z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-overlay.hidden { display: none !important; }
+
+  /* Inline confirm */
+  .inline-confirm { display: none; background: #FFF8E7; border: 1px solid rgba(186,26,26,.2); border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #14381F; margin-top: 8px; align-items: center; gap: 8px; }
+  .inline-confirm.show { display: flex; }
+
+  /* Skeleton */
+  @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+  .skeleton { background: linear-gradient(90deg, #FFF8E7 25%, #f3e6d6 50%, #FFF8E7 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; border-radius: 10px; }
+
+  @media(max-width: 768px) { .two-col { grid-template-columns: 1fr !important; } }
+</style>
+</head>
+<body class="bg-[#FFF8E7] text-on-surface font-body-md min-h-screen" id="body-content">
+
+<seller-layout active-tab="profile">
+
+<!-- Toast -->
+<div id="toast" class="fixed top-20 right-6 z-[300] hidden items-center gap-3 px-5 py-3 rounded-2xl shadow-lg text-sm font-semibold">
+  <span class="material-symbols-outlined text-lg" id="toast-icon"></span>
+  <span id="toast-msg"></span>
+</div>
+
+<!-- Address Modal -->
+<div id="address-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Address form">
+  <div class="bg-surface-bright rounded-2xl shadow-2xl w-full max-w-lg p-8 relative">
+    <button id="close-address-modal" class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface transition-colors">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <h3 class="font-headline text-2xl mb-6" id="address-modal-title">Add New Address</h3>
+    <form id="address-form" class="space-y-4">
+      <input type="hidden" id="address-edit-id"/>
+      <div class="grid grid-cols-2 gap-4 two-col">
+        <div>
+          <label class="field-label" for="addr-label">Label</label>
+          <input class="field-input" id="addr-label" placeholder="e.g. Home, Studio" type="text"/>
+          <p class="field-error" id="err-addr-label"></p>
+        </div>
+        <div>
+          <label class="field-label" for="addr-phone">Phone</label>
+          <input class="field-input" id="addr-phone" placeholder="+91 9XXXXXXXXX" type="tel"/>
+          <p class="field-error" id="err-addr-phone"></p>
+        </div>
+      </div>
+      <div>
+        <label class="field-label" for="addr-line">Address Line</label>
+        <input class="field-input" id="addr-line" placeholder="Street, building, area" type="text"/>
+        <p class="field-error" id="err-addr-line"></p>
+      </div>
+      <div class="grid grid-cols-3 gap-4">
+        <div>
+          <label class="field-label" for="addr-city">City</label>
+          <input class="field-input" id="addr-city" placeholder="City" type="text"/>
+          <p class="field-error" id="err-addr-city"></p>
+        </div>
+        <div>
+          <label class="field-label" for="addr-state">State</label>
+          <input class="field-input" id="addr-state" placeholder="State" type="text"/>
+        </div>
+        <div>
+          <label class="field-label" for="addr-pincode">Pincode</label>
+          <input class="field-input" id="addr-pincode" placeholder="000000" type="text" maxlength="6"/>
+          <p class="field-error" id="err-addr-pincode"></p>
+        </div>
+      </div>
+      <label class="flex items-center gap-3 cursor-pointer mt-2">
+        <input type="checkbox" id="addr-default" class="w-4 h-4 accent-primary rounded"/>
+        <span class="text-sm">Set as default address</span>
+      </label>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" id="cancel-address-btn" class="px-6 py-2.5 rounded-full border border-outline-variant text-sm font-semibold hover:bg-surface-container transition-all">Cancel</button>
+        <button type="submit" id="save-address-btn" class="px-8 py-2.5 rounded-full bg-primary text-on-primary text-sm font-semibold hover:opacity-90 transition-all flex items-center gap-2">
+          <span class="material-symbols-outlined text-base">save</span>Save Address
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Close Account Modal -->
+<div id="close-account-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+  <div class="bg-surface-bright rounded-2xl shadow-2xl w-full max-w-md p-8 relative">
+    <button id="close-account-modal-x" class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <div class="flex items-center gap-3 mb-4">
+      <span class="material-symbols-outlined text-error text-3xl" style="font-variation-settings:'FILL' 1">warning</span>
+      <h3 class="font-headline text-2xl text-error">Close Seller Account</h3>
+    </div>
+    <p class="text-sm text-on-surface-variant mb-4">This action is <strong>permanent</strong>. All your listings, orders history, and data will be deleted. Type <code class="bg-error-container text-on-error-container px-1.5 py-0.5 rounded font-mono text-xs">DELETE</code> below to confirm.</p>
+    <input id="confirm-delete-input" type="text" placeholder="Type DELETE" class="field-input mb-4" autocomplete="off"/>
+    <div class="flex justify-end gap-3">
+      <button id="cancel-close-account" class="px-6 py-2.5 rounded-full border border-outline-variant text-sm font-semibold hover:bg-surface-container transition-all">Cancel</button>
+      <button id="confirm-close-account" disabled class="px-8 py-2.5 rounded-full bg-error text-white text-sm font-semibold opacity-40 transition-all">Close My Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- Page Header — matches all other tabs -->
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-md mb-6 flex-shrink-0">
+  <div>
+    <h1 class="font-headline-lg text-primary text-4xl font-bold">Profile & Settings</h1>
+    <p class="text-on-surface-variant text-base font-body-md mt-2">Manage your profile, about page, and addresses</p>
+  </div>
+</div>
+
+<!-- Tab Navigation — same style as filter tabs in reviews / analytics -->
+<div class="flex items-center mb-8 gap-4 py-1">
+  <a href="/seller/profile.html" class="tab-btn active" id="tab-profile">Profile</a>
+  <a href="/seller/profile-settings.html" class="tab-btn" id="tab-settings">Settings</a>
+</div>
+
+<!-- Loading Skeleton -->
+<div id="loading-state" class="space-y-6">
+  <div class="skeleton h-64 rounded-2xl"></div>
+  <div class="skeleton h-72 rounded-2xl"></div>
+  <div class="skeleton h-48 rounded-2xl"></div>
+</div>
+
+<!-- Error State -->
+<div id="error-state" class="hidden flex flex-col items-center justify-center py-24 gap-4">
+  <span class="material-symbols-outlined text-5xl text-error">error_outline</span>
+  <p class="text-on-surface-variant text-center text-sm" id="error-message">Failed to load profile.</p>
+  <button id="retry-btn" class="bg-primary text-on-primary py-2.5 px-8 rounded-full font-semibold text-sm hover:opacity-90 transition-all">Try Again</button>
+</div>
+
+<!-- Profile Content -->
+<div id="profile-content" class="hidden space-y-7">
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- SECTION A: BASIC INFO                                       -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section class="card-section">
+    <div class="flex items-center gap-2 mb-7">
+      <span class="material-symbols-outlined text-primary">account_circle</span>
+      <h2 class="font-headline text-2xl">Basic Info</h2>
+    </div>
+
+    <!-- Avatar Row -->
+    <div class="flex flex-col md:flex-row gap-8 items-start mb-7">
+      <div class="flex-shrink-0">
+        <div class="relative group cursor-pointer w-24 h-24" onclick="document.getElementById('input-avatar').click()" title="Change profile photo">
+          <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-surface-container-high shadow-sm bg-surface-container">
+            <img id="profile-avatar" alt="Profile photo" class="w-full h-full object-cover" src="/uploads/avatars/default-avatar.png" loading="lazy" />
+          </div>
+          <div class="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings:'FILL' 1">photo_camera</span>
+          </div>
+          <div class="absolute bottom-0.5 right-0.5 bg-primary text-on-primary p-1 rounded-full border-2 border-surface shadow-sm">
+            <span class="material-symbols-outlined text-xs" style="font-variation-settings:'FILL' 1">photo_camera</span>
+          </div>
+        </div>
+        <input type="file" id="input-avatar" class="hidden" accept="image/jpeg,image/png,image/jpg"/>
+        <p class="text-center text-xs text-on-surface-variant mt-2">JPG or PNG</p>
+      </div>
+
+      <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
+        <div>
+          <label class="field-label" for="f-shop-name">Shop Name</label>
+          <input class="field-input" id="f-shop-name" name="shop_name" placeholder="Your craft shop name" type="text"/>
+          <p class="field-error" id="err-shop-name"></p>
+        </div>
+        <div>
+          <label class="field-label" for="f-handle">Username / Handle</label>
+          <div class="flex items-center">
+            <span class="bg-surface-container border border-outline-variant border-r-0 px-3 py-[10px] rounded-l-[10px] text-sm text-on-surface-variant font-medium select-none">@</span>
+            <input class="field-input rounded-l-none" id="f-handle" name="handle" placeholder="your_handle" type="text" style="border-top-left-radius:0;border-bottom-left-radius:0;"/>
+          </div>
+          <p class="field-error" id="err-handle"></p>
+          <p id="handle-status" class="text-xs mt-1 hidden"></p>
+        </div>
+        <div>
+          <label class="field-label" for="f-location">City / Location</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-base">location_on</span>
+            <input class="field-input" id="f-location" name="location" placeholder="City, State" type="text" style="padding-left: 40px;"/>
+          </div>
+          <p class="field-error" id="err-location"></p>
+        </div>
+        <div class="md:col-span-2">
+          <label class="field-label" for="f-bio">Short Bio <span class="text-on-surface-variant normal-case font-normal">(max 300 chars)</span></label>
+          <textarea class="field-input" id="f-bio" name="bio" rows="3" maxlength="300" placeholder="Tell buyers about yourself and your craft..."></textarea>
+          <p class="char-counter" id="bio-counter">0 / 300</p>
+          <p class="field-error" id="err-bio"></p>
+        </div>
+      </div>
+    </div>
+
+      <!-- Banner Image Upload -->
+      <div class="mb-5">
+        <label class="field-label mb-2">Banner Image</label>
+        <div id="banner-drop-zone" class="drop-zone" onclick="document.getElementById('input-banner').click()">
+          <div id="banner-placeholder">
+            <span class="material-symbols-outlined text-4xl text-outline mb-2 block">image</span>
+            <p class="text-sm font-semibold text-on-surface-variant">Drop your banner image here</p>
+            <p class="text-xs text-on-surface-variant/70 mt-1">or click to browse · JPG, PNG · max 5 MB</p>
+          </div>
+          <div id="banner-preview-wrap" class="hidden">
+            <img id="banner-preview-img" class="max-h-48 mx-auto rounded-lg object-contain" alt="Banner preview" loading="lazy" />
+            <p class="text-xs text-on-surface-variant mt-2 text-center">Click to change</p>
+          </div>
+        </div>
+        <input type="file" id="input-banner" class="hidden" accept="image/jpeg,image/png,image/jpg"/>
+      </div>
+
+    <!-- Seller Badges -->
+    <div class="mb-7">
+      <label class="field-label mb-3">Seller Badges</label>
+      <div class="flex flex-wrap gap-3" id="badges-row">
+        <button type="button" class="badge-chip" data-badge="top_seller">
+          <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' 1">workspace_premium</span>Top Seller
+        </button>
+        <button type="button" class="badge-chip" data-badge="verified_crafts">
+          <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' 1">verified</span>Verified Crafts
+        </button>
+        <button type="button" class="badge-chip" data-badge="fast_shipments">
+          <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' 1">local_shipping</span>Fast Shipments
+        </button>
+        <button type="button" class="badge-chip" data-badge="eco_friendly">
+          <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' 1">eco</span>Eco-friendly
+        </button>
+      </div>
+    </div>
+
+    <div class="flex justify-end pt-5 border-t border-outline-variant/30">
+      <button type="button" id="save-basic-info-btn" class="bg-primary text-on-primary py-2.5 px-10 rounded-full font-semibold text-sm hover:opacity-90 transition-all shadow-sm flex items-center gap-2">
+        <span class="material-symbols-outlined text-base">save</span>Save Basic Info
+      </button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- SECTION B: ABOUT PAGE                                       -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section class="card-section">
+    <div class="flex items-center gap-2 mb-7">
+      <span class="material-symbols-outlined text-primary">auto_stories</span>
+      <h2 class="font-headline text-2xl">About Page</h2>
+    </div>
+
+    <div class="space-y-5">
+      <!-- Story Headline -->
+      <div>
+        <label class="field-label" for="f-story-headline">Story Headline</label>
+        <input class="field-input" id="f-story-headline" name="story_headline" placeholder="A short, catchy headline for your story" type="text"/>
+      </div>
+
+      <!-- Story Description -->
+      <div>
+        <label class="field-label" for="f-story-desc">Story Description <span class="text-on-surface-variant normal-case font-normal">(max 1000 chars)</span></label>
+        <textarea class="field-input" id="f-story-desc" name="story_description" rows="6" maxlength="1000" placeholder="Share the story behind your craft, your inspiration, your journey..."></textarea>
+        <p class="char-counter" id="story-counter">0 / 1000</p>
+      </div>
+
+      <!-- About Image Upload -->
+      <div>
+        <label class="field-label mb-2">About Image</label>
+        <div id="about-image-drop-zone" class="drop-zone" onclick="document.getElementById('input-about-image').click()">
+          <div id="about-image-placeholder">
+            <span class="material-symbols-outlined text-4xl text-outline mb-2 block">image</span>
+            <p class="text-sm font-semibold text-on-surface-variant">Drop your about page image here</p>
+            <p class="text-xs text-on-surface-variant/70 mt-1">or click to browse · JPG, PNG · max 5 MB</p>
+          </div>
+          <div id="about-image-preview-wrap" class="hidden">
+            <img id="about-image-preview-img" class="max-h-48 mx-auto rounded-lg object-contain" alt="About preview" loading="lazy" />
+            <p class="text-xs text-on-surface-variant mt-2 text-center">Click to change</p>
+          </div>
+        </div>
+        <input type="file" id="input-about-image" class="hidden" accept="image/jpeg,image/png,image/jpg"/>
+      </div>
+
+      <!-- Working On -->
+      <div>
+        <label class="field-label" for="f-working-on">Working On Label</label>
+        <input class="field-input" id="f-working-on" name="working_on" placeholder="e.g. Working on potter's wheel" type="text"/>
+      </div>
+
+      <!-- Video URL -->
+      <div>
+        <label class="field-label" for="f-video-url">Workshop Video / Reel URL</label>
+        <input class="field-input" id="f-video-url" name="video_url" placeholder="YouTube or Instagram URL" type="url"/>
+        <p class="text-xs text-on-surface-variant mt-1.5">Paste a valid YouTube or Instagram Reel URL to see a preview below.</p>
+        <div id="video-preview-wrap" class="hidden mt-3">
+          <div class="embed-preview">
+            <iframe id="video-iframe" src="" class="w-full h-full border-0" allowfullscreen loading="lazy"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-end pt-6 mt-4 border-t border-outline-variant/30">
+      <button type="button" id="save-about-btn" class="bg-primary text-on-primary py-2.5 px-10 rounded-full font-semibold text-sm hover:opacity-90 transition-all shadow-sm flex items-center gap-2">
+        <span class="material-symbols-outlined text-base">save</span>Save About Page
+      </button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- SECTION C: ADDRESSES                                        -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section class="card-section">
+    <div class="flex items-center justify-between mb-7">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary">home_pin</span>
+        <h2 class="font-headline text-2xl">Addresses</h2>
+      </div>
+      <button id="open-add-address-btn" type="button" class="flex items-center gap-2 bg-primary text-on-primary py-2.5 px-5 rounded-full font-semibold text-sm hover:opacity-90 transition-all shadow-sm">
+        <span class="material-symbols-outlined text-base">add</span>Add New Address
+      </button>
+    </div>
+
+    <!-- Addresses List -->
+    <div id="addresses-list" class="space-y-4">
+      <div class="skeleton h-24 rounded-xl"></div>
+      <div class="skeleton h-24 rounded-xl"></div>
+    </div>
+  </section>
+
+</div>
+
+
+<!-- NEW TOHFA FOOTER — footer_stitch v1 -->
+<footer style="position:relative;overflow:hidden;background:#14381F;color:#FFF8E7;padding-top:64px;padding-bottom:32px;">
+  <!-- Ghost watermark -->
+  <div style="position:absolute;bottom:-10%;right:-5%;opacity:0.04;pointer-events:none;user-select:none;">
+    <span class="material-symbols-outlined" style="font-size:600px;color:white;">local_florist</span>
+  </div>
+  <!-- Main grid -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:repeat(1,1fr);gap:48px;margin-bottom:80px;position:relative;z-index:10;" class="tohfa-footer-grid">
+    <!-- Brand -->
+    <div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:44px;font-style:italic;color:#14381F;margin-bottom:16px;">Tohfa.</h2>
+      <p style="font-family:'DM Sans',sans-serif;color:#FFF8E7;margin-bottom:8px;font-weight:500;">Thoughtful Gifting, Made Effortless.</p>
+      <p style="font-family:'DM Sans',sans-serif;color:#A8B89A;margin-bottom:32px;line-height:1.6;">India's first home for handcrafted gifts, celebrating the soul of artisanal craftsmanship.</p>
+      
+    </div>
+    <!-- Company -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#14381F;margin-bottom:32px;">Company</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a href="/buyer/our-story.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">About Us</a></li>
+        <li><a href="/buyer/our-story.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Our Story</a></li>
+        <li><a href="/buyer/terms-conditions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Terms &amp; Conditions</a></li>
+      </ul>
+    </div>
+    <!-- For Sellers -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#14381F;margin-bottom:32px;">For Sellers</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a onclick="handleFooterSellerLink(event)" href="/buyer/become-seller.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Sell on Tohfa</a></li>
+        <li><a href="/seller/dashboard.html" onclick="handleFooterSellerLink(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Seller Studio</a></li>
+      </ul>
+    </div>
+    <!-- For Buyers -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#14381F;margin-bottom:32px;">For Buyers</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a href="javascript:void(0)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'" onclick="event.preventDefault(); if (window.openTohfaChat) { window.openTohfaChat('Find me a gift'); } else if (window.openTanya) { window.openTanya(); } else { window.__tohfaChatQueue = window.__tohfaChatQueue || []; window.__tohfaChatQueue.push('Find me a gift'); }">AI Gift Guide</a></li>
+        <li><a href="/buyer/occasions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Occasions</a></li>
+        <li><a href="/buyer/zip-gift.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Zip Gift ✨</a></li>
+      </ul>
+    </div>
+    <!-- Support -->
+    <div>
+      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#14381F;margin-bottom:32px;">Support</h3>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
+        <li><a href="javascript:void(0)" onclick="openContactModal(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Contact Us</a></li>
+        <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Refunds &amp; Disputes</a></li>
+        <li><a href="/buyer/terms-conditions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Terms and Conditions</a></li>
+        <li><a href="/buyer/faq.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">FAQs</a></li>
+      </ul>
+    </div>
+  </div>
+  <!-- Divider -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;margin-bottom:32px;">
+    <div style="width:100%;height:1px;background:rgba(255,255,255,0.1);position:relative;">
+      <div style="position:absolute;left:50%;top:-8px;transform:translateX(-50%);display:flex;gap:16px;color:rgba(201,151,44,0.3);">
+        <span class="material-symbols-outlined" style="font-size:16px;">stars</span>
+      </div>
+    </div>
+  </div>
+  <!-- Bottom bar -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:flex;flex-direction:column;align-items:center;gap:24px;position:relative;z-index:10;" class="tohfa-footer-bottom">
+    
+    <div style="display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;font-size:14px;color:#FFF8E7;">
+      <span>Made with</span>
+      <span class="material-symbols-outlined" style="color:#14381F;font-size:18px;font-variation-settings:'FILL' 1;">favorite</span>
+      <span>in India</span>
+
+    </div>
+  </div>
+  <style>
+    @media (min-width: 768px) {
+      .tohfa-footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr 1fr !important; }
+      .tohfa-footer-bottom { flex-direction: row !important; justify-content: space-between !important; }
+    }
+  </style>
+</footer>
+
+</seller-layout>
+
+<script>
+const API = window.location.origin;
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function showToast(message, type = 'success') {
+  const toast = document.getElementById('toast');
+  const icon  = document.getElementById('toast-icon');
+  const msg   = document.getElementById('toast-msg');
+  icon.textContent = type === 'success' ? 'check_circle' : 'error';
+  msg.textContent  = message;
+  toast.className  = `fixed top-20 right-6 z-[300] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-lg text-sm font-semibold transition-all ${
+    type === 'success'
+      ? 'bg-primary-fixed text-on-primary-container border border-primary-fixed-dim'
+      : 'bg-error-container text-on-error-container border border-error/30'
+  }`;
+  toast.classList.remove('hidden');
+  setTimeout(() => toast.classList.add('hidden'), 3500);
+}
+
+// ─── Token ────────────────────────────────────────────────────────────────────
+function getToken() { return localStorage.getItem('token') || localStorage.getItem('accessToken') || sessionStorage.getItem('tohfa_access_token'); }
+
+// ─── Char counters ────────────────────────────────────────────────────────────
+function wireCounter(textareaId, counterId, max) {
+  const ta = document.getElementById(textareaId);
+  const ct = document.getElementById(counterId);
+  function update() {
+    const len = ta.value.length;
+    ct.textContent = `${len} / ${max}`;
+    ct.classList.toggle('warn', len >= max * 0.9);
+  }
+  ta.addEventListener('input', update);
+  update();
+}
+
+// ─── Badge chips ──────────────────────────────────────────────────────────────
+let activeBadges = new Set();
+document.querySelectorAll('.badge-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const badge = chip.dataset.badge;
+    if (activeBadges.has(badge)) {
+      activeBadges.delete(badge);
+      chip.classList.remove('active');
+    } else {
+      activeBadges.add(badge);
+      chip.classList.add('active');
+    }
+  });
+});
+
+// ─── Handle uniqueness check ──────────────────────────────────────────────────
+let handleCheckTimeout;
+const handleInput = document.getElementById('f-handle');
+const handleStatus = document.getElementById('handle-status');
+handleInput.addEventListener('blur', () => {
+  const val = handleInput.value.trim();
+  if (!val) return;
+  clearTimeout(handleCheckTimeout);
+  handleCheckTimeout = setTimeout(async () => {
+    handleStatus.classList.remove('hidden', 'text-error', 'text-primary');
+    handleStatus.textContent = 'Checking…';
+    try {
+      const res = await fetch(`${API}/api/seller/check-handle?handle=${encodeURIComponent(val)}`, {
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      const data = await res.json();
+      if (data.available === true) {
+        handleStatus.textContent = '✓ Handle is available';
+        handleStatus.classList.add('text-primary');
+      } else {
+        handleStatus.textContent = '✗ Handle is already taken';
+        handleStatus.classList.add('text-error');
+      }
+    } catch (_) {
+      handleStatus.classList.add('hidden');
+    }
+  }, 500);
+});
+
+// ─── Avatar upload ────────────────────────────────────────────────────────────
+document.getElementById('input-avatar').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!['image/jpeg','image/png','image/jpg'].includes(file.type)) {
+    showToast('Only JPG/PNG allowed for profile photo.', 'error'); return;
+  }
+  // Immediate preview
+  const reader = new FileReader();
+  reader.onload = ev => { document.getElementById('profile-avatar').src = ev.target.result; };
+  reader.readAsDataURL(file);
+  // Upload
+  const fd = new FormData();
+  fd.append('photo', file);
+  try {
+    const res = await fetch(`${API}/api/seller/profile/photo`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${getToken()}` },
+      body: fd
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Upload failed');
+    if (data.data?.avatar_url || data.avatar_url) {
+      document.getElementById('profile-avatar').src = data.data?.avatar_url || data.avatar_url;
+    }
+    showToast('Profile photo updated!', 'success');
+  } catch (err) {
+    showToast(err.message || 'Failed to upload photo.', 'error');
+  }
+});
+
+// ─── Banner upload ────────────────────────────────────────────────────────────
+const bannerDropZone = document.getElementById('banner-drop-zone');
+const bannerInput    = document.getElementById('input-banner');
+
+function showBannerPreview(src) {
+  document.getElementById('banner-placeholder').classList.add('hidden');
+  document.getElementById('banner-preview-wrap').classList.remove('hidden');
+  document.getElementById('banner-preview-img').src = src;
+}
+
+bannerDropZone.addEventListener('dragover', e => { e.preventDefault(); bannerDropZone.classList.add('drag-over'); });
+bannerDropZone.addEventListener('dragleave', () => bannerDropZone.classList.remove('drag-over'));
+bannerDropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  bannerDropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) uploadBanner(file);
+});
+bannerInput.addEventListener('change', e => {
+  if (e.target.files[0]) uploadBanner(e.target.files[0]);
+});
+
+async function uploadBanner(file) {
+  if (!['image/jpeg','image/png','image/jpg'].includes(file.type)) {
+    showToast('Only JPG/PNG allowed for banner.', 'error'); return;
+  }
+  const reader = new FileReader();
+  reader.onload = ev => showBannerPreview(ev.target.result);
+  reader.readAsDataURL(file);
+  const fd = new FormData();
+  fd.append('banner', file);
+  try {
+    const res = await fetch(`${API}/api/seller/profile/banner`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${getToken()}` },
+      body: fd
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Upload failed');
+    if (data.data?.banner_url || data.banner_url) {
+      showBannerPreview(data.data?.banner_url || data.banner_url);
+    }
+    showToast('Banner updated!', 'success');
+  } catch (err) {
+    showToast(err.message || 'Failed to upload banner.', 'error');
+  }
+}
+
+// ─── About page image upload ───────────────────────────────────────────────────
+const aboutImageDropZone = document.getElementById('about-image-drop-zone');
+const aboutImageInput    = document.getElementById('input-about-image');
+
+function showAboutImagePreview(src) {
+  document.getElementById('about-image-placeholder').classList.add('hidden');
+  document.getElementById('about-image-preview-wrap').classList.remove('hidden');
+  document.getElementById('about-image-preview-img').src = src;
+}
+
+aboutImageDropZone.addEventListener('dragover', e => { e.preventDefault(); aboutImageDropZone.classList.add('drag-over'); });
+aboutImageDropZone.addEventListener('dragleave', () => aboutImageDropZone.classList.remove('drag-over'));
+aboutImageDropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  aboutImageDropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) uploadAboutImage(file);
+});
+aboutImageInput.addEventListener('change', e => {
+  if (e.target.files[0]) uploadAboutImage(e.target.files[0]);
+});
+
+async function uploadAboutImage(file) {
+  if (!['image/jpeg','image/png','image/jpg'].includes(file.type)) {
+    showToast('Only JPG/PNG allowed for about image.', 'error'); return;
+  }
+  const reader = new FileReader();
+  reader.onload = ev => showAboutImagePreview(ev.target.result);
+  reader.readAsDataURL(file);
+  const fd = new FormData();
+  fd.append('about_image', file);
+  try {
+    const res = await fetch(`${API}/api/seller/profile/about-image`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${getToken()}` },
+      body: fd
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Upload failed');
+    if (data.data?.about_image_url || data.about_image_url) {
+      showAboutImagePreview(data.data?.about_image_url || data.about_image_url);
+    }
+    showToast('About image updated!', 'success');
+  } catch (err) {
+    showToast(err.message || 'Failed to upload about image.', 'error');
+  }
+}
+
+// ─── Video URL embed preview ───────────────────────────────────────────────────
+document.getElementById('f-video-url').addEventListener('input', debounce(function() {
+  const url = this.value.trim();
+  const wrap = document.getElementById('video-preview-wrap');
+  const iframe = document.getElementById('video-iframe');
+  const embedUrl = getEmbedUrl(url);
+  if (embedUrl) {
+    iframe.src = embedUrl;
+    wrap.classList.remove('hidden');
+  } else {
+    wrap.classList.add('hidden');
+    iframe.src = '';
+  }
+}, 600));
+
+function getEmbedUrl(url) {
+  if (!url) return null;
+  // YouTube
+  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/);
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?rel=0`;
+  // Instagram Reel
+  const igMatch = url.match(/instagram\.com\/(?:reel|reels|p)\/([A-Za-z0-9_-]+)/);
+  if (igMatch) return `https://www.instagram.com/p/${igMatch[1]}/embed`;
+  return null;
+}
+
+function debounce(fn, ms) {
+  let t;
+  return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), ms); };
+}
+
+// ─── Save Basic Info ──────────────────────────────────────────────────────────
+document.getElementById('save-basic-info-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('save-basic-info-btn');
+  // Clear errors
+  ['err-shop-name','err-handle','err-location','err-bio'].forEach(id => { document.getElementById(id).textContent = ''; });
+  // Validate
+  let valid = true;
+  const shopName = document.getElementById('f-shop-name').value.trim();
+  const handle   = document.getElementById('f-handle').value.trim();
+  const location = document.getElementById('f-location').value.trim();
+  const bio      = document.getElementById('f-bio').value.trim();
+  if (!shopName) { document.getElementById('err-shop-name').textContent = 'Shop name is required.'; valid = false; }
+  if (!handle)   { document.getElementById('err-handle').textContent = 'Handle is required.'; valid = false; }
+  if (!valid) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="material-symbols-outlined text-base animate-spin">refresh</span>Saving…';
+  try {
+    const res = await fetch(`${API}/api/seller/profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+      body: JSON.stringify({
+        shop_name:   shopName,
+        display_name: shopName,
+        handle:      handle.toLowerCase(),
+        location,
+        bio,
+        badges:      [...activeBadges]
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Update failed');
+    showToast('Basic info saved!', 'success');
+  } catch (err) {
+    showToast(err.message || 'Failed to save.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined text-base">save</span>Save Basic Info';
+  }
+});
+
+// ─── Save About Page ──────────────────────────────────────────────────────────
+document.getElementById('save-about-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('save-about-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="material-symbols-outlined text-base animate-spin">refresh</span>Saving…';
+  try {
+    const res = await fetch(`${API}/api/seller/profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+      body: JSON.stringify({
+        story_headline:    document.getElementById('f-story-headline').value.trim(),
+        story_description: document.getElementById('f-story-desc').value.trim(),
+        working_on:        document.getElementById('f-working-on').value.trim(),
+        video_url:         document.getElementById('f-video-url').value.trim(),
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Update failed');
+    showToast('About page saved!', 'success');
+  } catch (err) {
+    showToast(err.message || 'Failed to save.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined text-base">save</span>Save About Page';
+  }
+});
+
+// ─── Addresses ────────────────────────────────────────────────────────────────
+let addresses = [];
+
+async function loadAddresses() {
+  const listEl = document.getElementById('addresses-list');
+  listEl.innerHTML = '<div class="skeleton h-20 rounded-xl"></div><div class="skeleton h-20 rounded-xl mt-3"></div>';
+  try {
+    const res = await fetch(`${API}/api/seller/addresses`, {
+      headers: { 'Authorization': `Bearer ${getToken()}` }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error();
+    addresses = data.data || data || [];
+    renderAddresses();
+  } catch (_) {
+    listEl.innerHTML = '<p class="text-sm text-on-surface-variant text-center py-8">Could not load addresses. <button onclick="loadAddresses()" class="text-primary underline">Retry</button></p>';
+  }
+}
+
+function renderAddresses() {
+  const listEl = document.getElementById('addresses-list');
+  if (!addresses.length) {
+    listEl.innerHTML = '<div class="text-center py-10 text-on-surface-variant text-sm"><span class="material-symbols-outlined text-4xl mb-2 block opacity-40">location_off</span>No addresses saved yet. Add one to get started.</div>';
+    return;
+  }
+  listEl.innerHTML = '';
+  addresses.forEach(addr => {
+    const card = document.createElement('div');
+    card.className = 'address-card';
+    card.id = `addr-card-${addr._id || addr.id}`;
+    card.innerHTML = `
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-xs font-bold uppercase tracking-wider text-primary bg-primary-fixed px-2.5 py-0.5 rounded-full">${escHtml(addr.label || 'Address')}</span>
+            ${addr.is_default ? '<span class="text-xs font-semibold text-on-primary bg-custom-primary px-2.5 py-0.5 rounded-full">Default</span>' : ''}
+          </div>
+          <p class="text-sm font-medium text-on-surface">${escHtml(addr.address_line || '')}</p>
+          <p class="text-xs text-on-surface-variant mt-0.5">${[addr.city, addr.state, addr.pincode].filter(Boolean).join(', ')}</p>
+          ${addr.phone ? `<p class="text-xs text-on-surface-variant mt-0.5"><span class="material-symbols-outlined text-xs align-middle">call</span> ${escHtml(addr.phone)}</p>` : ''}
+        </div>
+        <div class="flex items-center gap-1 flex-shrink-0">
+          <button onclick="openEditAddress('${addr._id || addr.id}')" title="Edit" class="p-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant hover:text-primary">
+            <span class="material-symbols-outlined text-base">edit</span>
+          </button>
+          <button onclick="initDeleteAddress('${addr._id || addr.id}')" title="Delete" class="p-2 rounded-full hover:bg-error-container/40 transition-colors text-on-surface-variant hover:text-error">
+            <span class="material-symbols-outlined text-base">delete</span>
+          </button>
+        </div>
+      </div>
+      <div class="inline-confirm" id="confirm-del-${addr._id || addr.id}">
+        <span class="material-symbols-outlined text-error text-base">warning</span>
+        <span>Remove this address?</span>
+        <button onclick="confirmDeleteAddress('${addr._id || addr.id}')" class="text-xs font-bold text-error underline hover:no-underline">Remove</button>
+        <button onclick="cancelDeleteAddress('${addr._id || addr.id}')" class="text-xs font-bold text-on-surface-variant underline hover:no-underline">Cancel</button>
+      </div>
+    `;
+    listEl.appendChild(card);
+  });
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function initDeleteAddress(id) {
+  document.querySelectorAll('.inline-confirm').forEach(el => el.classList.remove('show'));
+  const conf = document.getElementById(`confirm-del-${id}`);
+  if (conf) conf.classList.add('show');
+}
+
+function cancelDeleteAddress(id) {
+  const conf = document.getElementById(`confirm-del-${id}`);
+  if (conf) conf.classList.remove('show');
+}
+
+async function confirmDeleteAddress(id) {
+  try {
+    const res = await fetch(`${API}/api/seller/addresses/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${getToken()}` }
+    });
+    if (!res.ok) throw new Error();
+    addresses = addresses.filter(a => (a._id || a.id) !== id);
+    renderAddresses();
+    showToast('Address removed.', 'success');
+  } catch (_) {
+    showToast('Failed to delete address.', 'error');
+  }
+}
+
+function openEditAddress(id) {
+  const addr = addresses.find(a => (a._id || a.id) === id);
+  if (!addr) return;
+  document.getElementById('address-modal-title').textContent = 'Edit Address';
+  document.getElementById('address-edit-id').value = id;
+  document.getElementById('addr-label').value   = addr.label || '';
+  document.getElementById('addr-line').value    = addr.address_line || '';
+  document.getElementById('addr-city').value    = addr.city || '';
+  document.getElementById('addr-state').value   = addr.state || '';
+  document.getElementById('addr-pincode').value = addr.pincode || '';
+  document.getElementById('addr-phone').value   = addr.phone || '';
+  document.getElementById('addr-default').checked = !!addr.is_default;
+  openAddressModal();
+}
+
+// Address modal open/close
+function openAddressModal() {
+  document.getElementById('address-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+function closeAddressModal() {
+  document.getElementById('address-modal').classList.add('hidden');
+  document.body.style.overflow = '';
+  document.getElementById('address-form').reset();
+  document.getElementById('address-edit-id').value = '';
+  document.getElementById('address-modal-title').textContent = 'Add New Address';
+  ['err-addr-label','err-addr-line','err-addr-city','err-addr-pincode','err-addr-phone'].forEach(id => {
+    document.getElementById(id).textContent = '';
+  });
+}
+document.getElementById('open-add-address-btn').addEventListener('click', () => {
+  document.getElementById('address-form').reset();
+  document.getElementById('address-edit-id').value = '';
+  document.getElementById('address-modal-title').textContent = 'Add New Address';
+  openAddressModal();
+});
+document.getElementById('close-address-modal').addEventListener('click', closeAddressModal);
+document.getElementById('cancel-address-btn').addEventListener('click', closeAddressModal);
+document.getElementById('address-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('address-modal')) closeAddressModal();
+});
+
+// Submit address form
+document.getElementById('address-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  ['err-addr-label','err-addr-line','err-addr-city','err-addr-pincode','err-addr-phone'].forEach(id => {
+    document.getElementById(id).textContent = '';
+  });
+  let valid = true;
+  const label   = document.getElementById('addr-label').value.trim();
+  const line    = document.getElementById('addr-line').value.trim();
+  const city    = document.getElementById('addr-city').value.trim();
+  const pincode = document.getElementById('addr-pincode').value.trim();
+  if (!label)   { document.getElementById('err-addr-label').textContent = 'Label required.'; valid = false; }
+  if (!line)    { document.getElementById('err-addr-line').textContent = 'Address line required.'; valid = false; }
+  if (!city)    { document.getElementById('err-addr-city').textContent = 'City required.'; valid = false; }
+  if (!pincode || !/^\d{6}$/.test(pincode)) { document.getElementById('err-addr-pincode').textContent = 'Enter valid 6-digit pincode.'; valid = false; }
+  if (!valid) return;
+
+  const editId = document.getElementById('address-edit-id').value;
+  const payload = {
+    label,
+    address_line: line,
+    city,
+    state:        document.getElementById('addr-state').value.trim(),
+    pincode,
+    phone:        document.getElementById('addr-phone').value.trim(),
+    is_default:   document.getElementById('addr-default').checked
+  };
+  const saveBtn = document.getElementById('save-address-btn');
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<span class="material-symbols-outlined text-base animate-spin">refresh</span>Saving…';
+  try {
+    const url    = editId ? `${API}/api/seller/addresses/${editId}` : `${API}/api/seller/addresses`;
+    const method = editId ? 'PUT' : 'POST';
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Save failed');
+    showToast(editId ? 'Address updated!' : 'Address added!', 'success');
+    closeAddressModal();
+    await loadAddresses();
+  } catch (err) {
+    showToast(err.message || 'Failed to save address.', 'error');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<span class="material-symbols-outlined text-base">save</span>Save Address';
+  }
+});
+
+// ─── Load profile ─────────────────────────────────────────────────────────────
+async function loadProfile() {
+  const loadingEl = document.getElementById('loading-state');
+  const errorEl   = document.getElementById('error-state');
+  const contentEl = document.getElementById('profile-content');
+  if (loadingEl) loadingEl.classList.remove('hidden');
+  if (errorEl) errorEl.classList.add('hidden');
+  if (contentEl) contentEl.classList.add('hidden');
+  
+  const token = getToken();
+  try {
+    let data = null;
+    if (token) {
+      const res = await fetch(`${API}/api/seller/profile`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const resp = await res.json();
+        data = resp.data || resp;
+      }
+    }
+
+    if (!data) {
+      data = {
+        shop_name: 'Artisan Studio',
+        handle: 'artisan_studio',
+        location: 'Jaipur, Rajasthan',
+        bio: 'Crafting bespoke handcrafted gifts and artisanal treasures.',
+        story_headline: 'Artisanal Craftsmanship Since 2024',
+        story_description: 'Every gift tells a unique story.',
+        working_on: 'Bespoke holiday gifts collection',
+        avatar_url: '/img/placeholder-avatar.png'
+      };
+    }
+
+    populateProfile(data);
+    if (loadingEl) loadingEl.classList.add('hidden');
+    if (contentEl) contentEl.classList.remove('hidden');
+    if (token) await loadAddresses();
+  } catch (err) {
+    console.warn('Load profile fallback:', err);
+    if (loadingEl) loadingEl.classList.add('hidden');
+    if (contentEl) contentEl.classList.remove('hidden');
+  }
+}
+
+function populateProfile(data) {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  set('f-shop-name', data.shop_name || data.display_name);
+  set('f-handle', data.handle);
+  set('f-location', data.location);
+  set('f-bio', data.bio);
+  set('f-story-headline', data.story_headline);
+  set('f-story-desc', data.story_description);
+  set('f-working-on', data.working_on);
+  set('f-video-url', data.video_url);
+  if (data.avatar_url) document.getElementById('profile-avatar').src = data.avatar_url;
+  if (data.banner_url) showBannerPreview(data.banner_url);
+  if (data.about_image_url) showAboutImagePreview(data.about_image_url);
+  if (data.video_url) {
+    const embedUrl = getEmbedUrl(data.video_url);
+    if (embedUrl) {
+      document.getElementById('video-iframe').src = embedUrl;
+      document.getElementById('video-preview-wrap').classList.remove('hidden');
+    }
+  }
+  // Badges
+  activeBadges = new Set(data.badges || []);
+  document.querySelectorAll('.badge-chip').forEach(chip => {
+    chip.classList.toggle('active', activeBadges.has(chip.dataset.badge));
+  });
+  // Trigger counters
+  ['f-bio','f-story-desc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.dispatchEvent(new Event('input'));
+  });
+}
+
+// ─── DOMContentLoaded ─────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  const token = getToken();
+  if (!token) { window.location.href = '/auth/login.html'; return; }
+  try {
+    const pr = await fetch(`${API}/api/profile/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!pr.ok) throw new Error();
+    const pd = await pr.json();
+    const u  = pd.data || pd;
+    if (u.role !== 'seller') { window.location.href = '/buyer/profile.html'; return; }
+  } catch (_) {
+    sessionStorage.clear(); window.location.href = '/auth/login.html'; return;
+  }
+  wireCounter('f-bio', 'bio-counter', 300);
+  wireCounter('f-story-desc', 'story-counter', 1000);
+  await loadProfile();
+});
+
+document.getElementById('retry-btn').addEventListener('click', loadProfile);
+</script>
+
+
+<script>
+async function handleFooterSellerLink(e) {
+  if (e) e.preventDefault();
+  const isMobile = window.innerWidth < 768;
+  const token = sessionStorage.getItem('tohfa_access_token');
+  if (!token) {
+    sessionStorage.setItem('tohfa_redirect_seller', 'true');
+    window.location.href = '/auth/login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/profile/me', {
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success) {
+        const role = data.data.role;
+        if (role === 'seller') {
+          window.location.href = isMobile ? '/mobile-seller/dashboard.html' : '/seller/dashboard.html';
+          return;
+        }
+      }
+    }
+  } catch(err) {
+    console.error("Error checking seller status:", err);
+  }
+  
+  window.location.href = isMobile ? '/mobile-buyer/become-seller.html' : '/buyer/become-seller.html';
+}
+
+// Check if we need to auto-redirect back to dashboard/signup after login redirect
+document.addEventListener("DOMContentLoaded", () => {
+  const needsRedirect = sessionStorage.getItem('tohfa_redirect_seller');
+  if (needsRedirect === 'true') {
+    sessionStorage.removeItem('tohfa_redirect_seller');
+    const token = sessionStorage.getItem('tohfa_access_token');
+    if (token) {
+      handleFooterSellerLink();
+    }
+  }
+});
+
+window.openContactModal = function(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const modal = document.getElementById('tohfa-contact-modal');
+  if (modal) {
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeContactModal = function() {
+  const modal = document.getElementById('tohfa-contact-modal');
+  if (modal) {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+};
+
+if (!window.hasContactModalEscListener) {
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      window.closeContactModal();
+    }
+  });
+  window.hasContactModalEscListener = true;
+}
+
+window.openRefundsModal = function(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const modal = document.getElementById('tohfa-refunds-modal');
+  if (modal) {
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeRefundsModal = function() {
+  const modal = document.getElementById('tohfa-refunds-modal');
+  if (modal) {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+};
+
+if (!window.hasRefundsModalEscListener) {
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      window.closeRefundsModal();
+    }
+  });
+  window.hasRefundsModalEscListener = true;
+}
+</script>
+</body>
+</html>

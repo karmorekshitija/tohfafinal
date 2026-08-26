@@ -1,0 +1,289 @@
+<!--
+  FILE: auth/signup-buyer.html
+  PANEL: Auth
+  ROUTE: /auth/signup-buyer.html
+  PURPOSE: Buyer account registration page.
+  AUTH: Public
+  LAST_POLISHED: 2026-08-23
+-->
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Join Tohfa | Buyer Registration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+  <link rel="stylesheet" href="/src/responsive.css">
+  <style>
+    .requirement-item { display: flex; align-items: center; gap: 6px; font-size: 12px; transition: color 0.2s ease; }
+    .requirement-item.valid { color: #2D7A3A; }
+    .requirement-item.invalid { color: rgba(28, 28, 28, 0.5); }
+  </style>
+</head>
+<body class="bg-[#FFF8E7] min-h-screen flex flex-col justify-between font-['DM_Sans'] text-[#1C1C1C]">
+
+  <!-- Header -->
+  <header class="w-full px-6 py-5 flex justify-between items-center max-w-7xl mx-auto">
+    <a href="/buyer/home.html" class="font-['Playfair_Display'] text-3xl italic font-bold text-[#14381F]">
+      Tohfa<span class="opacity-60">.</span>
+    </a>
+    <div class="flex items-center gap-3 text-xs sm:text-sm text-[#1C1C1C]/70">
+      <span>Already have an account?</span>
+      <a href="/auth/login.html" class="text-[#14381F] font-semibold hover:underline">Log In</a>
+      <span class="opacity-30">|</span>
+      <a href="/auth/signup-seller.html" class="text-[#14381F] font-semibold hover:underline">Sell as Artisan</a>
+    </div>
+  </header>
+
+  <!-- Signup Main Card -->
+  <main class="flex-1 flex items-center justify-center p-4 py-8">
+    <div class="w-full max-w-md bg-[#FFF8E7] rounded-2xl border border-[#14381F]/15 p-6 sm:p-8 shadow-[0_8px_30px_rgba(20,56,31,0.06)] relative overflow-hidden">
+      
+      <!-- Header Section -->
+      <div class="text-center mb-6">
+        <span class="material-symbols-outlined text-[#14381F] mb-1 opacity-80 text-3xl">brush</span>
+        <p class="font-['Space_Mono'] text-[10px] font-semibold text-[#14381F]/70 tracking-[0.2em] uppercase mb-1">BEGIN YOUR COLLECTION</p>
+        <h2 class="font-['Playfair_Display'] italic text-3xl text-[#14381F] font-bold select-none">Join Our Community</h2>
+        <p class="text-xs text-[#1C1C1C]/60 mt-1">Discover handcrafted gifts and support artisan creators</p>
+      </div>
+
+      <!-- General Error Alert -->
+      <div id="general-error" class="hidden mb-5 p-3.5 bg-[#C0392B]/10 border border-[#C0392B]/30 text-[#C0392B] rounded-xl flex items-start gap-2.5 text-xs font-medium">
+        <span class="material-symbols-outlined text-[18px] text-[#C0392B] shrink-0 mt-0.5">warning</span>
+        <span id="general-error-text"></span>
+      </div>
+
+      <!-- Signup Form -->
+      <form id="signup-form" class="space-y-4" novalidate>
+        <!-- Full Name -->
+        <div>
+          <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1.5" for="full_name">Full Name *</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#1C1C1C]/40 text-[20px]">person</span>
+            <input class="w-full pl-10 pr-4 py-3 bg-[#FFF8E7] border border-[#14381F]/20 rounded-xl text-base text-[#1C1C1C] outline-none focus:border-[#14381F] focus:ring-2 focus:ring-[#14381F]/10 transition-all" id="full_name" name="full_name" placeholder="Enter your full name" type="text" required />
+          </div>
+          <p id="name-error" class="hidden text-[#C0392B] text-[12px] mt-1 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">error</span>
+            <span id="name-error-text">Full name is required.</span>
+          </p>
+        </div>
+
+        <!-- Email Address -->
+        <div>
+          <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1.5" for="email">Email Address *</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#1C1C1C]/40 text-[20px]">mail</span>
+            <input class="w-full pl-10 pr-4 py-3 bg-[#FFF8E7] border border-[#14381F]/20 rounded-xl text-base text-[#1C1C1C] outline-none focus:border-[#14381F] focus:ring-2 focus:ring-[#14381F]/10 transition-all" id="email" name="email" placeholder="example@tohfa.com" type="email" required />
+          </div>
+          <p id="email-error" class="hidden text-[#C0392B] text-[12px] mt-1 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">error</span>
+            <span id="email-error-text">Please enter a valid email address.</span>
+          </p>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1.5" for="password">Password *</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#1C1C1C]/40 text-[20px]">lock</span>
+            <input class="w-full pl-10 pr-10 py-3 bg-[#FFF8E7] border border-[#14381F]/20 rounded-xl text-base text-[#1C1C1C] outline-none focus:border-[#14381F] focus:ring-2 focus:ring-[#14381F]/10 transition-all" id="password" name="password" placeholder="Create a password" type="password" required />
+            <button type="button" id="toggle-pw-btn" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#1C1C1C]/40 hover:text-[#14381F] transition-colors" aria-label="Toggle password visibility">
+              <span id="password-toggle-icon" class="material-symbols-outlined text-[20px]">visibility</span>
+            </button>
+          </div>
+          
+          <!-- Password Requirement Helper -->
+          <div class="mt-2 space-y-1 bg-[#14381F]/5 p-3 rounded-lg border border-[#14381F]/10">
+            <div id="req-length" class="requirement-item invalid">
+              <span class="material-symbols-outlined text-[14px]" id="req-icon">circle</span>
+              <span>Must be at least 8 characters long</span>
+            </div>
+          </div>
+
+          <p id="password-error" class="hidden text-[#C0392B] text-[12px] mt-1 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">error</span>
+            <span id="password-error-text">Password must satisfy all security requirements.</span>
+          </p>
+        </div>
+
+        <!-- Submit Button -->
+        <button id="submit-btn" type="submit" class="w-full py-3.5 bg-[#14381F] text-[#FFF8E7] rounded-xl text-sm font-bold hover:bg-[#0D2614] active:scale-[0.99] transition-all shadow-sm mt-4">
+          Create Account
+        </button>
+      </form>
+
+      <!-- Footer Links -->
+      <div class="mt-6 pt-5 border-t border-[#14381F]/10 text-center space-y-2">
+        <p class="text-xs text-[#1C1C1C]/70">
+          Already have an account? 
+          <a class="text-[#14381F] font-bold hover:underline ml-1" href="/auth/login.html">Log in</a>
+        </p>
+        <div>
+          <a class="text-[11px] text-[#14381F] hover:underline tracking-wider font-semibold uppercase flex items-center justify-center gap-1" href="/auth/signup-seller.html">
+            ✦ Apply as an Artisan Seller
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="py-5 text-center text-xs text-[#1C1C1C]/60 flex flex-col items-center gap-2">
+    <a class="inline-flex items-center gap-1 text-xs text-[#1C1C1C]/70 hover:text-[#14381F] transition-colors uppercase tracking-wider font-semibold" href="/buyer/home.html">
+      <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+      Back to Explore
+    </a>
+    <div>&copy; 2026 Tohfa Marketplace. Handcrafted with care.</div>
+  </footer>
+
+  <script type="module">
+    import apiClient from '/src/utils/apiClient.js';
+
+    const signupForm = document.getElementById('signup-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const nameInput = document.getElementById('full_name');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const togglePwBtn = document.getElementById('toggle-pw-btn');
+    const toggleIcon = document.getElementById('password-toggle-icon');
+
+    const nameError = document.getElementById('name-error');
+    const nameErrorText = document.getElementById('name-error-text');
+    const emailError = document.getElementById('email-error');
+    const emailErrorText = document.getElementById('email-error-text');
+    const passwordError = document.getElementById('password-error');
+    const passwordErrorText = document.getElementById('password-error-text');
+    const generalError = document.getElementById('general-error');
+    const generalErrorText = document.getElementById('general-error-text');
+
+    const reqLength = document.getElementById('req-length');
+    const reqIcon = document.getElementById('req-icon');
+
+    togglePwBtn.addEventListener('click', () => {
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.textContent = 'visibility_off';
+      } else {
+        passwordInput.type = 'password';
+        toggleIcon.textContent = 'visibility';
+      }
+    });
+
+    passwordInput.addEventListener('input', function() {
+      const val = passwordInput.value;
+      if (val.length >= 8) {
+        reqLength.classList.remove('invalid');
+        reqLength.classList.add('valid');
+        reqIcon.textContent = 'check_circle';
+      } else {
+        reqLength.classList.remove('valid');
+        reqLength.classList.add('invalid');
+        reqIcon.textContent = 'circle';
+      }
+    });
+
+    function clearErrors() {
+      generalError.classList.add('hidden');
+      nameError.classList.add('hidden');
+      emailError.classList.add('hidden');
+      passwordError.classList.add('hidden');
+    }
+
+    signupForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      clearErrors();
+
+      let hasErrors = false;
+
+      if (!nameInput.value.trim()) {
+        nameErrorText.textContent = "Full name is required.";
+        nameError.classList.remove('hidden');
+        hasErrors = true;
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailInput.value.trim() || !emailRegex.test(emailInput.value)) {
+        emailErrorText.textContent = "Please enter a valid email address.";
+        emailError.classList.remove('hidden');
+        hasErrors = true;
+      }
+
+      if (passwordInput.value.length < 8) {
+        passwordErrorText.textContent = "Password must be at least 8 characters.";
+        passwordError.classList.remove('hidden');
+        hasErrors = true;
+      }
+
+      if (hasErrors) return;
+
+      submitBtn.innerText = 'Creating Account...';
+      submitBtn.disabled = true;
+
+      try {
+        const payload = {
+          name: nameInput.value.trim(),
+          full_name: nameInput.value.trim(),
+          email: emailInput.value.trim(),
+          password: passwordInput.value,
+          role: 'buyer'
+        };
+
+        const response = await apiClient.post('/auth/register/buyer', payload);
+        const data = response.data;
+
+        if (data.success) {
+          const resultData = data.data || {};
+          const token = resultData.accessToken || resultData.token || resultData.access_token;
+          const refreshToken = resultData.refreshToken || resultData.refresh_token;
+          const user = resultData.user;
+
+          if (token) {
+            localStorage.setItem('tohfa_auth_token', token);
+            sessionStorage.setItem('tohfa_access_token', token);
+          }
+          if (refreshToken) {
+            localStorage.setItem('tohfa_refresh_token', refreshToken);
+            sessionStorage.setItem('tohfa_refresh_token', refreshToken);
+          }
+          if (user) {
+            localStorage.setItem('tohfa_user_data', JSON.stringify(user));
+            sessionStorage.setItem('tohfa_user', JSON.stringify(user));
+          }
+          
+          const returnTo = sessionStorage.getItem('tohfa_return_to');
+          sessionStorage.removeItem('tohfa_return_to');
+          window.location.href = returnTo || '/buyer/home.html';
+        } else {
+          generalErrorText.textContent = data.message || "An unexpected error occurred. Please try again.";
+          generalError.classList.remove('hidden');
+        }
+
+      } catch (error) {
+        console.error("Signup request failed:", error);
+        const response = error.response;
+        if (response) {
+          const data = response.data || {};
+          if (response.status === 409) {
+            emailErrorText.textContent = data.message || "This email is already registered. Try logging in.";
+            emailError.classList.remove('hidden');
+          } else {
+            generalErrorText.textContent = data.message || "An unexpected error occurred. Please try again.";
+            generalError.classList.remove('hidden');
+          }
+        } else {
+          generalErrorText.textContent = "Unable to connect to the backend server. Please try again.";
+          generalError.classList.remove('hidden');
+        }
+      } finally {
+        submitBtn.innerText = 'Create Account';
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

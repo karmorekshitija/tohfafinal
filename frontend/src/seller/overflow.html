@@ -1,0 +1,141 @@
+<!-- File: frontend/src/seller/overflow.html | Role: Seller Capacity Overflow Queue -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capacity Queue | Seller Studio — Tohfa</title>
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <link rel="stylesheet" href="../styles/reset.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/animations.css">
+  <style>
+    .seller-layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+    @media (max-width: 900px) { .seller-layout { grid-template-columns: 1fr; } .seller-sidebar { display: none; } }
+    .seller-main { padding: var(--space-8); background: var(--color-background); }
+  </style>
+</head>
+<body>
+  <div class="seller-layout">
+    <aside class="seller-sidebar" id="sellerSidebar"></aside>
+
+    <main class="seller-main">
+      <div class="flex justify-between items-center" style="margin-bottom:var(--space-6);">
+        <div>
+          <h1 class="text-display" style="font-size:var(--text-2xl); color:var(--color-primary);">Capacity Overflow Queue ⏳</h1>
+          <p class="text-small" style="margin-top:var(--space-1);">Orders placed when your studio exceeds max concurrent batch limits</p>
+        </div>
+      </div>
+
+      <!-- Capacity Limit Read-Only Box -->
+      <div class="card flex justify-between items-center" style="padding:var(--space-4); margin-bottom:var(--space-6); background:rgba(205,237,179,0.2); border-color:var(--color-accent);">
+        <div>
+          <div class="text-xs font-bold" style="text-transform:uppercase; color:var(--color-primary);">Active Workshop Capacity</div>
+          <p class="text-small" style="margin-top:2px;">Orders exceeding your workshop limit will pause instant checkout and queue here for manual review.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="badge badge-accent font-bold" style="font-size:var(--text-sm); padding:var(--space-2) var(--space-4);">
+            Limit: <span id="capacityDisplay">—</span> orders
+          </div>
+          <a href="./store-config.html" class="btn btn-sm btn-secondary" style="white-space:nowrap;">Edit in Store Settings →</a>
+        </div>
+      </div>
+
+      <div class="card" style="padding:var(--space-4);">
+        <div id="overflowQueueTable">
+          <div class="skeleton skeleton--card" style="height:120px;"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+  <script type="module">
+    import { api } from '../js/api.js';
+    import { initSellerShell } from '../js/sellerLayout.js';
+    import { requireAuth, requireRole } from '../js/auth.js';
+    import { formatPrice, formatDate, showToast } from '../js/utils.js';
+
+    if (requireAuth() && requireRole('seller')) {
+      initSellerShell({ activeTab: 'overflow' });
+    }
+
+    const tableEl = document.getElementById('overflowQueueTable');
+    const capDisplay = document.getElementById('capacityDisplay');
+
+    async function load() {
+      try {
+        const [profRes, ovRes] = await Promise.all([
+          api.get('/api/seller/profile'),
+          api.get('/api/orders/overflow')
+        ]);
+
+        if (capDisplay) {
+          capDisplay.textContent = profRes?.data?.profile?.capacity_limit ?? profRes?.data?.capacity_limit ?? 50;
+        }
+
+        const queue = Array.isArray(ovRes?.data?.overflow_orders) ? ovRes.data.overflow_orders : (Array.isArray(ovRes?.data) ? ovRes.data : []);
+
+        if (!queue.length) {
+          tableEl.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state__icon">✨</div>
+              <h3 class="empty-state__title">Capacity Queue is Clear</h3>
+              <p class="empty-state__body">You are currently operating comfortably within your workshop fulfillment limit.</p>
+            </div>
+          `;
+          return;
+        }
+
+        tableEl.innerHTML = `
+          <table class="data-table" style="width:100%;">
+            <thead>
+              <tr>
+                <th>Queue ID</th>
+                <th>Queued At</th>
+                <th>Buyer</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${queue.map(q => `
+                <tr>
+                  <td class="text-id">#${String(q.id).slice(0, 8).toUpperCase()}</td>
+                  <td>${formatDate(q.created_at)}</td>
+                  <td>${q.buyer_name || 'Customer'}</td>
+                  <td class="text-price-sm">${formatPrice(q.total_amount)}</td>
+                  <td><span class="badge ${q.status === 'pending' ? 'badge-warning' : 'badge-success'}">${q.status}</span></td>
+                  <td>
+                    ${q.status === 'pending' ? `
+                      <div class="flex gap-2">
+                        <button onclick="handleQueue('${q.id}', 'accept')" class="btn btn-xs btn-primary">Accept & Convert</button>
+                        <button onclick="handleQueue('${q.id}', 'decline')" class="btn btn-xs btn-ghost" style="color:var(--color-error);">Decline</button>
+                      </div>
+                    ` : 'Processed'}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch (err) {
+        tableEl.innerHTML = `<p class="text-body">${err.message}</p>`;
+      }
+    }
+
+    window.handleQueue = async (id, action) => {
+      try {
+        await api.patch(`/api/orders/overflow/${id}`, { action });
+        showToast(`Order ${action}ed!`, 'success');
+        load();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    };
+
+    load();
+  </script>
+</body>
+</html>

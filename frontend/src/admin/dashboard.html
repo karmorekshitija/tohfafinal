@@ -1,0 +1,462 @@
+﻿<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+<script type="module" src="/src/components/AdminSidebar.js"></script>
+<script type="module" src="/src/components/ReportWidget.js" defer></script>
+<script type="module" src="/src/components/ProtectedRoute.js"></script>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Tohfa Admin - Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    .watermark-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0.05;
+      background-image: url('/img/textures/pinstripe.png');
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+    }
+  </style>
+</head>
+<body class="bg-[#FFF8E7] text-text-default font-body-md min-h-screen overflow-x-hidden">
+  <div class="watermark-overlay"></div>
+
+  <!-- Shared Sidebar Component Injected Dynamically -->
+  <aside></aside>
+
+  <!-- Top Navigation Header -->
+  <header class="fixed top-0 right-0 w-[calc(100%-256px)] h-[60px] bg-[#FFF8E7] border-b border-outline-variant flex justify-between items-center px-8 z-40">
+    <h2 class="font-headline-md text-headline-md italic text-primary">Dashboard</h2>
+    <div class="flex items-center gap-6">
+      <button id="logout-btn" class="text-on-surface-variant hover:text-primary transition-colors text-[14px] font-label-btn">Logout</button>
+      <div class="h-8 w-8 rounded-full bg-secondary-container flex items-center justify-center text-primary font-bold text-xs">TA</div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="ml-64 pt-[60px] p-8 max-w-[1200px] mx-auto min-h-screen">
+    <!-- Header Section -->
+    <section class="mb-8 mt-4">
+      <h1 class="font-headline-lg text-headline-lg text-primary leading-tight">Overview</h1>
+      <p class="font-serif italic text-text-muted">Real-time marketplace growth & activity insights</p>
+    </section>
+
+    <!-- Stats Row -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <!-- Card 1 -->
+      <div class="bg-[#FFF8E7] p-6 rounded-xl border border-outline-variant/30 border-l-4 border-l-highlight-gold shadow-sm flex flex-col justify-between">
+        <span class="text-xs font-bold text-text-muted uppercase tracking-wider">Total Revenue</span>
+        <h2 id="stat-revenue" class="font-headline-lg text-3xl text-primary mt-2">₹0.00</h2>
+        <span class="text-[11px] text-[#14381F] font-semibold mt-1">Platform Sales (all-time)</span>
+      </div>
+      <!-- Card 2 -->
+      <div class="bg-[#FFF8E7] p-6 rounded-xl border border-outline-variant/30 border-l-4 border-l-primary shadow-sm flex flex-col justify-between">
+        <span class="text-xs font-bold text-text-muted uppercase tracking-wider">Orders Today</span>
+        <h2 id="stat-orders" class="font-headline-lg text-3xl text-primary mt-2">0</h2>
+        <span class="text-[11px] text-text-muted mt-1" id="stat-orders-prev">Today's transactions</span>
+      </div>
+      <!-- Card 3 -->
+      <div class="bg-[#FFF8E7] p-6 rounded-xl border border-outline-variant/30 border-l-4 border-l-accent-violet shadow-sm flex flex-col justify-between cursor-pointer hover:shadow-md transition-shadow" onclick="window.location.href='/admin/sellers.html?tab=applications'">
+        <span class="text-xs font-bold text-text-muted uppercase tracking-wider">Artisan Sellers</span>
+        <h2 id="stat-sellers" class="font-headline-lg text-3xl text-primary mt-2">0</h2>
+        <span class="text-[11px] text-[#7B5EA7] font-semibold mt-1 flex items-center gap-1.5" id="pending-apps-container">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse hidden" id="pending-apps-dot"></span>
+          <span id="stat-pending-apps">Active Studios</span>
+        </span>
+      </div>
+      <!-- Card 4 -->
+      <div class="bg-[#FFF8E7] p-6 rounded-xl border border-outline-variant/30 border-l-4 border-l-secondary-container shadow-sm flex flex-col justify-between">
+        <span class="text-xs font-bold text-text-muted uppercase tracking-wider">Registered Buyers</span>
+        <h2 id="stat-buyers" class="font-headline-lg text-3xl text-primary mt-2">0</h2>
+        <span class="text-[11px] text-[#49663f] font-semibold mt-1">Artisan Admirers</span>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <!-- Revenue Chart (2/3 width) -->
+      <div class="lg:col-span-2 bg-[#FFF8E7] p-6 rounded-xl border border-outline-variant/30 shadow-sm">
+        <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
+          <h3 class="font-headline-md text-lg text-primary">Revenue Timeline</h3>
+          <!-- Range Controls -->
+          <div class="flex items-center gap-2 bg-[#FFF8E7] p-1 rounded-full">
+            <button id="btn-chart-7d" class="px-4 py-1 rounded-full text-xs font-bold bg-[#14381F] text-white shadow-sm transition-all duration-200">7D</button>
+            <button id="btn-chart-30d" class="px-4 py-1 rounded-full text-xs font-bold text-text-default hover:bg-outline-variant/10 transition-all duration-200">30D</button>
+            <button id="btn-chart-custom" class="px-4 py-1 rounded-full text-xs font-bold text-text-default hover:bg-outline-variant/10 transition-all duration-200">Custom</button>
+          </div>
+        </div>
+        <!-- Custom date inputs (hidden by default) -->
+        <div id="custom-date-picker" class="hidden flex gap-4 mb-4 items-center bg-[#FFF8E7]/50 p-3 rounded-lg border border-outline-variant/20">
+          <div>
+            <label class="block text-[10px] uppercase font-bold text-text-muted mb-1">Start Date</label>
+            <input type="date" id="start-date" class="px-3 py-1 border border-outline-variant/30 rounded text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none" />
+          </div>
+          <div>
+            <label class="block text-[10px] uppercase font-bold text-text-muted mb-1">End Date</label>
+            <input type="date" id="end-date" class="px-3 py-1 border border-outline-variant/30 rounded text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none" />
+          </div>
+          <button id="btn-apply-custom" class="mt-4 px-4 py-1.5 bg-[#14381F] hover:bg-[#2a4d38] text-white font-bold text-xs rounded transition-colors shadow-sm">Apply</button>
+        </div>
+        <div class="relative h-[300px]">
+          <canvas id="revenueChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Footfall / Signup Chart (1/3 width) -->
+      <div class="bg-[#FFF8E7] p-6 rounded-xl border border-outline-variant/30 shadow-sm flex flex-col justify-between">
+        <div>
+          <h3 class="font-headline-md text-lg text-primary mb-6">Traffic & Signups</h3>
+          <div class="relative h-[220px]">
+            <canvas id="footfallChart"></canvas>
+          </div>
+        </div>
+        <div class="mt-4 pt-4 border-t border-outline-variant/20 flex justify-between text-xs text-text-muted">
+          <span>Views & click sessions tracked</span>
+          <span class="font-semibold text-primary" id="total-traffic-count">Calculating...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tables Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Going Viral Table -->
+      <div class="bg-[#FFF8E7] p-6 rounded-xl border border-outline-variant/30 shadow-sm">
+        <h3 class="font-headline-md text-lg text-primary mb-6 flex items-center gap-2">
+          <span class="material-symbols-outlined text-[#14381F] fill-current">trending_up</span>
+          <span>Going Viral Products</span>
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-outline-variant/30 text-xs font-bold text-text-muted uppercase">
+                <th class="py-3 pr-4">Product</th>
+                <th class="py-3 px-4 text-center">Views</th>
+                <th class="py-3 px-4 text-center">Clicks</th>
+                <th class="py-3 px-4 text-right">Viral Score</th>
+              </tr>
+            </thead>
+            <tbody id="viral-products-list" class="divide-y divide-outline-variant/20 text-sm">
+              <!-- Dynamically populated -->
+              <tr>
+                <td colspan="4" class="py-6 text-center text-text-muted">Loading viral rankings...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Seller Activity List -->
+      <div class="bg-[#FFF8E7] p-6 rounded-xl border border-outline-variant/30 shadow-sm">
+        <h3 class="font-headline-md text-lg text-primary mb-6 flex items-center gap-2">
+          <span class="material-symbols-outlined text-[#7B5EA7]">local_activity</span>
+          <span>Seller Activity</span>
+        </h3>
+        <div class="space-y-4 max-h-[300px] overflow-y-auto pr-1" id="seller-activity-list">
+          <!-- Dynamically populated -->
+          <div class="text-center text-text-muted py-6">Loading active studios...</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import adminApiClient from '/src/utils/adminApiClient.js';
+    import { formatPaise } from '/src/utils/currency.js';
+
+    // Global references for charts
+    let revenueChart = null;
+    let footfallChart = null;
+    let selectedPeriod = '7d';
+
+    async function loadStats() {
+      try {
+        const res = await adminApiClient.get('/admin/dashboard/summary');
+        if (res.data && res.data.success) {
+          const s = res.data.data;
+          document.getElementById('stat-revenue').textContent = formatPaise(s.total_revenue || 0);
+          document.getElementById('stat-orders').textContent = s.revenue_today > 0 ? (s.total_orders_today || '1') : '0';
+          document.getElementById('stat-sellers').textContent = s.total_sellers || 0;
+          document.getElementById('stat-buyers').textContent = s.total_buyers || 0;
+
+          const pendingCount = s.pending_applications || 0;
+          const dot = document.getElementById('pending-apps-dot');
+          const label = document.getElementById('stat-pending-apps');
+          if (pendingCount > 0) {
+            dot.classList.remove('hidden');
+            label.textContent = `${pendingCount} pending applications`;
+            label.className = "text-amber-600 font-bold";
+          } else {
+            dot.classList.add('hidden');
+            label.textContent = "Active Studios";
+            label.className = "text-[#7B5EA7] font-semibold";
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load dashboard summary stats:', err);
+      }
+    }
+
+    async function updateCharts(period = '7d', start = '', end = '') {
+      try {
+        // 1. Fetch Revenue
+        let revUrl = `/admin/dashboard/revenue-chart?period=${period}`;
+        if (period === 'custom') {
+          revUrl += `&start=${start}&end=${end}`;
+        }
+        const revRes = await adminApiClient.get(revUrl);
+        const revData = revRes.data.success ? revRes.data.data : [];
+
+        // 2. Fetch Footfall
+        let ffUrl = `/admin/dashboard/footfall?period=${period}`;
+        if (period === 'custom') {
+          ffUrl += `&start=${start}&end=${end}`;
+        }
+        const ffRes = await adminApiClient.get(ffUrl);
+        const ffData = ffRes.data.success ? ffRes.data.data : [];
+
+        // Update traffic indicator count
+        const totalVisits = ffData.reduce((acc, row) => acc + (row.unique_visitors || 0), 0);
+        document.getElementById('total-traffic-count').textContent = `${totalVisits.toLocaleString()} visits`;
+
+        // Render Revenue Chart
+        const revLabels = revData.map(d => d.date);
+        const revValues = revData.map(d => (d.revenue || 0) / 100);
+
+        if (revenueChart) revenueChart.destroy();
+        const ctxRev = document.getElementById('revenueChart').getContext('2d');
+        revenueChart = new Chart(ctxRev, {
+          type: 'line',
+          data: {
+            labels: revLabels,
+            datasets: [{
+              label: 'Revenue (₹)',
+              data: revValues,
+              borderColor: '#14381F',
+              backgroundColor: 'rgba(61, 107, 79, 0.05)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.3
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: { color: 'rgba(217, 212, 203, 0.3)' },
+                ticks: { font: { family: 'Space Mono' } }
+              },
+              x: {
+                grid: { display: false },
+                ticks: { font: { family: 'Space Mono' } }
+              }
+            }
+          }
+        });
+
+        // Render Footfall Chart
+        const ffLabels = ffData.map(d => d.date);
+        const visitorValues = ffData.map(d => d.unique_visitors || 0);
+        const signupValues = ffData.map(d => d.new_signups || 0);
+
+        if (footfallChart) footfallChart.destroy();
+        const ctxFf = document.getElementById('footfallChart').getContext('2d');
+        footfallChart = new Chart(ctxFf, {
+          type: 'bar',
+          data: {
+            labels: ffLabels,
+            datasets: [
+              {
+                label: 'Visitors',
+                data: visitorValues,
+                backgroundColor: 'rgba(20,56,31,0.2)',
+                borderRadius: 4
+              },
+              {
+                label: 'Signups',
+                data: signupValues,
+                backgroundColor: '#7B5EA7',
+                borderRadius: 4
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { font: { family: 'DM Sans' } } } },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: { color: 'rgba(217, 212, 203, 0.3)' },
+                ticks: { font: { family: 'Space Mono' } }
+              },
+              x: {
+                grid: { display: false },
+                ticks: { font: { family: 'Space Mono' } }
+              }
+            }
+          }
+        });
+
+      } catch (err) {
+        console.error('Failed to update charts:', err);
+      }
+    }
+
+    async function loadViralProducts() {
+      try {
+        const res = await adminApiClient.get('/admin/dashboard/top-products?limit=5');
+        const listEl = document.getElementById('viral-products-list');
+        listEl.innerHTML = '';
+        if (res.data && res.data.success && res.data.data.length > 0) {
+          res.data.data.forEach(p => {
+            const score = p.viral_score || 0;
+            const tr = document.createElement('tr');
+            tr.className = 'border-b border-outline-variant/10 hover:bg-[#FFF8E7]/20 transition-colors';
+            tr.innerHTML = `
+              <td class="py-3.5 pr-4 flex items-center gap-3">
+                <div class="font-semibold text-text-default hover:text-primary cursor-pointer" onclick="window.location.href='/admin/products.html?search=${encodeURIComponent(p.name)}'">${p.name}</div>
+              </td>
+              <td class="py-3.5 px-4 text-center font-data-meta text-xs text-text-muted">${p.views || 0}</td>
+              <td class="py-3.5 px-4 text-center font-data-meta text-xs text-text-muted">${p.clicks || 0}</td>
+              <td class="py-3.5 px-4 text-right">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#f0f7ee] text-[#14381F] border border-[rgba(20,56,31,0.2)]">
+                  ${score.toFixed(1)}
+                </span>
+              </td>
+            `;
+            listEl.appendChild(tr);
+          });
+        } else {
+          listEl.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-text-muted">No trending products found</td></tr>`;
+        }
+      } catch (err) {
+        console.error('Failed to load viral products:', err);
+      }
+    }
+
+    async function loadSellerActivity() {
+      try {
+        const res = await adminApiClient.get('/admin/dashboard/seller-activity');
+        const listEl = document.getElementById('seller-activity-list');
+        listEl.innerHTML = '';
+        if (res.data && res.data.success && res.data.data.length > 0) {
+          res.data.data.forEach(s => {
+            const initial = s.name ? s.name.charAt(0).toUpperCase() : 'S';
+            const rawDate = s.last_order_at;
+            let displayDate = 'No sales yet';
+            if (rawDate) {
+              displayDate = new Date(rawDate.replace(' ', 'T')).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+            }
+
+            const item = document.createElement('div');
+            item.className = 'flex items-center justify-between p-3 bg-[#FFF8E7] rounded-lg border border-outline-variant/20 hover:shadow-sm duration-200 transition-all cursor-pointer';
+            item.addEventListener('click', () => {
+              window.location.href = `/admin/seller-detail.html?id=${s.id}`;
+            });
+            item.innerHTML = `
+              <div class="flex items-center gap-3">
+                <div class="h-9 w-9 rounded-full bg-secondary-container flex items-center justify-center text-primary font-bold text-xs shrink-0">${initial}</div>
+                <div>
+                  <h4 class="text-sm font-semibold text-text-default leading-tight">${s.name}</h4>
+                  <p class="text-[11px] text-text-faint font-data-meta mt-0.5">${s.shop_name || 'Artisan Shop'}</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-xs text-text-muted">Last Order:</span>
+                <p class="text-[11px] font-semibold text-primary leading-tight mt-0.5">${displayDate}</p>
+              </div>
+            `;
+            listEl.appendChild(item);
+          });
+        } else {
+          listEl.innerHTML = `<div class="text-center text-text-muted py-6">No seller activity found</div>`;
+        }
+      } catch (err) {
+        console.error('Failed to load seller activity:', err);
+      }
+    }
+
+    // Tab buttons handling
+    const btn7d = document.getElementById('btn-chart-7d');
+    const btn30d = document.getElementById('btn-chart-30d');
+    const btnCustom = document.getElementById('btn-chart-custom');
+    const customPicker = document.getElementById('custom-date-picker');
+
+    function resetActiveButtons() {
+      [btn7d, btn30d, btnCustom].forEach(b => {
+        b.className = "px-4 py-1 rounded-full text-xs font-bold text-text-default hover:bg-outline-variant/10 transition-all duration-200";
+      });
+    }
+
+    btn7d.addEventListener('click', () => {
+      resetActiveButtons();
+      btn7d.className = "px-4 py-1 rounded-full text-xs font-bold bg-[#14381F] text-white shadow-sm transition-all duration-200";
+      customPicker.classList.add('hidden');
+      selectedPeriod = '7d';
+      updateCharts('7d');
+    });
+
+    btn30d.addEventListener('click', () => {
+      resetActiveButtons();
+      btn30d.className = "px-4 py-1 rounded-full text-xs font-bold bg-[#14381F] text-white shadow-sm transition-all duration-200";
+      customPicker.classList.add('hidden');
+      selectedPeriod = '30d';
+      updateCharts('30d');
+    });
+
+    btnCustom.addEventListener('click', () => {
+      resetActiveButtons();
+      btnCustom.className = "px-4 py-1 rounded-full text-xs font-bold bg-[#14381F] text-white shadow-sm transition-all duration-200";
+      customPicker.classList.remove('hidden');
+      selectedPeriod = 'custom';
+    });
+
+    document.getElementById('btn-apply-custom').addEventListener('click', () => {
+      const start = document.getElementById('start-date').value;
+      const end = document.getElementById('end-date').value;
+      if (!start || !end) {
+        alert('Please select both start and end dates.');
+        return;
+      }
+      updateCharts('custom', start, end);
+    });
+
+    // Logout Action
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      sessionStorage.removeItem('tohfa_admin_token');
+      // admin login check bypassed
+    });
+
+    // Initial Load
+    document.addEventListener('DOMContentLoaded', () => {
+      loadStats();
+      updateCharts('7d');
+      loadViralProducts();
+      loadSellerActivity();
+    });
+  </script>
+</body>
+</html>

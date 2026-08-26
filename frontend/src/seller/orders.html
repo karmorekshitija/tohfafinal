@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <script type="module" src="/src/components/ReportWidget.js" defer></script>
+<script type="module" src="/src/components/ProtectedRoute.js"></script>
+    <meta charset="utf-8"/>
+    <title>TOFA Seller Studio | Order Queue</title>
+    <!-- Google Fonts -->
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+    <script type="module" src="/components/seller-components.js"></script>
+    <script src="/seller/js/seller-utils.js"></script>
+        
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .pressed-flower {
+            opacity: 0.08;
+            pointer-events: none;
+            position: absolute;
+            z-index: 0;
+        }
+        .order-row:hover {
+            transform: translateY(-2px);
+            transition: all 0.2s ease;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(20,56,31,0.2); border-radius: 10px; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+        .fade-in { animation:fadeIn 0.25s ease forwards; }
+        .skeleton { background: linear-gradient(90deg, #FFF8E7 25%, #f3e6d6 50%, #FFF8E7 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; }
+        @keyframes shimmer { 0%{background-position:-200px 0} 100%{background-position:200px 0} }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.7;transform:scale(1.15)} }
+    </style>
+<body class="bg-[#FFF8E7] text-on-surface font-body-md min-h-screen overflow-x-hidden" id="body-content">
+
+<!-- Pressed Flower Watermarks -->
+<div class="pressed-flower top-10 left-40 scale-150 rotate-12">
+    <span class="material-symbols-outlined text-[120px] text-sage">local_florist</span>
+</div>
+<div class="pressed-flower bottom-20 right-20 scale-125 -rotate-45">
+    <span class="material-symbols-outlined text-[150px] text-sage">eco</span>
+</div>
+
+<seller-layout active-tab="orders">
+    <!-- Filter Bar & Header -->
+    <header class="flex flex-col gap-6 mb-xl">
+        <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-md">
+            <div>
+                <h1 class="font-headline-lg text-headline-lg italic text-primary">Order Queue</h1>
+                <p class="text-on-surface-variant opacity-70 font-body-md mt-1" id="orders-count-label">Loading orders...</p>
+            </div>
+            <div class="flex gap-4 items-center flex-wrap">
+                <div class="relative group">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">search</span>
+                    <input id="search-input" class="pl-10 pr-4 py-2 bg-surface-bright border border-sage rounded-lg font-data-price focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all w-64" placeholder="Search orders..." type="text"/>
+                </div>
+                <select id="period-select" class="bg-surface-bright border border-sage rounded-lg px-4 py-2 font-data-price focus:ring-1 focus:ring-primary focus:border-primary outline-none text-sm cursor-pointer transition-all">
+                    <option value="7d">Last 7 Days</option>
+                    <option value="30d" selected>Last 30 Days</option>
+                    <option value="90d">Last 90 Days</option>
+                    <option value="all">All Time</option>
+                </select>
+
+            </div>
+        </div>
+        
+        <!-- Custom Tabs -->
+        <div class="flex items-center border-b border-outline-variant gap-8 overflow-x-auto no-scrollbar" id="status-tabs">
+            <button data-status="all" class="filter-btn pb-3 px-1 border-b-2 border-primary text-primary font-bold whitespace-nowrap">All</button>
+            <button data-status="pending" class="filter-btn pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Pending</button>
+            <button data-status="crafting" class="filter-btn pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">In Production</button>
+            <button data-status="packed" class="filter-btn pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Packed ✓</button>
+            <button data-status="shipped" class="filter-btn pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Shipped</button>
+            <button data-status="delivered" class="filter-btn pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Delivered</button>
+            <button data-status="cancelled" class="filter-btn pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Cancelled</button>
+        </div>
+    </header>
+
+    <!-- KPI Strip -->
+    <section id="kpi-strip" class="grid grid-cols-2 md:grid-cols-4 gap-md mb-xl hidden">
+        <div class="bg-[#FFF8E7] border border-outline-variant/30 rounded-xl p-md shadow-sm">
+            <p class="text-xs font-label-caps text-on-surface-variant opacity-70">Total Orders</p>
+            <p class="text-2xl font-bold font-display-hero text-primary mt-sm" id="kpi-total">—</p>
+        </div>
+        <div class="bg-[#FFF8E7] border border-outline-variant/30 rounded-xl p-md shadow-sm">
+            <p class="text-xs font-label-caps text-on-surface-variant opacity-70">Pending Action</p>
+            <p class="text-2xl font-bold font-display-hero text-primary mt-sm" id="kpi-pending">—</p>
+        </div>
+        <div class="bg-[#FFF8E7] border border-outline-variant/30 rounded-xl p-md shadow-sm">
+            <p class="text-xs font-label-caps text-on-surface-variant opacity-70">On-Time Rate</p>
+            <p class="text-2xl font-bold font-display-hero text-primary mt-sm" id="kpi-ontime">—</p>
+        </div>
+        <div class="bg-[#FFF8E7] border border-outline-variant/30 rounded-xl p-md shadow-sm">
+            <p class="text-xs font-label-caps text-on-surface-variant opacity-70">Avg Dispatch</p>
+            <p class="text-2xl font-bold font-display-hero text-primary mt-sm" id="kpi-dispatch">—</p>
+        </div>
+    </section>
+
+    <!-- States -->
+    <div id="loading-state" class="py-xl flex flex-col items-center gap-md">
+        <div class="w-12 h-12 border-4 border-sage border-t-primary rounded-full animate-spin"></div>
+        <p class="text-on-surface-variant font-medium">Fetching active order queue...</p>
+    </div>
+
+    <div id="error-state" class="hidden py-xl bg-error-container border border-error/20 rounded-xl p-lg flex flex-col items-center text-center gap-md">
+        <span class="material-symbols-outlined text-error text-4xl">error</span>
+        <h3 class="text-lg font-bold font-headline-lg text-on-error-container">Unable to load orders</h3>
+        <p id="error-msg" class="text-sm text-on-error-container opacity-80"></p>
+        <button id="retry-btn" class="bg-primary text-white px-6 py-2 rounded-lg hover:opacity-90 transition-all font-body-md">Retry Fetching</button>
+    </div>
+
+    <div id="empty-state" class="hidden py-24 bg-[#FFF8E7] border border-sage-soft rounded-xl flex flex-col items-center text-center p-lg gap-md shadow-sm">
+        <span class="material-symbols-outlined text-sage text-5xl">shopping_bag</span>
+        <h3 class="text-xl font-bold font-headline-lg text-primary italic">No orders found</h3>
+        <p class="text-sm text-on-surface-variant max-w-sm">There are no orders matching the current filter and period criteria.</p>
+    </div>
+
+    <!-- Bulk Actions Bar -->
+    <div id="bulk-actions-bar" class="hidden bg-secondary-container/40 border border-secondary/20 p-4 rounded-xl flex items-center justify-between mb-lg">
+        <span class="text-sm font-medium text-primary font-bold" id="selected-count-label">0 orders selected</span>
+        <div class="flex gap-2">
+            <button id="bulk-packed-btn" class="bg-primary text-on-primary font-bold px-4 py-2 rounded-lg text-xs hover:opacity-90 transition-all">
+                Mark as Packed
+            </button>
+            <button id="bulk-dispatched-btn" class="bg-primary text-on-primary font-bold px-4 py-2 rounded-lg text-xs hover:opacity-90 transition-all">
+                Mark as Dispatched
+            </button>
+        </div>
+    </div>
+
+    <!-- Orders Table/Grid Wrap -->
+    <section id="orders-table-wrap" class="w-full overflow-x-auto hidden">
+        <div class="min-w-[900px] flex flex-col gap-4">
+            <!-- Table Header -->
+            <div class="grid grid-cols-12 gap-x-4 px-6 py-2 font-label-caps text-on-surface-variant opacity-60 text-xs tracking-wider">
+                <div class="col-span-1 flex justify-center"><input type="checkbox" id="select-all-checkbox" class="rounded border-sage text-primary focus:ring-primary"/></div>
+                <div class="col-span-1">Order Date</div>
+                <div class="col-span-2">Order ID</div>
+                <div class="col-span-2">Buyer</div>
+                <div class="col-span-2">Product Title</div>
+                <div class="col-span-1 text-center">Amount</div>
+                <div class="col-span-1 text-center">Status</div>
+                <div class="col-span-2 text-center">Label</div>
+            </div>
+            <!-- Order Rows Container -->
+            <div id="orders-tbody" class="flex flex-col gap-3"></div>
+        </div>
+    </section>
+</seller-layout>
+
+<!-- Order Detail Slide-over -->
+<div class="fixed inset-0 z-[60] pointer-events-none" id="slideOver">
+    <div class="absolute inset-0 bg-black/20 opacity-0 transition-opacity duration-300 pointer-events-none" id="slideOverOverlay"></div>
+    <aside class="absolute right-0 top-0 h-screen w-[450px] bg-[#FFF8E7] shadow-2xl border-l border-sage-soft translate-x-full transition-transform duration-500 ease-in-out pointer-events-auto p-10 flex flex-col gap-8 overflow-y-auto" id="slideOverContent">
+        <div class="flex justify-between items-start">
+            <div>
+                <span class="font-label-caps text-gold text-xs">Detail View</span>
+                <h2 class="font-headline-lg text-primary text-2xl mt-1" id="modal-order-ref">Order #—</h2>
+            </div>
+            <button class="p-2 hover:bg-surface-variant rounded-full transition-colors" id="close-order-modal">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <div id="order-detail-body" class="space-y-6 flex-1">
+            <!-- Dynamically populated -->
+        </div>
+    </aside>
+</div>
+
+<!-- Toast notifications -->
+<div id="toast" class="hidden">
+    <span class="material-symbols-outlined" id="toast-icon">check_circle</span>
+    <span id="toast-msg">Success</span>
+</div>
+
+<!-- Micro-interactions Script -->
+<script>
+    const API_BASE_URL = window.location.origin;
+    let currentStatus = 'all';
+    let currentPeriod = '30d';
+    let searchQuery   = '';
+    let searchTimer   = null;
+    let allOrders     = [];
+
+    function formatPaise(p) {
+        if (p == null) return '₹0';
+        return '₹' + (p / 100).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    function formatDate(dt) {
+        if (!dt) return '—';
+        return new Date(dt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+    }
+
+    function showToast(msg, type='success') {
+        const t = document.getElementById('toast');
+        document.getElementById('toast-icon').textContent = type === 'success' ? 'check_circle' : 'error';
+        document.getElementById('toast-msg').textContent  = msg;
+        t.className = `fixed top-24 right-6 z-[300] flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg text-sm font-medium transition-all transform duration-300 ${
+            type === 'success' ? 'bg-primary text-white border border-primary/20' : 'bg-error-container text-on-error-container border border-error/20'
+        }`;
+        t.classList.remove('hidden');
+        setTimeout(() => t.classList.add('hidden'), 3500);
+    }
+
+    function statusBadge(s) {
+        const m = {
+            pending:   'bg-secondary-container text-on-secondary-container',
+            crafting:  'bg-primary-fixed text-on-primary-fixed-variant border border-primary-fixed-dim/40',
+            packed:    'bg-amber-100 text-amber-800 border border-amber-300',
+            shipped:   'bg-tertiary-fixed text-on-tertiary-fixed-variant',
+            delivered: 'bg-primary text-on-primary',
+            cancelled: 'bg-error-container text-on-error-container'
+        };
+        const labels = { pending:'Pending', crafting:'In Production', packed:'Packed ✓', shipped:'Shipped', delivered:'Delivered', cancelled:'Cancelled' };
+        return `<span class="text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${m[s] || 'bg-surface-variant text-on-surface-variant'}">${labels[s] || s}</span>`;
+    }
+
+    function matchStatus(order, targetStatus) {
+        if (!targetStatus || targetStatus === 'all') return true;
+        const s = ((order.fulfillment_status || order.status || '') + '').toLowerCase().trim();
+        const target = targetStatus.toLowerCase().trim();
+
+        if (target === 'crafting' || target === 'in_production') {
+            return s === 'crafting' || s === 'in_production' || s === 'processing' || s === 'confirmed';
+        }
+        if (target === 'packed') {
+            return s === 'packed';
+        }
+        if (target === 'shipped' || target === 'dispatched') {
+            return s === 'shipped' || s === 'dispatched';
+        }
+        if (target === 'delivered') {
+            return s === 'delivered';
+        }
+        if (target === 'cancelled') {
+            return s === 'cancelled';
+        }
+        if (target === 'pending') {
+            return s === 'pending';
+        }
+        return s === target;
+    }
+
+    function renderOrders() {
+        try {
+            const empty      = document.getElementById('empty-state');
+            const table      = document.getElementById('orders-table-wrap');
+            const tbody      = document.getElementById('orders-tbody');
+            const countLabel = document.getElementById('orders-count-label');
+            const bulkBar    = document.getElementById('bulk-actions-bar');
+            const selectAll  = document.getElementById('select-all-checkbox');
+
+            if (selectAll) selectAll.checked = false;
+            if (bulkBar) bulkBar.classList.add('hidden');
+
+            const orderList = Array.isArray(allOrders) ? allOrders : [];
+            let filtered = orderList;
+
+            if (currentStatus && currentStatus !== 'all') {
+                filtered = orderList.filter(o => matchStatus(o, currentStatus));
+            }
+
+            if (searchQuery) {
+                const q = searchQuery.toLowerCase().trim();
+                filtered = filtered.filter(o => {
+                    const idStr = String(o.order_id || o.order_ref || o.id || o.internal_id || '').toLowerCase();
+                    const buyerStr = String(o.buyer_name || '').toLowerCase();
+                    const itemStr = String(o.item_title || o.product_name || '').toLowerCase();
+                    return idStr.includes(q) || buyerStr.includes(q) || itemStr.includes(q);
+                });
+            }
+
+            if (countLabel) {
+                countLabel.textContent = `Showing ${filtered.length} order${filtered.length !== 1 ? 's' : ''} in this view.`;
+            }
+
+            if (filtered.length === 0) {
+                if (tbody) tbody.innerHTML = '';
+                if (empty) {
+                    empty.classList.remove('hidden');
+                    const emptyTitle = empty.querySelector('h3');
+                    const emptyMsg = empty.querySelector('p');
+                    if (emptyTitle) emptyTitle.textContent = 'No orders found';
+                    if (emptyMsg) {
+                        const statusName = currentStatus !== 'all' ? `"${currentStatus}"` : 'selected';
+                        emptyMsg.textContent = `There are no ${statusName} orders matching your filter.`;
+                    }
+                }
+                if (table) table.classList.add('hidden');
+                return;
+            }
+
+            if (empty) empty.classList.add('hidden');
+            if (table) table.classList.remove('hidden');
+
+            if (tbody) {
+                tbody.innerHTML = filtered.map(o => {
+                    const id = o.internal_id || o.id;
+                    const orderDate = o.order_date || o.created_at;
+                    const orderRef = o.order_id || o.order_ref || (id ? `TF-${String(id).slice(0, 8).toUpperCase()}` : '—');
+                    const buyer = o.buyer_name || 'Artisan Patron';
+                    const item = o.item_title || o.product_name || 'Handcrafted Item';
+                    const totalPaise = o.total_paise != null ? o.total_paise : Math.round(parseFloat(o.total_amount || 0) * 100);
+                    const status = o.fulfillment_status || o.status || 'pending';
+
+                    return `
+                    <div class="order-row grid grid-cols-12 gap-x-4 px-6 py-5 bg-[#FFF8E7] border border-outline-variant/30 rounded-xl items-center shadow-sm relative group cursor-pointer fade-in" data-id="${id}">
+                        <div class="col-span-1 flex justify-center"><input type="checkbox" class="order-select-checkbox rounded border-sage text-primary focus:ring-primary" data-id="${id}" onclick="event.stopPropagation();"/></div>
+                        <div class="col-span-1 font-data-price text-on-surface-variant text-xs">${formatDate(orderDate)}</div>
+                        <div class="col-span-2 font-data-price text-primary truncate pr-2 min-w-0 font-bold" title="#${escapeHtml(orderRef)}">#${escapeHtml(orderRef)}</div>
+                        <div class="col-span-2 flex flex-col min-w-0 pr-2">
+                            <span class="font-body-md font-bold text-on-surface truncate" title="${escapeHtml(buyer)}">${escapeHtml(buyer)}</span>
+                        </div>
+                        <div class="col-span-2 flex flex-col min-w-0 pr-2">
+                            <span class="font-body-md truncate text-on-surface-variant font-medium" title="${escapeHtml(item)}">${escapeHtml(item)}</span>
+                        </div>
+                        <div class="col-span-1 text-center font-data-price text-primary font-bold">${formatPaise(totalPaise)}</div>
+                        <div class="col-span-1 flex justify-center">
+                            ${statusBadge(status)}
+                        </div>
+                        <div class="col-span-2 flex justify-center" onclick="event.stopPropagation();">
+                            <a href="/api/seller/orders/${id}/label" download class="flex items-center gap-1 bg-[#14381F] text-white hover:bg-[#14381F]/90 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider transition-all duration-200 active:scale-95">
+                                <span class="material-symbols-outlined text-xs">download</span> Label
+                            </a>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            }
+
+            attachTableListeners();
+        } catch (err) {
+            console.error('Error rendering orders table:', err);
+        }
+    }
+
+    const MOCK_ORDERS = [
+        {
+            id: 101,
+            internal_id: 101,
+            order_id: 'TF-20260815-001',
+            order_ref: 'TF-20260815-001',
+            buyer_name: 'Aditi Sharma',
+            buyer_city: 'Jaipur',
+            item_title: 'Handcrafted Blue Pottery Vase',
+            product_id_display: 'PROD-101',
+            quantity: 1,
+            total_paise: 249900,
+            fulfillment_status: 'pending',
+            status: 'pending',
+            order_date: new Date().toISOString(),
+            deadline_at: new Date(Date.now() + 86400000 * 2).toISOString(),
+            estimated_delivery: new Date(Date.now() + 86400000 * 5).toISOString()
+        },
+        {
+            id: 102,
+            internal_id: 102,
+            order_id: 'TF-20260815-002',
+            order_ref: 'TF-20260815-002',
+            buyer_name: 'Rahul Mehta',
+            buyer_city: 'Mumbai',
+            item_title: 'Brass Diya Gift Set',
+            product_id_display: 'PROD-102',
+            quantity: 2,
+            total_paise: 185000,
+            fulfillment_status: 'crafting',
+            status: 'in_production',
+            order_date: new Date(Date.now() - 86400000).toISOString(),
+            deadline_at: new Date(Date.now() + 86400000).toISOString(),
+            estimated_delivery: new Date(Date.now() + 86400000 * 4).toISOString()
+        },
+        {
+            id: 103,
+            internal_id: 103,
+            order_id: 'TF-20260815-003',
+            order_ref: 'TF-20260815-003',
+            buyer_name: 'Kavita Rao',
+            buyer_city: 'Bengaluru',
+            item_title: 'Silk Embroidered Dupatta',
+            product_id_display: 'PROD-103',
+            quantity: 1,
+            total_paise: 349900,
+            fulfillment_status: 'packed',
+            status: 'packed',
+            order_date: new Date(Date.now() - 86400000 * 2).toISOString(),
+            deadline_at: new Date(Date.now()).toISOString(),
+            estimated_delivery: new Date(Date.now() + 86400000 * 3).toISOString()
+        }
+    ];
+
+    async function loadOrders() {
+        const loading = document.getElementById('loading-state');
+        const error   = document.getElementById('error-state');
+        const empty   = document.getElementById('empty-state');
+        const table   = document.getElementById('orders-table-wrap');
+        const kpi     = document.getElementById('kpi-strip');
+
+        if (loading) loading.classList.remove('hidden');
+        if (error) error.classList.add('hidden');
+        if (empty) empty.classList.add('hidden');
+        if (table) table.classList.add('hidden');
+        if (kpi) kpi.classList.add('hidden');
+
+        const token = localStorage.getItem('token') || localStorage.getItem('accessToken') || sessionStorage.getItem('tohfa_access_token');
+        const params = new URLSearchParams({
+            period: currentPeriod,
+            ...(currentStatus && currentStatus !== 'all' ? { status: currentStatus } : {}),
+            ...(searchQuery ? { search: searchQuery } : {})
+        });
+
+        try {
+            if (!token) {
+                // Fallback to preview mock orders if no session token
+                allOrders = MOCK_ORDERS;
+                if (kpi) {
+                    const totalEl = document.getElementById('kpi-total');
+                    const pendingEl = document.getElementById('kpi-pending');
+                    const ontimeEl = document.getElementById('kpi-ontime');
+                    const dispatchEl = document.getElementById('kpi-dispatch');
+                    if (totalEl) totalEl.textContent = allOrders.length;
+                    if (pendingEl) pendingEl.textContent = '1';
+                    if (ontimeEl) ontimeEl.textContent = '100%';
+                    if (dispatchEl) dispatchEl.textContent = '2d';
+                    kpi.classList.remove('hidden');
+                }
+                if (loading) loading.classList.add('hidden');
+                renderOrders();
+                return;
+            }
+
+            const res  = await fetch(`${API_BASE_URL}/api/seller/orders?${params}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.status === 401 || res.status === 403) {
+                allOrders = MOCK_ORDERS;
+                if (loading) loading.classList.add('hidden');
+                renderOrders();
+                return;
+            }
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            const resp   = await res.json();
+            const data   = resp.data || resp;
+            const orders = Array.isArray(data) ? data : (data.orders || data.data?.orders || []);
+            allOrders    = orders;
+
+            // KPIs
+            if (kpi) {
+                const totalEl = document.getElementById('kpi-total');
+                const pendingEl = document.getElementById('kpi-pending');
+                const ontimeEl = document.getElementById('kpi-ontime');
+                const dispatchEl = document.getElementById('kpi-dispatch');
+                if (totalEl) totalEl.textContent = data.total ?? orders.length ?? '0';
+                if (pendingEl) pendingEl.textContent = data.pending_action_count ?? '0';
+                if (ontimeEl) ontimeEl.textContent = `${data.on_time_rate_pct ?? 100}%`;
+                if (dispatchEl) dispatchEl.textContent = data.avg_dispatch_days != null ? `${data.avg_dispatch_days}d` : '—';
+                kpi.classList.remove('hidden');
+            }
+
+            if (loading) loading.classList.add('hidden');
+            renderOrders();
+
+        } catch (err) {
+            console.warn('Live orders fetch fallback to mock:', err);
+            allOrders = MOCK_ORDERS;
+            if (loading) loading.classList.add('hidden');
+            renderOrders();
+        }
+    }
+
+    async function openOrderDetail(internalId) {
+        const token = sessionStorage.getItem('tohfa_access_token');
+        const body  = document.getElementById('order-detail-body');
+        body.innerHTML = '<div class="skeleton h-40 rounded-xl"></div>';
+        
+        toggleSlideOver(true);
+
+        try {
+            const res  = await fetch(`${API_BASE_URL}/api/seller/orders/${internalId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const resp = await res.json();
+            const o    = resp.data || resp;
+
+            document.getElementById('modal-order-ref').textContent = `Order #${escapeHtml(o.order_id || '—')}`;
+
+            const events = (o.tracking_events || []).map(ev => `
+                <div class="relative pl-6">
+                    <span class="absolute -left-[9px] top-1 w-3.5 h-3.5 rounded-full bg-sage-soft border-2 border-white"></span>
+                    <p class="text-xs font-bold capitalize text-primary">${escapeHtml(ev.status)}</p>
+                    <p class="text-[10px] text-on-surface-variant">${formatDate(ev.occurred_at)}</p>
+                </div>
+            `).join('');
+
+            body.innerHTML = `
+                <!-- Patron Info Card -->
+                <div class="flex flex-col gap-1 border-b border-outline-variant/30 pb-4">
+                    <p class="text-xs uppercase tracking-wider text-on-surface-variant font-label-caps opacity-70">Patron</p>
+                    <p class="font-bold text-on-surface text-base">${escapeHtml(o.buyer_name || '—')}</p>
+                    ${o.buyer_phone ? `<p class="text-xs text-on-surface-variant" style="font-family:'Space Mono',monospace">${escapeHtml(o.buyer_phone)}</p>` : ''}
+                    <p class="text-sm text-on-surface-variant leading-relaxed mt-1 whitespace-pre-line">${escapeHtml(o.buyer_address || '—')}</p>
+                </div>
+
+                <!-- Product Card with Product ID -->
+                <div class="flex gap-3 items-start border-b border-outline-variant/30 pb-4">
+                    <img src="${o.item_photo_url || o.item_image || 'https://ui-avatars.com/api/?name=Product&background=f9ecdc&color=3D6B4F&size=56'}" class="w-14 h-14 rounded-xl object-cover border border-sage-soft flex-shrink-0" alt="${escapeHtml(o.item_title || 'Product')}" loading="lazy" />
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-primary text-sm truncate">${escapeHtml(o.item_title || '—')}</p>
+                        <p class="text-[10px] mt-0.5" style="font-family:'Space Mono',monospace;color:#14381F;">#${escapeHtml(o.product_id_display || '—')}</p>
+                        ${o.variant_name ? `<p class="text-xs text-on-surface-variant mt-0.5">Variant: ${escapeHtml(o.variant_name)}</p>` : ''}
+                        <p class="text-xs text-on-surface-variant mt-0.5">Qty: ${o.quantity || 1}</p>
+                        <p class="font-bold text-primary mt-1" style="font-family:'Space Mono',monospace">${formatPaise(o.total_paise)}</p>
+                    </div>
+                </div>
+
+                <!-- Pickup & Delivery Date Chips -->
+                <div class="flex gap-3 border-b border-outline-variant/30 pb-4">
+                    <div class="flex-1 bg-surface-container rounded-xl p-3 flex flex-col gap-1">
+                        <span class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Pickup by Seller</span>
+                        <span class="text-sm font-bold" style="font-family:'Space Mono',monospace;color:#14381F">${formatDate(o.deadline_at)}</span>
+                    </div>
+                    <div class="flex-1 bg-surface-container rounded-xl p-3 flex flex-col gap-1">
+                        <span class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Est. Delivery</span>
+                        <span class="text-sm font-bold text-primary" style="font-family:'Space Mono',monospace">${formatDate(o.estimated_delivery)}</span>
+                    </div>
+                </div>
+
+                <!-- Fulfillment Timeline -->
+                <div class="flex flex-col gap-1 border-b border-outline-variant/30 pb-4">
+                    <p class="text-xs uppercase tracking-wider text-on-surface-variant font-label-caps opacity-70 mb-3">Delivery Journey</p>
+                    ${(() => {
+                        const STEPS = [
+                            {key:'awaiting_payment', label:'Order Placed'},
+                            {key:'processing',       label:'Processing'},
+                            {key:'in_production',    label:'Crafting'},
+                            {key:'packed',           label:'Packed / QC'},
+                            {key:'dispatched',       label:'Dispatched'},
+                            {key:'delivered',        label:'Delivered'}
+                        ];
+                        const rawStatus = (o.fulfillment_status || o.status || '').toLowerCase();
+                        const normalizedStatus = rawStatus.replace('crafting','in_production').replace('shipped','dispatched').replace('pending','awaiting_payment');
+                        const eventMap = {};
+                        (o.tracking_events || []).forEach(ev => { eventMap[ev.status] = ev.occurred_at; });
+                        const currentIdx = STEPS.findIndex(s => s.key === normalizedStatus);
+                        return STEPS.map((step, i) => {
+                            const isDone    = eventMap[step.key] != null;
+                            const isCurrent = !isDone && i === currentIdx;
+                            let dotStyle, dotContent;
+                            if (isDone) {
+                                dotStyle = 'background:#14381F;border-color:#14381F;color:#fff;';
+                                dotContent = '<span class="material-symbols-outlined" style="font-size:13px;font-variation-settings:FILL 1">check</span>';
+                            } else if (isCurrent) {
+                                dotStyle = 'background:#14381F;border-color:#14381F;color:#fff;animation:pulse 1.5s infinite;';
+                                dotContent = `${i+1}`;
+                            } else {
+                                dotStyle = 'background:#fff;border-color:#c9c9c9;color:#9e9e9e;';
+                                dotContent = `${i+1}`;
+                            }
+                            const labelStyle = (isDone || isCurrent) ? 'color:#211b11;font-weight:600;' : 'color:#9e9e9e;';
+                            const dateStr = eventMap[step.key] ? formatDate(eventMap[step.key]) : '';
+                            const connector = i < STEPS.length-1 ? '<div style="width:2px;height:22px;background:rgba(113,121,114,0.2);margin:2px auto;"></div>' : '';
+                            return `
+                                <div style="display:flex;gap:12px;align-items:flex-start">
+                                    <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+                                        <div style="width:28px;height:28px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;${dotStyle}">${dotContent}</div>
+                                        ${connector}
+                                    </div>
+                                    <div style="padding-bottom:4px">
+                                        <p style="font-size:12px;margin:0;${labelStyle}">${step.label}</p>
+                                        ${dateStr ? `<p style="font-size:10px;color:#9e9e9e;margin:2px 0 0;">${dateStr}</p>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    })()}
+                </div>
+
+                <!-- Chat with Buyer Button -->
+                <div class="border-b border-outline-variant/30 pb-4">
+                    <button id="chat-buyer-btn-${internalId}"
+                        class="w-full flex items-center justify-center gap-2 border border-primary text-primary font-bold py-2.5 rounded-xl text-sm hover:bg-secondary-container/20 transition-all"
+                        data-buyer-id="${o.buyer_id}" data-order-id="${internalId}">
+                        <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' 1">chat</span>
+                        Chat with Buyer
+                    </button>
+                </div>
+
+                <!-- Customization details if present -->
+                ${o.customization_details ? `
+                <div class="flex flex-col gap-2 border-b border-outline-variant/30 pb-4 bg-sage-soft/30 p-3 rounded-lg border border-sage-soft">
+                    <p class="text-xs uppercase tracking-wider text-secondary font-label-caps font-bold">Customization Details</p>
+                    <p class="text-sm text-on-surface-variant italic leading-relaxed">"${escapeHtml(o.customization_details)}"</p>
+                </div>
+                ` : ''}
+
+                <!-- Status block -->
+                <div class="flex flex-col gap-2 border-b border-outline-variant/30 pb-4">
+                    <p class="text-xs uppercase tracking-wider text-on-surface-variant font-label-caps opacity-70">Fulfillment Status</p>
+                    <div class="flex items-center gap-md">
+                        ${statusBadge(o.fulfillment_status)}
+                        ${o.tracking_number ? `<span class="text-xs font-data-price text-on-surface-variant">Tracking ID: <span class="font-bold select-all font-mono bg-surface p-1 rounded border border-outline-variant/30">${o.tracking_number}</span></span>` : ''}
+                    </div>
+                </div>
+
+                <!-- Status action buttons -->
+                <div class="flex flex-col gap-2 border-b border-outline-variant/30 pb-4">
+                    <p class="text-xs uppercase tracking-wider text-on-surface-variant font-label-caps opacity-70">Quick Actions</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="status-action-btn bg-surface border border-primary text-primary px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-secondary-container/20 transition-all" data-status="processing">Processing →</button>
+                        <button class="status-action-btn bg-surface border border-primary text-primary px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-secondary-container/20 transition-all" data-status="in_production">Production →</button>
+                        <button class="status-action-btn bg-surface border border-primary text-primary px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-secondary-container/20 transition-all" data-status="packed">QC Check →</button>
+                    </div>
+                </div>
+
+                <!-- Shiprocket integration -->
+                <div class="border-b border-outline-variant/30 pb-4">
+                    <button id="generate-shiprocket-btn-${internalId}" class="w-full bg-secondary-container text-primary font-bold py-2.5 rounded-lg text-xs font-label-caps uppercase tracking-wider hover:opacity-90 transition-all">
+                        Generate Shiprocket Label
+                    </button>
+                </div>
+
+                <!-- Update status forms -->
+                <div class="flex flex-col gap-4 border-b border-outline-variant/30 pb-4">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-xs font-label-caps text-on-surface-variant opacity-70">Transition Status</label>
+                        <div class="flex gap-2">
+                            <select id="status-select-${internalId}" class="flex-1 bg-surface-bright border border-sage rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
+                                <option value="processing" ${o.fulfillment_status === 'processing' ? 'selected' : ''}>Processing</option>
+                                <option value="in_production" ${o.fulfillment_status === 'in_production' || o.fulfillment_status === 'crafting' ? 'selected' : ''}>Crafting</option>
+                                <option value="packed" ${o.fulfillment_status === 'packed' ? 'selected' : ''}>Packed</option>
+                                <option value="dispatched" ${o.fulfillment_status === 'dispatched' || o.fulfillment_status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                                <option value="delivered" ${o.fulfillment_status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                                <option value="cancelled" ${o.fulfillment_status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                            </select>
+                            <button id="update-status-btn-${internalId}" class="bg-primary text-on-primary font-bold px-5 py-2 rounded-lg text-sm hover:opacity-90 transition-all flex items-center justify-center" data-id="${internalId}">
+                                Update
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-2">
+                        <label class="text-xs font-label-caps text-on-surface-variant opacity-70">Courier Tracking Reference</label>
+                        <div class="flex gap-2">
+                            <input id="tracking-input-${internalId}" type="text" placeholder="Add tracking number…" class="flex-1 bg-surface-bright border border-sage rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" value="${o.tracking_number || ''}"/>
+                            <button id="add-tracking-btn-${internalId}" class="border border-primary text-primary hover:bg-secondary-container/20 font-bold px-5 py-2 rounded-lg text-sm transition-all" data-id="${internalId}">
+                                Set
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Studio Notes Section -->
+                <div class="flex flex-col gap-3 border-b border-outline-variant/30 pb-4">
+                    <p class="text-xs uppercase tracking-wider text-on-surface-variant font-label-caps opacity-70">Studio Notes</p>
+                    <div class="flex flex-col gap-2" id="studio-notes-list-${internalId}">
+                        ${(o.studio_notes || []).map(n => `
+                            <div class="bg-surface-bright border border-outline-variant/20 p-3 rounded-xl text-xs flex flex-col gap-1">
+                                <p class="text-on-surface font-medium leading-relaxed">${n.text}</p>
+                                <span class="text-[9px] text-on-surface-variant opacity-60">${formatDate(n.ts)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="flex flex-col gap-2 mt-2">
+                        <textarea id="studio-note-input-${internalId}" placeholder="Enter new studio note..." class="w-full bg-surface-bright border border-sage rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary" rows="2"></textarea>
+                        <button id="save-studio-note-btn-${internalId}" class="bg-primary text-on-primary font-bold px-4 py-2 rounded-lg text-xs self-end hover:opacity-90 transition-all">
+                            Save Note
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Generate Shiprocket Label handler
+            document.getElementById(`generate-shiprocket-btn-${internalId}`).addEventListener('click', () => {
+                alert('Generate Shiprocket Label placeholder');
+            });
+
+            // Chat with Buyer handler
+            const chatBuyerBtn = document.getElementById(`chat-buyer-btn-${internalId}`);
+            if (chatBuyerBtn) {
+                chatBuyerBtn.addEventListener('click', async () => {
+                    chatBuyerBtn.disabled = true;
+                    chatBuyerBtn.innerHTML = '<span class="material-symbols-outlined text-base">hourglass_empty</span> Opening…';
+                    try {
+                        const r = await fetch(`${API_BASE_URL}/api/seller/messages/start`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ order_id: internalId, buyer_id: o.buyer_id })
+                        });
+                        const d = await r.json();
+                        if (!r.ok) throw new Error(d.message || 'Failed to start chat');
+                        window.location.href = `/seller/messages.html?conversationId=${d.data.thread_id}`;
+                    } catch (err) {
+                        showToast(err.message, 'error');
+                        chatBuyerBtn.disabled = false;
+                        chatBuyerBtn.innerHTML = '<span class="material-symbols-outlined text-base" style="font-variation-settings:\'FILL\' 1">chat</span> Chat with Buyer';
+                    }
+                });
+            }
+
+            // Quick status action buttons handler
+            document.querySelectorAll('.status-action-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const status = btn.dataset.status;
+                    let tracking_id = o.tracking_number || o.tracking_id || '';
+                    if (status === 'dispatched' && !tracking_id) {
+                        tracking_id = prompt('Enter Tracking ID for shipping:');
+                        if (!tracking_id) return;
+                    }
+                    try {
+                        const r = await fetch(`${API_BASE_URL}/api/seller/orders/${internalId}/status`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ status, tracking_id })
+                        });
+                        const d = await r.json();
+                        if (!r.ok) throw new Error(d.message || 'Failed to update order status.');
+                        showToast(`Status updated to "${status}"!`, 'success');
+                        toggleSlideOver(false);
+                        loadOrders();
+                    } catch (err) {
+                        showToast(err.message, 'error');
+                    }
+                });
+            });
+
+            // Save studio note handler
+            document.getElementById(`save-studio-note-btn-${internalId}`).addEventListener('click', async () => {
+                const note = document.getElementById(`studio-note-input-${internalId}`).value.trim();
+                if (!note) { showToast('Please enter a note', 'error'); return; }
+                const btn = document.getElementById(`save-studio-note-btn-${internalId}`);
+                btn.disabled = true; btn.textContent = 'Saving…';
+                try {
+                    const r = await fetch(`${API_BASE_URL}/api/seller/orders/${internalId}/status`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ status: o.fulfillment_status || o.status, studio_note: note })
+                    });
+                    const d = await r.json();
+                    if (!r.ok) throw new Error(d.message || 'Failed to save studio note.');
+                    showToast('Studio note recorded!', 'success');
+                    toggleSlideOver(false);
+                    loadOrders();
+                } catch (err) {
+                    showToast(err.message, 'error');
+                } finally {
+                    btn.disabled = false; btn.textContent = 'Save Note';
+                }
+            });
+
+            // Update status handler
+            document.getElementById(`update-status-btn-${internalId}`).addEventListener('click', async () => {
+                const newStatus = document.getElementById(`status-select-${internalId}`).value;
+                const btn       = document.getElementById(`update-status-btn-${internalId}`);
+                btn.disabled    = true; btn.textContent = 'Saving…';
+                try {
+                    const r = await fetch(`${API_BASE_URL}/api/seller/orders/${internalId}/status`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ status: newStatus })
+                    });
+                    const d = await r.json();
+                    if (!r.ok) throw new Error(d.message || 'Failed to update order status.');
+                    showToast(`Order status updated to "${newStatus}"!`, 'success');
+                    toggleSlideOver(false);
+                    loadOrders();
+                } catch (err) {
+                    showToast(err.message, 'error');
+                } finally {
+                    btn.disabled = false; btn.textContent = 'Update';
+                }
+            });
+
+            // Set tracking handler
+            document.getElementById(`add-tracking-btn-${internalId}`).addEventListener('click', async () => {
+                const tn  = document.getElementById(`tracking-input-${internalId}`).value.trim();
+                const btn = document.getElementById(`add-tracking-btn-${internalId}`);
+                if (!tn) { showToast('Please enter a tracking number', 'error'); return; }
+                btn.disabled = true; btn.textContent = 'Saving…';
+                try {
+                    const r = await fetch(`${API_BASE_URL}/api/seller/orders/${internalId}/tracking`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ tracking_number: tn })
+                    });
+                    const d = await r.json();
+                    if (!r.ok) throw new Error(d.message || 'Failed to update tracking ID.');
+                    showToast('Courier tracking number recorded!', 'success');
+                    toggleSlideOver(false);
+                    loadOrders();
+                } catch (err) {
+                    showToast(err.message, 'error');
+                } finally {
+                    btn.disabled = false; btn.textContent = 'Set';
+                }
+            });
+
+        } catch (err) {
+            body.innerHTML = `<div class="p-lg bg-error-container text-on-error-container rounded-xl flex items-center gap-md border border-error/15 text-sm">
+                <span class="material-symbols-outlined">error</span>
+                <span>Error details: ${err.message}</span>
+            </div>`;
+        }
+    }
+
+    function toggleSlideOver(show) {
+        const slideOver = document.getElementById('slideOver');
+        const overlay = document.getElementById('slideOverOverlay');
+        const content = document.getElementById('slideOverContent');
+
+        if (show) {
+            slideOver.classList.remove('pointer-events-none');
+            overlay.classList.add('opacity-100');
+            overlay.classList.remove('pointer-events-none');
+            content.classList.remove('translate-x-full');
+        } else {
+            slideOver.classList.add('pointer-events-none');
+            overlay.classList.remove('opacity-100');
+            overlay.classList.add('pointer-events-none');
+            content.classList.add('translate-x-full');
+        }
+    }
+
+    function updateBulkActionsUI() {
+        const checkboxes = document.querySelectorAll('.order-select-checkbox');
+        const checked = Array.from(checkboxes).filter(cb => cb.checked);
+        const bar = document.getElementById('bulk-actions-bar');
+        const countLabel = document.getElementById('selected-count-label');
+        
+        if (checked.length > 0) {
+            bar.classList.remove('hidden');
+            countLabel.textContent = `${checked.length} order${checked.length !== 1 ? 's' : ''} selected`;
+        } else {
+            bar.classList.add('hidden');
+            const selectAll = document.getElementById('select-all-checkbox');
+            if (selectAll) selectAll.checked = false;
+        }
+    }
+
+    function attachTableListeners() {
+        document.querySelectorAll('.order-row').forEach(row => {
+            row.addEventListener('click', (e) => {
+                if (e.target.closest('input[type="checkbox"]')) return;
+                openOrderDetail(row.dataset.id);
+            });
+        });
+        
+        document.querySelectorAll('.order-select-checkbox').forEach(cb => {
+            cb.addEventListener('change', updateBulkActionsUI);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const token = localStorage.getItem('token') || localStorage.getItem('accessToken') || sessionStorage.getItem('tohfa_access_token');
+        if (token) {
+            // Auth Role check
+            try {
+                const pr = await fetch(`${API_BASE_URL}/api/profile/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (pr.ok) {
+                    const pd = await pr.json();
+                    const u  = pd.data || pd;
+                    if (u.role && u.role !== 'seller') { window.location.href = '/buyer/profile.html'; return; }
+                }
+            } catch (e) {
+                console.warn("Profile check failed, continuing in preview mode:", e);
+            }
+        }
+
+        loadOrders();
+
+        // Select All Checkbox
+        const selectAllCheckbox = document.getElementById('select-all-checkbox');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', (e) => {
+                const checked = e.target.checked;
+                document.querySelectorAll('.order-select-checkbox').forEach(cb => {
+                    cb.checked = checked;
+                });
+                updateBulkActionsUI();
+            });
+        }
+
+
+
+        // Bulk Actions: Packed & Dispatched
+        const handleBulkStatusUpdate = async (status) => {
+            const checkboxes = document.querySelectorAll('.order-select-checkbox');
+            const checkedIds = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.dataset.id);
+            if (checkedIds.length === 0) return;
+
+            let tracking_id = '';
+            if (status === 'dispatched') {
+                tracking_id = prompt('Enter tracking ID for shipping (or leave empty to auto-generate):') || 'TRK-AUTO';
+            }
+
+            let successCount = 0;
+            let errorMsg = '';
+
+            for (const id of checkedIds) {
+                try {
+                    const r = await fetch(`${API_BASE_URL}/api/seller/orders/${id}/status`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ status, tracking_id })
+                    });
+                    if (r.ok) {
+                        successCount++;
+                    } else {
+                        const d = await r.json();
+                        errorMsg = d.message || 'Status transition failed';
+                    }
+                } catch (e) {
+                    errorMsg = e.message;
+                }
+            }
+
+            if (successCount > 0) {
+                showToast(`Successfully updated ${successCount} orders to "${status}"!`, 'success');
+            }
+            if (successCount < checkedIds.length) {
+                showToast(`Failed to update some orders: ${errorMsg}`, 'error');
+            }
+
+            loadOrders();
+        };
+
+        const bulkPackedBtn = document.getElementById('bulk-packed-btn');
+        if (bulkPackedBtn) {
+            bulkPackedBtn.addEventListener('click', () => handleBulkStatusUpdate('packed'));
+        }
+
+        const bulkDispatchedBtn = document.getElementById('bulk-dispatched-btn');
+        if (bulkDispatchedBtn) {
+            bulkDispatchedBtn.addEventListener('click', () => handleBulkStatusUpdate('dispatched'));
+        }
+
+        // Status Tabs selectors
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    b.className = 'filter-btn pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap';
+                });
+                btn.className = 'filter-btn pb-3 px-1 border-b-2 border-primary text-primary font-bold whitespace-nowrap';
+                currentStatus = btn.dataset.status;
+                loadOrders();
+            });
+        });
+
+        // Period filter dropdown
+        const periodSelect = document.getElementById('period-select');
+        if (periodSelect) periodSelect.addEventListener('change', (e) => {
+            currentPeriod = e.target.value;
+            loadOrders();
+        });
+
+        // Search text input
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => { searchQuery = e.target.value.trim(); loadOrders(); }, 400);
+        });
+
+        // Close detail drawer
+        const closeOrderModalBtn = document.getElementById('close-order-modal');
+        if (closeOrderModalBtn) closeOrderModalBtn.addEventListener('click', () => toggleSlideOver(false));
+        const slideOverOverlay = document.getElementById('slideOverOverlay');
+        if (slideOverOverlay) slideOverOverlay.addEventListener('click', () => toggleSlideOver(false));
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') toggleSlideOver(false);
+        });
+
+        // Retry reload
+        const retryBtn = document.getElementById('retry-btn');
+        if (retryBtn) retryBtn.addEventListener('click', loadOrders);
+
+        // View Store redirection
+        const viewStoreBtn = document.getElementById('view-store-btn');
+        if (viewStoreBtn) {
+            viewStoreBtn.addEventListener('click', () => {
+                fetch(`${API_BASE_URL}/api/seller/profile`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    const profileData = data.data || data;
+                    if (profileData && (profileData.user_id || profileData.seller_id || profileData.id)) {
+                        window.location.href = `/buyer/seller-profile.html?id=${profileData.user_id || profileData.seller_id || profileData.id}`;
+                    } else {
+                        window.location.href = '/';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching seller profile:', err);
+                    window.location.href = '/';
+                });
+            });
+        }
+
+        // Logout action
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) logoutBtn.addEventListener('click', () => {
+            const refresh = sessionStorage.getItem('tohfa_refresh_token');
+            if (token && refresh) {
+                fetch('/api/auth/logout', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body:JSON.stringify({refresh_token:refresh}) }).catch(()=>{});
+            }
+            sessionStorage.clear();
+            window.location.href = '/auth/login.html';
+        });
+    });
+</script>
+</body>
+</html>

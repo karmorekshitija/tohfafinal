@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <script type="module" src="/src/components/ReportWidget.js" defer></script>
+<script type="module" src="/src/components/ProtectedRoute.js"></script>
+    <meta charset="utf-8"/>
+    <title>Tohfa | Search Handcrafted Goods</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+      <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .artisan-texture-top {
+            background-image: radial-gradient(circle at 20% 20%, rgba(113, 121, 114, 0.06) 0%, transparent 40%);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .artisan-texture-bottom {
+            background-image: radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.04) 0%, transparent 40%);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-width: 10px 10px 10px 0;
+            border-style: solid;
+            border-color: transparent #FFF8E7 transparent transparent;
+        }
+        .speech-bubble::before {
+            content: '';
+            position: absolute;
+            left: -11px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-width: 11px 11px 11px 0;
+            border-style: solid;
+            border-color: transparent #717972 transparent transparent;
+        }
+        .wax-tape {
+            background-color: #E5D8C8;
+            opacity: 0.06;
+            transform: rotate(-12deg);
+        }
+        .leaf-sprig {
+            opacity: 0.06;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Diagonal Corner Ribbon Styles */
+        .ribbon-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 120px;
+            height: 120px;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 20;
+        }
+        .ribbon-tag {
+            position: absolute;
+            top: 22px;
+            left: -32px;
+            width: 160px;
+            transform: rotate(-45deg);
+            text-align: center;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #ffffff;
+            line-height: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+        }
+        .ribbon-tag::before, .ribbon-tag::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            border-top: 3px solid rgba(0,0,0,0.4);
+            border-left: 3px solid transparent;
+            border-right: 3px solid transparent;
+        }
+        .ribbon-tag::before { left: 0; }
+        .ribbon-tag::after { right: 0; }
+
+        .ribbon-sponsored {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        .ribbon-bestseller {
+            background: #C85A32;
+        }
+        .ribbon-custom {
+            background: #B492B7;
+        }
+        .ribbon-bestseller-double {
+            top: 13px !important;
+            left: -41px !important;
+        }
+        .ribbon-custom-double {
+            top: 30px !important;
+            left: -24px !important;
+        }
+
+        /* Redefine Ribbon to Flat top-left pills for both desktop and mobile */
+        .ribbon-wrapper {
+            position: absolute !important;
+            top: 8px !important;  /* Matches top-2 on mobile */
+            left: 8px !important; /* Matches left-2 on mobile */
+            width: auto !important;
+            height: auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 4px !important;
+            z-index: 20 !important;
+            overflow: visible !important;
+            pointer-events: none !important;
+        }
+
+        @media (min-width: 640px) {
+            .ribbon-wrapper {
+                top: 12px !important;  /* Matches top-3 on desktop */
+                left: 12px !important; /* Matches left-3 on desktop */
+            }
+        }
+
+        .ribbon-tag {
+            position: static !important;
+            width: auto !important;
+            transform: none !important;
+            text-align: center !important;
+            font-size: 9px !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.05em !important;
+            color: #ffffff !important;
+            line-height: 1 !important;
+            padding: 4px 8px !important;
+            border-radius: 9999px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+            display: inline-block !important;
+            white-space: nowrap !important;
+        }
+
+        .ribbon-tag::before,
+        .ribbon-tag::after {
+            display: none !important;
+        }
+
+        .ribbon-bestseller-double,
+        .ribbon-custom-double {
+            top: auto !important;
+            left: auto !important;
+            position: static !important;
+        }
+
+        /* Force Filled White Heart with Green Border style */
+        .toggle-wishlist-btn .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1 !important;
+            -webkit-text-stroke: 1.5px #14381F !important;
+            color: #ffffff !important;
+        }
+
+        .toggle-wishlist-btn[data-wishlisted="true"] .material-symbols-outlined,
+        .toggle-wishlist-btn .text-red-500 {
+            -webkit-text-stroke: 1.5px #ef4444 !important;
+            color: #ef4444 !important;
+        }
+        .occasion-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 16px !important;
+        }
+        @media (min-width: 768px) {
+            .occasion-grid {
+                grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-[#FFF8E7] min-h-screen relative overflow-x-hidden text-ink font-body-md antialiased">
+    <!-- Subtle Textures -->
+    <div class="fixed top-[-20px] left-[-20px] w-48 h-12 wax-tape z-0 pointer-events-none"></div>
+    <div class="fixed bottom-margin-desktop right-margin-desktop w-64 h-64 leaf-sprig z-0 pointer-events-none">
+        <span class="material-symbols-outlined text-[160px] text-primary select-none">eco</span>
+    </div>
+    <div class="artisan-texture-top"></div>
+    <div class="artisan-texture-bottom"></div>
+
+    <!-- Top Navigation Bar (LOCKED) -->
+<header
+  class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-4 md:px-8 lg:px-12 h-16 md:h-20 transition-colors"
+  style="background-color: #273328; background-image: url('/img/taskbar-texture.png'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
+>
+  <!-- Brand Logo -->
+  <div class="flex items-center flex-1">
+    <a
+      href="/buyer/home.html"
+      class="select-none"
+      style="font-family: 'Playfair Display', serif; font-size: clamp(24px, 4vw, 32px); font-style: italic; color: #FAF6EE; text-decoration: none;"
+    >
+      Tohfa<span style="color: #FAF6EE; opacity: 0.7;">.</span>
+    </a>
+  </div>
+
+  <!-- Desktop Navigation Links -->
+  <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+    <a
+      href="/buyer/home.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">home</span>
+      <span>Home</span>
+    </a>
+    <a
+      href="/buyer/categories.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">category</span>
+      <span>Category</span>
+    </a>
+    <a
+      href="/buyer/zip-gift.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">bolt</span>
+      <span>ZipGift</span>
+    </a>
+    <a
+      href="/buyer/profile.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+    >
+      <span class="material-symbols-outlined text-[20px]">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <!-- Right side items -->
+  <div class="flex items-center justify-end flex-1 gap-1 sm:gap-2">
+    <!-- Search Button -->
+    <a
+      href="/buyer/search.html?focus=true"
+      id="header-search-btn"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+      title="Search"
+    >
+      <span class="material-symbols-outlined text-[22px]">search</span>
+    </a>
+
+    <!-- Wishlist Button -->
+    <a
+      href="/buyer/wishlist.html"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      title="Saved Makes"
+    >
+      <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+      <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+    </a>
+
+    <!-- Cart Button -->
+    <a
+      href="/buyer/cart.html"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      title="Shopping Cart"
+    >
+      <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
+      <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+    </a>
+
+    <!-- Notifications Button -->
+    <a
+      href="/buyer/notifications.html"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      title="Notifications"
+    >
+      <span class="material-symbols-outlined text-[22px]">notifications</span>
+      <span id="nav-notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
+      <span id="nav-notif-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
+    </a>
+
+    <!-- Auth Container -->
+    <div id="auth-buttons-container" class="flex items-center gap-2 ml-2 md:ml-4"></div>
+  </div>
+</header>
+
+    <!-- Main Content Area -->
+    <main class="pt-8 max-w-7xl mx-auto px-margin-desktop relative z-10 pb-24">
+        
+        <!-- Search Input Bar -->
+        <div class="max-w-3xl mx-auto mb-8">
+            <div class="relative flex items-center bg-white border border-[#273328]/20 rounded-full shadow-sm hover:border-[#14381F] focus-within:border-[#14381F] focus-within:ring-2 focus-within:ring-[#14381F]/10 transition-all px-5 py-3">
+                <span class="material-symbols-outlined text-[#717972] mr-3 text-[24px]">search</span>
+                <input
+                    type="text"
+                    id="search-input"
+                    class="w-full bg-transparent border-none outline-none font-['DM_Sans'] text-base text-[#1C1C1A] placeholder-[#717972]"
+                    placeholder="Search handcrafted gifts, artisans, occasions..."
+                    autocomplete="off"
+                />
+                <button
+                    type="button"
+                    id="clear-search-btn"
+                    class="p-1 text-[#717972] hover:text-[#1C1C1A] rounded-full hover:bg-black/5 transition-colors cursor-pointer"
+                    title="Clear search"
+                >
+                    <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- ==================== STATE 1: IDLE VIEW ==================== -->
+        <div id="idle-view" class="space-y-xl">
+            <!-- Mascot Greeting Block -->
+            <section class="flex items-center justify-center gap-xl my-lg">
+                <div class="relative w-[180px] h-[180px] flex-shrink-0">
+                    <img alt="Tohfa Mascot Greeting" class="w-full h-full object-contain" src="/img/artisan-mascot.png" loading="lazy" />
+                </div>
+                <div class="speech-bubble relative bg-ivory border border-sage p-lg rounded-xl max-w-md">
+                    <h1 class="font-title-serif italic text-[22px] text-ink mb-2 leading-tight">
+                        What would you like to gift today? ?
+                    </h1>
+                    <p class="font-body-md text-[14px] text-on-surface-variant">
+                        Search by product name, category, description, or seller.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Trending Searches -->
+            <section>
+                <h2 class="font-label-caps text-[11px] text-gold tracking-widest mb-md uppercase">Trending Now ??</h2>
+                <div id="trending-container" class="grid grid-rows-3 grid-flow-col gap-sm overflow-x-auto scrollbar-hide pb-2" style="grid-template-rows: repeat(3, auto); -ms-overflow-style: none; scrollbar-width: none;">
+                    <!-- Dynamically populated -->
+                </div>
+            </section>
+
+            <!-- Shop by Occasion -->
+            <section>
+                <h2 class="font-label-caps text-[11px] text-gold tracking-widest mb-md uppercase">Shop by Occasion</h2>
+                <div class="occasion-grid">
+                    <div class="occasion-card h-[100px] bg-ivory border border-outline-variant rounded-lg flex flex-col items-center justify-center group hover:bg-[#FFF8E7] hover:border-primary-container cursor-pointer transition-all duration-300" data-occasion="gift">
+                        <span class="material-symbols-outlined text-primary-container mb-2 text-[26px]" style="font-variation-settings: 'FILL' 0;">cake</span>
+                        <span class="font-label-caps text-[12px] text-ink group-hover:text-primary transition-colors">BIRTHDAY</span>
+                    </div>
+                    <div class="occasion-card h-[100px] bg-ivory border border-outline-variant rounded-lg flex flex-col items-center justify-center group hover:bg-[#FFF8E7] hover:border-primary-container cursor-pointer transition-all duration-300" data-occasion="anniversary">
+                        <span class="material-symbols-outlined text-primary-container mb-2 text-[26px]" style="font-variation-settings: 'FILL' 0;">favorite</span>
+                        <span class="font-label-caps text-[12px] text-ink group-hover:text-primary transition-colors">ANNIVERSARY</span>
+                    </div>
+                    <div class="occasion-card h-[100px] bg-ivory border border-outline-variant rounded-lg flex flex-col items-center justify-center group hover:bg-[#FFF8E7] hover:border-primary-container cursor-pointer transition-all duration-300" data-occasion="wedding">
+                        <span class="material-symbols-outlined text-primary-container mb-2 text-[26px]" style="font-variation-settings: 'FILL' 0;">celebration</span>
+                        <span class="font-label-caps text-[12px] text-ink group-hover:text-primary transition-colors">WEDDING</span>
+                    </div>
+                    <div class="occasion-card h-[100px] bg-ivory border border-outline-variant rounded-lg flex flex-col items-center justify-center group hover:bg-[#FFF8E7] hover:border-primary-container cursor-pointer transition-all duration-300" data-occasion="haldi">
+                        <span class="material-symbols-outlined text-primary-container mb-2 text-[26px]" style="font-variation-settings: 'FILL' 0;">spa</span>
+                        <span class="font-label-caps text-[12px] text-ink group-hover:text-primary transition-colors">HALDI</span>
+                    </div>
+                    <div class="occasion-card h-[100px] bg-ivory border border-outline-variant rounded-lg flex flex-col items-center justify-center group hover:bg-[#FFF8E7] hover:border-primary-container cursor-pointer transition-all duration-300" data-occasion="sangeet">
+                        <span class="material-symbols-outlined text-primary-container mb-2 text-[26px]" style="font-variation-settings: 'FILL' 0;">music_note</span>
+                        <span class="font-label-caps text-[12px] text-ink group-hover:text-primary transition-colors">SANGEET</span>
+                    </div>
+                    <div class="occasion-card h-[100px] bg-ivory border border-outline-variant rounded-lg flex flex-col items-center justify-center group hover:bg-[#FFF8E7] hover:border-primary-container cursor-pointer transition-all duration-300" data-occasion="diwali">
+                        <span class="material-symbols-outlined text-primary-container mb-2 text-[26px]" style="font-variation-settings: 'FILL' 0;">flare</span>
+                        <span class="font-label-caps text-[12px] text-ink group-hover:text-primary transition-colors">DIWALI</span>
+                    </div>
+                    <div class="occasion-card h-[100px] bg-ivory border border-outline-variant rounded-lg flex flex-col items-center justify-center group hover:bg-[#FFF8E7] hover:border-primary-container cursor-pointer transition-all duration-300" data-occasion="festival">
+                        <span class="material-symbols-outlined text-primary-container mb-2 text-[26px]" style="font-variation-settings: 'FILL' 0;">festival</span>
+                        <span class="font-label-caps text-[12px] text-ink group-hover:text-primary transition-colors">FESTIVAL</span>
+                    </div>
+                    <div class="occasion-card h-[100px] bg-ivory border border-outline-variant rounded-lg flex flex-col items-center justify-center group hover:bg-[#FFF8E7] hover:border-primary-container cursor-pointer transition-all duration-300" data-occasion="housewarming">
+                        <span class="material-symbols-outlined text-primary-container mb-2 text-[26px]" style="font-variation-settings: 'FILL' 0;">home</span>
+                        <span class="font-label-caps text-[12px] text-ink group-hover:text-primary transition-colors">HOUSEWARMING</span>
+                    </div>
+                    <div class="occasion-card h-[100px] bg-ivory border border-outline-variant rounded-lg flex flex-col items-center justify-center group hover:bg-[#FFF8E7] hover:border-primary-container cursor-pointer transition-all duration-300" data-occasion="baby-shower">
+                        <span class="material-symbols-outlined text-primary-container mb-2 text-[26px]" style="font-variation-settings: 'FILL' 0;">child_care</span>
+                        <span class="font-label-caps text-[12px] text-ink group-hover:text-primary transition-colors">BABY SHOWER</span>
+                    </div>
+                    <div class="occasion-card h-[100px] bg-ivory border border-outline-variant rounded-lg flex flex-col items-center justify-center group hover:bg-[#FFF8E7] hover:border-primary-container cursor-pointer transition-all duration-300" data-occasion="congratulations">
+                        <span class="material-symbols-outlined text-primary-container mb-2 text-[26px]" style="font-variation-settings: 'FILL' 0;">workspace_premium</span>
+                        <span class="font-label-caps text-[12px] text-ink group-hover:text-primary transition-colors">CONGRATS</span>
+                    </div>
+                    <div class="occasion-card h-[100px] bg-ivory border border-outline-variant rounded-lg flex flex-col items-center justify-center group hover:bg-[#FFF8E7] hover:border-primary-container cursor-pointer transition-all duration-300" data-occasion="handmade">
+                        <span class="material-symbols-outlined text-primary-container mb-2 text-[26px]" style="font-variation-settings: 'FILL' 0;">volunteer_activism</span>
+                        <span class="font-label-caps text-[12px] text-ink group-hover:text-primary transition-colors">JUST BECAUSE</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Searches -->
+            <section class="max-w-2xl" id="recent-searches-section">
+                <div class="flex items-center justify-between mb-md">
+                    <h2 class="font-label-caps text-[11px] text-gold tracking-widest uppercase">Recent Searches</h2>
+                    <button id="clear-recents-btn" class="font-body-md text-[13px] text-tertiary-container hover:underline transition-all">Clear all</button>
+                </div>
+                <div id="recent-searches-list" class="bg-[#FFF8E7] rounded-xl border border-outline-variant/30 divide-y divide-outline-variant/30 overflow-hidden">
+                    <!-- Recent searches injected here -->
+                </div>
+            </section>
+        </div>
+
+        <!-- ==================== STATE 2: TYPING/SUGGESTIONS VIEW ==================== -->
+        <div id="typing-view" class="space-y-xl max-w-2xl mx-auto hidden">
+            <!-- Autocomplete Suggestions List -->
+            <section>
+                <div id="suggestions-list" class="flex flex-col">
+                    <!-- Dynamic suggestions rows injected here -->
+                </div>
+            </section>
+
+            <!-- Matching Sellers Row -->
+            <section id="matching-sellers-section" class="hidden">
+                <h3 class="font-label-caps text-label-caps text-gold mb-md uppercase tracking-widest">Sellers</h3>
+                <div id="matching-sellers-list" class="flex overflow-x-auto pb-2 gap-sm scrollbar-hide">
+                    <!-- Dynamic seller chips injected here -->
+                </div>
+            </section>
+
+            <!-- Matching Categories Row -->
+            <section id="matching-categories-section" class="hidden">
+                <h3 class="font-label-caps text-label-caps text-gold mb-md uppercase tracking-widest">Categories</h3>
+                <div id="matching-categories-list" class="flex overflow-x-auto pb-2 gap-sm scrollbar-hide">
+                    <!-- Dynamic category pills injected here -->
+                </div>
+            </section>
+        </div>
+
+        <!-- ==================== STATE 3: SEARCH RESULTS / NO RESULTS VIEW ==================== -->
+        <div id="results-view" class="space-y-lg hidden">
+            <!-- Search Result Stats and Sorting -->
+            <div id="results-header" class="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-outline-variant/30 pb-md mb-xl gap-sm">
+                <div>
+                    <h2 class="font-headline-lg text-primary" id="results-title">Search Results</h2>
+                    <p class="font-body-md text-on-surface-variant" id="results-count">Finding treasures...</p>
+                </div>
+                <div class="flex items-center gap-sm self-end">
+                    <span class="text-xs text-outline font-label-caps whitespace-nowrap">Sort:</span>
+                    <select id="sort-select" class="px-md py-sm rounded-lg bg-surface text-on-surface-variant font-body-md text-sm border border-outline-variant/20 focus:ring-0 focus:outline-none cursor-pointer">
+                        <option value="newest">Newest</option>
+                        <option value="price_asc">Price: Low to High</option>
+                        <option value="price_desc">Price: High to Low</option>
+                        <option value="top_rated">Top Rated</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Loader -->
+            <div id="results-loader" class="flex flex-col items-center justify-center py-20">
+                <div class="relative w-12 h-12">
+                    <div class="absolute inset-0 border-4 border-primary/10 rounded-full"></div>
+                    <div class="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                <p class="mt-md text-primary font-body-md italic animate-pulse">Gathering handcrafted treasures...</p>
+            </div>
+
+            <!-- Product Grid -->
+            <div id="results-grid" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-lg hidden">
+                <!-- Dynamic cards injected here -->
+            </div>
+
+            <!-- pagination loader / end message -->
+            <div id="pagination-sentinel" class="h-10"></div>
+
+            <!-- Empty / No Results State View -->
+            <div id="no-results-view" class="space-y-xl text-center hidden pt-10">
+                <div class="max-w-md mx-auto space-y-md">
+                    <div class="w-20 h-20 rounded-full bg-[rgba(20,56,31,0.06)] border border-[#14381F]/15 flex items-center justify-center mx-auto text-[#14381F]">
+                        <span class="material-symbols-outlined text-[40px]">search_off</span>
+                    </div>
+                    <h3 class="font-headline-lg text-[26px] text-ink leading-tight italic" id="no-results-heading">No handcrafted treasures found</h3>
+                    <p class="font-body-md text-on-surface-variant text-[15px] leading-relaxed" id="no-results-subtext">
+                        No handcrafted treasures found matching your search. Try checking for spelling mistakes or explore our artisan categories below.
+                    </p>
+                    <a class="inline-block bg-[#14381F] text-white font-body-md px-xl py-3 rounded-full hover:bg-[#0D2614] active:scale-98 transition-all shadow-md mt-sm no-underline font-semibold text-sm" href="/buyer/categories.html">
+                        Browse all categories
+                    </a>
+                </div>
+
+                <!-- Related Treasures section -->
+                <div class="pt-16 border-t border-outline-variant/20 text-left">
+                    <h4 class="font-headline-lg text-[22px] text-primary italic text-center mb-10">Related treasures you might love</h4>
+                    <div id="related-treasures-grid" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
+                        <!-- Recommended items injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Global Toast Component Placeholders -->
+    <div id="toast-root" class="fixed bottom-6 right-6 z-50"></div>
+
+    <script type="module">
+        import apiClient from '/src/utils/apiClient.js';
+    import { logout } from '/src/utils/auth.js';
+        import { formatPaise } from '/src/utils/currency.js';
+
+    function isProductOwned(sellerId) {
+        try {
+            const user = JSON.parse(sessionStorage.getItem('tohfa_user'));
+            return user && Number(user.id) === Number(sellerId);
+        } catch (e) {
+            return false;
+        }
+    }
+
+        // State variables
+        let searchInput = document.getElementById('search-input');
+        let clearSearchBtn = document.getElementById('clear-search-btn');
+        let idleView = document.getElementById('idle-view');
+        let typingView = document.getElementById('typing-view');
+        let resultsView = document.getElementById('results-view');
+        let resultsGrid = document.getElementById('results-grid');
+        let resultsLoader = document.getElementById('results-loader');
+        let noResultsView = document.getElementById('no-results-view');
+        
+        let typingTimeout = null;
+        let lastQuery = '';
+        let searchResults = [];
+        let cursor = null;
+        let nextOffset = 0;
+        let hasMore = false;
+        let isLoadingMore = false;
+
+        // Init page
+        function init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryParam = urlParams.get('q') || urlParams.get('search') || urlParams.get('query') || '';
+            const occasionParam = urlParams.get('occasion');
+            const focusParam = urlParams.get('focus');
+
+            // Wire event listeners
+            searchInput.addEventListener('input', handleTyping);
+            searchInput.addEventListener('keydown', handleKeydown);
+            clearSearchBtn.addEventListener('click', clearSearch);
+            document.getElementById('clear-recents-btn').addEventListener('click', clearRecentSearches);
+            document.getElementById('sort-select').addEventListener('change', () => {
+                if (lastQuery) {
+                    executeSearch(lastQuery, true);
+                }
+            });
+
+            // Wire occasion clicks
+            document.querySelectorAll('.occasion-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const tag = card.getAttribute('data-occasion');
+                    searchInput.value = tag;
+                    executeSearch(tag);
+                });
+            });
+
+            // Load trending searches from backend
+            loadTrendingSearches();
+
+            // Handle URL Parameters
+            if (occasionParam) {
+                const queryText = occasionParam.replace(/-/g, ' ');
+                searchInput.value = queryText;
+                executeSearch(queryText, true, occasionParam);
+            } else if (queryParam) {
+                searchInput.value = queryParam;
+                executeSearch(queryParam);
+            } else {
+                renderRecentSearches();
+                if (focusParam === 'true') {
+                    searchInput.focus();
+                }
+            }
+
+            // Setup Infinite Scroll
+            window.addEventListener('scroll', handleScroll);
+        }
+
+        async function loadTrendingSearches() {
+            try {
+                const res = await apiClient.get('/products/trending-searches');
+                if (res.data && res.data.success) {
+                    const tags = res.data.data;
+                    const container = document.getElementById('trending-container');
+                    container.innerHTML = tags.map(tag => `
+                        <button class="trending-chip px-md py-xs bg-ivory border border-outline-variant rounded-full font-body-md text-[14px] text-on-surface hover:border-primary-container hover:bg-[#FFF8E7] transition-all duration-200 whitespace-nowrap">${tag}</button>
+                    `).join('');
+
+                    // Wire dynamic trending chips clicks
+                    container.querySelectorAll('.trending-chip').forEach(chip => {
+                        chip.addEventListener('click', () => {
+                            const text = chip.innerText;
+                            searchInput.value = text;
+                            executeSearch(text);
+                        });
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to load trending searches:", err);
+            }
+        }
+
+        // States navigation logic
+        function showState(stateName) {
+            if (stateName === 'idle') {
+                idleView.classList.remove('hidden');
+                typingView.classList.add('hidden');
+                resultsView.classList.add('hidden');
+                clearSearchBtn.classList.add('hidden');
+                renderRecentSearches();
+            } else if (stateName === 'typing') {
+                idleView.classList.add('hidden');
+                typingView.classList.remove('hidden');
+                resultsView.classList.add('hidden');
+                clearSearchBtn.classList.remove('hidden');
+            } else if (stateName === 'results') {
+                idleView.classList.add('hidden');
+                typingView.classList.add('hidden');
+                resultsView.classList.remove('hidden');
+                clearSearchBtn.classList.remove('hidden');
+            }
+        }
+
+        // Typing logic (autocomplete logic)
+        function handleTyping() {
+            const val = searchInput.value.trim();
+            if (val === '') {
+                showState('idle');
+                return;
+            }
+
+            showState('typing');
+
+            // Debounce suggestion calls
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(async () => {
+                try {
+                    const res = await apiClient.get('/products/search-suggestions', { params: { q: val } });
+                    if (res.data && res.data.success) {
+                        renderSuggestions(res.data.data, val);
+                    }
+                } catch (err) {
+                    console.error("Suggestions error:", err);
+                }
+            }, 300);
+        }
+
+        function handleKeydown(e) {
+            if (e.key === 'Enter') {
+                const query = searchInput.value.trim();
+                if (query) {
+                    executeSearch(query);
+                }
+            }
+        }
+
+        function clearSearch() {
+            searchInput.value = '';
+            showState('idle');
+            searchInput.focus();
+        }
+
+        // Render Suggestions
+        function renderSuggestions(data, query) {
+            const { suggestions, sellers, categories } = data;
+            const suggestionsList = document.getElementById('suggestions-list');
+
+            // Render text suggestions
+            if (suggestions.length === 0 && sellers.length === 0 && categories.length === 0) {
+                suggestionsList.innerHTML = `
+                    <div class="h-[52px] flex items-center px-2 text-on-surface-variant italic text-sm">
+                        No matches found... press Enter to search anyway.
+                    </div>
+                `;
+                document.getElementById('matching-sellers-section').classList.add('hidden');
+                document.getElementById('matching-categories-section').classList.add('hidden');
+                return;
+            }
+
+            // Suggestions markup
+            suggestionsList.innerHTML = suggestions.map(s => {
+                const highlighted = highlightMatch(s, query);
+                return `
+                    <div class="suggestion-row h-[52px] flex items-center justify-between border-b border-outline-variant hover:bg-surface-container-low transition-colors px-2 cursor-pointer group" data-suggestion="${s}">
+                        <div class="flex items-center gap-md">
+                            <span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">search</span>
+                            <p class="text-body-md text-on-surface">${highlighted}</p>
+                        </div>
+                        <span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">north_east</span>
+                    </div>
+                `;
+            }).join('');
+
+            // Click suggestions
+            suggestionsList.querySelectorAll('.suggestion-row').forEach(row => {
+                row.addEventListener('click', () => {
+                    const txt = row.getAttribute('data-suggestion');
+                    searchInput.value = txt;
+                    executeSearch(txt);
+                });
+            });
+
+            // Render Sellers
+            const sellersSection = document.getElementById('matching-sellers-section');
+            const sellersList = document.getElementById('matching-sellers-list');
+            if (sellers.length > 0) {
+                sellersSection.classList.remove('hidden');
+                sellersList.innerHTML = sellers.map(s => {
+                    const avatar = s.avatar_url ? `<img src="${s.avatar_url}" alt="${s.shop_name}" class="w-[28px] h-[28px] rounded-full object-cover" loading="lazy" />` : `<div class="w-[28px] h-[28px] rounded-full bg-primary-container flex items-center justify-center text-[10px] text-white font-bold uppercase">${s.shop_name.substring(0,2)}</div>`;
+                    return `
+                        <div class="seller-chip flex-shrink-0 flex items-center gap-sm bg-surface px-3 py-1.5 rounded-full border border-outline-variant shadow-sm hover:border-primary transition-all cursor-pointer" data-query="${s.shop_name}">
+                            ${avatar}
+                            <span class="text-body-md font-medium text-ink">${s.shop_name}</span>
+                            <span class="font-data-price text-data-price text-gold">${s.rating} ?</span>
+                        </div>
+                    `;
+                }).join('');
+
+                sellersList.querySelectorAll('.seller-chip').forEach(chip => {
+                    chip.addEventListener('click', () => {
+                        const seller = chip.getAttribute('data-query');
+                        searchInput.value = seller;
+                        executeSearch(seller);
+                    });
+                });
+            } else {
+                sellersSection.classList.add('hidden');
+            }
+
+            // Render Categories
+            const categoriesSection = document.getElementById('matching-categories-section');
+            const categoriesList = document.getElementById('matching-categories-list');
+            if (categories.length > 0) {
+                categoriesSection.classList.remove('hidden');
+                categoriesList.innerHTML = categories.map(c => `
+                    <a class="flex-shrink-0 bg-primary px-4 py-2 rounded-full text-white font-body-md text-[12px] uppercase tracking-wide hover:bg-primary-container transition-colors shadow-sm cursor-pointer" href="/buyer/category.html?slug=${c.slug}">
+                        <span class="mr-1">${c.emoji}</span> ${c.display_name}
+                    </a>
+                `).join('');
+            } else {
+                categoriesSection.classList.add('hidden');
+            }
+        }
+
+        // Highlight matching query
+        function highlightMatch(text, query) {
+            const index = text.toLowerCase().indexOf(query.toLowerCase());
+            if (index >= 0) {
+                const before = text.substring(0, index);
+                const match = text.substring(index, index + query.length);
+                const after = text.substring(index + query.length);
+                return `${before}<span class="font-bold text-primary-container">${match}</span>${after}`;
+            }
+            return text;
+        }
+
+        // Save and Load Recent Searches
+        function saveRecentSearch(query) {
+            let recents = JSON.parse(localStorage.getItem('tohfa_recent_searches') || '[]');
+            recents = recents.filter(r => r.toLowerCase() !== query.toLowerCase());
+            recents.unshift(query);
+            if (recents.length > 5) {
+                recents.pop();
+            }
+            localStorage.setItem('tohfa_recent_searches', JSON.stringify(recents));
+        }
+
+        function renderRecentSearches() {
+            const recents = JSON.parse(localStorage.getItem('tohfa_recent_searches') || '[]');
+            const recentsSection = document.getElementById('recent-searches-section');
+            const recentsList = document.getElementById('recent-searches-list');
+
+            if (recents.length === 0) {
+                recentsSection.classList.add('hidden');
+                return;
+            }
+
+            recentsSection.classList.remove('hidden');
+            recentsList.innerHTML = recents.map(r => `
+                <div class="recent-row flex items-center justify-between py-md px-4 group hover:bg-surface transition-colors cursor-pointer" data-query="${r}">
+                    <div class="flex items-center gap-md">
+                        <span class="material-symbols-outlined text-outline group-hover:text-primary-container">history</span>
+                        <span class="font-body-md text-on-surface">${r}</span>
+                    </div>
+                    <div class="flex items-center gap-md">
+                        <button class="remove-recent-btn text-outline hover:text-error transition-colors p-1" data-query="${r}">
+                            <span class="material-symbols-outlined text-sm">close</span>
+                        </button>
+                        <span class="material-symbols-outlined text-outline group-hover:text-primary-container transform -rotate-45">arrow_forward</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // Click recent query to search
+            recentsList.querySelectorAll('.recent-row').forEach(row => {
+                row.addEventListener('click', (e) => {
+                    // Check if clicked remove button
+                    if (e.target.closest('.remove-recent-btn')) {
+                        return;
+                    }
+                    const q = row.getAttribute('data-query');
+                    searchInput.value = q;
+                    executeSearch(q);
+                });
+            });
+
+            // Click remove button to delete recent
+            recentsList.querySelectorAll('.remove-recent-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const q = btn.getAttribute('data-query');
+                    let recents = JSON.parse(localStorage.getItem('tohfa_recent_searches') || '[]');
+                    recents = recents.filter(r => r !== q);
+                    localStorage.setItem('tohfa_recent_searches', JSON.stringify(recents));
+                    renderRecentSearches();
+                });
+            });
+        }
+
+        function clearRecentSearches() {
+            localStorage.removeItem('tohfa_recent_searches');
+            renderRecentSearches();
+        }
+
+        // SEARCH EXECUTION LOGIC
+        async function executeSearch(query, isNewSearch = true, occasion = null) {
+            if (!query || query.trim() === '') return;
+            query = query.trim();
+            lastQuery = query;
+
+            saveRecentSearch(query);
+            showState('results');
+            
+            // Set header values
+            document.getElementById('results-title').innerText = occasion ? `Curated ${query} Gifts` : `Search Results for "${query}"`;
+            document.getElementById('results-count').innerText = `Gathering handcrafted items...`;
+
+            if (isNewSearch) {
+                cursor = null;
+                nextOffset = 0;
+                resultsGrid.innerHTML = '';
+            }
+
+            // Show loading
+            resultsLoader.classList.remove('hidden');
+            resultsGrid.classList.add('hidden');
+            noResultsView.classList.add('hidden');
+
+            const sort = document.getElementById('sort-select').value;
+
+            try {
+                const params = { q: query, occasion: occasion || undefined, sort, limit: 12 };
+                if (sort === 'newest' && cursor) {
+                    params.cursor = cursor;
+                } else if (sort !== 'newest' && nextOffset > 0) {
+                    params.offset = nextOffset;
+                }
+
+                const res = await apiClient.get('/products/search', { params });
+                
+                resultsLoader.classList.add('hidden');
+                
+                if (res.data && res.data.success) {
+                    const products = res.data.data.products || [];
+                    hasMore = res.data.data.has_more || false;
+                    cursor = res.data.data.next_cursor || null;
+                    nextOffset = res.data.data.next_offset || 0;
+
+                    if (isNewSearch) {
+                        searchResults = products;
+                    } else {
+                        searchResults.push(...products);
+                    }
+
+                    if (searchResults.length === 0) {
+                        // Empty State (No Results)
+                        resultsGrid.classList.add('hidden');
+                        noResultsView.classList.remove('hidden');
+                        document.getElementById('results-count').innerText = `0 items found`;
+                        const noResHeading = document.getElementById('no-results-heading');
+                        const noResSubtext = document.getElementById('no-results-subtext');
+                        if (noResHeading) noResHeading.innerText = `No handcrafted treasures found`;
+                        if (noResSubtext) noResSubtext.innerText = `No handcrafted treasures found matching "${query}". Try different words or explore our artisan categories below.`;
+                        await fetchRelatedTreasures();
+                    } else {
+                        // Display Results
+                        resultsGrid.classList.remove('hidden');
+                        noResultsView.classList.add('hidden');
+                        document.getElementById('results-count').innerText = `${searchResults.length}${hasMore ? '+' : ''} handcrafted item${searchResults.length === 1 ? '' : 's'} found`;
+                        renderProductGrid(searchResults);
+                    }
+                }
+            } catch (err) {
+                console.error("Search API Error:", err);
+                resultsLoader.classList.add('hidden');
+                resultsGrid.classList.add('hidden');
+                document.getElementById('results-count').innerText = `Error loading results`;
+                resultsGrid.innerHTML = `
+                    <div class="col-span-full text-center py-20 text-error">
+                        <span class="material-symbols-outlined text-[32px] mb-sm">error</span>
+                        <p class="font-semibold text-sm">Failed to retrieve search results</p>
+                        <button onclick="executeSearch('${query}')" class="mt-md px-md py-sm bg-primary text-white rounded-lg text-sm font-bold active:scale-95 transition-all">Retry</button>
+                    </div>
+                `;
+                resultsGrid.classList.remove('hidden');
+            }
+        }
+
+        // Render matching products
+        function renderProductGrid(products) {
+            resultsGrid.innerHTML = products.map(p => {
+                const img = p.image_url || 'https://placehold.co/400x400/f4ede3/516447?text=Handcrafted';
+                const price = `?${(p.price_paise / 100).toLocaleString('en-IN')}`;
+                const isWishlisted = !!p.is_wishlisted;
+
+                let ribbonHtml = '';
+                if (p.product_tag === 'Sponsored' || p.type === 'sponsored') {
+                    ribbonHtml = `
+                        <div class="ribbon-wrapper">
+                            <div class="ribbon-tag ribbon-sponsored">Sponsored</div>
+                        </div>
+                    `;
+                } else if (p.is_bestseller && p.listing_type === 'custom') {
+                    ribbonHtml = `
+                        <div class="ribbon-wrapper">
+                            <div class="ribbon-tag ribbon-bestseller ribbon-bestseller-double">BEST SELLER</div>
+                            <div class="ribbon-tag ribbon-custom ribbon-custom-double">CUSTOM</div>
+                        </div>
+                    `;
+                } else if (p.is_bestseller) {
+                    ribbonHtml = `
+                        <div class="ribbon-wrapper">
+                            <div class="ribbon-tag ribbon-bestseller">BEST SELLER</div>
+                        </div>
+                    `;
+                } else if (p.listing_type === 'custom') {
+                    ribbonHtml = `
+                        <div class="ribbon-wrapper">
+                            <div class="ribbon-tag ribbon-custom">CUSTOM</div>
+                        </div>
+                    `;
+                }
+
+                const isOwner = isProductOwned(p.seller_id);
+                const wishlistBtnHtml = isOwner
+                    ? `<button class="absolute top-2 right-2 sm:top-3 sm:right-3 p-1 sm:p-1.5 md:p-2 bg-transparent opacity-50 cursor-not-allowed flex items-center justify-center z-10" disabled onclick="event.stopPropagation();">
+                           <span class="material-symbols-outlined text-[14px] sm:text-[16px] md:text-[20px] text-secondary" style="font-variation-settings: 'FILL' 0;">favorite</span>
+                       </button>`
+                    : `<button class="absolute top-2 right-2 sm:top-3 sm:right-3 p-1 sm:p-1.5 md:p-2 bg-transparent hover:scale-110 active:scale-95 transition-all duration-200 toggle-wishlist-btn flex items-center justify-center cursor-pointer z-10" data-id="${p.id}" data-wishlisted="${isWishlisted}" onclick="event.stopPropagation();">
+                           <span class="material-symbols-outlined text-[14px] sm:text-[16px] md:text-[20px] transition-all ${isWishlisted ? 'fill-icon text-red-500' : 'text-secondary'}" style="font-variation-settings: 'FILL' ${isWishlisted ? 1 : 0};">favorite</span>
+                       </button>`;
+
+                const isCustomized = p.listing_type === 'custom';
+                const addToCartBtnHtml = isOwner
+                    ? `<button class="w-full bg-[#14381F]/20 text-[#605e57] py-2 rounded-lg font-semibold opacity-50 cursor-not-allowed text-sm" disabled onclick="event.stopPropagation();">
+                           Own Product
+                       </button>`
+                    : isCustomized
+                        ? `<button class="w-full bg-[#14381F] text-white py-2 rounded-lg font-semibold hover:opacity-90 active:scale-[0.98] transition-all text-sm talk-to-seller-btn" data-id="${p.id}" onclick="event.stopPropagation();">
+                               Talk to Seller
+                           </button>`
+                        : `<button class="w-full bg-[#14381F] text-white py-2 rounded-lg font-semibold hover:opacity-90 active:scale-[0.98] transition-all text-sm add-to-cart-btn" data-id="${p.id}" onclick="event.stopPropagation();">
+                               Add to Cart
+                           </button>`;
+
+                return `
+                    <div class="group bg-[#FFF8E7] border border-[#c3c8c1] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative" onclick="window.location.href='/buyer/product.html?id=${p.id}'" data-product-id="${p.id}">
+                        <div>
+                            <div class="relative aspect-square overflow-hidden rounded-xl bg-surface-container-lowest mb-4">
+                                ${ribbonHtml}
+                                <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="${img}" alt="${p.name}" loading="lazy">
+                                ${wishlistBtnHtml}
+                            </div>
+                            <div class="flex flex-col mb-4">
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <span class="font-bold text-lg text-[#14381F]">${price}</span>
+                                    ${parseInt(p.review_count || 0, 10) > 0
+                                        ? `<div class="flex items-center gap-1 text-xs text-[#605e57]">
+                                            <span class="text-[#14381F] font-bold">?</span>
+                                            <span class="font-semibold text-on-surface">${parseFloat(p.avg_rating).toFixed(1)}</span>
+                                            <span>(${parseInt(p.review_count, 10)})</span>
+                                          </div>`
+                                        : `<span class="bg-[#14381F]/10 text-[#14381F] text-[10px] font-mono font-bold px-2 py-0.5 rounded tracking-wider uppercase">New</span>`}
+                                </div>
+                                <h4 class="font-headline-lg font-bold text-on-surface line-clamp-1 mb-1" style="font-family: 'Playfair Display', serif;">${p.name}</h4>
+                                <span class="text-xs text-[#605e57] hover:underline cursor-pointer" onclick="event.stopPropagation(); window.location.href='/buyer/seller-profile.html?id=${p.seller_id}'">By ${p.seller_name || 'Artisan'}</span>
+                            </div>
+                        </div>
+                        <div class="w-full font-['DM_Sans']">
+                            ${addToCartBtnHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Bind click handlers
+            resultsGrid.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    await handleAddToCart(id);
+                });
+            });
+
+            resultsGrid.querySelectorAll('.talk-to-seller-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    await handleTalkToSeller(id, btn);
+                });
+            });
+
+            resultsGrid.querySelectorAll('.toggle-wishlist-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    const wishlisted = btn.getAttribute('data-wishlisted') === 'true';
+                    await handleToggleWishlist(id, wishlisted, btn);
+                });
+            });
+        }
+
+        // Render Related/Recommended items
+        async function fetchRelatedTreasures() {
+            const grid = document.getElementById('related-treasures-grid');
+            grid.innerHTML = `
+                <div class="col-span-full flex flex-col items-center justify-center py-10">
+                    <span class="material-symbols-outlined animate-spin text-[32px] text-primary">sync</span>
+                    <p class="text-outline text-sm italic mt-sm">Finding related treasures you might love...</p>
+                </div>
+            `;
+
+            try {
+                const res = await apiClient.get('/home/feed');
+                if (res.data && res.data.success) {
+                    const products = res.data.data.featured_products || [];
+                    if (products.length === 0) {
+                        grid.innerHTML = `<p class="col-span-full text-center text-outline text-sm">No recommended items found.</p>`;
+                        return;
+                    }
+
+                    const items = products.slice(0, 8); // Display up to 8
+                    grid.innerHTML = items.map(p => {
+                        const img = p.image_url || 'https://placehold.co/400x400/f4ede3/516447?text=Handcrafted';
+                        const price = `?${(p.price_paise / 100).toLocaleString('en-IN')}`;
+                        const isWishlisted = !!p.is_wishlisted;
+
+                        let ribbonHtml = '';
+                        if (p.product_tag === 'Sponsored' || p.type === 'sponsored') {
+                            ribbonHtml = `
+                                <div class="ribbon-wrapper">
+                                    <div class="ribbon-tag ribbon-sponsored">Sponsored</div>
+                                </div>
+                            `;
+                        } else if (p.is_bestseller && p.listing_type === 'custom') {
+                            ribbonHtml = `
+                                <div class="ribbon-wrapper">
+                                    <div class="ribbon-tag ribbon-bestseller ribbon-bestseller-double">BEST SELLER</div>
+                                    <div class="ribbon-tag ribbon-custom ribbon-custom-double">CUSTOM</div>
+                                </div>
+                            `;
+                        } else if (p.is_bestseller) {
+                            ribbonHtml = `
+                                <div class="ribbon-wrapper">
+                                    <div class="ribbon-tag ribbon-bestseller">BEST SELLER</div>
+                                </div>
+                            `;
+                        } else if (p.listing_type === 'custom') {
+                            ribbonHtml = `
+                                <div class="ribbon-wrapper">
+                                    <div class="ribbon-tag ribbon-custom">CUSTOM</div>
+                                </div>
+                            `;
+                        }
+
+                        const isOwner = isProductOwned(p.seller_id);
+                        const wishlistBtnHtml = isOwner
+                            ? `<button class="absolute top-2 right-2 sm:top-3 sm:right-3 p-1 sm:p-1.5 md:p-2 bg-transparent opacity-50 cursor-not-allowed flex items-center justify-center z-10" disabled onclick="event.stopPropagation();">
+                                   <span class="material-symbols-outlined text-[14px] sm:text-[16px] md:text-[20px] text-secondary" style="font-variation-settings: 'FILL' 0;">favorite</span>
+                               </button>`
+                            : `<button class="absolute top-2 right-2 sm:top-3 sm:right-3 p-1 sm:p-1.5 md:p-2 bg-transparent hover:scale-110 active:scale-95 transition-all duration-200 toggle-wishlist-btn flex items-center justify-center cursor-pointer z-10" data-id="${p.id}" data-wishlisted="${isWishlisted}" onclick="event.stopPropagation();">
+                                   <span class="material-symbols-outlined text-[14px] sm:text-[16px] md:text-[20px] transition-all ${isWishlisted ? 'fill-icon text-red-500' : 'text-secondary'}" style="font-variation-settings: 'FILL' ${isWishlisted ? 1 : 0};">favorite</span>
+                               </button>`;
+
+                        const isCustomized = p.listing_type === 'custom';
+                        const addToCartBtnHtml = isOwner
+                            ? `<button class="w-full bg-[#14381F]/20 text-[#605e57] py-2 rounded-lg font-semibold opacity-50 cursor-not-allowed text-sm" disabled onclick="event.stopPropagation();">
+                                   Own Product
+                               </button>`
+                            : isCustomized
+                                ? `<button class="w-full bg-[#14381F] text-white py-2 rounded-lg font-semibold hover:opacity-90 active:scale-[0.98] transition-all text-sm talk-to-seller-btn" data-id="${p.id}" onclick="event.stopPropagation();">
+                                       Talk to Seller
+                                   </button>`
+                                : `<button class="w-full bg-[#14381F] text-white py-2 rounded-lg font-semibold hover:opacity-90 active:scale-[0.98] transition-all text-sm add-to-cart-btn" data-id="${p.id}" onclick="event.stopPropagation();">
+                                       Add to Cart
+                                   </button>`;
+
+                        return `
+                            <div class="group bg-[#FFF8E7] border border-[#c3c8c1] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative" onclick="window.location.href='/buyer/product.html?id=${p.id}'">
+                                <div>
+                                    <div class="relative aspect-square overflow-hidden rounded-xl bg-surface-container-lowest mb-4">
+                                        ${ribbonHtml}
+                                        <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="${img}" alt="${p.name}" loading="lazy">
+                                        ${wishlistBtnHtml}
+                                    </div>
+                                    <div class="flex flex-col mb-4">
+                                        <div class="flex items-center justify-between gap-2 mb-1">
+                                            <span class="font-bold text-lg text-[#14381F]">${price}</span>
+                                            ${parseInt(p.review_count || 0, 10) > 0
+                                                ? `<div class="flex items-center gap-1 text-xs text-[#605e57]">
+                                                    <span class="text-[#14381F] font-bold">?</span>
+                                                    <span class="font-semibold text-on-surface">${parseFloat(p.avg_rating).toFixed(1)}</span>
+                                                    <span>(${parseInt(p.review_count, 10)})</span>
+                                                  </div>`
+                                                : `<span class="bg-[#14381F]/10 text-[#14381F] text-[10px] font-mono font-bold px-2 py-0.5 rounded tracking-wider uppercase">New</span>`}
+                                        </div>
+                                        <h4 class="font-headline-lg font-bold text-on-surface line-clamp-1 mb-1" style="font-family: 'Playfair Display', serif;">${p.name}</h4>
+                                        <span class="text-xs text-[#605e57] hover:underline cursor-pointer" onclick="event.stopPropagation(); window.location.href='/buyer/seller-profile.html?id=${p.seller_id}'">By ${p.seller_name || 'Artisan'}</span>
+                                    </div>
+                                </div>
+                                <div class="w-full font-['DM_Sans']">
+                                    ${addToCartBtnHtml}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    // Bind click handlers for related treasures
+                    grid.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                        btn.addEventListener('click', async (e) => {
+                            e.stopPropagation();
+                            const id = btn.getAttribute('data-id');
+                            await handleAddToCart(id);
+                        });
+                    });
+
+                    grid.querySelectorAll('.talk-to-seller-btn').forEach(btn => {
+                        btn.addEventListener('click', async (e) => {
+                            e.stopPropagation();
+                            const id = btn.getAttribute('data-id');
+                            await handleTalkToSeller(id, btn);
+                        });
+                    });
+
+                    grid.querySelectorAll('.toggle-wishlist-btn').forEach(btn => {
+                        btn.addEventListener('click', async (e) => {
+                            e.stopPropagation();
+                            const id = btn.getAttribute('data-id');
+                            const wishlisted = btn.getAttribute('data-wishlisted') === 'true';
+                            await handleToggleWishlist(id, wishlisted, btn);
+                        });
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to load related feeds:", err);
+                grid.innerHTML = `<p class="col-span-full text-center text-error text-sm">Could not retrieve recommended items.</p>`;
+            }
+        }
+
+        // Cart and Wishlist operations
+        // Cart and Wishlist operations
+        async function handleTalkToSeller(productId, btn) {
+            const token = sessionStorage.getItem('tohfa_access_token');
+            if (!token) {
+                // login check bypassed
+                return;
+            }
+
+            btn.disabled = true;
+            const originalText = btn.innerText;
+            btn.innerText = 'Starting chat...';
+
+            try {
+                const res = await apiClient.post('/requests', {
+                    listing_id: Number(productId),
+                    request_type: 'customization',
+                    quantity: 1
+                });
+                if (res.data && res.data.success) {
+                    const convId = res.data.conversation_id;
+                    window.location.href = `/buyer/chat.html?conversationId=${convId}`;
+                } else {
+                    throw new Error("Invalid response");
+                }
+            } catch (err) {
+                console.error("Failed to start customization request:", err);
+                showToast("Failed to start chat. Please try again.", "error");
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        }
+
+        async function handleAddToCart(productId) {
+            const token = sessionStorage.getItem('tohfa_access_token');
+            if (!token) {
+                // login check bypassed
+                return;
+            }
+
+            try {
+                const res = await apiClient.post('/cart/items', { product_id: Number(productId), quantity: 1 });
+                if (res.data && res.data.success) {
+                    showToast("Added to basket!", "success");
+                }
+            } catch (err) {
+                console.error("Cart error:", err);
+            }
+        }
+
+        async function handleToggleWishlist(productId, isWishlisted, btn) {
+            const token = sessionStorage.getItem('tohfa_access_token');
+            if (!token) {
+                // login check bypassed
+                return;
+            }
+
+            try {
+                const iconEl = btn.querySelector('.material-symbols-outlined');
+                if (isWishlisted) {
+                    const res = await apiClient.delete(`/wishlist/${productId}`);
+                    if (res.data && res.data.success) {
+                        btn.setAttribute('data-wishlisted', 'false');
+                        if (iconEl) {
+                            iconEl.classList.remove('fill-icon', 'text-red-500');
+                            iconEl.classList.add('text-secondary');
+                            iconEl.style.fontVariationSettings = "'FILL' 0";
+                        }
+                        showToast("Removed from favorites", "success");
+                    }
+                } else {
+                    const res = await apiClient.post(`/wishlist/${productId}`);
+                    if (res.data && res.data.success) {
+                        btn.setAttribute('data-wishlisted', 'true');
+                        if (iconEl) {
+                            iconEl.classList.add('fill-icon', 'text-red-500');
+                            iconEl.classList.remove('text-secondary');
+                            iconEl.style.fontVariationSettings = "'FILL' 1";
+                        }
+                        showToast("Saved to favorites", "success");
+                    }
+                }
+            } catch (err) {
+                console.error("Wishlist error:", err);
+            }
+        }
+
+        // Toast Helper
+        function showToast(message, type = 'success') {
+            const root = document.getElementById('toast-root');
+            const toast = document.createElement('div');
+            toast.className = `flex items-center gap-sm px-lg py-md rounded-xl border text-sm font-semibold shadow-lg transition-all transform translate-y-4 opacity-0 duration-300 bg-[#FFF8E7] border-outline-variant/60 text-primary-container`;
+            
+            const icon = type === 'success' ? 'check_circle' : 'error';
+            toast.innerHTML = `
+                <span class="material-symbols-outlined text-primary">${icon}</span>
+                <span>${message}</span>
+            `;
+            root.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+            }, 10);
+            
+            // Auto dismiss
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // Scroll helper for infinite loading
+        async function handleScroll() {
+            if (!hasMore || isLoadingMore) return;
+
+            const sentinel = document.getElementById('pagination-sentinel');
+            if (!sentinel) return;
+
+            const rect = sentinel.getBoundingClientRect();
+            const isNearBottom = rect.top <= window.innerHeight + 100;
+
+            if (isNearBottom && lastQuery) {
+                isLoadingMore = true;
+                const prevGridHtml = resultsGrid.innerHTML;
+                
+                // Show tiny loader indicator at bottom
+                const spinner = document.createElement('div');
+                spinner.id = 'infinite-scroll-loader';
+                spinner.className = 'w-full flex justify-center py-4 col-span-full';
+                spinner.innerHTML = `
+                    <div class="relative w-8 h-8">
+                        <div class="absolute inset-0 border-2 border-primary/10 rounded-full"></div>
+                        <div class="absolute inset-0 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                `;
+                resultsGrid.appendChild(spinner);
+
+                try {
+                    const sort = document.getElementById('sort-select').value;
+                    const params = { q: lastQuery, sort, limit: 12 };
+                    if (sort === 'newest' && cursor) {
+                        params.cursor = cursor;
+                    } else if (sort !== 'newest' && nextOffset > 0) {
+                        params.offset = nextOffset;
+                    }
+                    const res = await apiClient.get('/products/search', { params });
+                    
+                    spinner.remove();
+
+                    if (res.data && res.data.success) {
+                        const newProducts = res.data.data.products || [];
+                        hasMore = res.data.data.has_more || false;
+                        cursor = res.data.data.next_cursor || null;
+                        nextOffset = res.data.data.next_offset || 0;
+
+                        if (newProducts.length > 0) {
+                            searchResults.push(...newProducts);
+                            // Append new items
+                            renderProductGrid(searchResults);
+                        }
+                    }
+                } catch (err) {
+                    console.error("Infinite scroll error:", err);
+                    spinner.remove();
+                } finally {
+                    isLoadingMore = false;
+                }
+            }
+        }
+
+        // Run
+        window.addEventListener('DOMContentLoaded', init);
+
+    let isLoggedIn = false;
+    async function checkAuthState() {
+        const token = sessionStorage.getItem('tohfa_access_token');
+        const authContainer = document.getElementById('auth-buttons-container');
+        
+        if (token) {
+            isLoggedIn = true;
+            try {
+                let avatarUrl = null;
+                let initial = 'A';
+                try {
+                    const res = await apiClient.get('/profile/me');
+                    if (res.data && res.data.success) {
+                        avatarUrl = res.data.data.avatar_url;
+                        if (res.data.data.full_name) {
+                            initial = res.data.data.full_name.charAt(0).toUpperCase();
+                        }
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch profile avatar:", err);
+                }
+                
+                let avatarHtml = '';
+                if (avatarUrl) {
+                    avatarHtml = `<img src="${avatarUrl}" alt="Profile" class="w-10 h-10 rounded-full border border-[rgba(20,56,31,0.2)] object-cover cursor-pointer" onclick="window.location.href='profile.html'" loading="lazy" />`;
+                } else {
+                    avatarHtml = `
+                        <a href="/buyer/profile.html" class="w-10 h-10 rounded-full bg-[#14381F] flex items-center justify-center text-white font-bold border border-[rgba(20,56,31,0.2)] text-sm overflow-hidden flex-shrink-0 cursor-pointer">
+                            ${initial}
+                        </a>
+                    `;
+                }
+
+                if (authContainer) {
+                    authContainer.innerHTML = avatarHtml;
+                }
+            } catch(e) {
+                console.error("Failed to parse token:", e);
+                logout();
+            }
+        } else {
+            isLoggedIn = false;
+            if (authContainer) {
+                authContainer.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <a href="/auth/login.html" class="text-sm font-semibold text-[#FAF6EE] hover:text-white hover:underline no-underline" style="font-family: 'DM Sans', sans-serif;">Login</a>
+                        <a href="/auth/signup-buyer.html" class="text-[#14381F] text-sm font-semibold px-3.5 py-1.5 rounded-lg bg-[#FAF6EE] hover:bg-white transition-all no-underline shadow-sm" style="font-family: 'DM Sans', sans-serif;">Sign Up</a>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    checkAuthState();
+</script>
+</body>
+</html>

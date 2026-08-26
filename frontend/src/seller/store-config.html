@@ -1,0 +1,717 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <script type="module" src="/src/components/ReportWidget.js" defer></script>
+<script type="module" src="/src/components/ProtectedRoute.js"></script>
+<meta charset="utf-8">
+<title>Store Config | TOFA Seller Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+<script type="module" src="/components/seller-components.js"></script>
+  <style>
+        body {
+            background-color: #FFF8E7; /* Warm parchment base */
+            overflow-x: hidden;
+        }
+        .pressed-flower-bg {
+            background-image: url("/img/textures/handmade-paper.png");
+            opacity: 0.1;
+        }
+
+        .watercolor-bar {
+            background: linear-gradient(90deg, rgba(20,56,31,0.2) 0%, #14381F 100%);
+            mask-image: linear-gradient(to right, black, rgba(0,0,0,0.5), black);
+        }
+        .anime-accent {
+            position: fixed;
+            z-index: 50;
+            filter: drop-shadow(0 4px 12px rgba(74,63,53,0.15));
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface bg-[#FFF8E7]">
+<seller-layout active-tab="profile">
+<!-- (B) Setup Checklist Card -->
+<section class="mb-12 relative" style="opacity: 1; transform: translateY(0px); transition: 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
+<div class="bg-surface-container-lowest rounded-xl border border-secondary/20 p-8 shadow-[0_8px_32px_rgba(74,63,53,0.04)] overflow-hidden relative">
+
+<h3 class="font-headline-sm text-headline-sm text-secondary mb-8 font-ui-serif italic">Artisan Setup Progress</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-8">
+<!-- Done Steps -->
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary shrink-0">
+<span class="material-symbols-outlined text-xl">check</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">Store details</h4>
+<p class="text-xs text-secondary/60">Verified</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary shrink-0">
+<span class="material-symbols-outlined text-xl">check</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">Payment gateway</h4>
+<p class="text-xs text-secondary/60">Active</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary shrink-0">
+<span class="material-symbols-outlined text-xl">check</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">Shipping</h4>
+<p class="text-xs text-secondary/60">Configured</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary shrink-0">
+<span class="material-symbols-outlined text-xl">check</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">Store policies</h4>
+<p class="text-xs text-secondary/60">Published</p>
+</div>
+</div>
+<!-- Current/Incomplete Steps -->
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary shrink-0">
+<span class="material-symbols-outlined text-xl">check</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">Website appearance</h4>
+<p class="text-xs text-secondary/60">Customized</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-on-secondary shrink-0">
+<span class="text-body-sm font-bold">6</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">User access</h4>
+<span class="text-[10px] px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full font-bold uppercase tracking-wider">Set up</span>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-on-secondary shrink-0">
+<span class="text-body-sm font-bold">7</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">Accept orders</h4>
+<span class="text-[10px] px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full font-bold uppercase tracking-wider">Incomplete</span>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-full border-2 border-secondary/30 flex items-center justify-center text-secondary/40 shrink-0">
+<span class="text-body-sm font-bold">8</span>
+</div>
+<div>
+<h4 class="font-bold text-secondary/40">Gift wrap</h4>
+<p class="text-xs text-secondary/30">Optional</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- (C) Three Side-by-Side Cards -->
+<section class="grid grid-cols-1 xl:grid-cols-3 gap-gutter mb-12" style="opacity: 1; transform: translateY(0px); transition: 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
+<!-- 1. Delivery -->
+<div class="bg-surface-container-lowest rounded-xl border border-secondary/10 p-6 flex flex-col gap-6 shadow-[0_4px_24px_rgba(74,63,53,0.03)] group transition-all hover:shadow-[0_12px_48px_rgba(74,63,53,0.06)]">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm text-primary flex items-center gap-2">
+<span class="material-symbols-outlined">local_shipping</span>
+                            Delivery
+                        </h3>
+<label class="relative inline-flex items-center cursor-pointer">
+<input id="accept-orders-toggle" checked="" class="sr-only peer" type="checkbox">
+<div class="w-11 h-6 bg-secondary-container/40 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-[#FFF8E7] after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="space-y-4">
+<div>
+<p class="text-body-sm font-ui-serif text-secondary/70 mb-2">Flat Shipping Fee</p>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 font-data-mono text-secondary">₹</span>
+<input id="flat-shipping-fee" class="w-full pl-8 py-2 border-b border-outline-variant focus:border-primary bg-transparent font-data-mono focus:ring-0" type="text" value="150">
+</div>
+</div>
+<div class="flex items-center justify-between p-3 bg-surface-container rounded-lg border border-outline-variant/20">
+<span class="font-ui-serif text-on-surface">Store Pickup</span>
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">toggle_on</span>
+</div>
+<button id="save-delivery-btn" class="w-full mt-2 py-2 bg-primary text-on-primary rounded-lg text-sm font-bold shadow-sm hover:opacity-90">Save Delivery</button>
+</div>
+</div>
+<!-- 2. Payments & Payouts -->
+<div class="bg-surface-container-lowest rounded-xl border border-secondary/10 p-6 flex flex-col gap-6 shadow-[0_4px_24px_rgba(74,63,53,0.03)] group transition-all hover:shadow-[0_12px_48px_rgba(74,63,53,0.06)]">
+<h3 class="font-headline-sm text-headline-sm text-primary flex items-center gap-2">
+<span class="material-symbols-outlined">payments</span>
+                        Payouts
+                    </h3>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-primary-container/10 text-primary-container text-xs font-bold rounded-full border border-primary/20 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">verified</span> UPI
+                        </span>
+<span class="px-3 py-1 bg-primary-container/10 text-primary-container text-xs font-bold rounded-full border border-primary/20 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">verified</span> Cards
+                        </span>
+<span class="px-3 py-1 bg-primary-container/10 text-primary-container text-xs font-bold rounded-full border border-primary/20 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">verified</span> NetBanking
+                        </span>
+</div>
+<div class="mt-auto">
+<p class="text-xs text-secondary/60 uppercase tracking-widest font-bold mb-1">Pending Payout</p>
+<p class="text-3xl font-data-mono text-primary">₹6,340.00</p>
+<a class="text-body-sm font-ui-serif text-secondary hover:text-primary underline decoration-sage/40 mt-2 block transition-colors" href="/seller/payouts.html">View payout history →</a>
+</div>
+</div>
+<!-- 3. Store Appearance -->
+<div class="bg-surface-container-lowest rounded-xl border border-secondary/10 p-6 flex flex-col gap-6 shadow-[0_4px_24px_rgba(74,63,53,0.03)] group transition-all hover:shadow-[0_12px_48px_rgba(74,63,53,0.06)] relative overflow-hidden">
+<div class="bg-violet-100/30 absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl"></div>
+<h3 class="font-headline-sm text-headline-sm text-primary flex items-center gap-2">
+<span class="material-symbols-outlined">palette</span>
+                        Appearance
+                    </h3>
+<div class="flex items-center gap-4">
+<div class="w-16 h-16 rounded-lg border border-outline-variant/40 bg-[#FFF8E7] p-2 shrink-0">
+<img alt="Store QR Code" class="w-full h-full object-contain" data-alt="A beautifully designed, stylized QR code centered within a floral border of lavender and sage. The QR code itself is integrated with delicate leaf patterns. The overall aesthetic is clean, set against a warm parchment background, suggesting a luxury artisan brand identity." src="/img/ceramic_bowls.jpg" loading="lazy">
+</div>
+<div class="flex-1 overflow-hidden">
+<p class="text-xs font-ui-serif text-secondary/70 truncate">tofa.art/artisan</p>
+<div class="flex gap-3 mt-1">
+<button class="text-[11px] font-bold text-primary flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-xs">content_copy</span> Copy
+                                </button>
+<button class="text-[11px] font-bold text-primary flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-xs">download</span> QR
+                                </button>
+</div>
+</div>
+</div>
+<button class="w-full py-2 bg-secondary/10 text-secondary border border-secondary/20 rounded-lg font-ui-serif text-sm hover:bg-secondary/20 transition-all flex items-center justify-center gap-2">
+                        Edit website <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</section>
+<!-- (D) Team Access Card -->
+<section class="mb-12" style="opacity: 1; transform: translateY(0px); transition: 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
+<div class="bg-surface-container-lowest rounded-xl border border-secondary/10 p-8 shadow-[0_4px_24px_rgba(74,63,53,0.03)]">
+<h3 class="font-headline-sm text-headline-sm text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined">group</span>
+                        Team Access
+                    </h3>
+<div class="flex flex-col lg:flex-row gap-8">
+<div class="flex-1">
+<div class="flex gap-2 mb-8">
+<input class="flex-1 px-4 py-3 bg-surface-container border border-outline-variant/40 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary font-ui-serif" placeholder="colleague@studio.com" type="email">
+<button class="bg-primary text-on-primary px-8 rounded-lg font-ui-serif font-bold hover:opacity-90 transition-all">Invite</button>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between p-4 border-b border-outline-variant/20 group hover:bg-surface-container/50 rounded-lg transition-all">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center text-violet-700 font-bold font-display-lg overflow-hidden">
+<img alt="Member Avatar" class="w-full h-full object-cover" data-alt="A portrait of a serene artisan with a warm smile, wearing a simple linen apron. The lighting is soft and natural, suggesting an afternoon in a well-lit studio filled with dried flowers and vintage glass jars. The photographic style is editorial and high-end, capturing a mood of quiet craftsmanship." src="/img/ceramic_bowls.jpg" loading="lazy">
+</div>
+<div>
+<p class="font-ui-serif font-bold text-on-surface">Elena Wildwood</p>
+<p class="text-xs text-secondary/60">Owner · Primary Account</p>
+</div>
+</div>
+<span class="px-3 py-1 bg-primary/10 text-primary text-[10px] font-bold rounded-full uppercase tracking-widest">Admin</span>
+</div>
+<div class="flex items-center justify-between p-4 border-b border-outline-variant/20 group hover:bg-surface-container/50 rounded-lg transition-all">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-sage-100 flex items-center justify-center text-sage-800 font-bold font-display-lg">J</div>
+<div>
+<p class="font-ui-serif font-bold text-on-surface">Julian Thorne</p>
+<p class="text-xs text-secondary/60">julian.t@botanist.co</p>
+</div>
+</div>
+<span class="px-3 py-1 bg-secondary/10 text-secondary text-[10px] font-bold rounded-full uppercase tracking-widest">Catalog</span>
+</div>
+<div class="flex items-center justify-between p-4 group hover:bg-surface-container/50 rounded-lg transition-all">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold font-display-lg">M</div>
+<div>
+<p class="font-ui-serif font-bold text-on-surface">Mira Kael</p>
+<p class="text-xs text-secondary/60">mira@studio.com</p>
+</div>
+</div>
+<span class="px-3 py-1 bg-secondary/10 text-secondary text-[10px] font-bold rounded-full uppercase tracking-widest">Orders</span>
+</div>
+</div>
+</div>
+<div class="w-full lg:w-72 p-6 bg-secondary/5 rounded-xl border border-secondary/10 flex flex-col items-center text-center justify-center">
+<span class="material-symbols-outlined text-4xl text-secondary mb-4">shield_person</span>
+<p class="font-ui-serif text-sm text-secondary leading-relaxed mb-4 italic">Protect your studio by assigning specific roles. Granular permissions ensure each artisan only sees what they need.</p>
+<a class="text-primary font-bold text-sm underline decoration-primary/30" href="#">User roles &amp; permissions →</a>
+</div>
+</div>
+</div>
+</section>
+<!-- (E) Vacation Mode Card -->
+<section class="mb-12" style="opacity: 1; transform: translateY(0px); transition: 0.6s cubic-bezier(0.16, 1, 0.3, 1);" id="vacation-section">
+<div class="bg-surface-container-lowest rounded-xl border border-secondary/10 p-8 shadow-[0_4px_24px_rgba(74,63,53,0.03)]">
+<div class="flex items-center justify-between mb-6">
+  <h3 class="font-headline-sm text-headline-sm text-primary flex items-center gap-2">
+    <span class="material-symbols-outlined">beach_access</span>
+    Vacation Mode
+  </h3>
+  <label class="relative inline-flex items-center cursor-pointer">
+    <input id="vacation-mode-toggle" class="sr-only peer" type="checkbox">
+    <div class="w-11 h-6 bg-secondary-container/40 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-[#FFF8E7] after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+  </label>
+</div>
+<div id="vacation-mode-panel" class="hidden flex-col gap-4">
+  <p class="text-sm text-secondary/70 font-ui-serif italic">When vacation mode is on, buyers cannot place new orders from your store. Your catalog remains visible but the Add to Cart and Checkout buttons are disabled.</p>
+  <div class="flex flex-col gap-1">
+    <label class="text-xs font-label-caps text-on-surface-variant opacity-70 uppercase tracking-widest">Vacation Message (shown to buyers)</label>
+    <textarea id="vacation-message-input" rows="2" placeholder="We're on a short creative break! Back in 2 weeks with new handcrafted pieces." class="w-full px-4 py-3 bg-surface-container border border-outline-variant/40 rounded-lg focus:ring-1 focus:ring-amber-400 focus:border-amber-400 font-ui-serif text-sm leading-relaxed"></textarea>
+  </div>
+</div>
+<div id="vacation-active-banner" class="hidden mt-4 bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-center gap-3">
+  <span class="material-symbols-outlined text-amber-600" style="font-variation-settings:'FILL' 1">info</span>
+  <p class="text-sm text-amber-800 font-medium">Your store is currently on vacation. Buyers cannot place new orders.</p>
+</div>
+<div class="flex justify-end mt-6">
+  <button id="save-vacation-btn" class="bg-primary text-on-primary px-8 py-2 rounded-full font-ui-serif text-sm font-bold shadow-sm hover:opacity-90 transition-all">Save Vacation Settings</button>
+</div>
+</div>
+</section>
+<!-- (F) Store Policies Accordion -->
+<section class="mb-24" style="opacity: 1; transform: translateY(0px); transition: 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
+<h3 class="font-headline-sm text-headline-sm text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined">description</span>
+                    Store Policies
+                </h3>
+<div class="space-y-4">
+<!-- Expanded Item -->
+<div class="border border-secondary/20 rounded-xl overflow-hidden bg-[#FFF8E7] shadow-sm">
+<button class="w-full flex items-center justify-between p-5 text-left bg-secondary/5">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-gold" style="font-variation-settings: 'FILL' 1; color: #14381F">local_florist</span>
+<span class="font-ui-serif font-bold text-primary">Returns &amp; Exchanges</span>
+</div>
+<span class="material-symbols-outlined text-secondary transition-transform rotate-180">expand_more</span>
+</button>
+<div class="p-6">
+<p class="text-body-sm text-secondary/80 mb-4 font-ui-serif italic">Define your return window and conditions for items and perishables.</p>
+<textarea id="policies-returns" class="w-full h-40 p-4 bg-surface-container border border-outline-variant/40 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary font-ui-serif text-sm leading-relaxed" placeholder="We accept returns on non-perishable prints within 14 days of delivery. Custom arrangements and dried specimens are final sale due to their delicate nature...">We accept returns on non-perishable prints within 14 days of delivery. Custom arrangements and dried specimens are final sale due to their delicate nature...</textarea>
+<div class="mt-4 flex justify-end">
+<button id="save-policies-btn" class="bg-primary text-on-primary px-8 py-2 rounded-full font-ui-serif text-sm font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform">Save Changes</button>
+</div>
+</div>
+</div>
+<!-- Collapsed Items -->
+<div class="border border-secondary/10 rounded-xl overflow-hidden bg-surface-container-lowest">
+<button class="w-full flex items-center justify-between p-5 text-left hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-gold" style="font-variation-settings: 'FILL' 0; color: #14381F">local_florist</span>
+<span class="font-ui-serif font-bold text-secondary">Cancellation Policy</span>
+</div>
+<span class="material-symbols-outlined text-secondary/40">expand_more</span>
+</button>
+</div>
+<div class="border border-secondary/10 rounded-xl overflow-hidden bg-surface-container-lowest">
+<button class="w-full flex items-center justify-between p-5 text-left hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-gold" style="font-variation-settings: 'FILL' 0; color: #14381F">local_florist</span>
+<span class="font-ui-serif font-bold text-secondary">Frequently Asked Questions</span>
+</div>
+<span class="material-symbols-outlined text-secondary/40">expand_more</span>
+</button>
+</div>
+<div class="border border-secondary/10 rounded-xl overflow-hidden bg-surface-container-lowest">
+<button class="w-full flex items-center justify-between p-5 text-left hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-gold" style="font-variation-settings: 'FILL' 0; color: #14381F">local_florist</span>
+<span class="font-ui-serif font-bold text-secondary">Intellectual Property Statement</span>
+</div>
+<span class="material-symbols-outlined text-secondary/40">expand_more</span>
+</button>
+</div>
+</div>
+</section>
+</seller-layout>
+<!-- Micro-interactions & Effects -->
+<script>
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.classList.add('scale-95');
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.classList.remove('scale-95');
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.classList.remove('scale-95');
+            });
+        });
+
+        // Simple watercolor fade-in effect on scroll
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section').forEach(section => {
+            section.style.opacity = '0';
+            section.style.transform = 'translateY(20px)';
+            section.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+            observer.observe(section);
+        });
+    </script><script>
+document.addEventListener('DOMContentLoaded', () => {
+  const token = sessionStorage.getItem('tohfa_access_token');
+  
+  // 1. Auth check: if no token is found, redirect to login
+  if (!token && (window.location.protocol.startsWith('http'))) {
+    /* login bypassed */(window.location.pathname);
+    return;
+  }
+  
+  // 2. Handle ZAI Mode State & UI Sync
+  let zaiEnabled = localStorage.getItem('zai_mode') === 'true';
+  updateZaiUI(zaiEnabled);
+  
+  if (token) {
+    fetch('/api/seller/dashboard', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.success && data.data && data.data.seller) {
+        const seller = data.data.seller;
+        const dbEnabled = !!seller.zai_mode_enabled;
+        localStorage.setItem('zai_mode', dbEnabled ? 'true' : 'false');
+        updateZaiUI(dbEnabled);
+        if (seller.avatar_url) {
+          const avatarEl = document.getElementById('sidebar-avatar');
+          if (avatarEl) avatarEl.src = seller.avatar_url;
+        }
+      }
+    })
+    .catch(err => console.error("Error syncing ZAI Mode:", err));
+  }
+  
+  // 3. Set up click listener on toggle button
+  const toggleBtn = document.getElementById('zai-toggle-btn');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+      const isEnabled = toggleBtn.classList.contains('bg-tertiary');
+      const nextEnabled = !isEnabled;
+      
+      updateZaiUI(nextEnabled);
+      localStorage.setItem('zai_mode', nextEnabled ? 'true' : 'false');
+      
+      if (token) {
+        fetch('/api/seller/zai-mode', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ enabled: nextEnabled })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (!data || !data.success) {
+            console.error("Failed to update ZAI Mode in DB");
+          }
+        })
+        .catch(err => console.error("Error updating ZAI Mode:", err));
+      }
+    });
+  }
+  
+  function updateZaiUI(enabled) {
+    const btn = document.getElementById('zai-toggle-btn');
+    if (btn) {
+      if (enabled) {
+        btn.classList.add('bg-tertiary', 'text-white');
+        btn.classList.remove('text-tertiary');
+        const icon = btn.querySelector('.material-symbols-outlined');
+        if (icon) icon.style.fontVariationSettings = "'FILL' 1";
+      } else {
+        btn.classList.remove('bg-tertiary', 'text-white');
+        btn.classList.add('text-tertiary');
+        const icon = btn.querySelector('.material-symbols-outlined');
+        if (icon) icon.style.fontVariationSettings = "'FILL' 0";
+      }
+    }
+    
+    // Find all zai tips / cards on the page and show/hide them
+    const selectors = [
+      '.zai-tip-card',
+      '[class*="zai-tip"]',
+      '[id*="zai-tip"]',
+      'aside .bg-tertiary-container\/10',
+      'section .bg-tertiary-fixed-dim\/40',
+      'div .bg-on-tertiary-fixed\/10'
+    ];
+    selectors.forEach(sel => {
+      try {
+        const els = document.querySelectorAll(sel);
+        els.forEach(el => {
+          if (el.id === 'zai-toggle-btn' || el.closest('#zai-toggle-btn')) return;
+          el.style.display = enabled ? '' : 'none';
+        });
+      } catch (e) {}
+    });
+  }
+  
+  // 4. Handle View Store button relative link click or navigation
+  const viewStoreBtn = document.getElementById('view-store-btn');
+  if (viewStoreBtn) {
+    viewStoreBtn.addEventListener('click', () => {
+      if (token) {
+        fetch('/api/seller/profile', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(res => res.json())
+        .then(data => {
+          const profileData = data.data || data;
+          if (profileData && (profileData.user_id || profileData.seller_id || profileData.id)) {
+            window.location.href = `/buyer/seller-profile.html?id=${profileData.user_id || profileData.seller_id || profileData.id}`;
+          } else {
+            window.location.href = '/';
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          window.location.href = '/';
+        });
+      } else {
+        window.location.href = '/';
+      }
+    });
+  }
+
+  // 5. Logout Action
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      const refresh = sessionStorage.getItem('tohfa_refresh_token') || sessionStorage.getItem('refresh_token');
+      if (token && refresh) {
+        fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ refresh_token: refresh })
+        }).catch(err => console.error('Logout failed:', err));
+      }
+      sessionStorage.clear();
+      window.location.href = '/auth/login.html';
+    });
+  }
+
+  // Toast notification helper
+  function showToast(message, type = 'success') {
+    let toast = document.getElementById('toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'toast';
+      document.body.appendChild(toast);
+    }
+    toast.className = `fixed top-20 right-6 z-[100] flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg text-sm font-medium transition-all duration-300`;
+    if (type === 'success') {
+      toast.style.backgroundColor = '#14381F'; // Forest Green
+      toast.style.color = '#FFFFFF';
+      toast.style.border = '1px solid #14381F';
+    } else {
+      toast.style.backgroundColor = '#BA1A1A'; // Terracotta Error Red
+      toast.style.color = '#FFFFFF';
+      toast.style.border = '1px solid #14381F';
+    }
+    toast.innerHTML = `
+      <span class="material-symbols-outlined text-lg">${type === 'success' ? 'check_circle' : 'error'}</span>
+      <span>${message}</span>
+    `;
+    toast.style.display = 'flex';
+    setTimeout(() => {
+      toast.style.display = 'none';
+    }, 3500);
+  }
+
+  // Load and prefill configuration parameters
+  async function loadConfig() {
+    try {
+      const res = await fetch('/api/seller/store-config', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Failed to load store configuration");
+      const resp = await res.json();
+      const config = resp.data || resp;
+
+      // Prefill Accept Orders toggle
+      const acceptToggle = document.getElementById('accept-orders-toggle');
+      if (acceptToggle && config.store_identity) {
+        acceptToggle.checked = !!config.store_identity.is_accepting_orders;
+      }
+
+      // Prefill Flat Shipping Fee
+      const feeInput = document.getElementById('flat-shipping-fee');
+      if (feeInput && config.shipping_defaults) {
+        // Let's compute default flat fee based on dispatch SLA days or keep as 150
+        feeInput.value = config.shipping_defaults.default_dispatch_sla_days * 75 || 150;
+      }
+
+      // Prefill Returns policy textarea
+      const returnsText = document.getElementById('policies-returns');
+      if (returnsText) {
+        returnsText.value = config.vacation_note || "We accept returns on non-perishable prints within 14 days of delivery. Custom arrangements and dried specimens are final sale due to their delicate nature...";
+      }
+
+    } catch (err) {
+      console.error("Error loading configuration:", err);
+    }
+  }
+
+  if (token) {
+    loadConfig();
+  }
+
+  // Save Delivery Defaults
+  const saveDeliveryBtn = document.getElementById('save-delivery-btn');
+  if (saveDeliveryBtn) {
+    saveDeliveryBtn.addEventListener('click', async () => {
+      const isAccepting = document.getElementById('accept-orders-toggle').checked;
+      try {
+        const res = await fetch('/api/seller/store-config', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            is_accepting_orders: isAccepting,
+            accept_orders: isAccepting ? 1 : 0
+          })
+        });
+        const resp = await res.json();
+        if (!res.ok) throw new Error(resp.message || "Failed to update delivery defaults");
+        showToast("Delivery configuration saved successfully!", "success");
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    });
+  }
+
+  // Save Store Policies
+  const savePoliciesBtn = document.getElementById('save-policies-btn');
+  if (savePoliciesBtn) {
+    savePoliciesBtn.addEventListener('click', async () => {
+      const policyVal = document.getElementById('policies-returns').value.trim();
+      try {
+        const res = await fetch('/api/seller/store-config', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            vacation_note: policyVal
+          })
+        });
+        const resp = await res.json();
+        if (!res.ok) throw new Error(resp.message || "Failed to save store policies");
+        showToast("Store policies saved successfully!", "success");
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    });
+  }
+
+  // =========================================================
+  // VACATION MODE TOGGLE
+  // =========================================================
+  const vacationToggle = document.getElementById('vacation-mode-toggle');
+  const vacationPanel = document.getElementById('vacation-mode-panel');
+  const vacationBanner = document.getElementById('vacation-active-banner');
+  const saveVacationBtn = document.getElementById('save-vacation-btn');
+
+  function syncVacationUI(isActive) {
+    if (!vacationToggle) return;
+    vacationToggle.checked = !!isActive;
+    if (isActive) {
+      vacationPanel.classList.remove('hidden');
+      vacationPanel.classList.add('flex');
+      vacationBanner.classList.remove('hidden');
+    } else {
+      vacationPanel.classList.add('hidden');
+      vacationPanel.classList.remove('flex');
+      vacationBanner.classList.add('hidden');
+    }
+  }
+
+  // Load vacation state from API (already loaded by loadConfig above — but patch here if needed)
+  async function loadVacationState() {
+    try {
+      const r = await fetch('/api/seller/store-config', { headers: { 'Authorization': `Bearer ${token}` } });
+      const d = await r.json();
+      const cfg = d.data || d;
+      syncVacationUI(cfg.vacation_mode_active);
+      const msgInput = document.getElementById('vacation-message-input');
+      if (msgInput && cfg.vacation_message) msgInput.value = cfg.vacation_message;
+    } catch (e) { console.error('Vacation state load error:', e); }
+  }
+
+  if (token && vacationToggle) {
+    loadVacationState();
+    vacationToggle.addEventListener('change', () => {
+      syncVacationUI(vacationToggle.checked);
+    });
+  }
+
+  if (saveVacationBtn) {
+    saveVacationBtn.addEventListener('click', async () => {
+      const isActive = vacationToggle?.checked || false;
+      const msg = document.getElementById('vacation-message-input')?.value?.trim() || null;
+      try {
+        const r = await fetch('/api/seller/store-config', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ 
+            vacation_mode_active: isActive ? 1 : 0, 
+            vacation_mode: Boolean(isActive),
+            vacation_message: msg 
+          })
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.message || 'Failed to save vacation settings');
+        
+        // Also sync status endpoint
+        fetch('/api/seller/status', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ 
+            vacation_mode: Boolean(isActive),
+            vacation_message: msg
+          })
+        }).catch(() => {});
+
+        syncVacationUI(isActive);
+        showToast(isActive ? '🏖️ Vacation mode activated. Your store is paused.' : '🎉 Store is back open for orders!', 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    });
+  }
+});
+</script>
+
+</body></html>

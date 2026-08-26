@@ -1,0 +1,11 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <rect width="400" height="400" fill="#FFF8E7"/>
+  <rect x="20" y="20" width="360" height="360" rx="16" fill="#F4EDE3" stroke="#DCE6D8" stroke-width="2"/>
+  <g transform="translate(150, 140)" fill="none" stroke="#273328" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.6">
+    <rect x="10" y="30" width="80" height="60" rx="6" fill="#FFF8E7"/>
+    <path d="M10 50 L90 50"/>
+    <path d="M50 30 L50 90"/>
+    <path d="M35 30 C25 15, 30 5, 50 25 C70 5, 75 15, 65 30 Z" fill="#DCE6D8"/>
+  </g>
+  <text x="200" y="260" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="14" font-weight="600" fill="#717972" letter-spacing="1">TOHFA HANDCRAFTED</text>
+</svg>

@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <script type="module" src="/src/components/ReportWidget.js" defer></script>
+<script type="module" src="/src/components/ProtectedRoute.js"></script>
+    <meta charset="utf-8"/>
+    <title>TOFA Seller Studio — Reviews</title>
+    <!-- Google Fonts -->
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+    <script type="module" src="/components/seller-components.js"></script>
+    <script src="/seller/js/seller-utils.js"></script>
+        
+    <style>
+        body { font-family: 'DM Sans', sans-serif; background-color: #FFF8E7; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .star-filled { font-variation-settings: 'FILL' 1; color: #14381F; }
+
+        .filter-tab-active { border-bottom: 2px solid #14381F; color: #14381F; font-weight: 700; }
+        .custom-shadow { box-shadow: 0 4px 20px -2px rgba(58, 51, 40, 0.08); }
+        .skeleton { background: linear-gradient(90deg, #FFF8E7 25%, #f3e6d6 50%, #FFF8E7 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; }
+        @keyframes shimmer { 0%{background-position:-200px 0} 100%{background-position:200px 0} }
+    </style>
+</head>
+<body class="text-on-surface selection:bg-primary-fixed bg-[#FFF8E7]" id="body-content">
+
+<seller-layout active-tab="reviews">
+
+    <!-- Page Header Replacement -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-md mb-6 flex-shrink-0">
+      <div>
+        <h1 class="font-headline-lg text-primary text-2xl font-bold">Studio Reviews</h1>
+        <p class="text-on-surface-variant text-sm font-body-md mt-1">Review feedback from your buyers and respond to reviews</p>
+      </div>
+      <div class="flex items-center gap-md">
+        <button id="auto-request-btn" class="bg-[#FFF8E7] border border-sage text-primary font-bold px-4 py-2 rounded-lg hover:bg-parchment transition-all flex items-center gap-2 text-sm shadow-sm">
+          <span class="material-symbols-outlined text-sm">settings</span> Auto-Request Settings
+        </button>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+          <input id="reviews-search" class="bg-[#FFF8E7] border border-[#FFF8E7] rounded-full py-2 pl-10 pr-4 text-body-md focus:outline-none focus:border-primary w-64 text-sm" placeholder="Search reviews..." type="text"/>
+        </div>
+      </div>
+    </div>
+    <!-- Top Summary Row -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl">
+        <!-- Overall Rating -->
+        <div class="bg-[#FFF8E7] border border-sage rounded-xl p-lg custom-shadow flex flex-col items-center justify-center text-center relative overflow-hidden">
+
+            <p class="font-label-caps text-label-caps text-on-surface-variant mb-2">Overall Rating</p>
+            <h2 class="font-data-price text-[48px] text-primary mb-2" id="summary-avg">4.7</h2>
+            <div class="flex gap-1 mb-1" id="summary-stars">
+                <!-- Stars rendered dynamically -->
+            </div>
+            <p class="font-body-md text-on-surface-variant" id="summary-total-label">Based on 0 reviews</p>
+        </div>
+        <!-- Total Reviews & Graph -->
+        <div class="bg-[#FFF8E7] border border-sage rounded-xl p-lg custom-shadow relative overflow-hidden">
+
+            <p class="font-label-caps text-label-caps text-on-surface-variant mb-4">Rating Distribution</p>
+            <div class="space-y-2" id="distribution-wrap">
+                <!-- Distribution rows -->
+            </div>
+        </div>
+        <!-- Pending Replies -->
+        <div class="bg-[#FFF8E7] border border-sage rounded-xl p-lg custom-shadow flex flex-col justify-between relative overflow-hidden">
+
+            <div>
+                <p class="font-label-caps text-label-caps text-on-surface-variant mb-2">Needs Response</p>
+                <h2 class="font-data-price text-[40px] text-primary" id="summary-pending">0</h2>
+                <p class="font-body-md text-on-surface-variant italic">Waiting for your reply</p>
+            </div>
+            <div class="text-xs text-on-surface-variant mt-4 flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+                Response Rate: <span id="summary-response-rate">100%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: ZAI Mode Recommendation Tip -->
+    <section id="zai-insight-banner" class="hidden mb-lg bg-tertiary-container/10 border border-tertiary-container/30 rounded-xl p-md flex items-start gap-md">
+        <span class="material-symbols-outlined text-tertiary text-2xl flex-shrink-0" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+        <div>
+            <h4 class="font-bold text-tertiary text-sm">ZAI Studio Sprout Recommendation</h4>
+            <p id="zai-insight-text" class="text-sm text-on-surface-variant mt-1 leading-relaxed">Consider responding promptly to positive reviews to build customer relationships!</p>
+        </div>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-lg">
+        <!-- Review List (Full Width) -->
+        <div class="lg:col-span-12 space-y-6">
+            <!-- Filters -->
+            <div class="flex gap-6 border-b border-outline-variant overflow-x-auto" id="filter-tabs">
+                <button data-filter="all" class="filter-tab-active pb-2 whitespace-nowrap font-label-caps text-xs">All Reviews</button>
+                <button data-filter="unreplied" class="text-on-surface-variant hover:text-primary pb-2 whitespace-nowrap font-label-caps text-xs transition-colors">Needs Reply</button>
+                <button data-filter="critical" class="text-on-surface-variant hover:text-primary pb-2 whitespace-nowrap font-label-caps text-xs transition-colors">Critical (1-2★)</button>
+            </div>
+
+            <!-- Loader / Empty States -->
+            <div id="reviews-loader" class="py-xl flex flex-col items-center gap-md">
+                <div class="w-10 h-10 border-4 border-sage border-t-primary rounded-full animate-spin"></div>
+                <p class="text-sm text-on-surface-variant font-medium">Loading reviews feed...</p>
+            </div>
+
+            <div id="reviews-empty" class="hidden py-xl bg-[#FFF8E7] border border-sage rounded-xl flex flex-col items-center justify-center p-lg gap-md text-center">
+                <span class="material-symbols-outlined text-sage text-4xl">rate_review</span>
+                <p class="text-sm text-on-surface-variant">No reviews found matching the criteria.</p>
+            </div>
+
+            <!-- Reviews Container -->
+            <div id="reviews-list" class="space-y-6"></div>
+        </div>
+    </div>
+</seller-layout>
+
+<!-- Auto-Request Settings Modal -->
+<div id="auto-request-modal" class="fixed inset-0 bg-[#211b11]/40 backdrop-blur-sm z-[1000] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-[#FFF8E7] border border-sage rounded-2xl p-lg custom-shadow max-w-md w-full mx-4 relative overflow-hidden transform scale-95 transition-transform duration-300">
+
+        <div class="flex justify-between items-center mb-6 relative z-10">
+            <h3 class="font-headline-lg text-2xl text-primary">Auto-Request Settings</h3>
+            <button id="close-modal-btn" class="text-on-surface-variant hover:text-primary transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="space-y-6 relative z-10">
+            <div class="flex items-center justify-between">
+                <span class="font-body-md font-bold text-sm">Enable Auto-Requests</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input id="modal-enable-auto" checked="" class="sr-only peer" type="checkbox"/>
+                    <div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#FFF8E7] after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                </label>
+            </div>
+            <div>
+                <label class="block font-label-caps text-[11px] text-on-surface-variant mb-2">Send request after delivery</label>
+                <div class="flex items-center border border-outline-variant rounded-lg overflow-hidden max-w-[140px]">
+                    <button id="modal-days-minus" class="p-2 hover:bg-surface-container-low text-primary"><span class="material-symbols-outlined text-sm">remove</span></button>
+                    <input id="modal-days-input" class="w-full text-center border-none font-data-price focus:ring-0 text-sm bg-transparent" readonly="" type="text" value="3 Days"/>
+                    <button id="modal-days-plus" class="p-2 hover:bg-surface-container-low text-primary"><span class="material-symbols-outlined text-sm">add</span></button>
+                </div>
+            </div>
+            <div>
+                <label class="block font-label-caps text-[11px] text-on-surface-variant mb-2">Message Template Preview</label>
+                <div class="bg-parchment p-4 border border-outline-variant rounded-lg relative overflow-hidden">
+                    <p class="font-body-md text-xs italic text-on-surface-variant relative z-10 leading-relaxed">
+                        "Hi [Name], your studio find has arrived! If it brings you joy, would you share a quick review? Your feedback helps my small studio thrive."
+                    </p>
+                </div>
+            </div>
+            <ul class="space-y-2">
+                <li class="flex items-start gap-2 text-xs text-on-surface-variant">
+                    <span class="text-gold">✦</span>
+                    Automatically filtered for successful deliveries.
+                </li>
+                <li class="flex items-start gap-2 text-xs text-on-surface-variant">
+                    <span class="text-gold">✦</span>
+                    Includes direct link to photo upload.
+                </li>
+            </ul>
+            <button id="modal-save-btn" class="w-full bg-primary text-white font-body-md py-3 rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm font-bold shadow-sm">
+                <span class="material-symbols-outlined text-sm">save</span>
+                Save Settings
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast notifications -->
+<div id="toast" class="hidden">
+    <span class="material-symbols-outlined" id="toast-icon">check_circle</span>
+    <span id="toast-msg">Success</span>
+</div>
+
+<script>
+    const API_BASE_URL = window.location.origin;
+    let activeFilter = 'all';
+    let searchQuery = '';
+    let searchTimer = null;
+
+    function showToast(msg, type='success') {
+        const t = document.getElementById('toast');
+        document.getElementById('toast-icon').textContent = type === 'success' ? 'check_circle' : 'error';
+        document.getElementById('toast-msg').textContent  = msg;
+        t.className = `fixed top-24 right-6 z-[300] flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg text-sm font-medium transition-all transform duration-300 ${
+            type === 'success' ? 'bg-primary text-white border border-primary/20' : 'bg-error-container text-on-error-container border border-error/20'
+        }`;
+        t.classList.remove('hidden');
+        setTimeout(() => t.classList.add('hidden'), 3500);
+    }
+
+    function renderStars(r) {
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+            if (i <= Math.floor(r)) {
+                stars += `<span class="material-symbols-outlined star-filled text-sm">star</span>`;
+            } else if (i === Math.ceil(r) && r % 1 !== 0) {
+                stars += `<span class="material-symbols-outlined star-filled text-sm" style="font-variation-settings: 'FILL' 1;">star_half</span>`;
+            } else {
+                stars += `<span class="material-symbols-outlined text-outline-variant text-sm">star</span>`;
+            }
+        }
+        return stars;
+    }
+
+    async function loadReviews() {
+        const token = localStorage.getItem('token') || localStorage.getItem('accessToken') || sessionStorage.getItem('tohfa_access_token');
+
+        const loader = document.getElementById('reviews-loader');
+        const empty = document.getElementById('reviews-empty');
+        const list = document.getElementById('reviews-list');
+
+        if (loader) loader.classList.remove('hidden');
+        if (empty) empty.classList.add('hidden');
+        if (list) list.classList.add('hidden');
+
+        try {
+            let data = null;
+            if (token) {
+                const res = await fetch(`${API_BASE_URL}/api/seller/reviews?filter=${activeFilter}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const resp = await res.json();
+                    data = resp.data || resp;
+                }
+            }
+
+            const rawReviews = data?.reviews || [];
+            const summary = data?.summary || {
+                avg_rating: rawReviews.length ? (rawReviews.reduce((acc, r) => acc + Number(r.rating || 5), 0) / rawReviews.length) : 5.0,
+                total_reviews: rawReviews.length,
+                pending_replies: rawReviews.filter(r => !r.reply).length,
+                response_rate_pct: 100,
+                rating_distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
+            };
+
+            const totalReviews = Number(summary.total_reviews || rawReviews.length || 0);
+            const avgRating = summary.avg_rating ? Number(summary.avg_rating).toFixed(1) : '5.0';
+
+            // Render stats
+            if (document.getElementById('summary-avg')) document.getElementById('summary-avg').textContent = avgRating;
+            if (document.getElementById('summary-stars')) document.getElementById('summary-stars').innerHTML = renderStars(Number(avgRating));
+            if (document.getElementById('summary-total-label')) document.getElementById('summary-total-label').textContent = `Based on ${totalReviews} review${totalReviews !== 1 ? 's' : ''}`;
+            if (document.getElementById('summary-pending')) document.getElementById('summary-pending').textContent = summary.pending_replies || 0;
+            if (document.getElementById('summary-response-rate')) document.getElementById('summary-response-rate').textContent = `${summary.response_rate_pct ?? 100}%`;
+
+            // Rating distribution
+            const total = totalReviews > 0 ? totalReviews : 1;
+            const dist = summary.rating_distribution || {};
+            if (document.getElementById('distribution-wrap')) {
+                document.getElementById('distribution-wrap').innerHTML = [5, 4, 3, 2, 1].map(stars => {
+                    const count = dist[String(stars)] || 0;
+                    const pct = Math.round((count / total) * 100);
+                    return `
+                        <div class="flex items-center gap-3">
+                            <span class="font-data-price text-xs w-4">${stars}★</span>
+                            <div class="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                                <div class="h-full bg-primary" style="width: ${pct}%"></div>
+                            </div>
+                            <span class="font-data-price text-xs w-8 text-right">${count}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Filter lists based on search locally
+            let reviews = rawReviews;
+            if (searchQuery) {
+                reviews = reviews.filter(r => 
+                    (r.body && r.body.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                    (r.reviewer_handle && r.reviewer_handle.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                    (r.buyer_name && r.buyer_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                    (r.listing_title && r.listing_title.toLowerCase().includes(searchQuery.toLowerCase()))
+                );
+            }
+
+            if (loader) loader.classList.add('hidden');
+
+            if (reviews.length === 0) {
+                if (empty) empty.classList.remove('hidden');
+                return;
+            }
+
+            list.innerHTML = reviews.map(r => `
+                <div class="bg-[#FFF8E7] border border-sage rounded-xl p-md custom-shadow flex gap-md relative overflow-hidden fade-in">
+                    <div class="shrink-0">
+                        <div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-primary font-bold text-lg">
+                            ${r.reviewer_handle ? r.reviewer_handle.charAt(0).toUpperCase() : 'U'}
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="font-body-md font-bold text-on-surface">${r.reviewer_handle.split('@')[0]}</h4>
+                                <p class="text-xs text-on-surface-variant font-label-caps tracking-tighter">${r.listing_title || '—'}</p>
+                            </div>
+                            <span class="font-data-price text-xs text-outline">${new Date(r.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}</span>
+                        </div>
+                        <div class="flex gap-0.5 mb-3">
+                            ${renderStars(r.rating)}
+                        </div>
+                        <p class="font-body-md text-on-surface-variant leading-relaxed mb-4 italic">
+                            "${r.body}"
+                        </p>
+                        <div class="flex items-center gap-4 mb-4">
+                            <span class="font-label-caps text-[10px] bg-primary-container text-white px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[12px]">verified</span> Verified Purchase
+                            </span>
+                        </div>
+                        
+                        <!-- Reply block -->
+                        ${(r.reply || r.seller_reply || r.reply_text) ? `
+                            <div class="bg-surface-container-low p-4 rounded-lg border-l-2 border-primary mt-2">
+                                <p class="font-body-md font-bold italic text-primary text-sm mb-1">Response from Studio</p>
+                                <p class="font-body-md text-sm text-on-surface-variant">${r.reply?.reply_text || r.reply || r.seller_reply || r.reply_text}</p>
+                            </div>
+                        ` : `
+                            <div class="mt-2" id="reply-container-${r.review_id || r.id}">
+                                <button class="text-primary border border-primary px-4 py-1.5 rounded-md text-xs font-bold hover:bg-secondary-container/20 transition-colors flex items-center gap-2" onclick="showReplyForm(${r.review_id || r.id})">
+                                    <span class="material-symbols-outlined text-xs">reply</span> Reply to review
+                                </button>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `).join('');
+
+            list.classList.remove('hidden');
+
+            // ZAI Insight Banner Sync
+            const isZaiEnabled = localStorage.getItem('zai_mode') === 'true';
+            const banner = document.getElementById('zai-insight-banner');
+            const insightText = document.getElementById('zai-insight-text');
+            if (isZaiEnabled) {
+                insightText.textContent = data.summary.pending_replies > 0 
+                    ? `You have ${data.summary.pending_replies} pending reviews to respond to. Replying can boost buyer trust!` 
+                    : "Excellent work! All reviews have been addressed.";
+                banner.classList.remove('hidden');
+            } else {
+                banner.classList.add('hidden');
+            }
+
+        } catch (err) {
+            console.error('Error loading reviews:', err);
+            loader.classList.add('hidden');
+            empty.classList.remove('hidden');
+        }
+    }
+
+    window.showReplyForm = function(reviewId) {
+        const wrap = document.getElementById(`reply-container-${reviewId}`);
+        wrap.innerHTML = `
+            <div class="flex flex-col gap-2 mt-2 max-w-lg">
+                <textarea id="reply-text-${reviewId}" class="w-full bg-surface-bright border border-outline-variant rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary outline-none h-20 resize-none" placeholder="Write a response..."></textarea>
+                <div class="flex gap-2">
+                    <button class="bg-primary text-white font-bold px-4 py-1.5 rounded-md text-xs hover:opacity-90 transition-all" onclick="submitReply(${reviewId})">Send Response</button>
+                    <button class="border border-outline text-on-surface px-4 py-1.5 rounded-md text-xs hover:bg-surface-container transition-all" onclick="cancelReplyForm(${reviewId})">Cancel</button>
+                </div>
+            </div>
+        `;
+    };
+
+    window.cancelReplyForm = function(reviewId) {
+        const wrap = document.getElementById(`reply-container-${reviewId}`);
+        wrap.innerHTML = `
+            <button class="text-primary border border-primary px-4 py-1.5 rounded-md text-xs font-bold hover:bg-secondary-container/20 transition-colors flex items-center gap-2" onclick="showReplyForm(${reviewId})">
+                <span class="material-symbols-outlined text-xs">reply</span> Reply to review
+            </button>
+        `;
+    };
+
+    window.submitReply = async function(reviewId) {
+        const token = sessionStorage.getItem('tohfa_access_token') || localStorage.getItem('token') || localStorage.getItem('accessToken');
+        const txt = document.getElementById(`reply-text-${reviewId}`).value.trim();
+        if (!txt) { showToast('Reply text cannot be empty', 'error'); return; }
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/seller/reviews/${reviewId}/reply`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ reply: txt, reply_text: txt })
+            });
+            const d = await res.json();
+            if (!res.ok) throw new Error(d.message || 'Failed to submit response');
+            showToast('Reply submitted successfully!', 'success');
+            loadReviews();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    };
+
+    // ZAI Mode status updates
+    function updateZaiUI(enabled) {
+        const toggleBtn = document.getElementById('zai-toggle-btn');
+        if (toggleBtn) {
+            if (enabled) {
+                toggleBtn.style.fontVariationSettings = "'FILL' 1";
+                toggleBtn.classList.add('text-primary');
+            } else {
+                toggleBtn.style.fontVariationSettings = "'FILL' 0";
+                toggleBtn.classList.remove('text-primary');
+            }
+        }
+        loadReviews(); // Reload to toggle recommendation banner
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const token = sessionStorage.getItem('tohfa_access_token');
+        if (!token) { window.location.href = '/auth/login.html'; return; }
+
+        // Role verification
+        try {
+            const pr = await fetch(`${API_BASE_URL}/api/profile/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (!pr.ok) throw new Error();
+            const pd = await pr.json();
+            const u = pd.data || pd;
+            if (u.role !== 'seller') { window.location.href = '/buyer/profile.html'; return; }
+        } catch {
+            sessionStorage.clear();
+            window.location.href = '/auth/login.html';
+            return;
+        }
+
+        // Show page
+        document.getElementById('body-content').classList.remove('opacity-0');
+
+        // Init load
+        const zaiEnabled = localStorage.getItem('zai_mode') === 'true';
+        updateZaiUI(zaiEnabled);
+
+        // Filter tab selection
+        document.querySelectorAll('#filter-tabs button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#filter-tabs button').forEach(b => {
+                    b.className = 'text-on-surface-variant hover:text-primary pb-2 whitespace-nowrap font-label-caps text-xs transition-colors';
+                });
+                btn.className = 'filter-tab-active pb-2 whitespace-nowrap font-label-caps text-xs';
+                activeFilter = btn.dataset.filter;
+                loadReviews();
+            });
+        });
+
+        // Search reviews
+        document.getElementById('reviews-search').addEventListener('input', (e) => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                searchQuery = e.target.value.trim();
+                loadReviews();
+            }, 400);
+        });
+
+        // ZAI toggle
+        const toggleBtn = document.getElementById('zai-toggle-btn');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                const nextEnabled = !(localStorage.getItem('zai_mode') === 'true');
+                localStorage.setItem('zai_mode', nextEnabled ? 'true' : 'false');
+                
+                // Sync with backend
+                fetch(`${API_BASE_URL}/api/seller/zai-mode`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ enabled: nextEnabled })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.success) {
+                        updateZaiUI(nextEnabled);
+                    }
+                })
+                .catch(err => console.error("Error setting ZAI mode:", err));
+            });
+        }
+
+        // View Store
+        const viewStoreBtn = document.getElementById('view-store-btn');
+        if (viewStoreBtn) {
+            viewStoreBtn.addEventListener('click', () => {
+                fetch(`${API_BASE_URL}/api/seller/profile`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    const profileData = data.data || data;
+                    if (profileData && (profileData.user_id || profileData.seller_id || profileData.id)) {
+                        window.location.href = `/buyer/seller-profile.html?id=${profileData.user_id || profileData.seller_id || profileData.id}`;
+                    } else {
+                        window.location.href = '/';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching seller profile:', err);
+                    window.location.href = '/';
+                });
+            });
+        }
+
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            const refresh = sessionStorage.getItem('tohfa_refresh_token') || sessionStorage.getItem('refresh_token');
+            if (token && refresh) {
+                fetch('/api/auth/logout', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body:JSON.stringify({refresh_token:refresh}) }).catch(()=>{});
+            }
+            sessionStorage.clear();
+            window.location.href = '/auth/login.html';
+        });
+
+        // Auto-Request Settings Modal Handler
+        const autoRequestBtn = document.getElementById('auto-request-btn');
+        const autoRequestModal = document.getElementById('auto-request-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const modalSaveBtn = document.getElementById('modal-save-btn');
+        const modalDaysInput = document.getElementById('modal-days-input');
+        const modalDaysMinus = document.getElementById('modal-days-minus');
+        const modalDaysPlus = document.getElementById('modal-days-plus');
+
+        let daysCount = parseInt(localStorage.getItem('auto_request_days') || '3', 10);
+        const savedEnabled = localStorage.getItem('auto_request_enabled') !== 'false';
+        
+        document.getElementById('modal-enable-auto').checked = savedEnabled;
+
+        const updateDaysDisplay = () => {
+            modalDaysInput.value = `${daysCount} Day${daysCount > 1 ? 's' : ''}`;
+        };
+        updateDaysDisplay();
+
+        // Load Settings from Backend
+        async function loadReviewSettings() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/seller/review-settings`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const resp = await res.json();
+                    const settings = resp.data || {};
+                    daysCount = settings.delay_days_after_del || 3;
+                    const enabled = settings.enabled !== 0 && settings.enabled !== false;
+                    document.getElementById('modal-enable-auto').checked = enabled;
+                    updateDaysDisplay();
+                }
+            } catch (err) {
+                console.error("Error loading review settings:", err);
+            }
+        }
+        loadReviewSettings();
+
+        modalDaysMinus.addEventListener('click', () => {
+            if (daysCount > 1) {
+                daysCount--;
+                updateDaysDisplay();
+            }
+        });
+
+        modalDaysPlus.addEventListener('click', () => {
+            if (daysCount < 30) {
+                daysCount++;
+                updateDaysDisplay();
+            }
+        });
+
+        const openModal = () => {
+            autoRequestModal.classList.remove('hidden');
+            setTimeout(() => {
+                autoRequestModal.classList.remove('opacity-0');
+                autoRequestModal.querySelector('div').classList.remove('scale-95');
+            }, 10);
+        };
+
+        const closeModal = () => {
+            autoRequestModal.classList.add('opacity-0');
+            autoRequestModal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => {
+                autoRequestModal.classList.add('hidden');
+            }, 300);
+        };
+
+        autoRequestBtn.addEventListener('click', openModal);
+        closeModalBtn.addEventListener('click', closeModal);
+        autoRequestModal.addEventListener('click', (e) => {
+            if (e.target === autoRequestModal) {
+                closeModal();
+            }
+        });
+
+        modalSaveBtn.addEventListener('click', async () => {
+            const enabled = document.getElementById('modal-enable-auto').checked;
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/seller/review-settings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        enabled: enabled ? 1 : 0,
+                        delay_days_after_del: daysCount
+                    })
+                });
+                if (res.ok) {
+                    localStorage.setItem('auto_request_enabled', enabled ? 'true' : 'false');
+                    localStorage.setItem('auto_request_days', String(daysCount));
+                    showToast('Auto-request settings saved successfully!', 'success');
+                    closeModal();
+                } else {
+                    showToast('Failed to save settings', 'error');
+                }
+            } catch (err) {
+                console.error("Error saving review settings:", err);
+                showToast('Failed to save settings', 'error');
+            }
+        });
+    });
+</script>
+</body>
+</html>

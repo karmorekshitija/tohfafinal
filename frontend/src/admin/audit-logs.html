@@ -1,0 +1,485 @@
+﻿<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+<script type="module" src="/src/components/AdminSidebar.js"></script>
+<script type="module" src="/src/components/ReportWidget.js" defer></script>
+<script type="module" src="/src/components/ProtectedRoute.js"></script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Audit Logs | Tohfa Artisan Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+  <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ink-line-overlay {
+            background-image: radial-gradient(#717972 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+            opacity: 0.03;
+        }
+        .diff-code {
+            background-color: #FFF8E7;
+            border-left: 3px solid rgba(20,56,31,0.2);
+        }
+    </style>
+</head>
+<body class="bg-[#FFF8E7] font-body-md text-text-default selection:bg-sage-soft">
+<!-- New Sidebar Navigation per IMAGE_13 -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 py-10 px-6 z-50 w-64 border-r border-outline-variant/30 bg-[#FFF8E7]">
+<div class="mb-14">
+<h1 class="font-headline-lg text-headline-lg italic text-[#14381F] leading-tight">Tohfa</h1>
+<p class="text-accent-caps font-accent-caps text-text-faint tracking-widest text-[10px] mt-1 opacity-70">Admin Console</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="#">
+<span class="material-symbols-outlined text-[20px]">grid_view</span>
+<span class="font-label-btn text-label-btn">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/sellers.html">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span class="font-label-btn text-label-btn">Sellers</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/orders.html">
+<span class="material-symbols-outlined text-[20px]">shopping_cart</span>
+<span class="font-label-btn text-label-btn">Orders</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/categories.html">
+<span class="material-symbols-outlined text-[20px]">category</span>
+<span class="font-label-btn text-label-btn">Categories</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/products.html">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="font-label-btn text-label-btn">Products</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-[#14381F] text-white rounded-full transition-all" href="/admin/audit-logs.html">
+<span class="material-symbols-outlined text-[20px]">history_edu</span>
+<span class="font-label-btn text-label-btn">Audit Logs</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="font-label-btn text-label-btn">Settings</span>
+</a>
+</nav>
+<!-- Profile Footer -->
+<div class="mt-auto pt-6 border-t border-outline-variant/20 flex items-center gap-3">
+<div class="h-10 w-10 rounded-full bg-sage-soft flex items-center justify-center text-primary font-bold text-xs shrink-0">TA</div>
+<div class="overflow-hidden">
+<p class="text-[13px] font-bold text-text-default truncate leading-tight">Tohfa Admin</p>
+<p class="text-[11px] text-text-faint font-data-meta truncate">Master Access</p>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen relative overflow-hidden flex flex-col">
+<!-- Aesthetic Background Texture -->
+<div class="absolute inset-0 ink-line-overlay pointer-events-none"></div>
+<!-- Page Canvas -->
+<div class="px-10 py-12 max-w-7xl mx-auto relative z-10 w-full flex-1">
+<!-- Page Identity -->
+<div class="mb-10">
+<h2 class="font-headline-lg text-headline-lg text-primary">Audit Logs</h2>
+<p class="font-serif-ui-md italic text-text-muted mt-1 opacity-80">Complete record of all admin actions on this platform</p>
+<div class="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-surface-container-low border border-sage-soft rounded-md">
+<span class="material-symbols-outlined text-[16px] text-text-faint">info</span>
+<span class="text-data-meta font-data-meta text-text-muted">This is a read-only view. No actions can be taken from this page.</span>
+</div>
+</div>
+<!-- Filter Bar -->
+<div class="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4 p-5 bg-[#FFF8E7] border border-sage-soft rounded-xl shadow-sm">
+<div>
+<label class="block text-accent-caps font-accent-caps text-text-faint mb-2 uppercase">Event Type</label>
+<select id="event-type-filter" class="w-full bg-transparent border-sage-soft rounded-lg font-body-sm text-text-default focus:ring-primary focus:border-primary">
+<option value="">All Events</option>
+<option value="admin.seller.banned">admin.seller.banned</option>
+<option value="admin.seller.unbanned">admin.seller.unbanned</option>
+<option value="admin.order.status_overridden">admin.order.status_overridden</option>
+<option value="admin.product.sponsored_toggled">admin.product.sponsored_toggled</option>
+<option value="admin.category.created">admin.category.created</option>
+<option value="admin.category.updated">admin.category.updated</option>
+<option value="admin.category.deleted">admin.category.deleted</option>
+<option value="admin.session.login">admin.session.login</option>
+</select>
+</div>
+<div>
+<label class="block text-accent-caps font-accent-caps text-text-faint mb-2 uppercase">Actor</label>
+<div class="relative">
+<input id="actor-filter" class="w-full bg-transparent border-sage-soft rounded-lg font-body-sm text-text-default focus:ring-primary focus:border-primary" placeholder="Filter by admin name/ID" type="text"/>
+</div>
+</div>
+<div class="md:col-span-2 flex items-end gap-4">
+<div class="flex-1">
+<label class="block text-accent-caps font-accent-caps text-text-faint mb-2 uppercase">Date Range</label>
+<div class="flex items-center gap-2">
+<input id="from-date-filter" class="w-full bg-transparent border-sage-soft rounded-lg font-body-sm text-text-default text-xs p-2" type="date"/>
+<span class="text-text-faint font-data-meta text-xs">to</span>
+<input id="to-date-filter" class="w-full bg-transparent border-sage-soft rounded-lg font-body-sm text-text-default text-xs p-2" type="date"/>
+</div>
+</div>
+<button id="reset-filters-btn" class="pb-2.5 text-primary hover:underline font-label-btn text-label-btn whitespace-nowrap">
+                        Reset Filters
+                    </button>
+</div>
+</div>
+<!-- Audit Log Table -->
+<div class="bg-[#FFF8E7] border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+<table class="w-full border-collapse">
+<thead>
+<tr class="bg-surface-ivory border-b border-outline-variant text-left">
+<th class="px-6 py-4 font-accent-caps text-accent-caps text-text-faint uppercase tracking-wider">Timestamp</th>
+<th class="px-6 py-4 font-accent-caps text-accent-caps text-text-faint uppercase tracking-wider">Event</th>
+<th class="px-6 py-4 font-accent-caps text-accent-caps text-text-faint uppercase tracking-wider">Actor</th>
+<th class="px-6 py-4 font-accent-caps text-accent-caps text-text-faint uppercase tracking-wider">Target</th>
+<th class="px-6 py-4 font-accent-caps text-accent-caps text-text-faint uppercase tracking-wider">Change</th>
+</tr>
+</thead>
+<tbody id="audit-logs-list" class="divide-y divide-outline-variant/50">
+<!-- Dynamic logs will be loaded here -->
+</tbody>
+</table>
+</div>
+<!-- Pagination & Load More -->
+<div class="mt-8 flex flex-col md:flex-row items-center justify-between gap-6">
+<p id="pagination-info" class="text-data-meta font-data-meta text-text-muted">
+                    Showing <span class="text-primary font-bold">0</span> of <span class="text-primary font-bold">0</span> log entries
+                </p>
+<div class="flex items-center gap-6">
+<div class="flex gap-1">
+<button id="prev-page" class="h-8 w-8 flex items-center justify-center rounded-md border border-sage-soft bg-[#FFF8E7] text-primary hover:bg-sage-soft transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<div id="page-buttons" class="flex gap-1">
+<!-- Page numbers injected dynamically -->
+</div>
+<button id="next-page" class="h-8 w-8 flex items-center justify-center rounded-md border border-sage-soft bg-[#FFF8E7] text-primary hover:bg-sage-soft transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+<button id="load-more-btn" class="px-6 py-2 border border-primary text-primary font-label-btn text-label-btn rounded-full hover:bg-primary hover:text-white transition-all duration-300">
+                        Load 20 more
+                    </button>
+</div>
+</div>
+</div>
+<!-- Atmospheric Art Watermark -->
+<div class="fixed bottom-[-50px] right-[-50px] opacity-[0.04] pointer-events-none select-none z-0">
+<img class="w-[400px]" data-alt="A large, soft-focus charcoal and watercolor illustration of a weaver's loom." src="/img/artisan-story.png" loading="lazy" />
+</div>
+</main>
+<script type="module">
+import adminApiClient from '/src/utils/adminApiClient.js';
+
+if (!sessionStorage.getItem('tohfa_admin_token')) {
+  // admin login check bypassed
+}
+
+let logs = [];
+let currentPage = 1;
+let currentLimit = 20;
+let totalPages = 1;
+let filterEventType = '';
+let filterActor = '';
+let filterFromDate = '';
+let filterToDate = '';
+
+const listEl = document.getElementById('audit-logs-list');
+const eventTypeFilter = document.getElementById('event-type-filter');
+const actorFilter = document.getElementById('actor-filter');
+const fromDateFilter = document.getElementById('from-date-filter');
+const toDateFilter = document.getElementById('to-date-filter');
+const resetFiltersBtn = document.getElementById('reset-filters-btn');
+const paginationInfo = document.getElementById('pagination-info');
+const prevPageBtn = document.getElementById('prev-page');
+const nextPageBtn = document.getElementById('next-page');
+const pageButtonsContainer = document.getElementById('page-buttons');
+const loadMoreBtn = document.getElementById('load-more-btn');
+
+async function fetchLogs(append = false) {
+  try {
+    const response = await adminApiClient.get('/admin/audit-logs', {
+      params: {
+        event_type: filterEventType,
+        actor: filterActor,
+        from_date: filterFromDate,
+        to_date: filterToDate,
+        page: currentPage,
+        per_page: currentLimit
+      }
+    });
+
+    if (response.data?.success) {
+      const data = response.data.data;
+      totalPages = data.total_pages;
+      
+      if (append) {
+        logs = [...logs, ...data.logs];
+      } else {
+        logs = data.logs;
+      }
+      
+      renderLogs();
+      renderPagination(data.total, data.page, data.per_page);
+    }
+  } catch (error) {
+    console.error('Failed to fetch audit logs:', error);
+  }
+}
+
+function renderLogs() {
+  listEl.innerHTML = '';
+  if (logs.length === 0) {
+    listEl.innerHTML = `
+      <tr>
+        <td colspan="5" class="px-6 py-10 text-center text-text-muted text-sm font-serif-ui-sm">
+          No audit logs found matching the filters.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  logs.forEach((log) => {
+    // Main row
+    const tr = document.createElement('tr');
+    tr.className = "bg-[#FFF8E7] hover:bg-surface-bright transition-colors border-l-2 border-l-highlight-gold/40";
+    
+    // Choose badge background/text color based on event type
+    let badgeClass = "bg-bg-cream-deep text-text-muted";
+    if (log.event_type.includes('.banned')) badgeClass = "bg-gold-soft text-highlight-gold";
+    else if (log.event_type.includes('.unbanned') || log.event_type.includes('.created')) badgeClass = "bg-sage-soft text-primary";
+    else if (log.event_type.includes('.updated') || log.event_type.includes('.status_') || log.event_type.includes('.sponsored_')) badgeClass = "bg-violet-soft text-accent-violet";
+    
+    const badgeHtml = `<span class="px-3 py-1 ${badgeClass} text-[10px] font-bold rounded-full uppercase tracking-tight">${log.event_label}</span>`;
+    
+    const actionButtonHtml = log.has_diff
+      ? `<button class="view-diff-btn text-primary font-label-btn text-[12px] hover:underline flex items-center gap-1" data-id="${log.id}">
+           View diff <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+         </button>`
+      : `<span class="text-text-faint text-[12px] font-data-meta italic">No diff</span>`;
+
+    tr.innerHTML = `
+      <td class="px-6 py-3 font-data-meta text-[11px] text-text-muted whitespace-nowrap">${log.timestamp_display || log.timestamp}</td>
+      <td class="px-6 py-3">${badgeHtml}</td>
+      <td class="px-6 py-3">
+        <div class="flex items-center gap-1.5">
+          <span class="font-body-sm text-[13px] text-text-default">${log.actor_name}</span>
+          <span class="font-accent-caps text-[9px] px-1.5 py-0.5 border border-primary/20 text-primary rounded-sm bg-primary/5 uppercase">${log.actor_role}</span>
+        </div>
+      </td>
+      <td class="px-6 py-3 font-body-sm text-[13px] text-text-faint">${log.target_label || ''}</td>
+      <td class="px-6 py-3">${actionButtonHtml}</td>
+    `;
+    listEl.appendChild(tr);
+
+    // Diff row (hidden by default)
+    if (log.has_diff) {
+      const diffTr = document.createElement('tr');
+      diffTr.id = `diff-row-${log.id}`;
+      diffTr.className = "bg-surface-ivory hidden";
+      diffTr.innerHTML = `
+        <td class="px-8 py-4" colspan="5">
+          <div class="diff-content-container diff-code p-4 rounded-lg font-data-meta text-[11px] leading-relaxed shadow-inner">
+            <span class="text-text-muted">Loading diff details...</span>
+          </div>
+          <p class="mt-2 text-[10px] text-text-faint italic font-serif-ui-sm">The before_json/after_json only loads when the 'View diff' is clicked — lazy loaded to keep table fast.</p>
+        </td>
+      `;
+      listEl.appendChild(diffTr);
+    }
+  });
+
+  // Attach diff toggle event listeners
+  listEl.querySelectorAll('.view-diff-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const logId = parseInt(e.currentTarget.getAttribute('data-id'));
+      const diffTr = document.getElementById(`diff-row-${logId}`);
+      if (!diffTr) return;
+
+      if (diffTr.classList.contains('hidden')) {
+        diffTr.classList.remove('hidden');
+        e.currentTarget.innerHTML = `Hide diff <span class="material-symbols-outlined text-[14px]">arrow_downward</span>`;
+        
+        const container = diffTr.querySelector('.diff-content-container');
+        const log = logs.find(l => l.id === logId);
+        
+        if (log && log.before_json === null && log.after_json === null) {
+          try {
+            const response = await adminApiClient.get(`/admin/audit-logs/${logId}/diff`);
+            if (response.data?.success) {
+              log.before_json = response.data.data.before_json;
+              log.after_json = response.data.data.after_json;
+            }
+          } catch (error) {
+            container.innerHTML = `<span class="text-error">Failed to load diff details.</span>`;
+            return;
+          }
+        }
+        
+        if (log) {
+          container.innerHTML = generateDiffHtml(log.before_json, log.after_json);
+        }
+      } else {
+        diffTr.classList.add('hidden');
+        e.currentTarget.innerHTML = `View diff <span class="material-symbols-outlined text-[14px]">arrow_forward</span>`;
+      }
+    });
+  });
+}
+
+function generateDiffHtml(beforeJson, afterJson) {
+  try {
+    const before = beforeJson ? JSON.parse(beforeJson) : null;
+    const after = afterJson ? JSON.parse(afterJson) : null;
+    
+    if (!before && !after) return '<span class="text-text-faint">No details recorded</span>';
+    
+    let lines = [];
+    const allKeys = new Set([...Object.keys(before || {}), ...Object.keys(after || {})]);
+    
+    allKeys.forEach(key => {
+      const bVal = before ? before[key] : undefined;
+      const aVal = after ? after[key] : undefined;
+      
+      if (bVal !== undefined && aVal !== undefined) {
+        if (JSON.stringify(bVal) !== JSON.stringify(aVal)) {
+          lines.push(`  <span class="text-[#14381F]">"${key}"</span>: <span class="text-danger-terracotta">${JSON.stringify(bVal)}</span> <span class="text-text-faint">→</span> <span class="text-primary">${JSON.stringify(aVal)}</span>`);
+        }
+      } else if (aVal !== undefined) {
+        lines.push(`  <span class="text-[#14381F]">"${key}"</span>: <span class="text-primary">${JSON.stringify(aVal)} (added)</span>`);
+      } else if (bVal !== undefined) {
+        lines.push(`  <span class="text-[#14381F]">"${key}"</span>: <span class="text-danger-terracotta">${JSON.stringify(bVal)} (removed)</span>`);
+      }
+    });
+    
+    if (lines.length === 0) {
+      return '<span class="text-text-faint">No changes detected</span>';
+    }
+    
+    const lineNumbers = lines.map((_, i) => i + 1).join('<br/>');
+    
+    return `
+      <div class="flex gap-4">
+        <div class="text-text-faint select-none opacity-50 text-right min-w-[15px]">${lineNumbers}</div>
+        <pre class="overflow-x-auto whitespace-pre-wrap"><code class="text-text-default">{\n${lines.join(',\n')}\n}</code></pre>
+      </div>
+    `;
+  } catch(e) {
+    return `<pre class="text-danger-terracotta">${e.message}</pre>`;
+  }
+}
+
+function renderPagination(total, page, per_page) {
+  const start = (page - 1) * per_page + 1;
+  const end = Math.min(page * per_page, total);
+  paginationInfo.innerHTML = total > 0 
+    ? `Showing <span class="text-primary font-bold">${start}-${end}</span> of <span class="text-primary font-bold">${total}</span> log entries`
+    : `Showing <span class="text-primary font-bold">0</span> of <span class="text-primary font-bold">0</span> log entries`;
+
+  prevPageBtn.disabled = page <= 1;
+  prevPageBtn.style.opacity = page <= 1 ? '0.4' : '1';
+  prevPageBtn.style.cursor = page <= 1 ? 'not-allowed' : 'pointer';
+
+  nextPageBtn.disabled = page >= totalPages;
+  nextPageBtn.style.opacity = page >= totalPages ? '0.4' : '1';
+  nextPageBtn.style.cursor = page >= totalPages ? 'not-allowed' : 'pointer';
+
+  // Render Page buttons
+  pageButtonsContainer.innerHTML = '';
+  const maxButtons = 5;
+  let startPage = Math.max(1, page - 2);
+  let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+  if (endPage - startPage < maxButtons - 1) {
+    startPage = Math.max(1, endPage - maxButtons + 1);
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    const btn = document.createElement('button');
+    btn.className = i === page
+      ? "h-8 w-8 flex items-center justify-center rounded-md border border-primary bg-primary text-white font-label-btn text-xs"
+      : "h-8 w-8 flex items-center justify-center rounded-md border border-sage-soft bg-[#FFF8E7] text-text-muted hover:bg-sage-soft transition-colors font-label-btn text-xs";
+    btn.textContent = i;
+    btn.addEventListener('click', () => {
+      currentPage = i;
+      fetchLogs();
+    });
+    pageButtonsContainer.appendChild(btn);
+  }
+
+  // Load more button visibility
+  if (page >= totalPages) {
+    loadMoreBtn.style.display = 'none';
+  } else {
+    loadMoreBtn.style.display = 'block';
+  }
+}
+
+// Event Listeners for Filters
+eventTypeFilter.addEventListener('change', (e) => {
+  filterEventType = e.target.value;
+  currentPage = 1;
+  fetchLogs();
+});
+
+actorFilter.addEventListener('input', (e) => {
+  filterActor = e.target.value.trim();
+  currentPage = 1;
+  fetchLogs();
+});
+
+fromDateFilter.addEventListener('change', (e) => {
+  filterFromDate = e.target.value;
+  currentPage = 1;
+  fetchLogs();
+});
+
+toDateFilter.addEventListener('change', (e) => {
+  filterToDate = e.target.value;
+  currentPage = 1;
+  fetchLogs();
+});
+
+resetFiltersBtn.addEventListener('click', () => {
+  eventTypeFilter.value = '';
+  actorFilter.value = '';
+  fromDateFilter.value = '';
+  toDateFilter.value = '';
+  
+  filterEventType = '';
+  filterActor = '';
+  filterFromDate = '';
+  filterToDate = '';
+  
+  currentPage = 1;
+  fetchLogs();
+});
+
+prevPageBtn.addEventListener('click', () => {
+  if (currentPage > 1) {
+    currentPage--;
+    fetchLogs();
+  }
+});
+
+nextPageBtn.addEventListener('click', () => {
+  if (currentPage < totalPages) {
+    currentPage++;
+    fetchLogs();
+  }
+});
+
+loadMoreBtn.addEventListener('click', () => {
+  if (currentPage < totalPages) {
+    currentPage++;
+    fetchLogs(true);
+  }
+});
+
+// Initial Load
+fetchLogs();
+</script>
+</body></html>

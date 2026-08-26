@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <script type="module" src="/src/components/ReportWidget.js" defer></script>
+  <script type="module" src="/src/components/ProtectedRoute.js"></script>
+  <meta charset="utf-8"/>
+  <title>Craft New Listing | Seller Studio | Tohfa</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/src/tailwind.css">
+  <link rel="stylesheet" href="/src/responsive.css">
+  
+  <script type="module" src="/components/seller-components.js"></script>
+  <script src="/seller/js/seller-utils.js"></script>
+
+  <style>
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: #FFF8E7;
+      color: #1C1C1A;
+    }
+    h1, h2, h3, h4, .font-heading {
+      font-family: 'Playfair Display', serif;
+    }
+    .font-mono {
+      font-family: 'Space Mono', monospace;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .form-card {
+      background: #FFFFFF;
+      border: 1px solid rgba(40, 92, 58, 0.15);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 2px 14px rgba(20, 56, 31, 0.04);
+    }
+    .field-input {
+      width: 100%;
+      background-color: #FFF8E7;
+      border: 1px solid rgba(40, 92, 58, 0.2);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 14px;
+      color: #1C1C1A;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .field-input:focus {
+      border-color: #14381F;
+      box-shadow: 0 0 0 3px rgba(20, 56, 31, 0.12);
+    }
+    .dropzone-active {
+      border-color: #14381F !important;
+      background-color: #FAF6EE !important;
+    }
+  </style>
+</head>
+
+<body class="bg-[#FFF8E7] text-on-surface font-body-md min-h-screen">
+  <seller-layout active-tab="catalog">
+    <div class="max-w-5xl mx-auto space-y-8 pb-20">
+      
+      <!-- Top Action Bar -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#285C3A]/15">
+        <div class="flex items-center gap-3">
+          <a href="/seller/catalog.html" class="p-2 rounded-full border border-[#285C3A]/20 bg-white text-[#14381F] hover:bg-[#FAF6EE] transition-colors" title="Back to Catalog">
+            <span class="material-symbols-outlined text-lg">arrow_back</span>
+          </a>
+          <div>
+            <h1 class="text-3xl font-bold text-[#14381F]">Craft New Listing</h1>
+            <p class="text-xs text-[#587A5B] font-mono">Consolidated Single-Step Studio Flow</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <span id="draft-status-indicator" class="text-xs text-[#587A5B] font-mono hidden">Draft Saved ✓</span>
+          <button type="button" id="save-draft-btn" class="px-5 py-2.5 rounded-full border border-[#285C3A]/20 bg-white text-[#14381F] text-xs font-semibold hover:bg-[#FAF6EE] transition-all cursor-pointer">
+            Save Draft
+          </button>
+          <button type="button" id="open-preview-btn" class="px-5 py-2.5 rounded-full border border-[#14381F] text-[#14381F] text-xs font-semibold hover:bg-[#14381F] hover:text-white transition-all cursor-pointer flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-base">visibility</span>
+            <span>Preview</span>
+          </button>
+          <button type="button" id="publish-listing-btn" class="px-7 py-2.5 rounded-full bg-[#14381F] text-[#FFF8E7] text-xs font-bold hover:bg-[#285C3A] transition-all shadow-sm cursor-pointer flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-base">publish</span>
+            <span>Publish Listing</span>
+          </button>
+        </div>
+      </div>
+
+      <form id="listing-master-form" class="space-y-8">
+        
+        <!-- SECTION 1: PRODUCT BASICS & DETAILS -->
+        <section class="form-card space-y-6">
+          <div class="flex items-center gap-2.5 pb-4 border-b border-[#285C3A]/10">
+            <span class="material-symbols-outlined text-2xl text-[#14381F]">edit_note</span>
+            <h2 class="text-xl font-bold text-[#14381F]">1. Product Details</h2>
+          </div>
+
+          <!-- Product Type Selector -->
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-2.5 font-mono">Listing Type</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label class="flex items-center gap-3 p-4 rounded-xl border border-[#285C3A]/20 bg-[#FAF6EE] cursor-pointer hover:border-[#14381F] transition-all" id="type-premade-label">
+                <input type="radio" name="product_type" value="pre-made" checked class="w-4 h-4 text-[#14381F] accent-[#14381F]"/>
+                <div>
+                  <span class="block text-sm font-bold text-[#14381F]">Pre-made / Ready Stock</span>
+                  <span class="block text-xs text-[#587A5B]">Standard inventory dispatched directly from workshop</span>
+                </div>
+              </label>
+
+              <label class="flex items-center gap-3 p-4 rounded-xl border border-[#285C3A]/20 bg-white cursor-pointer hover:border-[#14381F] transition-all" id="type-custom-label">
+                <input type="radio" name="product_type" value="custom" class="w-4 h-4 text-[#14381F] accent-[#14381F]"/>
+                <div>
+                  <span class="block text-sm font-bold text-[#14381F]">Customisable / Made-to-Order</span>
+                  <span class="block text-xs text-[#587A5B]">Accept custom names, engravings, color choices or quotes</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Title -->
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Listing Title <span class="text-red-600">*</span></label>
+            <input type="text" id="prod-title" placeholder="e.g. Hand-carved Blue Pottery Floral Tea Set" maxlength="200" class="field-input" required/>
+          </div>
+
+          <!-- Category & Subcategory -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Category <span class="text-red-600">*</span></label>
+              <select id="prod-category" class="field-input cursor-pointer" required>
+                <option value="">Select a Craft Category</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Subcategory</label>
+              <select id="prod-subcategory" class="field-input cursor-pointer">
+                <option value="">Select Subcategory</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Description & Story</label>
+            <textarea id="prod-description" rows="4" placeholder="Describe the materials, craftsmanship technique, cultural origin, and care instructions..." class="field-input"></textarea>
+          </div>
+        </section>
+
+        <!-- SECTION 2: PHOTOS & MEDIA -->
+        <section class="form-card space-y-6">
+          <div class="flex items-center gap-2.5 pb-4 border-b border-[#285C3A]/10">
+            <span class="material-symbols-outlined text-2xl text-[#14381F]">photo_library</span>
+            <h2 class="text-xl font-bold text-[#14381F]">2. Photos & Media</h2>
+          </div>
+
+          <!-- Drag and drop zone -->
+          <div id="photos-dropzone" class="border-2 border-dashed border-[#285C3A]/30 rounded-2xl p-8 text-center cursor-pointer hover:bg-[#FAF6EE] transition-colors" onclick="document.getElementById('photo-input').click()">
+            <span class="material-symbols-outlined text-4xl text-[#587A5B] mb-2 block">add_photo_alternate</span>
+            <p class="text-sm font-bold text-[#14381F]">Click or drag photos here to upload</p>
+            <p class="text-xs text-[#587A5B] mt-1">High-resolution JPG, PNG or WEBP · First image will be primary thumbnail</p>
+            <input type="file" id="photo-input" accept="image/*" multiple class="hidden"/>
+          </div>
+
+          <!-- Photos Thumbnails Container -->
+          <div id="photo-previews-container" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+            <!-- Thumbnails rendered dynamically -->
+          </div>
+        </section>
+
+        <!-- SECTION 3: PRICING & INVENTORY -->
+        <section class="form-card space-y-6">
+          <div class="flex items-center gap-2.5 pb-4 border-b border-[#285C3A]/10">
+            <span class="material-symbols-outlined text-2xl text-[#14381F]">payments</span>
+            <h2 class="text-xl font-bold text-[#14381F]">3. Pricing & Inventory</h2>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Base Price (₹) <span class="text-red-600">*</span></label>
+              <input type="number" id="prod-price" min="0" step="1" placeholder="e.g. 1450" class="field-input font-mono font-bold" required/>
+            </div>
+
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Stock Quantity</label>
+              <input type="number" id="prod-stock" min="0" value="10" class="field-input font-mono"/>
+            </div>
+
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Low Stock Alert Threshold</label>
+              <input type="number" id="prod-threshold" min="1" value="3" class="field-input font-mono"/>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 4: SHIPPING & DIMENSIONS -->
+        <section class="form-card space-y-6">
+          <div class="flex items-center gap-2.5 pb-4 border-b border-[#285C3A]/10">
+            <span class="material-symbols-outlined text-2xl text-[#14381F]">local_shipping</span>
+            <h2 class="text-xl font-bold text-[#14381F]">4. Shipping & Dimensions</h2>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Length (cm)</label>
+              <input type="number" id="dim-l" step="0.1" min="0" placeholder="L" class="field-input font-mono"/>
+            </div>
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Width (cm)</label>
+              <input type="number" id="dim-w" step="0.1" min="0" placeholder="W" class="field-input font-mono"/>
+            </div>
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Height (cm)</label>
+              <input type="number" id="dim-h" step="0.1" min="0" placeholder="H" class="field-input font-mono"/>
+            </div>
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Weight (grams)</label>
+              <input type="number" id="dim-weight" min="0" placeholder="Weight (g)" class="field-input font-mono"/>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 5: CUSTOMISATION OPTIONS (Task 15) -->
+        <section id="customisation-master-section" class="form-card space-y-6 hidden">
+          <div class="flex items-center gap-2.5 pb-4 border-b border-[#285C3A]/10">
+            <span class="material-symbols-outlined text-2xl text-[#14381F]">tune</span>
+            <h2 class="text-xl font-bold text-[#14381F]">5. Customisation Configuration</h2>
+          </div>
+
+          <!-- Mode Radio -->
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-2 font-mono">Customisation Strategy</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label class="flex items-start gap-3 p-4 rounded-xl border border-[#285C3A]/20 bg-[#FAF6EE] cursor-pointer">
+                <input type="radio" name="custom_mode" value="fixed" checked class="w-4 h-4 text-[#14381F] accent-[#14381F] mt-0.5"/>
+                <div>
+                  <span class="block text-sm font-bold text-[#14381F]">Fixed Personalisation Fields</span>
+                  <span class="block text-xs text-[#587A5B]">Buyer chooses from preset text limits, color swatches, or image uploads at fixed price.</span>
+                </div>
+              </label>
+
+              <label class="flex items-start gap-3 p-4 rounded-xl border border-[#285C3A]/20 bg-white cursor-pointer">
+                <input type="radio" name="custom_mode" value="open" class="w-4 h-4 text-[#14381F] accent-[#14381F] mt-0.5"/>
+                <div>
+                  <span class="block text-sm font-bold text-[#14381F]">Open Customisation & Quotes</span>
+                  <span class="block text-xs text-[#587A5B]">Buyer submits bespoke brief and reference images. You review and reply with a custom quote.</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Fixed Fields Configuration Panel -->
+          <div id="fixed-options-panel" class="space-y-4 pt-2">
+            <div class="p-4 rounded-xl bg-[#FAF6EE] border border-[#285C3A]/15 space-y-3">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="fixed-opt-text" class="w-4 h-4 text-[#14381F] accent-[#14381F]" checked/>
+                <span class="text-xs font-bold text-[#14381F]">Allow Name / Text Engraving</span>
+              </label>
+              <div id="fixed-text-settings" class="pl-6 space-y-2">
+                <input type="text" id="fixed-text-label" placeholder="Field label (e.g. Enter name to engrave)" value="Name to engrave" class="field-input text-xs"/>
+                <input type="number" id="fixed-text-limit" placeholder="Max character limit" value="25" min="1" class="field-input text-xs w-48 font-mono"/>
+              </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-[#FAF6EE] border border-[#285C3A]/15 space-y-3">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="fixed-opt-colors" class="w-4 h-4 text-[#14381F] accent-[#14381F]"/>
+                <span class="text-xs font-bold text-[#14381F]">Offer Color Options</span>
+              </label>
+              <div id="fixed-colors-settings" class="pl-6 hidden">
+                <input type="text" id="fixed-color-list" placeholder="Comma-separated colors (e.g. Indigo Blue, Terracotta Red, Forest Green)" class="field-input text-xs"/>
+              </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-[#FAF6EE] border border-[#285C3A]/15 space-y-3">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="fixed-opt-images" class="w-4 h-4 text-[#14381F] accent-[#14381F]"/>
+                <span class="text-xs font-bold text-[#14381F]">Allow Reference Image Upload by Buyer</span>
+              </label>
+              <div id="fixed-image-settings" class="pl-6 hidden">
+                <textarea id="fixed-image-instructions" rows="2" placeholder="Instructions for buyer (e.g. Please upload a high-contrast reference photo)" class="field-input text-xs"></textarea>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Customisation Surcharge Fee (₹)</label>
+              <input type="number" id="fixed-custom-fee" min="0" value="0" placeholder="0 for free" class="field-input w-48 font-mono"/>
+              <span class="text-[11px] text-[#587A5B] block mt-1">Added automatically to base price when customized.</span>
+            </div>
+          </div>
+
+          <!-- Open Customisation Configuration Panel -->
+          <div id="open-config-panel" class="space-y-4 pt-2 hidden">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Allowed Customization Scope</label>
+                <input type="text" id="open-allowed-types" placeholder="e.g. Dimensions, Glaze Finish, Monogram" value="Dimensions, Glaze Finish, Monogram" class="field-input text-xs"/>
+              </div>
+              <div>
+                <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Estimated Turnaround (Days)</label>
+                <input type="text" id="open-turnaround" placeholder="e.g. 7-10 business days" value="7-10 business days" class="field-input text-xs"/>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Minimum Commission Budget (₹)</label>
+                <input type="number" id="open-budget-min" min="0" placeholder="e.g. 1000" class="field-input text-xs font-mono"/>
+              </div>
+              <div>
+                <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Maximum Budget Cap (₹)</label>
+                <input type="number" id="open-budget-max" min="0" placeholder="e.g. 10000" class="field-input text-xs font-mono"/>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Artisan Brief Instructions</label>
+              <textarea id="open-instructions" rows="3" placeholder="Tell buyers what kind of bespoke requests you can accommodate..." class="field-input text-xs"></textarea>
+            </div>
+          </div>
+
+        </section>
+
+      </form>
+    </div>
+  </seller-layout>
+
+  <!-- Live Preview Modal -->
+  <div id="preview-modal" class="fixed inset-0 z-[100] bg-[#14381F]/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl bg-[#FFF8E7] rounded-3xl shadow-2xl border border-[#285C3A]/20 p-6 md:p-8 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-4 border-b border-[#285C3A]/15 mb-6">
+        <h3 class="text-xl font-bold text-[#14381F]">Buyer Preview</h3>
+        <button id="close-preview-modal-btn" class="p-1 text-[#587A5B] hover:text-[#14381F]">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="space-y-6">
+        <div class="aspect-square max-h-72 w-full rounded-2xl overflow-hidden bg-[#FAF6EE] mx-auto border border-[#285C3A]/15">
+          <img id="preview-modal-img" src="/img/ceramic_bowls.jpg" alt="Preview Image" class="w-full h-full object-cover"/>
+        </div>
+
+        <div class="space-y-2">
+          <span class="text-xs font-mono uppercase text-[#587A5B]" id="preview-modal-category">Artisan Craft</span>
+          <h2 class="text-2xl font-bold text-[#14381F]" id="preview-modal-title">Product Title</h2>
+          <p class="text-xl font-bold text-[#14381F] font-mono" id="preview-modal-price">₹0</p>
+          <p class="text-xs text-[#1C1C1A]/80 leading-relaxed pt-2" id="preview-modal-desc"></p>
+        </div>
+
+        <div id="preview-modal-custom-box" class="p-4 rounded-xl bg-[#FAF6EE] border border-[#285C3A]/15 space-y-2 hidden">
+          <span class="text-xs font-bold text-[#14381F] font-mono uppercase">Customisation Options Available</span>
+          <p class="text-xs text-[#587A5B]" id="preview-modal-custom-desc">Personalization enabled for this piece.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./add-product.js"></script>
+</body>
+</html>

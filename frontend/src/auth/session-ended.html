@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Session Ended | Tohfa</title>
+    <!-- Tailwind CSS -->
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+    <!-- Google Fonts -->
+      <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .sketch-texture {
+            background-image: url("/img/textures/natural-paper.png");
+            opacity: 0.08;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-[#FFF8E7] font-body-main text-on-surface overflow-x-hidden">
+
+    <div class="fixed inset-0 sketch-texture z-0"></div>
+
+    <!-- Main Canvas -->
+    <main class="min-h-[calc(100vh-128px)] md:min-h-screen flex items-center justify-center py-12 px-6 bg-[#8FAF82] relative z-10">
+        <!-- Session Ended Modal Card -->
+        <div class="bg-[#FFF8E7] w-full max-w-[360px] border border-[#F7F3EC] rounded-[16px] shadow-[0_4px_24px_rgba(0,0,0,0.07)] overflow-hidden flex flex-col items-center p-10 relative bg-surface-ivory">
+            <!-- Hand-drawn line motif -->
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-sage-soft via-gold-soft to-sage-soft opacity-40"></div>
+            
+            <!-- Chibi Artisan Illustration -->
+            <div class="mb-6 w-[120px] h-[120px] flex items-center justify-center">
+                <img alt="A charming chibi-style illustration of a young artisan peacefully napping at a wooden workbench." class="w-full h-full object-contain" src="/img/sleeping-cat.png" loading="lazy" />
+            </div>
+
+            <!-- Typography -->
+            <h1 class="font-serif italic text-2xl text-[#3D6B4F] text-center mb-2">
+                Your session has rested
+            </h1>
+            <p class="font-serif italic text-sm text-[#6B6B6B] text-center mb-6">
+                For your safety, please log in again.
+            </p>
+
+            <!-- Actions -->
+            <button onclick="window.location.href='/'" class="w-full bg-[#3D6B4F] text-white py-[14px] rounded-[8px] font-sans font-semibold text-sm hover:bg-[#3D6B4F] transition-all active:scale-[0.98] shadow-md">
+                Home
+            </button>
+            <a href="/" class="mt-4 text-sm text-[#6B6B6B] hover:text-[#3D6B4F] transition-colors font-medium">
+                Return to gallery
+            </a>
+        </div>
+    </main>
+
+
+
+    <script>
+        // Simple entrance animation for the modal
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.querySelector('.bg-surface-ivory');
+            if (modal) {
+                modal.style.opacity = '0';
+                modal.style.transform = 'translateY(20px) scale(0.95)';
+                
+                setTimeout(() => {
+                    modal.style.transition = 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
+                    modal.style.opacity = '1';
+                    modal.style.transform = 'translateY(0) scale(1)';
+                }, 100);
+            }
+        });
+    </script>
+</body>
+</html>

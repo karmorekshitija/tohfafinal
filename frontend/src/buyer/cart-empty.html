@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Your Basket is Empty | Tohfa</title>
+  <meta name="description" content="Your Tohfa basket is currently empty. Explore authentic handcrafted gifts from master Indian artisans."/>
+  
+  <script type="module" src="/src/components/ReportWidget.js" defer></script>
+  <script type="module" src="/src/components/ProtectedRoute.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,600;0,6..96,700;1,6..96,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  
+  <link rel="stylesheet" href="/src/tailwind.css">
+  <link rel="stylesheet" href="/src/responsive.css">
+
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 350, 'GRAD' 0, 'opsz' 24;
+    }
+    .craft-bubble {
+      transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .craft-bubble:hover {
+      transform: translateY(-3px);
+      background-color: #FAF6EE;
+      border-color: #14381F;
+    }
+  </style>
+</head>
+
+<body class="bg-[#FFF8E7] text-[#1C1C1A] min-h-screen font-['DM_Sans'] flex flex-col justify-between antialiased selection:bg-[#DCE6D8] selection:text-[#14381F]">
+
+  <!-- Top Navigation Bar (LOCKED) -->
+  <header
+    class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-4 md:px-8 lg:px-12 h-16 md:h-20 transition-colors"
+    style="background-color: #273328; background-image: url('/img/taskbar-texture.png'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
+  >
+    <!-- Brand Logo -->
+    <div class="flex items-center flex-1">
+      <a
+        href="/buyer/home.html"
+        class="select-none"
+        style="font-family: 'Playfair Display', serif; font-size: clamp(24px, 4vw, 32px); font-style: italic; color: #FAF6EE; text-decoration: none;"
+      >
+        Tohfa<span style="color: #FAF6EE; opacity: 0.7;">.</span>
+      </a>
+    </div>
+
+    <!-- Desktop Navigation Links -->
+    <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+      <a
+        href="/buyer/home.html"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      >
+        <span class="material-symbols-outlined text-[20px]">home</span>
+        <span>Home</span>
+      </a>
+      <a
+        href="/buyer/categories.html"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      >
+        <span class="material-symbols-outlined text-[20px]">category</span>
+        <span>Category</span>
+      </a>
+      <a
+        href="/buyer/zip-gift.html"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      >
+        <span class="material-symbols-outlined text-[20px]">bolt</span>
+        <span>ZipGift</span>
+      </a>
+      <a
+        href="/buyer/profile.html"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      >
+        <span class="material-symbols-outlined text-[20px]">person</span>
+        <span>Profile</span>
+      </a>
+    </nav>
+
+    <!-- Right side items -->
+    <div class="flex items-center justify-end flex-1 gap-1 sm:gap-2">
+      <a
+        href="/buyer/search.html?focus=true"
+        id="header-search-btn"
+        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+        title="Search"
+      >
+        <span class="material-symbols-outlined text-[22px]">search</span>
+      </a>
+
+      <a
+        href="/buyer/wishlist.html"
+        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+        title="Wishlist"
+      >
+        <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+        <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+      </a>
+
+      <a
+        href="/buyer/cart.html"
+        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+        title="Shopping Cart"
+      >
+        <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
+        <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+      </a>
+
+      <a
+        href="/buyer/notifications.html"
+        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+        title="Notifications"
+      >
+        <span class="material-symbols-outlined text-[22px]">notifications</span>
+        <span id="nav-notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
+      </a>
+
+      <div id="auth-buttons-container" class="flex items-center gap-2 ml-2 md:ml-4">
+        <a href="/auth/login.html" class="text-sm font-semibold text-[#FAF6EE] hover:text-white hover:underline no-underline" style="font-family: 'DM Sans', sans-serif;">Login</a>
+        <a href="/auth/signup-buyer.html" class="text-[#14381F] text-sm font-semibold px-3.5 py-1.5 rounded-lg bg-[#FAF6EE] hover:bg-white transition-all no-underline shadow-sm" style="font-family: 'DM Sans', sans-serif;">Sign Up</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Empty State Container -->
+  <main class="flex-grow flex items-center justify-center py-16 md:py-24 px-4">
+    <div class="max-w-xl mx-auto text-center space-y-8">
+      
+      <!-- Botanical Graphic / Icon -->
+      <div class="relative inline-flex items-center justify-center">
+        <div class="w-32 h-32 md:w-36 md:h-36 rounded-full bg-[#DCE6D8]/60 border border-[#285C3A]/20 flex items-center justify-center shadow-inner">
+          <span class="material-symbols-outlined text-6xl md:text-7xl text-[#14381F]">
+            local_florist
+          </span>
+        </div>
+        <div class="absolute -bottom-2 -right-2 w-11 h-11 rounded-full bg-[#14381F] text-[#FFF8E7] flex items-center justify-center shadow-md">
+          <span class="material-symbols-outlined text-xl">shopping_basket</span>
+        </div>
+      </div>
+
+      <!-- Copy -->
+      <div class="space-y-3">
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-normal text-[#14381F] tracking-tight leading-tight" style="font-family: 'Cormorant Garamond', Georgia, serif;">
+          Your basket is waiting for something handcrafted.
+        </h1>
+        <p class="text-base sm:text-lg text-[#587A5B] max-w-md mx-auto font-light leading-relaxed">
+          Explore thoughtful creations made by master artisans across India, or let our AI guide find the perfect personalized gift.
+        </p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-wrap items-center justify-center gap-4 pt-2">
+        <a
+          href="/buyer/categories.html"
+          class="px-8 py-3.5 rounded-full bg-[#14381F] text-[#FFF8E7] text-sm font-semibold hover:bg-[#285C3A] transition-all shadow-md flex items-center gap-2 no-underline"
+        >
+          <span class="material-symbols-outlined text-base">explore</span>
+          <span>Explore Categories</span>
+        </a>
+        <a
+          href="/buyer/occasions.html"
+          class="px-8 py-3.5 rounded-full border border-[#14381F]/30 bg-white text-[#14381F] text-sm font-semibold hover:bg-[#FAF6EE] transition-all flex items-center gap-2 no-underline shadow-xs"
+        >
+          <span class="material-symbols-outlined text-base">auto_awesome</span>
+          <span>Gifts by Occasion</span>
+        </a>
+      </div>
+
+      <!-- Quick Category Shortcuts -->
+      <div class="pt-8 border-t border-[#285C3A]/15">
+        <span class="text-xs uppercase tracking-widest text-[#587A5B] font-mono block mb-4">Popular Craft Categories</span>
+        <div class="flex flex-wrap items-center justify-center gap-2.5">
+          <a href="/buyer/category.html?slug=ceramics-pottery" class="craft-bubble px-4 py-2 rounded-full border border-[#285C3A]/20 bg-white text-xs font-medium text-[#14381F] no-underline">
+            Ceramics & Pottery
+          </a>
+          <a href="/buyer/category.html?slug=jewellery" class="craft-bubble px-4 py-2 rounded-full border border-[#285C3A]/20 bg-white text-xs font-medium text-[#14381F] no-underline">
+            Handmade Jewellery
+          </a>
+          <a href="/buyer/category.html?slug=candles-fragrance" class="craft-bubble px-4 py-2 rounded-full border border-[#285C3A]/20 bg-white text-xs font-medium text-[#14381F] no-underline">
+            Botanical Candles
+          </a>
+          <a href="/buyer/category.html?slug=art-portraits" class="craft-bubble px-4 py-2 rounded-full border border-[#285C3A]/20 bg-white text-xs font-medium text-[#14381F] no-underline">
+            Custom Portraits
+          </a>
+          <a href="/buyer/category.html?slug=hampers" class="craft-bubble px-4 py-2 rounded-full border border-[#285C3A]/20 bg-white text-xs font-medium text-[#14381F] no-underline">
+            Gift Hampers
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Shared Footer -->
+  <div id="tohfa-footer"></div>
+  <script type="module" src="/src/components/tohfa-include.js"></script>
+
+  <script type="module">
+    import { initSearchOverlay } from '/buyer/searchOverlay.js';
+    initSearchOverlay();
+
+    // Check Auth State for Navbar
+    function checkAuthState() {
+      const token = sessionStorage.getItem('tohfa_access_token');
+      const authContainer = document.getElementById('auth-buttons-container');
+      if (token) {
+        const cachedUser = sessionStorage.getItem('tohfa_user');
+        let initial = 'U';
+        if (cachedUser) {
+          try {
+            const u = JSON.parse(cachedUser);
+            if (u.name) initial = u.name.charAt(0).toUpperCase();
+            else if (u.full_name) initial = u.full_name.charAt(0).toUpperCase();
+          } catch(e) {}
+        }
+        if (authContainer) {
+          authContainer.innerHTML = `<a href="/buyer/profile.html" class="w-9 h-9 rounded-full bg-[#FAF6EE] text-[#14381F] flex items-center justify-center font-bold text-sm overflow-hidden flex-shrink-0 shadow-sm no-underline hover:bg-white">${initial}</a>`;
+        }
+      }
+    }
+    checkAuthState();
+  </script>
+</body>
+</html>

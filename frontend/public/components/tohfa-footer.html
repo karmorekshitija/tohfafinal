@@ -1,0 +1,254 @@
+<!--
+  FILE: components/tohfa-footer.html
+  PANEL: Shared Footer Component
+  PURPOSE: Responsive footer with mobile accordion and support modals.
+  LAST_POLISHED: 2026-08-23
+-->
+<footer style="position:relative;overflow:hidden;background:#273328;color:#FFF8E7;" class="tohfa-responsive-footer">
+  
+  <!-- DESKTOP FOOTER (min-width: 768px) -->
+  <div class="tohfa-desktop-footer" style="padding-top:64px;padding-bottom:32px;">
+    <!-- Ghost watermark -->
+    <div style="position:absolute;bottom:-10%;right:-5%;opacity:0.04;pointer-events:none;user-select:none;">
+      <span class="material-symbols-outlined" style="font-size:600px;color:#FFF8E7;">local_florist</span>
+    </div>
+    <!-- Main grid -->
+    <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:40px;margin-bottom:64px;position:relative;z-index:10;" class="tohfa-footer-grid">
+      <!-- Brand -->
+      <div>
+        <h2 style="font-family:'Playfair Display',serif;font-size:38px;font-style:italic;color:#FFF8E7;margin-bottom:12px;letter-spacing:-0.02em;">Tohfa<span style="opacity:0.6;">.</span></h2>
+        <p style="font-family:'DM Sans',sans-serif;color:#FFF8E7;margin-bottom:8px;font-weight:500;font-size:15px;">Thoughtful Gifting, Made Effortless.</p>
+        <p style="font-family:'DM Sans',sans-serif;color:rgba(255,248,231,0.7);margin-bottom:24px;line-height:1.6;font-size:13px;max-width:280px;">India's curated home for handcrafted gifts, celebrating artisanal excellence.</p>
+      </div>
+      <!-- Company -->
+      <div>
+        <h3 style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,248,231,0.6);margin-bottom:24px;">Company</h3>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;font-size:14px;">
+          <li><a href="/buyer/our-story.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">About Us</a></li>
+          <li><a href="/buyer/our-story.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Our Story</a></li>
+        </ul>
+      </div>
+      <!-- For Sellers -->
+      <div>
+        <h3 style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,248,231,0.6);margin-bottom:24px;">For Sellers</h3>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;font-size:14px;">
+          <li><a href="/buyer/become-seller.html" onclick="handleFooterSellerLink(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Sell on Tohfa</a></li>
+          <li><a href="/seller/dashboard.html" onclick="handleFooterSellerLink(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Seller Studio</a></li>
+        </ul>
+      </div>
+      <!-- For Buyers -->
+      <div>
+        <h3 style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,248,231,0.6);margin-bottom:24px;">For Buyers</h3>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;font-size:14px;">
+          <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'" onclick="event.preventDefault(); if (window.openTohfaChat) { window.openTohfaChat('Find me a gift'); } else { window.__tohfaChatQueue = window.__tohfaChatQueue || []; window.__tohfaChatQueue.push('Find me a gift'); }">AI Gift Guide (Tanya)</a></li>
+          <li><a href="/buyer/occasions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Occasions</a></li>
+          <li><a href="/buyer/bulk.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Bulk &amp; Corporate Gifting 📦</a></li>
+        </ul>
+      </div>
+      <!-- Support -->
+      <div>
+        <h3 style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,248,231,0.6);margin-bottom:24px;">Support</h3>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;font-size:14px;">
+          <li><a href="javascript:void(0)" onclick="openContactModal(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Contact Us</a></li>
+          <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Refunds &amp; Policy</a></li>
+          <li><a href="/buyer/faq.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">FAQs</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div style="max-width:1280px;margin:0 auto;padding:0 24px;margin-bottom:24px;">
+      <div style="width:100%;height:1px;background:rgba(255,248,231,0.1);"></div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:10;" class="tohfa-footer-bottom">
+      <div style="font-family:'DM Sans',sans-serif;font-size:13px;color:rgba(255,248,231,0.6);">
+        &copy; 2026 Tohfa Marketplace. All rights reserved.
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:#FFF8E7;">
+        <span>Handcrafted with care in India</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE ACCORDION FOOTER (max-width: 767px) -->
+  <div class="tohfa-mobile-footer" style="padding:40px 20px 24px 20px;">
+    <!-- Brand -->
+    <div style="margin-bottom:24px;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:32px;font-style:italic;color:#FFF8E7;margin-bottom:8px;">Tohfa<span style="opacity:0.6;">.</span></h2>
+      <p style="font-family:'DM Sans',sans-serif;color:rgba(255,248,231,0.7);font-size:13px;line-height:1.5;">India's home for handcrafted gifts.</p>
+    </div>
+
+    <!-- Accordions -->
+    <div style="border-top:1px solid rgba(255,248,231,0.1);margin-bottom:24px;">
+      <!-- Company -->
+      <details class="tohfa-footer-details" style="border-bottom:1px solid rgba(255,248,231,0.1);padding:14px 0;">
+        <summary style="display:flex;justify-content:space-between;align-items:center;list-style:none;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,248,231,0.8);cursor:pointer;">
+          <span>Company</span>
+          <span class="material-symbols-outlined" style="font-size:18px;">expand_more</span>
+        </summary>
+        <ul style="list-style:none;padding:10px 0 0 0;margin:0;display:flex;flex-direction:column;gap:10px;font-size:13px;">
+          <li><a href="/buyer/our-story.html" style="color:#FFF8E7;text-decoration:none;">Our Story</a></li>
+        </ul>
+      </details>
+
+      <!-- For Sellers -->
+      <details class="tohfa-footer-details" style="border-bottom:1px solid rgba(255,248,231,0.1);padding:14px 0;">
+        <summary style="display:flex;justify-content:space-between;align-items:center;list-style:none;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,248,231,0.8);cursor:pointer;">
+          <span>For Sellers</span>
+          <span class="material-symbols-outlined" style="font-size:18px;">expand_more</span>
+        </summary>
+        <ul style="list-style:none;padding:10px 0 0 0;margin:0;display:flex;flex-direction:column;gap:10px;font-size:13px;">
+          <li><a href="/buyer/become-seller.html" onclick="handleFooterSellerLink(event)" style="color:#FFF8E7;text-decoration:none;">Sell on Tohfa</a></li>
+          <li><a href="/seller/dashboard.html" onclick="handleFooterSellerLink(event)" style="color:#FFF8E7;text-decoration:none;">Seller Studio</a></li>
+        </ul>
+      </details>
+
+      <!-- Support -->
+      <details class="tohfa-footer-details" style="border-bottom:1px solid rgba(255,248,231,0.1);padding:14px 0;">
+        <summary style="display:flex;justify-content:space-between;align-items:center;list-style:none;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,248,231,0.8);cursor:pointer;">
+          <span>Support</span>
+          <span class="material-symbols-outlined" style="font-size:18px;">expand_more</span>
+        </summary>
+        <ul style="list-style:none;padding:10px 0 0 0;margin:0;display:flex;flex-direction:column;gap:10px;font-size:13px;">
+          <li><a href="javascript:void(0)" onclick="openContactModal(event)" style="color:#FFF8E7;text-decoration:none;">Contact Us</a></li>
+          <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" style="color:#FFF8E7;text-decoration:none;">Refunds &amp; Policy</a></li>
+          <li><a href="/buyer/faq.html" style="color:#FFF8E7;text-decoration:none;">FAQs</a></li>
+        </ul>
+      </details>
+    </div>
+
+    <div style="font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(255,248,231,0.6);text-align:center;">
+      &copy; 2026 Tohfa Marketplace. Handcrafted in India.
+    </div>
+  </div>
+
+  <style>
+    @media (max-width: 767px) {
+      .tohfa-desktop-footer { display: none !important; }
+      .tohfa-mobile-footer { display: block !important; }
+    }
+    @media (min-width: 768px) {
+      .tohfa-desktop-footer { display: block !important; }
+      .tohfa-mobile-footer { display: none !important; }
+    }
+    .tohfa-contact-modal, .tohfa-refunds-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(20,56,31,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 99999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .tohfa-contact-modal.is-open, .tohfa-refunds-modal.is-open {
+      display: flex;
+    }
+    .tohfa-modal-card {
+      background: #FFF8E7;
+      color: #1C1C1C;
+      border: 1px solid rgba(20,56,31,0.15);
+      border-radius: 16px;
+      padding: 28px;
+      max-width: 480px;
+      width: 100%;
+      position: relative;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+    .tohfa-modal-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #1C1C1C;
+      cursor: pointer;
+      line-height: 1;
+      opacity: 0.6;
+    }
+    .tohfa-modal-close:hover { opacity: 1; }
+  </style>
+
+  <!-- Contact Us Modal -->
+  <div id="tohfa-contact-modal" class="tohfa-contact-modal" onclick="if(event.target === this) closeContactModal()">
+    <div class="tohfa-modal-card" onclick="event.stopPropagation()">
+      <button class="tohfa-modal-close" onclick="closeContactModal()" aria-label="Close modal">&times;</button>
+      <h3 style="font-family:'Playfair Display',serif;font-size:22px;color:#273328;margin-top:0;margin-bottom:12px;">Get in Touch</h3>
+      <p style="font-family:'DM Sans',sans-serif;font-size:14px;color:#1C1C1C;line-height:1.6;margin-bottom:16px;">We would love to hear from you. For inquiries, seller onboarding, or general support, reach our team directly at:</p>
+      <a href="mailto:tohfa126@gmail.com" style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:#273328;color:#FFF8E7;border-radius:9999px;text-decoration:none;font-weight:500;font-size:14px;">
+        <span class="material-symbols-outlined" style="font-size:18px;">mail</span>
+        <span>tohfa126@gmail.com</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Refunds & Disputes Modal -->
+  <div id="tohfa-refunds-modal" class="tohfa-refunds-modal" onclick="if(event.target === this) closeRefundsModal()">
+    <div class="tohfa-modal-card" onclick="event.stopPropagation()">
+      <button class="tohfa-modal-close" onclick="closeRefundsModal()" aria-label="Close modal">&times;</button>
+      <h3 style="font-family:'Playfair Display',serif;font-size:22px;color:#273328;margin-top:0;margin-bottom:12px;">Refunds &amp; Disputes</h3>
+      <p style="font-family:'DM Sans',sans-serif;font-size:14px;color:#1C1C1C;line-height:1.6;margin-bottom:10px;">Most Tohfa items are custom-crafted or handmade specifically for you. As such, orders cannot be cancelled once crafting has commenced.</p>
+      <p style="font-family:'DM Sans',sans-serif;font-size:14px;color:#1C1C1C;line-height:1.6;margin-bottom:10px;">If an item arrives broken or damaged during transit, please submit an unedited unboxing video within 48 hours of delivery to qualify for an immediate replacement or full refund.</p>
+      <p style="font-family:'DM Sans',sans-serif;font-size:13px;color:rgba(28,28,28,0.7);line-height:1.5;">For dispute resolution, email us at <a href="mailto:tohfa126@gmail.com" style="color:#273328;font-weight:600;">tohfa126@gmail.com</a>.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+async function handleFooterSellerLink(e) {
+  if (e) e.preventDefault();
+  const token = sessionStorage.getItem('tohfa_access_token');
+  if (!token) {
+    sessionStorage.setItem('tohfa_redirect_seller', 'true');
+    sessionStorage.setItem('tohfa_return_to', window.location.pathname + window.location.search);
+    window.location.href = '/auth/login.html';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/profile/me', {
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success && data.data.role === 'seller') {
+        window.location.href = '/seller/dashboard.html';
+        return;
+      }
+    }
+  } catch(err) {
+    console.error("Error checking seller status:", err);
+  }
+  
+  window.location.href = '/buyer/become-seller.html';
+}
+
+window.openContactModal = function(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  const modal = document.getElementById('tohfa-contact-modal');
+  if (modal) { modal.classList.add('is-open'); document.body.style.overflow = 'hidden'; }
+};
+
+window.closeContactModal = function() {
+  const modal = document.getElementById('tohfa-contact-modal');
+  if (modal) { modal.classList.remove('is-open'); document.body.style.overflow = ''; }
+};
+
+window.openRefundsModal = function(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  const modal = document.getElementById('tohfa-refunds-modal');
+  if (modal) { modal.classList.add('is-open'); document.body.style.overflow = 'hidden'; }
+};
+
+window.closeRefundsModal = function() {
+  const modal = document.getElementById('tohfa-refunds-modal');
+  if (modal) { modal.classList.remove('is-open'); document.body.style.overflow = ''; }
+};
+</script>

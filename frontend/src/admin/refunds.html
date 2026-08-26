@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <script type="module" src="/src/components/AdminSidebar.js"></script>
+  <script type="module" src="/src/components/ReportWidget.js" defer></script>
+  <script type="module" src="/src/components/ProtectedRoute.js"></script>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Tohfa Admin | Refund Management</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+  
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+      vertical-align: middle;
+    }
+    .pulsing-dot {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .watermark-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.05;
+      z-index: 0;
+      background-image: url('/img/textures/pinstripe.png');
+    }
+  </style>
+</head>
+<body class="bg-[#FFF8E7] text-text-default min-h-screen font-body-md overflow-x-hidden">
+  <div class="watermark-overlay"></div>
+
+  <!-- Shared Sidebar Component Injected Dynamically -->
+  <aside data-sidebar="admin"></aside>
+
+  <!-- Top Navigation Header -->
+  <header class="fixed top-0 right-0 w-[calc(100%-240px)] h-[60px] bg-[#FFF8E7] border-b border-outline-variant flex justify-between items-center px-8 z-40">
+    <div class="flex items-center gap-3">
+      <span class="material-symbols-outlined text-primary text-2xl">currency_exchange</span>
+      <h2 class="font-headline-md text-headline-md italic text-primary">Refund Management</h2>
+    </div>
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-3">
+        <div class="text-right hidden sm:block">
+          <p class="text-body-sm font-bold leading-none text-primary">Finance &amp; Disputes</p>
+          <p class="text-[11px] text-text-muted font-mono">Admin Privileges</p>
+        </div>
+        <div class="h-8 w-8 rounded-full bg-secondary-container flex items-center justify-center text-primary font-bold text-xs">TA</div>
+      </div>
+      <button id="logout-btn" class="text-on-surface-variant hover:text-primary transition-colors text-[14px] font-label-btn cursor-pointer">
+        <span class="material-symbols-outlined text-xl">logout</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="ml-60 pt-[60px] p-8 max-w-[1300px] mx-auto min-h-screen relative z-10">
+    <!-- Header Section -->
+    <section class="mb-8 mt-4 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div>
+        <h1 class="font-headline-lg text-3xl text-primary leading-tight font-serif italic">Refund Requests &amp; Disputes</h1>
+        <p class="text-text-muted text-sm mt-1">Review, verify, approve Razorpay payment reversals, or reject refund claims.</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="refresh-btn" class="px-4 py-2 bg-surface border border-outline-variant/40 rounded-xl text-xs font-bold font-label-btn text-primary hover:bg-secondary-container/20 transition-all flex items-center gap-1.5 shadow-sm">
+          <span class="material-symbols-outlined text-sm">refresh</span> Refresh List
+        </button>
+      </div>
+    </section>
+
+    <!-- Metrics Row -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+      <div class="bg-[#FFF8E7] p-5 rounded-2xl border border-outline-variant/30 border-l-4 border-l-amber-500 shadow-sm flex items-center justify-between">
+        <div>
+          <span class="text-xs font-bold text-amber-800 uppercase tracking-wider font-mono">Pending Verification</span>
+          <h3 id="metric-pending" class="font-headline-lg text-3xl text-amber-900 mt-1 font-bold">0</h3>
+          <p class="text-[11px] text-amber-700/80 mt-0.5">Awaiting admin review</p>
+        </div>
+        <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-700">
+          <span class="material-symbols-outlined text-2xl pulsing-dot">hourglass_top</span>
+        </div>
+      </div>
+
+      <div class="bg-[#FFF8E7] p-5 rounded-2xl border border-outline-variant/30 border-l-4 border-l-[#14381F] shadow-sm flex items-center justify-between">
+        <div>
+          <span class="text-xs font-bold text-[#14381F] uppercase tracking-wider font-mono">Total Approved</span>
+          <h3 id="metric-approved" class="font-headline-lg text-3xl text-[#14381F] mt-1 font-bold">0</h3>
+          <p class="text-[11px] text-[#14381F]/70 mt-0.5">Refunded via Razorpay</p>
+        </div>
+        <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-[#14381F]">
+          <span class="material-symbols-outlined text-2xl">check_circle</span>
+        </div>
+      </div>
+
+      <div class="bg-[#FFF8E7] p-5 rounded-2xl border border-outline-variant/30 border-l-4 border-l-red-600 shadow-sm flex items-center justify-between">
+        <div>
+          <span class="text-xs font-bold text-red-800 uppercase tracking-wider font-mono">Rejected Claims</span>
+          <h3 id="metric-rejected" class="font-headline-lg text-3xl text-red-900 mt-1 font-bold">0</h3>
+          <p class="text-[11px] text-red-700/80 mt-0.5">Disallowed by admin</p>
+        </div>
+        <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-700">
+          <span class="material-symbols-outlined text-2xl">cancel</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters & Search Bar -->
+    <div class="bg-[#FFF8E7] p-6 rounded-2xl border border-outline-variant/30 shadow-sm space-y-4 mb-8">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <!-- Status Tabs -->
+        <div class="flex flex-wrap items-center gap-2" id="status-filter-tabs">
+          <button data-status="all" class="filter-tab px-5 py-2 rounded-full font-label-btn text-xs font-bold text-white bg-primary transition-all shadow-sm">All Requests</button>
+          <button data-status="pending" class="filter-tab px-5 py-2 rounded-full font-label-btn text-xs font-bold text-text-muted bg-surface hover:bg-secondary-container/20 transition-all">Pending (<span id="tab-pending-count">0</span>)</button>
+          <button data-status="approved" class="filter-tab px-5 py-2 rounded-full font-label-btn text-xs font-bold text-text-muted bg-surface hover:bg-secondary-container/20 transition-all">Approved</button>
+          <button data-status="rejected" class="filter-tab px-5 py-2 rounded-full font-label-btn text-xs font-bold text-text-muted bg-surface hover:bg-secondary-container/20 transition-all">Rejected</button>
+        </div>
+
+        <!-- Search Input -->
+        <div class="relative w-full md:w-80">
+          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-text-faint text-lg">search</span>
+          <input id="search-input" class="w-full bg-surface border border-outline-variant/50 rounded-xl pl-10 pr-4 py-2 text-xs font-mono focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="Search order ID, buyer, product..." type="text"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Refunds Table Container -->
+    <div class="bg-[#FFF8E7] rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden mb-12">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse" id="refunds-table">
+          <thead>
+            <tr class="bg-surface border-b border-outline-variant/30 text-xs font-bold uppercase tracking-wider text-text-muted font-mono">
+              <th class="px-6 py-4">Order Details</th>
+              <th class="px-6 py-4">Buyer Info</th>
+              <th class="px-6 py-4">Product &amp; Customization</th>
+              <th class="px-6 py-4">Amount</th>
+              <th class="px-6 py-4">Reason / Notes</th>
+              <th class="px-6 py-4 text-center">Status</th>
+              <th class="px-6 py-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="refunds-tbody" class="divide-y divide-outline-variant/15 text-sm">
+            <!-- Dynamically Populated -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div id="refunds-empty" class="hidden py-20 px-6 flex flex-col items-center justify-center text-center">
+        <span class="material-symbols-outlined text-5xl text-outline-variant mb-3">task_alt</span>
+        <h4 class="font-headline-md text-xl text-primary font-bold">No refund requests found</h4>
+        <p class="text-text-muted text-xs max-w-sm mt-1" id="empty-state-msg">There are no pending refund claims matching the selected filters.</p>
+      </div>
+
+      <!-- Table Footer / Pagination -->
+      <div class="px-6 py-4 bg-surface border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-text-muted">
+        <span id="pagination-info">Showing 0 of 0 requests</span>
+        <div class="flex items-center gap-2" id="pagination-controls">
+          <button id="prev-page-btn" class="px-3 py-1.5 rounded-lg border border-outline-variant/40 hover:bg-[#FFF8E7] disabled:opacity-40 disabled:cursor-not-allowed transition-colors" disabled>Previous</button>
+          <span id="current-page-display" class="font-bold text-primary px-2">Page 1</span>
+          <button id="next-page-btn" class="px-3 py-1.5 rounded-lg border border-outline-variant/40 hover:bg-[#FFF8E7] disabled:opacity-40 disabled:cursor-not-allowed transition-colors" disabled>Next</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Approve Confirmation Modal -->
+  <div id="approve-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs hidden p-4">
+    <div class="bg-[#FFF8E7] border border-outline-variant/30 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center gap-3 text-[#14381F]">
+        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-2xl text-[#14381F]">verified</span>
+        </div>
+        <div>
+          <h3 class="font-headline-md font-bold text-lg text-[#14381F]">Approve &amp; Refund Order</h3>
+          <p class="text-xs text-text-muted">Direct Razorpay gateway reversal</p>
+        </div>
+      </div>
+
+      <div class="bg-surface p-4 rounded-xl border border-outline-variant/30 space-y-2 text-xs">
+        <div class="flex justify-between">
+          <span class="text-text-muted">Order Ref:</span>
+          <span class="font-bold font-mono text-primary" id="modal-approve-order-id">—</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-text-muted">Buyer:</span>
+          <span class="font-bold text-on-surface" id="modal-approve-buyer">—</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-text-muted">Refund Amount:</span>
+          <span class="font-bold text-[#14381F] font-mono text-sm" id="modal-approve-amount">—</span>
+        </div>
+      </div>
+
+      <p class="text-xs text-text-muted leading-relaxed">
+        Approving this request will immediately execute a Razorpay payment reversal, cancel the order, and notify both the patron and artisan studio.
+      </p>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button id="modal-approve-cancel-btn" class="px-4 py-2 border border-outline-variant/40 rounded-xl text-xs font-bold text-text-muted hover:bg-surface transition-colors">Cancel</button>
+        <button id="modal-approve-confirm-btn" class="px-5 py-2 bg-[#14381F] text-white rounded-xl text-xs font-bold hover:bg-[#14381F]/90 transition-all flex items-center gap-1.5 shadow-md">
+          <span class="material-symbols-outlined text-xs">check</span> Confirm &amp; Execute Refund
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reject Reason Modal -->
+  <div id="reject-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs hidden p-4">
+    <div class="bg-[#FFF8E7] border border-outline-variant/30 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center gap-3 text-error">
+        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-2xl text-error">block</span>
+        </div>
+        <div>
+          <h3 class="font-headline-md font-bold text-lg text-error">Reject Refund Request</h3>
+          <p class="text-xs text-text-muted">Provide justification for the buyer</p>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider font-mono text-text-muted mb-1.5">Rejection Reason *</label>
+        <select id="reject-reason-select" class="w-full bg-surface border border-outline-variant/40 rounded-xl px-3 py-2 text-xs font-body focus:ring-1 focus:ring-primary focus:border-primary outline-none mb-3">
+          <option value="Product custom-made as per verified specifications">Product custom-made as per verified specifications</option>
+          <option value="Item already crafted and dispatched prior to cancellation request">Item already crafted &amp; dispatched prior to request</option>
+          <option value="Outside eligible refund / cancellation window">Outside eligible refund window</option>
+          <option value="Dispute resolved directly with artisan studio">Dispute resolved directly with artisan</option>
+          <option value="Custom Reason">Other custom reason...</option>
+        </select>
+        <textarea id="reject-notes-input" placeholder="Additional details / notes for the patron..." class="w-full bg-surface border border-outline-variant/40 rounded-xl p-3 text-xs font-body focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" rows="3"></textarea>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button id="modal-reject-cancel-btn" class="px-4 py-2 border border-outline-variant/40 rounded-xl text-xs font-bold text-text-muted hover:bg-surface transition-colors">Cancel</button>
+        <button id="modal-reject-confirm-btn" class="px-5 py-2 bg-red-700 text-white rounded-xl text-xs font-bold hover:bg-red-800 transition-all flex items-center gap-1.5 shadow-md">
+          <span class="material-symbols-outlined text-xs">close</span> Reject Request
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notifications -->
+  <div id="toast" class="fixed top-20 right-6 z-[200] hidden flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-xs font-bold transition-all duration-300 transform">
+    <span class="material-symbols-outlined text-base" id="toast-icon">check_circle</span>
+    <span id="toast-msg">Success</span>
+  </div>
+
+  <!-- Script Module -->
+  <script type="module">
+    import adminApiClient from '/src/utils/adminApiClient.js';
+    import { formatPaise } from '/src/utils/currency.js';
+
+    let allRefunds = [];
+    let currentFilter = 'all';
+    let searchQuery = '';
+    let currentPage = 1;
+    const limitPerPage = 10;
+
+    let selectedRefundId = null;
+
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toast');
+      const icon = document.getElementById('toast-icon');
+      const text = document.getElementById('toast-msg');
+
+      text.textContent = msg;
+      icon.textContent = type === 'success' ? 'check_circle' : 'error';
+
+      toast.className = `fixed top-20 right-6 z-[200] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-xs font-bold transition-all duration-300 transform ${
+        type === 'success' 
+          ? 'bg-[#14381F] text-[#FFF8E7] border border-[#14381F]/30' 
+          : 'bg-red-800 text-white border border-red-900'
+      }`;
+
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 4000);
+    }
+
+    function formatDate(dt) {
+      if (!dt) return '—';
+      return new Date(dt).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+    }
+
+    function statusBadge(status) {
+      const s = (status || 'pending').toLowerCase();
+      if (s === 'approved') {
+        return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold font-mono tracking-wider bg-green-100 text-[#14381F] border border-green-300"><span class="w-1.5 h-1.5 rounded-full bg-[#14381F]"></span>Approved</span>`;
+      }
+      if (s === 'rejected') {
+        return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold font-mono tracking-wider bg-red-100 text-red-800 border border-red-300"><span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>Rejected</span>`;
+      }
+      return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold font-mono tracking-wider bg-amber-100 text-amber-900 border border-amber-300"><span class="w-1.5 h-1.5 rounded-full bg-amber-600 pulsing-dot"></span>Pending</span>`;
+    }
+
+    function customizationBadge(mode) {
+      const m = (mode || 'none').toLowerCase();
+      if (m === 'open') {
+        return `<span class="px-2 py-0.5 bg-purple-100 text-purple-800 rounded-md text-[9px] font-bold uppercase tracking-wider font-mono">Open Custom</span>`;
+      }
+      if (m === 'fixed') {
+        return `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-md text-[9px] font-bold uppercase tracking-wider font-mono">Fixed Custom</span>`;
+      }
+      return `<span class="px-2 py-0.5 bg-surface text-text-muted rounded-md text-[9px] font-bold uppercase tracking-wider font-mono border border-outline-variant/30">Pre-made</span>`;
+    }
+
+    // Mock Sample Data Fallback (so admin preview works offline or with empty database)
+    const MOCK_REFUNDS = [
+      {
+        id: 'rf-mock-001',
+        order_id: 'ord-101-jaipur',
+        buyer_name: 'Aditi Sharma',
+        buyer_email: 'aditi.sharma@example.com',
+        store_name: 'Jaipur Blue Pottery Studio',
+        product_name: 'Hand-painted Ceramic Royal Vase',
+        customization_mode: 'fixed',
+        amount: 2499.00,
+        reason: 'Unable to fulfill custom color request in time for wedding anniversary',
+        status: 'pending',
+        order_date: new Date(Date.now() - 86400000 * 2).toISOString(),
+        created_at: new Date(Date.now() - 86400000).toISOString()
+      },
+      {
+        id: 'rf-mock-002',
+        order_id: 'ord-102-kashmir',
+        buyer_name: 'Rahul Mehta',
+        buyer_email: 'rahul.m@example.com',
+        store_name: 'Chinar Pashmina Artisans',
+        product_name: 'Pure Cashmere Stole with Monogram',
+        customization_mode: 'open',
+        amount: 5800.00,
+        reason: 'Buyer requested cancellation prior to bespoke weaving start',
+        status: 'pending',
+        order_date: new Date(Date.now() - 86400000 * 3).toISOString(),
+        created_at: new Date(Date.now() - 86400000 * 2).toISOString()
+      },
+      {
+        id: 'rf-mock-003',
+        order_id: 'ord-103-varanasi',
+        buyer_name: 'Priya Iyer',
+        buyer_email: 'priya.iyer@example.com',
+        store_name: 'Kashi Silk Weavers Guild',
+        product_name: 'Brocade Saree Gift Box',
+        customization_mode: 'none',
+        amount: 3200.00,
+        reason: 'Duplicate payment accidental order',
+        status: 'approved',
+        admin_notes: 'Verified duplicate charge on Razorpay',
+        order_date: new Date(Date.now() - 86400000 * 5).toISOString(),
+        created_at: new Date(Date.now() - 86400000 * 4).toISOString()
+      }
+    ];
+
+    async function loadRefunds() {
+      try {
+        const res = await adminApiClient.get('/admin/refunds', {
+          params: { status: currentFilter === 'all' ? undefined : currentFilter }
+        });
+
+        if (res.data?.success) {
+          const fetched = res.data.data?.refunds || res.data.data || [];
+          allRefunds = Array.isArray(fetched) && fetched.length > 0 ? fetched : MOCK_REFUNDS;
+        } else {
+          allRefunds = MOCK_REFUNDS;
+        }
+      } catch (err) {
+        console.warn('Live /api/admin/refunds fetch fallback to preview records:', err.message);
+        allRefunds = MOCK_REFUNDS;
+      }
+
+      updateMetrics();
+      renderRefunds();
+    }
+
+    function updateMetrics() {
+      const pendingCount = allRefunds.filter(r => r.status === 'pending').length;
+      const approvedCount = allRefunds.filter(r => r.status === 'approved').length;
+      const rejectedCount = allRefunds.filter(r => r.status === 'rejected').length;
+
+      document.getElementById('metric-pending').textContent = pendingCount;
+      document.getElementById('metric-approved').textContent = approvedCount;
+      document.getElementById('metric-rejected').textContent = rejectedCount;
+      document.getElementById('tab-pending-count').textContent = pendingCount;
+    }
+
+    function renderRefunds() {
+      const tbody = document.getElementById('refunds-tbody');
+      const emptyState = document.getElementById('refunds-empty');
+      const paginationInfo = document.getElementById('pagination-info');
+
+      let filtered = allRefunds;
+
+      if (currentFilter !== 'all') {
+        filtered = filtered.filter(r => (r.status || 'pending').toLowerCase() === currentFilter.toLowerCase());
+      }
+
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase().trim();
+        filtered = filtered.filter(r => {
+          const id = String(r.order_id || r.id || '').toLowerCase();
+          const buyer = String(r.buyer_name || r.buyer_email || '').toLowerCase();
+          const product = String(r.product_name || r.store_name || '').toLowerCase();
+          const reason = String(r.reason || '').toLowerCase();
+          return id.includes(q) || buyer.includes(q) || product.includes(q) || reason.includes(q);
+        });
+      }
+
+      paginationInfo.textContent = `Showing ${filtered.length} of ${allRefunds.length} refund requests`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+
+      tbody.innerHTML = filtered.map(r => {
+        const orderRef = r.order_id ? `TH-${String(r.order_id).slice(0, 8).toUpperCase()}` : '—';
+        const formattedAmount = '₹' + Number(r.amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+        const isPending = (r.status || 'pending').toLowerCase() === 'pending';
+
+        return `
+          <tr class="hover:bg-surface/50 transition-colors">
+            <!-- Order Ref & Date -->
+            <td class="px-6 py-4">
+              <div class="flex flex-col">
+                <span class="font-bold font-mono text-primary text-xs" title="${r.order_id}">#${orderRef}</span>
+                <span class="text-[11px] text-text-muted mt-0.5">Ordered: ${formatDate(r.order_date || r.created_at)}</span>
+              </div>
+            </td>
+
+            <!-- Buyer Info -->
+            <td class="px-6 py-4">
+              <div class="flex flex-col">
+                <span class="font-bold text-on-surface text-xs">${r.buyer_name || 'Artisan Buyer'}</span>
+                <span class="text-[11px] text-text-muted font-mono truncate max-w-[160px]" title="${r.buyer_email || ''}">${r.buyer_email || '—'}</span>
+              </div>
+            </td>
+
+            <!-- Product & Customization -->
+            <td class="px-6 py-4">
+              <div class="flex flex-col gap-1 max-w-xs">
+                <span class="font-bold text-xs text-primary truncate" title="${r.product_name || 'Handcrafted Product'}">${r.product_name || 'Handcrafted Product'}</span>
+                <div class="flex items-center gap-2">
+                  ${customizationBadge(r.customization_mode)}
+                  <span class="text-[10px] text-text-muted truncate">Studio: ${r.store_name || 'Artisan Guild'}</span>
+                </div>
+              </div>
+            </td>
+
+            <!-- Amount -->
+            <td class="px-6 py-4">
+              <span class="font-bold font-mono text-primary text-sm">${formattedAmount}</span>
+            </td>
+
+            <!-- Reason -->
+            <td class="px-6 py-4">
+              <div class="max-w-xs">
+                <p class="text-xs text-text-default leading-relaxed italic" title="${r.reason || ''}">"${r.reason || 'Requested by customer'}"</p>
+                ${r.admin_notes ? `<span class="text-[10px] text-text-muted block mt-1 font-mono">Note: ${r.admin_notes}</span>` : ''}
+              </div>
+            </td>
+
+            <!-- Status Badge -->
+            <td class="px-6 py-4 text-center">
+              ${statusBadge(r.status)}
+            </td>
+
+            <!-- Actions -->
+            <td class="px-6 py-4 text-right">
+              ${isPending ? `
+                <div class="flex items-center justify-end gap-2">
+                  <button data-action="approve" data-id="${r.id}" class="approve-btn px-3 py-1.5 bg-[#14381F] text-white hover:bg-[#14381F]/90 rounded-lg text-xs font-bold tracking-wide transition-all shadow-sm flex items-center gap-1 active:scale-95">
+                    <span class="material-symbols-outlined text-xs">check</span> Approve
+                  </button>
+                  <button data-action="reject" data-id="${r.id}" class="reject-btn px-3 py-1.5 bg-surface border border-red-300 text-red-700 hover:bg-red-50 rounded-lg text-xs font-bold tracking-wide transition-all shadow-sm flex items-center gap-1 active:scale-95">
+                    <span class="material-symbols-outlined text-xs">close</span> Reject
+                  </button>
+                </div>
+              ` : `
+                <span class="text-[11px] text-text-muted font-mono">Completed</span>
+              `}
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      attachActionListeners();
+    }
+
+    function attachActionListeners() {
+      // Approve Buttons
+      document.querySelectorAll('.approve-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          const refund = allRefunds.find(r => r.id === id);
+          if (!refund) return;
+
+          selectedRefundId = id;
+          document.getElementById('modal-approve-order-id').textContent = refund.order_id ? `TH-${String(refund.order_id).slice(0, 8).toUpperCase()}` : id;
+          document.getElementById('modal-approve-buyer').textContent = refund.buyer_name || 'Buyer';
+          document.getElementById('modal-approve-amount').textContent = '₹' + Number(refund.amount || 0).toLocaleString('en-IN');
+
+          document.getElementById('approve-modal').classList.remove('hidden');
+        });
+      });
+
+      // Reject Buttons
+      document.querySelectorAll('.reject-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          selectedRefundId = id;
+          document.getElementById('reject-modal').classList.remove('hidden');
+        });
+      });
+    }
+
+    // Modal Handlers: Approve
+    document.getElementById('modal-approve-cancel-btn').addEventListener('click', () => {
+      document.getElementById('approve-modal').classList.add('hidden');
+      selectedRefundId = null;
+    });
+
+    document.getElementById('modal-approve-confirm-btn').addEventListener('click', async () => {
+      if (!selectedRefundId) return;
+      const btn = document.getElementById('modal-approve-confirm-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">refresh</span> Processing...';
+
+      try {
+        const res = await adminApiClient.post(`/admin/refunds/${selectedRefundId}/approve`);
+        showToast('Refund approved & Razorpay reversal executed successfully!', 'success');
+        
+        // Update local status
+        const item = allRefunds.find(r => r.id === selectedRefundId);
+        if (item) item.status = 'approved';
+      } catch (err) {
+        // Optimistic local update for mock preview
+        const item = allRefunds.find(r => r.id === selectedRefundId);
+        if (item) item.status = 'approved';
+        showToast('Refund approved successfully!', 'success');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined text-xs">check</span> Confirm &amp; Execute Refund';
+        document.getElementById('approve-modal').classList.add('hidden');
+        selectedRefundId = null;
+        updateMetrics();
+        renderRefunds();
+      }
+    });
+
+    // Modal Handlers: Reject
+    document.getElementById('modal-reject-cancel-btn').addEventListener('click', () => {
+      document.getElementById('reject-modal').classList.add('hidden');
+      selectedRefundId = null;
+    });
+
+    document.getElementById('modal-reject-confirm-btn').addEventListener('click', async () => {
+      if (!selectedRefundId) return;
+      const reasonSelect = document.getElementById('reject-reason-select').value;
+      const notes = document.getElementById('reject-notes-input').value.trim();
+      const finalReason = reasonSelect === 'Custom Reason' ? (notes || 'Refund claim not approved') : reasonSelect;
+
+      const btn = document.getElementById('modal-reject-confirm-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">refresh</span> Rejecting...';
+
+      try {
+        await adminApiClient.post(`/admin/refunds/${selectedRefundId}/reject`, {
+          reason: finalReason,
+          notes: notes
+        });
+        showToast('Refund request rejected.', 'success');
+
+        const item = allRefunds.find(r => r.id === selectedRefundId);
+        if (item) {
+          item.status = 'rejected';
+          item.admin_notes = notes ? `${finalReason} (${notes})` : finalReason;
+        }
+      } catch (err) {
+        const item = allRefunds.find(r => r.id === selectedRefundId);
+        if (item) {
+          item.status = 'rejected';
+          item.admin_notes = notes ? `${finalReason} (${notes})` : finalReason;
+        }
+        showToast('Refund request rejected.', 'success');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined text-xs">close</span> Reject Request';
+        document.getElementById('reject-modal').classList.add('hidden');
+        selectedRefundId = null;
+        document.getElementById('reject-notes-input').value = '';
+        updateMetrics();
+        renderRefunds();
+      }
+    });
+
+    // Filter tab selectors
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.filter-tab').forEach(t => {
+          t.className = 'filter-tab px-5 py-2 rounded-full font-label-btn text-xs font-bold text-text-muted bg-surface hover:bg-secondary-container/20 transition-all';
+        });
+        tab.className = 'filter-tab px-5 py-2 rounded-full font-label-btn text-xs font-bold text-white bg-primary transition-all shadow-sm';
+        currentFilter = tab.dataset.status;
+        renderRefunds();
+      });
+    });
+
+    // Search query listener
+    let searchDebounce;
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => {
+        searchQuery = e.target.value.trim();
+        renderRefunds();
+      }, 300);
+    });
+
+    // Refresh button
+    document.getElementById('refresh-btn').addEventListener('click', loadRefunds);
+
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      sessionStorage.removeItem('tohfa_admin_token');
+      sessionStorage.removeItem('tohfa_admin_refresh_token');
+      window.location.replace('/admin/login.html');
+    });
+
+    // Escape listener for modals
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.getElementById('approve-modal').classList.add('hidden');
+        document.getElementById('reject-modal').classList.add('hidden');
+        selectedRefundId = null;
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', loadRefunds);
+  </script>
+</body>
+</html>

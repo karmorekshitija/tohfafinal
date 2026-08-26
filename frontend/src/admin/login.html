@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Tohfa Admin | Master Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+  <style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+    .parchment-bg { background-color: #FFF8E7; }
+  </style>
+</head>
+<body class="parchment-bg min-h-screen flex flex-col justify-between font-['DM_Sans'] text-[#1F1B15]">
+
+  <!-- Header -->
+  <header class="w-full px-8 py-6 flex justify-between items-center max-w-7xl mx-auto">
+    <a href="/buyer/home.html" class="font-['Playfair_Display'] text-3xl italic font-bold text-[#14381F]">
+      Tohfa<span class="text-[#14381F]">.</span> <span class="text-xs font-sans not-italic uppercase tracking-widest text-[#717972]">Admin</span>
+    </a>
+    <div class="text-xs text-[#717972]">
+      Return to <a href="/auth/login.html" class="text-[#14381F] font-semibold hover:underline">User Login</a>
+    </div>
+  </header>
+
+  <!-- Login Main Card -->
+  <main class="flex-1 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-[#FFF8E7] rounded-2xl border border-[#E2D9C8] p-8 shadow-sm">
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#14381F]/10 text-[#14381F] mb-3">
+          <span class="material-symbols-outlined text-2xl">admin_panel_settings</span>
+        </div>
+        <h1 class="font-['Playfair_Display'] text-3xl font-bold text-[#14381F] mb-1">Admin Portal</h1>
+        <p class="text-xs font-semibold uppercase tracking-wider text-[#14381F]">Authorized Personnel Only</p>
+      </div>
+
+      <!-- Security Notice -->
+      <div class="mb-5 p-3 bg-[#FFF8E7] border border-[#E2D9C8] text-[#414942] rounded-xl flex items-center gap-2.5 text-xs font-medium">
+        <span class="material-symbols-outlined text-[18px] text-[#14381F] shrink-0">shield_lock</span>
+        <span>Secured Area: All authentication attempts are logged and audited.</span>
+      </div>
+
+      <!-- Error Alert -->
+      <div id="error-alert" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px] text-red-600 shrink-0">warning</span>
+        <span id="error-alert-text"></span>
+      </div>
+      <div id="loginErrorMessage" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2"></div>
+
+      <!-- Login Form -->
+      <form id="loginForm" class="space-y-5">
+        <div>
+          <label for="identifier" class="block text-xs font-bold text-[#414942] uppercase tracking-wider mb-2">
+            Admin Username or Email
+          </label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#717972] text-[20px]">person</span>
+            <input 
+              type="text" 
+              id="identifier" 
+              name="identifier" 
+              required 
+              placeholder="admin or admin@tohfa.in" 
+              class="w-full pl-10 pr-4 py-3 bg-[#FFF8E7]/50 border border-[#D4C9B8] rounded-xl text-sm outline-none focus:border-[#14381F] focus:bg-[#FFF8E7] transition-all"
+            />
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-2">
+            <label for="password" class="text-xs font-bold text-[#414942] uppercase tracking-wider">
+              Password
+            </label>
+          </div>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#717972] text-[20px]">lock</span>
+            <input 
+              type="password" 
+              id="password" 
+              name="password" 
+              required 
+              placeholder="••••••••" 
+              class="w-full pl-10 pr-10 py-3 bg-[#FFF8E7]/50 border border-[#D4C9B8] rounded-xl text-sm outline-none focus:border-[#14381F] focus:bg-[#FFF8E7] transition-all"
+            />
+            <button type="button" id="toggle-pw-btn" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#717972]">
+              <span id="password-toggle-icon" class="material-symbols-outlined text-[20px]">visibility</span>
+            </button>
+          </div>
+        </div>
+
+        <button 
+          type="submit" 
+          id="loginSubmitBtn" 
+          class="w-full py-3.5 bg-[#14381F] text-white rounded-xl text-sm font-bold hover:bg-[#2D5B3F] active:scale-[0.99] transition-all shadow-sm flex items-center justify-center gap-2"
+        >
+          <span class="material-symbols-outlined text-[18px]">verified_user</span>
+          <span>Authenticate Admin</span>
+        </button>
+      </form>
+
+      <div class="mt-6 text-center text-xs text-[#717972]">
+        Standard user or seller? 
+        <a href="/auth/login.html" class="text-[#14381F] font-bold hover:underline">Log in here</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="py-6 text-center text-xs text-[#717972]">
+    © Tohfa Security Operations. Restricted System.
+  </footer>
+
+  <script type="module">
+    import { authStorage, redirectUserByRole } from '/src/utils/auth.js';
+
+    const togglePwBtn = document.getElementById('toggle-pw-btn');
+    togglePwBtn?.addEventListener('click', () => {
+      const input = document.getElementById('password');
+      const icon = document.getElementById('password-toggle-icon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.textContent = 'visibility_off';
+      } else {
+        input.type = 'password';
+        icon.textContent = 'visibility';
+      }
+    });
+
+    const form = document.getElementById('loginForm') || document.getElementById('login-form');
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const alertEl = document.getElementById('error-alert');
+      const alertText = document.getElementById('error-alert-text');
+      const errorEl = document.getElementById('loginErrorMessage');
+      const submitBtn = document.getElementById('loginSubmitBtn') || document.getElementById('submit-btn');
+      
+      if (alertEl) alertEl.classList.add('hidden');
+      if (alertText) alertText.textContent = '';
+      if (errorEl) {
+        errorEl.classList.add('hidden');
+        errorEl.textContent = '';
+      }
+
+      const usernameInput = document.getElementById('identifier') || document.getElementById('username') || document.getElementById('email');
+      const username = usernameInput ? usernameInput.value.trim() : '';
+      const password = document.getElementById('password').value;
+
+      if (!username || !password) {
+        const msg = 'Please enter both admin username/email and password.';
+        if (alertText) alertText.textContent = msg;
+        if (alertEl) alertEl.classList.remove('hidden');
+        if (errorEl) { errorEl.textContent = msg; errorEl.classList.remove('hidden'); }
+        return;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Authenticating...';
+      }
+
+      try {
+        let response = await fetch('/api/auth/admin-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: username, username, password })
+        });
+
+        if (response.status === 404) {
+          // Fallback if route is mounted at admin/auth/login
+          response = await fetch('/api/admin/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email: username, password })
+          });
+        }
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || data.error || 'Authentication failed. Please check your credentials.');
+        }
+
+        const token = data.token || data.accessToken || data.data?.access_token || data.data?.token;
+        const refreshToken = data.refreshToken || data.refresh_token || data.data?.refresh_token;
+        const admin = data.admin || data.user || data.data?.admin || data.data?.user || { role: 'admin' };
+        if (!admin.role) admin.role = 'admin';
+
+        if (token) {
+          authStorage.setToken(token);
+          localStorage.setItem('tohfa_admin_token', token);
+          sessionStorage.setItem('tohfa_admin_token', token);
+        }
+
+        if (refreshToken) {
+          localStorage.setItem('tohfa_admin_refresh_token', refreshToken);
+          sessionStorage.setItem('tohfa_admin_refresh_token', refreshToken);
+          localStorage.setItem('tohfa_refresh_token', refreshToken);
+          sessionStorage.setItem('tohfa_refresh_token', refreshToken);
+        }
+
+        if (admin) {
+          authStorage.setUser(admin);
+          localStorage.setItem('tohfa_admin', JSON.stringify(admin));
+          sessionStorage.setItem('tohfa_admin', JSON.stringify(admin));
+        }
+
+        redirectUserByRole(admin);
+
+      } catch (err) {
+        console.error('Admin login error:', err);
+        const msg = err.message || 'Unable to authenticate. Please check your credentials.';
+        if (alertText) alertText.textContent = msg;
+        if (alertEl) alertEl.classList.remove('hidden');
+        if (errorEl) { errorEl.textContent = msg; errorEl.classList.remove('hidden'); }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">verified_user</span><span>Authenticate Admin</span>';
+        }
+      }
+    });
+  </script>
+</body>
+</html>

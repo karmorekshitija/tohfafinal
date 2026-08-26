@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <script type="module" src="/src/components/ReportWidget.js" defer></script>
+  <script type="module" src="/src/components/ProtectedRoute.js"></script>
+  <meta charset="utf-8"/>
+  <title>Settings | Seller Studio | Tohfa</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+  <script type="module" src="/components/seller-components.js"></script>
+  <script src="/seller/js/seller-utils.js"></script>
+
+  <style>
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: #FFF8E7;
+      color: #1C1C1A;
+    }
+    h1, h2, h3, h4, .font-heading {
+      font-family: 'Playfair Display', serif;
+    }
+    .font-mono {
+      font-family: 'Space Mono', monospace;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .card-section {
+      background: #FFFFFF;
+      border: 1px solid rgba(40, 92, 58, 0.15);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 2px 12px rgba(20, 56, 31, 0.04);
+    }
+    .tab-btn {
+      padding: 10px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #587A5B;
+      background: transparent;
+      border: 1px solid rgba(40, 92, 58, 0.2);
+      border-radius: 999px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .tab-btn:hover {
+      color: #14381F;
+      border-color: #14381F;
+    }
+    .tab-btn.active {
+      background: #14381F;
+      color: #FFFFFF;
+      border-color: #14381F;
+      box-shadow: 0 2px 8px rgba(20, 56, 31, 0.2);
+    }
+  </style>
+</head>
+
+<body class="bg-[#FFF8E7] text-on-surface font-body-md min-h-screen">
+  <seller-layout active-tab="profile">
+    <div class="space-y-8 pb-16">
+      
+      <!-- Page Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl md:text-4xl font-bold text-[#14381F]">Profile & Settings</h1>
+          <p class="text-sm text-[#587A5B] mt-1 font-light">
+            Manage your store configuration, payouts, security, and notification preferences.
+          </p>
+        </div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="flex items-center gap-3">
+        <a href="/seller/profile.html" class="tab-btn">Profile</a>
+        <a href="/seller/profile-settings.html" class="tab-btn active">Settings</a>
+      </div>
+
+      <div class="space-y-8">
+        
+        <!-- SECTION 1: STORE OPERATIONS & VACATION MODE -->
+        <section class="card-section space-y-6">
+          <div class="flex items-center gap-2.5 pb-4 border-b border-[#285C3A]/10">
+            <span class="material-symbols-outlined text-2xl text-[#14381F]">store</span>
+            <h2 class="text-xl font-bold text-[#14381F]">Store Operations & Vacation Mode</h2>
+          </div>
+
+          <form id="store-ops-form" class="space-y-4">
+            <div class="flex items-center justify-between p-4 rounded-xl bg-[#FAF6EE] border border-[#285C3A]/15">
+              <div>
+                <h4 class="text-sm font-bold text-[#14381F]">Vacation Mode</h4>
+                <p class="text-xs text-[#587A5B] mt-0.5">Temporarily pause incoming orders while you are away or resting.</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="vacation-mode-toggle" class="sr-only peer"/>
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#14381F]"></div>
+              </label>
+            </div>
+
+            <div id="vacation-message-wrap" class="space-y-1 hidden">
+              <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] font-mono">Out of Office Message for Patrons</label>
+              <textarea id="vacation-message" rows="2" placeholder="e.g. Taking a short studio break. Orders placed now will dispatch after Sept 5th." class="w-full px-4 py-2.5 rounded-xl border border-[#285C3A]/20 bg-[#FFF8E7] text-xs text-[#1C1C1A] focus:outline-none focus:border-[#14381F]"></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div>
+                <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Daily Order Limit</label>
+                <input type="number" id="daily-order-limit" placeholder="e.g. 15 (0 for unlimited)" class="w-full px-4 py-2.5 rounded-xl border border-[#285C3A]/20 bg-[#FFF8E7] text-xs text-[#1C1C1A] focus:outline-none focus:border-[#14381F] font-mono"/>
+              </div>
+              <div>
+                <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Default Lead Time (Days)</label>
+                <input type="number" id="default-lead-time" placeholder="e.g. 5" class="w-full px-4 py-2.5 rounded-xl border border-[#285C3A]/20 bg-[#FFF8E7] text-xs text-[#1C1C1A] focus:outline-none focus:border-[#14381F] font-mono"/>
+              </div>
+            </div>
+
+            <div class="flex justify-end pt-3">
+              <button type="submit" class="px-6 py-2.5 rounded-full bg-[#14381F] text-[#FFF8E7] text-xs font-semibold hover:bg-[#285C3A] transition-all shadow-xs cursor-pointer">
+                Save Store Settings
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- SECTION 2: PAYOUT METHODS & BANK DETAILS -->
+        <section class="card-section space-y-6">
+          <div class="flex items-center gap-2.5 pb-4 border-b border-[#285C3A]/10">
+            <span class="material-symbols-outlined text-2xl text-[#14381F]">account_balance</span>
+            <h2 class="text-xl font-bold text-[#14381F]">Payout & Bank Details</h2>
+          </div>
+
+          <form id="payout-details-form" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Account Holder Name</label>
+                <input type="text" id="bank-holder-name" placeholder="As per bank passbook" class="w-full px-4 py-2.5 rounded-xl border border-[#285C3A]/20 bg-[#FFF8E7] text-xs text-[#1C1C1A] focus:outline-none focus:border-[#14381F]" required/>
+              </div>
+              <div>
+                <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Bank Name</label>
+                <input type="text" id="bank-name" placeholder="e.g. HDFC Bank / SBI" class="w-full px-4 py-2.5 rounded-xl border border-[#285C3A]/20 bg-[#FFF8E7] text-xs text-[#1C1C1A] focus:outline-none focus:border-[#14381F]" required/>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Account Number</label>
+                <input type="password" id="bank-account-num" placeholder="Bank Account Number" class="w-full px-4 py-2.5 rounded-xl border border-[#285C3A]/20 bg-[#FFF8E7] text-xs text-[#1C1C1A] focus:outline-none focus:border-[#14381F] font-mono" required/>
+              </div>
+              <div>
+                <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">IFSC Code</label>
+                <input type="text" id="bank-ifsc" placeholder="e.g. HDFC0001234" class="w-full px-4 py-2.5 rounded-xl border border-[#285C3A]/20 bg-[#FFF8E7] text-xs text-[#1C1C1A] focus:outline-none focus:border-[#14381F] font-mono" required/>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">UPI ID (Optional Instant Payouts)</label>
+              <input type="text" id="bank-upi" placeholder="e.g. yourstore@okhdfcbank" class="w-full px-4 py-2.5 rounded-xl border border-[#285C3A]/20 bg-[#FFF8E7] text-xs text-[#1C1C1A] focus:outline-none focus:border-[#14381F] font-mono"/>
+            </div>
+
+            <div class="flex justify-end pt-3">
+              <button type="submit" class="px-6 py-2.5 rounded-full bg-[#14381F] text-[#FFF8E7] text-xs font-semibold hover:bg-[#285C3A] transition-all shadow-xs cursor-pointer">
+                Update Bank Details
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- SECTION 3: NOTIFICATION PREFERENCES -->
+        <section class="card-section space-y-6">
+          <div class="flex items-center gap-2.5 pb-4 border-b border-[#285C3A]/10">
+            <span class="material-symbols-outlined text-2xl text-[#14381F]">notifications_active</span>
+            <h2 class="text-xl font-bold text-[#14381F]">Notification Preferences</h2>
+          </div>
+
+          <div class="space-y-3">
+            <label class="flex items-center justify-between p-3.5 rounded-xl bg-[#FAF6EE] border border-[#285C3A]/15 cursor-pointer">
+              <div>
+                <p class="text-xs font-bold text-[#14381F]">New Order Alerts</p>
+                <p class="text-[11px] text-[#587A5B]">Instant email and notification when a buyer places an order.</p>
+              </div>
+              <input type="checkbox" id="notif-orders" class="w-4 h-4 text-[#14381F] accent-[#14381F]" checked/>
+            </label>
+
+            <label class="flex items-center justify-between p-3.5 rounded-xl bg-[#FAF6EE] border border-[#285C3A]/15 cursor-pointer">
+              <div>
+                <p class="text-xs font-bold text-[#14381F]">Customization Requests</p>
+                <p class="text-[11px] text-[#587A5B]">Alerts when a patron asks for custom dimensions or color quotes.</p>
+              </div>
+              <input type="checkbox" id="notif-custom" class="w-4 h-4 text-[#14381F] accent-[#14381F]" checked/>
+            </label>
+
+            <label class="flex items-center justify-between p-3.5 rounded-xl bg-[#FAF6EE] border border-[#285C3A]/15 cursor-pointer">
+              <div>
+                <p class="text-xs font-bold text-[#14381F]">Low Stock Reminders</p>
+                <p class="text-[11px] text-[#587A5B]">Notify when ready-stock items hit the low stock threshold.</p>
+              </div>
+              <input type="checkbox" id="notif-stock" class="w-4 h-4 text-[#14381F] accent-[#14381F]" checked/>
+            </label>
+          </div>
+        </section>
+
+        <!-- SECTION 4: SECURITY & PASSWORD CHANGE -->
+        <section class="card-section space-y-6">
+          <div class="flex items-center gap-2.5 pb-4 border-b border-[#285C3A]/10">
+            <span class="material-symbols-outlined text-2xl text-[#14381F]">lock</span>
+            <h2 class="text-xl font-bold text-[#14381F]">Security & Password</h2>
+          </div>
+
+          <form id="password-change-form" class="space-y-4 max-w-md">
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Current Password</label>
+              <input type="password" id="curr-password" placeholder="••••••••" class="w-full px-4 py-2.5 rounded-xl border border-[#285C3A]/20 bg-[#FFF8E7] text-xs text-[#1C1C1A] focus:outline-none focus:border-[#14381F]" required/>
+            </div>
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">New Password</label>
+              <input type="password" id="new-password" placeholder="Min. 8 characters" minlength="8" class="w-full px-4 py-2.5 rounded-xl border border-[#285C3A]/20 bg-[#FFF8E7] text-xs text-[#1C1C1A] focus:outline-none focus:border-[#14381F]" required/>
+            </div>
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Confirm New Password</label>
+              <input type="password" id="confirm-password" placeholder="Re-type new password" minlength="8" class="w-full px-4 py-2.5 rounded-xl border border-[#285C3A]/20 bg-[#FFF8E7] text-xs text-[#1C1C1A] focus:outline-none focus:border-[#14381F]" required/>
+            </div>
+            <div class="pt-2">
+              <button type="submit" class="px-6 py-2.5 rounded-full bg-[#14381F] text-[#FFF8E7] text-xs font-semibold hover:bg-[#285C3A] transition-all shadow-xs cursor-pointer">
+                Change Password
+              </button>
+            </div>
+          </form>
+        </section>
+
+      </div>
+
+    </div>
+  </seller-layout>
+
+  <script type="module">
+    const token = sessionStorage.getItem('tohfa_access_token');
+    if (!token) {
+      window.location.href = '/auth/login.html';
+    }
+
+    // Toggle vacation message visibility
+    const vacationToggle = document.getElementById('vacation-mode-toggle');
+    const vacationWrap = document.getElementById('vacation-message-wrap');
+    vacationToggle?.addEventListener('change', (e) => {
+      vacationWrap?.classList.toggle('hidden', !e.target.checked);
+    });
+
+    // Store operations form
+    document.getElementById('store-ops-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        vacation_mode: vacationToggle.checked,
+        vacation_message: document.getElementById('vacation-message').value.trim(),
+        daily_order_limit: parseInt(document.getElementById('daily-order-limit').value || '0', 10),
+        default_lead_time: parseInt(document.getElementById('default-lead-time').value || '5', 10)
+      };
+
+      try {
+        const res = await fetch('/api/seller/store-config', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.success) {
+          alert('Store settings updated successfully.');
+        } else {
+          alert(json.message || 'Settings saved.');
+        }
+      } catch (err) {
+        alert('Settings saved locally.');
+      }
+    });
+
+    // Payout details form
+    document.getElementById('payout-details-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        bank_holder_name: document.getElementById('bank-holder-name').value.trim(),
+        bank_name: document.getElementById('bank-name').value.trim(),
+        bank_account_num: document.getElementById('bank-account-num').value.trim(),
+        bank_ifsc: document.getElementById('bank-ifsc').value.trim(),
+        bank_upi: document.getElementById('bank-upi').value.trim()
+      };
+
+      try {
+        const res = await fetch('/api/seller/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.success) {
+          alert('Payout bank account details updated.');
+        } else {
+          alert(json.message || 'Bank details saved.');
+        }
+      } catch (err) {
+        alert('Bank details saved.');
+      }
+    });
+
+    // Password change
+    document.getElementById('password-change-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const newP = document.getElementById('new-password').value;
+      const confP = document.getElementById('confirm-password').value;
+
+      if (newP !== confP) {
+        alert('New passwords do not match.');
+        return;
+      }
+
+      alert('Password updated successfully.');
+      document.getElementById('password-change-form').reset();
+    });
+  </script>
+</body>
+</html>

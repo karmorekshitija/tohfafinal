@@ -1,0 +1,58 @@
+<!-- File: frontend/src/seller/onboarding.html | Role: Seller Application Status & Onboarding Gate -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Status | Seller Studio — Tohfa</title>
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <link rel="stylesheet" href="../styles/reset.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/animations.css">
+</head>
+<body style="background:var(--color-background); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:var(--space-4);">
+  <div class="card animate-scale-in" style="max-width:500px; width:100%; padding:var(--space-8); text-align:center;">
+    <div id="statusIcon" style="font-size:48px; margin-bottom:var(--space-3);">⏳</div>
+    <h1 id="statusTitle" class="text-display" style="font-size:var(--text-2xl); color:var(--color-primary); margin-bottom:var(--space-2);">
+      Application Under Review
+    </h1>
+    <p id="statusMsg" class="text-body" style="color:var(--color-text-muted); margin-bottom:var(--space-6);">
+      Thank you for applying to Tohfa Studio! Our curation team carefully reviews all handmade collections within 24-48 hours.
+    </p>
+
+    <div id="actionContainer">
+      <a href="/buyer/home.html" class="btn btn-secondary">Explore Tohfa Marketplace</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { api } from '../js/api.js';
+    import { requireAuth } from '../js/auth.js';
+
+    if (requireAuth()) {}
+
+    async function checkStatus() {
+      try {
+        const res = await api.get('/api/seller/application-status');
+        const app = res?.data?.application || res?.data;
+
+        if (app?.is_approved) {
+          document.getElementById('statusIcon').textContent = '🎉';
+          document.getElementById('statusTitle').textContent = 'Application Approved!';
+          document.getElementById('statusMsg').textContent = 'Welcome to Tohfa Studio! Your artisan storefront is now live.';
+          document.getElementById('actionContainer').innerHTML = `<a href="./dashboard.html" class="btn btn-primary btn-full">Enter Seller Studio Dashboard →</a>`;
+        } else if (app?.rejection_reason) {
+          document.getElementById('statusIcon').textContent = '⚠️';
+          document.getElementById('statusTitle').textContent = 'Application Update';
+          document.getElementById('statusMsg').textContent = `Reason: ${app.rejection_reason}. You may re-apply with updated details.`;
+          document.getElementById('actionContainer').innerHTML = `<a href="/auth/signup-seller.html" class="btn btn-primary">Re-apply as Seller</a>`;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    checkStatus();
+  </script>
+</body>
+</html>

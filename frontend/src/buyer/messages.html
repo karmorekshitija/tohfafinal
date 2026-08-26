@@ -1,0 +1,141 @@
+<!-- File: frontend/src/buyer/messages.html | Role: Buyer Messages / Inquiries -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages | Tohfa</title>
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <link rel="stylesheet" href="../styles/reset.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/animations.css">
+  <style>
+    .messages-layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 0;
+      height: calc(100vh - var(--nav-height-desktop) - var(--space-12));
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+    .threads-panel {
+      border-right: 1px solid var(--color-border);
+      overflow-y: auto;
+    }
+    .thread-item {
+      display: flex;
+      gap: var(--space-3);
+      padding: var(--space-4);
+      cursor: pointer;
+      border-bottom: 1px solid var(--color-border);
+      transition: background var(--transition-fast);
+    }
+    .thread-item:hover { background: var(--color-surface); }
+    .thread-item.active { background: rgba(200,169,110,0.08); border-left: 3px solid var(--color-gold); }
+    .chat-panel {
+      display: flex;
+      flex-direction: column;
+      background: var(--color-background);
+    }
+    .chat-header {
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-surface);
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-5);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+    .msg-bubble {
+      max-width: 70%;
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-lg);
+      font-size: var(--text-sm);
+      line-height: var(--leading-normal);
+    }
+    .msg-bubble.me {
+      align-self: flex-end;
+      background: var(--color-primary);
+      color: var(--color-text-on-dark);
+      border-bottom-right-radius: 4px;
+    }
+    .msg-bubble.them {
+      align-self: flex-start;
+      background: var(--color-surface);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+      border-bottom-left-radius: 4px;
+    }
+    .chat-input-bar {
+      padding: var(--space-3) var(--space-4);
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      gap: var(--space-3);
+    }
+  </style>
+</head>
+<body class="page-with-nav page-with-bottom-tab">
+  <nav class="nav-desktop" id="navbarContainer"></nav>
+  <main class="container section">
+    <div class="section-header" style="margin-bottom:var(--space-5);">
+      <div class="section-header__left">
+        <span class="section-header__eyebrow">Conversations</span>
+        <h1 class="section-header__title">Messages</h1>
+      </div>
+    </div>
+
+    <div class="messages-layout">
+      <!-- Thread list -->
+      <div class="threads-panel">
+        <div style="padding:var(--space-3) var(--space-4); border-bottom:1px solid var(--color-border);">
+          <input type="search" class="form-input" placeholder="Search conversations…" style="height:36px; font-size:var(--text-sm);">
+        </div>
+        <div id="threadList">
+          <div style="padding:var(--space-5);">
+            <div class="skeleton skeleton--text" style="margin-bottom:var(--space-3);"></div>
+            <div class="skeleton skeleton--text" style="width:70%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat panel -->
+      <div class="chat-panel" id="chatPanel">
+        <!-- Empty: no chat selected -->
+        <div class="empty-state" id="chatEmpty" style="flex:1;">
+          <div class="empty-state__icon">💬</div>
+          <h3 class="empty-state__title">Select a conversation</h3>
+          <p class="empty-state__body">Chat with artisans about custom orders, personalisation, or delivery.</p>
+        </div>
+
+        <!-- Active chat (shown by JS) -->
+        <div id="activeChatArea" style="display:none; flex:1; display:flex; flex-direction:column;">
+          <div class="chat-header">
+            <div style="font-family:var(--font-display); font-size:var(--text-base); color:var(--color-primary);" id="chatSellerName"></div>
+            <div class="text-small" id="chatProductTitle"></div>
+          </div>
+          <div class="chat-messages" id="chatMessages"></div>
+          <form class="chat-input-bar" id="chatForm">
+            <input type="text" id="chatInput" class="form-input" placeholder="Type a message…" style="flex:1; height:42px;">
+            <button type="submit" class="btn btn-gold" style="height:42px; padding:0 var(--space-5);">
+              Send
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer class="footer"></footer>
+  <div id="toastContainer" class="toast-container"></div>
+  <script type="module" src="./messages.js"></script>
+  <script type="module">
+    import { initBuyerShell } from '../js/layout.js';
+    initBuyerShell({ activeTab: 'messages' });
+  </script>
+</body>
+</html>

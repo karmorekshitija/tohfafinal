@@ -1,0 +1,387 @@
+﻿<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta charset="utf-8"/>
+  <title>Studio Plans | Tohfa Seller Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+  <script type="module" src="/components/seller-components.js"></script>
+  <script type="module" src="/src/components/ProtectedRoute.js"></script>
+  <style>
+    body { background: #FFF8E7 !important; }
+    .plans-hero {
+      background: #14381F;
+      border-radius: 24px;
+      padding: 56px 48px 48px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 40px;
+    }
+    .plans-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 50% at 20% 50%, rgba(255,248,231,0.06) 0%, transparent 60%),
+                  radial-gradient(ellipse 60% 50% at 80% 50%, rgba(255,248,231,0.04) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .plans-hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 48px;
+      font-style: italic;
+      font-weight: 700;
+      color: #FFF8E7;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .plans-hero p.subtitle { color: rgba(255,248,231,0.65); font-size: 15px; max-width: 480px; margin: 0 auto; position: relative; line-height: 1.6; }
+    .priority-notice {
+      background: rgba(255,248,231,0.1);
+      border: 1px solid rgba(255,248,231,0.2);
+      border-radius: 12px;
+      padding: 12px 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 24px;
+      position: relative;
+    }
+    .priority-label { font-family: 'Space Mono',monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,248,231,0.5); }
+    .tiers { display: flex; align-items: center; gap: 6px; }
+    .tier-pill { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; font-family: 'DM Sans',sans-serif; }
+    .tier-pill.max  { background: #FFF8E7; color: #14381F; }
+    .tier-pill.pro  { background: rgba(255,248,231,0.25); color: #FFF8E7; }
+    .tier-pill.basic{ background: rgba(255,248,231,0.1); color: rgba(255,248,231,0.6); border: 1px solid rgba(255,248,231,0.2); }
+    .arrow-sep { color: rgba(255,248,231,0.35); font-size: 13px; }
+    .plans-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    .plan-card {
+      background: #1A2E1E;
+      border: 1.5px solid rgba(255,248,231,0.1);
+      border-radius: 20px;
+      padding: 32px 28px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .plan-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+    .plan-card.featured { border-color: rgba(255,248,231,0.35); background: #1F3524; box-shadow: 0 8px 32px rgba(0,0,0,0.25); }
+    .plan-card.current  { border-color: #4CAF50; }
+    .popular-badge {
+      position: absolute;
+      top: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #FFF8E7;
+      color: #14381F;
+      font-family: 'Space Mono',monospace;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 5px 16px;
+      border-radius: 0 0 12px 12px;
+    }
+    .plan-icon {
+      width: 44px; height: 44px;
+      background: rgba(255,248,231,0.08);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
+      color: #FFF8E7;
+    }
+    .plan-icon .material-symbols-outlined { font-size: 22px; }
+    .plan-name { font-family: 'Playfair Display',serif; font-size: 28px; font-weight: 700; color: #FFF8E7; line-height: 1; margin-bottom: 4px; }
+    .plan-tagline { font-size: 13px; color: rgba(255,248,231,0.5); margin-bottom: 20px; }
+    .plan-price { margin-bottom: 6px; }
+    .plan-price .amount { font-family: 'Playfair Display',serif; font-size: 36px; font-weight: 700; color: #FFF8E7; line-height: 1; }
+    .plan-price .currency { font-size: 18px; font-weight: 600; color: rgba(255,248,231,0.7); vertical-align: super; font-family: 'DM Sans',sans-serif; }
+    .plan-price-note { font-size: 12px; color: rgba(255,248,231,0.4); margin-bottom: 24px; }
+    .plan-divider { height: 1px; background: rgba(255,248,231,0.1); margin: 0 0 20px 0; }
+    .plan-cta {
+      width: 100%; padding: 13px; border-radius: 12px;
+      font-family: 'DM Sans',sans-serif; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s ease; margin-bottom: 24px;
+      text-align: center; border: none; letter-spacing: 0.02em;
+    }
+    .plan-cta.outline { background: transparent; border: 1.5px solid rgba(255,248,231,0.3); color: #FFF8E7; }
+    .plan-cta.outline:hover { border-color: rgba(255,248,231,0.7); background: rgba(255,248,231,0.06); }
+    .plan-cta.solid  { background: #FFF8E7; color: #14381F; }
+    .plan-cta.solid:hover { background: #f0e8d6; }
+    .plan-cta.current-plan { background: rgba(76,175,80,0.15); border: 1.5px solid #4CAF50; color: #4CAF50; cursor: default; }
+    .features-heading { font-family: 'DM Sans',sans-serif; font-size: 11px; font-weight: 700; color: rgba(255,248,231,0.5); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 14px; }
+    .feature-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 11px; }
+    .feature-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: rgba(255,248,231,0.8); line-height: 1.4; }
+    .feature-list li .check { color: #6FCF97; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .feature-list li.hl { font-weight: 700; color: #FFF8E7; }
+    .soon-tag { font-size: 9px; background: rgba(255,248,231,0.1); color: rgba(255,248,231,0.4); border-radius: 4px; padding: 1px 5px; font-family: 'Space Mono',monospace; letter-spacing: 0.08em; margin-left: 4px; }
+    @media(max-width:900px) {
+      .plans-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
+      .plans-hero h1 { font-size: 36px; }
+      .plans-hero { padding: 40px 24px 36px; }
+    }
+  </style>
+</head>
+<body class="bg-[#FFF8E7] font-['DM_Sans'] text-[#1C1C1C]">
+
+<seller-layout active-tab="plans">
+
+  <!-- HERO -->
+  <div class="plans-hero">
+    <p style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,248,231,0.45);margin-bottom:12px;position:relative;">Tohfa Studio</p>
+    <h1>Studio Plans</h1>
+    <p class="subtitle">Choose the plan that grows your artisan business. Upgrade or downgrade anytime.</p>
+    <div class="priority-notice">
+      <span class="material-symbols-outlined" style="color:rgba(255,248,231,0.5);font-size:16px;">package_2</span>
+      <span class="priority-label">Bulk Order Priority:</span>
+      <div class="tiers">
+        <span class="tier-pill max">Max</span>
+        <span class="arrow-sep">&#8594;</span>
+        <span class="tier-pill pro">Pro</span>
+        <span class="arrow-sep">&#8594;</span>
+        <span class="tier-pill basic">Basic</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLANS GRID -->
+  <div class="plans-grid" id="plansGrid">
+
+    <!-- BASIC -->
+    <div class="plan-card" id="card-basic">
+      <div class="plan-icon"><span class="material-symbols-outlined">storefront</span></div>
+      <div class="plan-name">Basic</div>
+      <div class="plan-tagline">Start your artisan journey</div>
+      <div class="plan-price"><span class="currency">&#8377;</span><span class="amount">0</span></div>
+      <div class="plan-price-note">Free forever &middot; No credit card needed</div>
+      <div class="plan-divider"></div>
+      <button class="plan-cta outline" id="basic-cta" onclick="handlePlanAction('basic')">Current Plan</button>
+      <div class="features-heading">What's included</div>
+      <ul class="feature-list">
+        <li><span class="material-symbols-outlined check">check_circle</span>List unlimited handcrafted products</li>
+        <li><span class="material-symbols-outlined check">check_circle</span>Accept orders &amp; payments</li>
+        <li><span class="material-symbols-outlined check">check_circle</span>Basic seller dashboard &amp; analytics</li>
+        <li><span class="material-symbols-outlined check">check_circle</span>Receive reviews &amp; ratings</li>
+        <li><span class="material-symbols-outlined check">check_circle</span>Customization order management</li>
+        <li><span class="material-symbols-outlined check">check_circle</span>WhatsApp order notifications</li>
+        <li><span class="material-symbols-outlined check">check_circle</span>Bulk order eligibility (lowest priority)</li>
+      </ul>
+    </div>
+
+    <!-- PRO -->
+    <div class="plan-card featured" id="card-pro">
+      <div class="popular-badge">Most Popular</div>
+      <div class="plan-icon" style="background:rgba(255,248,231,0.14);"><span class="material-symbols-outlined">auto_awesome</span></div>
+      <div class="plan-name">Pro</div>
+      <div class="plan-tagline">Grow your studio faster</div>
+      <div class="plan-price"><span class="currency">&#8377;</span><span class="amount">199</span></div>
+      <div class="plan-price-note">per month &middot; billed monthly</div>
+      <div class="plan-divider"></div>
+      <button class="plan-cta solid" id="pro-cta" onclick="handlePlanAction('pro')">Upgrade to Pro</button>
+      <div class="features-heading">Everything in Basic, plus:</div>
+      <ul class="feature-list">
+        <li class="hl"><span class="material-symbols-outlined check">check_circle</span><span><strong>5 Sponsored Products</strong> &mdash; featured in search &amp; home feed</span></li>
+        <li><span class="material-symbols-outlined check">check_circle</span>Priority placement in category pages</li>
+        <li><span class="material-symbols-outlined check">check_circle</span>&ldquo;Pro Studio&rdquo; badge on your profile</li>
+        <li><span class="material-symbols-outlined check">check_circle</span>Advanced analytics &amp; revenue insights</li>
+        <li><span class="material-symbols-outlined check">check_circle</span>Priority customer support</li>
+        <li><span class="material-symbols-outlined check">check_circle</span>Bulk order priority (above Basic)</li>
+        <li><span class="material-symbols-outlined check">check_circle</span>More features coming <span class="soon-tag">soon</span></li>
+      </ul>
+    </div>
+
+    <!-- MAX -->
+    <div class="plan-card" id="card-max">
+      <div class="plan-icon"><span class="material-symbols-outlined">diamond</span></div>
+      <div class="plan-name">Max</div>
+      <div class="plan-tagline">The complete growth engine</div>
+      <div class="plan-price"><span class="currency">&#8377;</span><span class="amount">499</span></div>
+      <div class="plan-price-note">per month &middot; billed monthly</div>
+      <div class="plan-divider"></div>
+      <button class="plan-cta outline" id="max-cta" onclick="handlePlanAction('max')" style="border-color:rgba(255,248,231,0.5);">Upgrade to Max</button>
+      <div class="features-heading">Everything in Pro, plus:</div>
+      <ul class="feature-list">
+        <li class="hl"><span class="material-symbols-outlined check">check_circle</span><span><strong>Meta Ads Integration</strong> &mdash; Instagram &amp; Facebook promotion</span></li>
+        <li class="hl"><span class="material-symbols-outlined check">check_circle</span><span><strong>Unlimited Sponsored Products</strong> &mdash; no cap</span></li>
+        <li><span class="material-symbols-outlined check">check_circle</span>&ldquo;Max Studio&rdquo; badge &mdash; top buyer trust signal</li>
+        <li><span class="material-symbols-outlined check">check_circle</span>Highest priority for Bulk &amp; Corporate orders</li>
+        <li><span class="material-symbols-outlined check">check_circle</span>Dedicated account manager <span class="soon-tag">soon</span></li>
+        <li><span class="material-symbols-outlined check">check_circle</span>Early access to new Tohfa features</li>
+        <li><span class="material-symbols-outlined check">check_circle</span>More features being added <span class="soon-tag">soon</span></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Bulk Orders Explainer -->
+  <div style="background:#1A2E1E;border-radius:16px;padding:24px 28px;margin-top:28px;display:flex;align-items:flex-start;gap:16px;">
+    <span class="material-symbols-outlined" style="color:rgba(255,248,231,0.5);font-size:28px;flex-shrink:0;margin-top:2px;">package_2</span>
+    <div>
+      <p style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#FFF8E7;margin-bottom:6px;">How Bulk &amp; Corporate Orders Work</p>
+      <p style="font-size:13px;color:rgba(255,248,231,0.6);line-height:1.6;max-width:680px;">
+        When a buyer places a large bulk order, Tohfa routes it to the most capable sellers first.
+        <strong style="color:rgba(255,248,231,0.85);">Max sellers</strong> are approached first, then
+        <strong style="color:rgba(255,248,231,0.85);">Pro sellers</strong>, then
+        <strong style="color:rgba(255,248,231,0.85);">Basic sellers</strong>.
+        Upgrading your plan directly increases your chances of landing high-value corporate orders.
+      </p>
+    </div>
+  </div>
+
+  <p style="text-align:center;color:rgba(28,28,28,0.4);font-size:12px;margin-top:28px;padding-bottom:8px;">
+    Plans auto-renew monthly. Cancel anytime. GST applicable. &nbsp;&middot;&nbsp;
+    <a href="/buyer/terms-conditions.html" target="_blank" style="color:#14381F;">Terms &amp; Conditions</a>
+  </p>
+
+</seller-layout>
+
+<!-- UPGRADE MODAL -->
+<div id="upgradeModal" class="fixed inset-0 z-[999] hidden" style="background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;">
+  <div style="background:#1A2E1E;border:1.5px solid rgba(255,248,231,0.15);border-radius:20px;padding:36px 32px;max-width:420px;width:90%;text-align:center;">
+    <span class="material-symbols-outlined" id="modalIcon" style="font-size:40px;color:#FFF8E7;margin-bottom:16px;display:block;">auto_awesome</span>
+    <h3 id="modalTitle" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#FFF8E7;margin-bottom:8px;"></h3>
+    <p id="modalSubtitle" style="font-size:13px;color:rgba(255,248,231,0.55);margin-bottom:28px;line-height:1.5;"></p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button id="modalConfirm" onclick="window.confirmUpgrade()" style="width:100%;padding:13px;background:#FFF8E7;color:#14381F;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">
+        Proceed to Payment
+      </button>
+      <button onclick="window.closeModal()" style="width:100%;padding:12px;background:transparent;border:1.5px solid rgba(255,248,231,0.2);color:rgba(255,248,231,0.6);border-radius:12px;font-size:13px;cursor:pointer;">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+(function(){
+  'use strict';
+  var API = '/api';
+  var tok = function(){ return sessionStorage.getItem('tohfa_access_token') || localStorage.getItem('tohfa_access_token'); };
+  var PLANS = {
+    basic:{ name:'Basic', price:0,   icon:'storefront',   sub:'You are already on the free Basic plan. No charges apply.' },
+    pro:  { name:'Pro',   price:199, icon:'auto_awesome', sub:'Upgrade to Pro for \u20b9199/month. Get 5 Sponsored Products & priority placement.' },
+    max:  { name:'Max',   price:499, icon:'diamond',      sub:'Upgrade to Max for \u20b9499/month. Get Meta Ads, unlimited sponsored products & bulk order priority.' }
+  };
+  var currentPlan = 'basic';
+  var targetPlan  = null;
+
+  function apiFetch(url, opts){
+    return fetch(API + url, Object.assign({ headers:{ 'Authorization':'Bearer '+ tok(), 'Content-Type':'application/json' } }, opts));
+  }
+
+  function renderCurrentState(){
+    ['basic','pro','max'].forEach(function(k){
+      var card = document.getElementById('card-'+k);
+      var btn  = document.getElementById(k+'-cta');
+      if(!card || !btn) return;
+      card.classList.remove('current');
+      btn.className = 'plan-cta';
+      btn.disabled = false;
+      btn.style.borderColor = '';
+      if(k === currentPlan){
+        card.classList.add('current');
+        btn.classList.add('current-plan');
+        btn.textContent = '\u2713 Current Plan';
+        btn.disabled = true;
+      } else if(k === 'basic'){
+        btn.classList.add('outline');
+        btn.textContent = 'Downgrade to Basic';
+      } else if(k === 'pro'){
+        btn.classList.add(currentPlan === 'max' ? 'outline' : 'solid');
+        btn.textContent = currentPlan === 'max' ? 'Downgrade to Pro' : 'Upgrade to Pro';
+      } else if(k === 'max'){
+        btn.classList.add('outline');
+        btn.style.borderColor = 'rgba(255,248,231,0.5)';
+        btn.textContent = 'Upgrade to Max';
+      }
+    });
+  }
+
+  window.handlePlanAction = function(planKey){
+    if(planKey === currentPlan) return;
+    targetPlan = planKey;
+    var p = PLANS[planKey];
+    document.getElementById('modalIcon').textContent    = p.icon;
+    document.getElementById('modalTitle').textContent   = p.name + ' Plan';
+    document.getElementById('modalSubtitle').textContent= p.sub;
+    document.getElementById('modalConfirm').textContent = p.price === 0 ? 'Confirm Downgrade (Free)' : 'Pay \u20b9' + p.price + ' / month';
+    var m = document.getElementById('upgradeModal');
+    m.style.display = 'flex';
+  };
+
+  window.closeModal = function(){
+    document.getElementById('upgradeModal').style.display = 'none';
+    targetPlan = null;
+  };
+
+  window.confirmUpgrade = function(){
+    if(!targetPlan) return;
+    var plan = PLANS[targetPlan];
+    window.closeModal();
+    if(plan.price === 0){ doUpdate(targetPlan); return; }
+    apiFetch('/seller/subscription/create-order',{ method:'POST', body: JSON.stringify({ plan: targetPlan, amount: plan.price }) })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        var order = (data && data.data && data.data.razorpay_order) || {};
+        if(!order.id){ doUpdate(targetPlan); return; }
+        var rzp = new Razorpay({
+          key: (data.data && data.data.key_id) || '',
+          amount: plan.price * 100,
+          currency: 'INR',
+          name: 'Tohfa Studio Plans',
+          description: plan.name + ' Plan \u2014 \u20b9' + plan.price + '/month',
+          order_id: order.id,
+          handler: function(resp){
+            apiFetch('/seller/subscription/verify',{ method:'POST', body: JSON.stringify({ plan: targetPlan, razorpay_payment_id: resp.razorpay_payment_id, razorpay_order_id: resp.razorpay_order_id, razorpay_signature: resp.razorpay_signature }) });
+            currentPlan = targetPlan;
+            renderCurrentState();
+            showToast(plan.name);
+          },
+          theme:{ color:'#14381F' }
+        });
+        rzp.open();
+      })
+      .catch(function(){ doUpdate(targetPlan); });
+  };
+
+  function doUpdate(planKey){
+    apiFetch('/seller/subscription',{ method:'PATCH', body: JSON.stringify({ plan: planKey }) }).catch(function(){});
+    currentPlan = planKey;
+    renderCurrentState();
+    showToast(PLANS[planKey].name);
+  }
+
+  function showToast(planName){
+    var t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#14381F;color:#FFF8E7;padding:12px 24px;border-radius:50px;font-size:14px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.3);z-index:9999;display:flex;align-items:center;gap:8px;';
+    t.innerHTML = '<span style="font-size:18px;">\u2736</span> You are now on the <strong>&nbsp;' + planName + '</strong>&nbsp;plan!';
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 4000);
+  }
+
+  // Load current plan
+  apiFetch('/seller/profile')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var p = (d && d.data && d.data.profile) || (d && d.data) || {};
+      currentPlan = p.subscription_plan || p.plan || 'basic';
+      renderCurrentState();
+    })
+    .catch(function(){ renderCurrentState(); });
+})();
+</script>
+</body>
+</html>

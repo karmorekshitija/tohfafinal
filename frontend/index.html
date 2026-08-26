@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    FILE: frontend/index.html
+    PURPOSE: Entry point redirect. Reads session role and routes to the
+             correct panel. All pages are now fully responsive — no
+             separate mobile-buyer or mobile-seller directories exist.
+
+    ROUTING:
+      seller → /seller/dashboard.html
+      admin  → /admin/dashboard.html
+      buyer  → /buyer/home.html
+  -->
+  <script>
+    (function() {
+      var role = 'buyer';
+      try {
+        var userStr = sessionStorage.getItem('tohfa_user');
+        if (userStr) {
+          var user = JSON.parse(userStr);
+          role = user.role || 'buyer';
+        }
+      } catch(e) {}
+
+      if (role === 'seller') {
+        window.location.replace('/seller/dashboard.html');
+      } else if (role === 'admin') {
+        window.location.replace('/admin/dashboard.html');
+      } else {
+        window.location.replace('/buyer/home.html');
+      }
+    })();
+  </script>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tohfa | Handcrafted Treasures</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #FFF8E7;
+      font-family: 'DM Sans', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px;
+      font-style: italic;
+      color: #14381F;
+    }
+    .brand span { color: #14381F; opacity: 0.6; }
+    .loader {
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(20, 56, 31, 0.15);
+      border-top-color: #14381F;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .tagline {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: #4A4A4A;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="brand">Tohfa<span>.</span></div>
+  <div class="loader"></div>
+  <p class="tagline">Redirecting you to handcrafted treasures…</p>
+</body>
+</html>

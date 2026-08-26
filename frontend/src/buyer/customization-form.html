@@ -1,0 +1,75 @@
+<!-- File: frontend/src/buyer/customization-form.html | Role: Custom Gift Request Form -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Customization | Tohfa</title>
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <link rel="stylesheet" href="../styles/reset.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/animations.css">
+  <style>
+    .custom-form-hero {
+      background: var(--color-surface);
+      padding: var(--space-10) 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+  </style>
+</head>
+<body class="page-with-nav page-with-bottom-tab">
+  <nav class="nav-desktop" id="navbarContainer"></nav>
+
+  <div class="custom-form-hero">
+    <div class="container" style="text-align:center;">
+      <p class="text-eyebrow" style="color:var(--color-gold); margin-bottom:var(--space-3);">BESPOKE CRAFTSMANSHIP</p>
+      <h1 style="font-family:var(--font-display); font-size:var(--text-display-sm); color:var(--color-primary); letter-spacing:var(--tracking-tight);">Request a Customization</h1>
+      <p style="font-size:var(--text-base); color:var(--color-text-muted); margin-top:var(--space-3); max-width:480px; margin-inline:auto;">
+        Personalise your handcrafted gift with bespoke engravings, dimensions, and custom artisan touches.
+      </p>
+    </div>
+  </div>
+
+  <main class="container section" style="max-width:680px;">
+    <!-- Seller instructions box (if configured) -->
+    <div id="sellerInstructionsBox" class="card" style="display:none; padding:var(--space-4); margin-bottom:var(--space-6); background:var(--color-pale-sage); border:1px solid var(--color-moss);">
+      <h3 style="font-size:var(--text-sm); font-weight:var(--weight-bold); color:var(--color-primary); margin-bottom:var(--space-1);">Artisan Note &amp; Guidelines</h3>
+      <p id="sellerInstructionsText" class="text-body" style="font-size:var(--text-sm);"></p>
+    </div>
+
+    <form id="customRequestForm" class="card" style="padding:var(--space-6);">
+      <h2 class="card__title" style="margin-bottom:var(--space-4);">Customization Details</h2>
+      
+      <!-- Dynamic per-product fields container -->
+      <div id="dynamicFieldsContainer" class="flex flex-col gap-4">
+        <div class="skeleton skeleton--card" style="height:120px;"></div>
+      </div>
+
+      <!-- Budget & Deadline fields -->
+      <div class="flex flex-col gap-4" style="margin-top:var(--space-6); padding-top:var(--space-6); border-top:1px solid var(--color-border);">
+        <div class="form-group">
+          <label class="form-label">Estimated Target Budget (₹ optional)</label>
+          <input type="number" name="budget" class="form-input" placeholder="e.g. 2500" min="0">
+          <span id="budgetHint" class="form-helper" style="color:var(--color-text-muted);"></span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Required Delivery Date / Deadline</label>
+          <input type="date" name="deadline" class="form-input">
+        </div>
+      </div>
+
+      <!-- Submit button -->
+      <div style="margin-top:var(--space-6);">
+        <button type="submit" id="submitRequestBtn" class="btn btn-gold btn-full">
+          Submit Custom Request 🎁
+        </button>
+      </div>
+    </form>
+  </main>
+
+  <footer class="footer"></footer>
+  <div id="toastContainer" class="toast-container"></div>
+  <script type="module" src="./customization-form.js"></script>
+</body>
+</html>

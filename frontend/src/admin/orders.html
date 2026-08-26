@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+<script type="module" src="/src/components/AdminSidebar.js"></script>
+<script type="module" src="/src/components/ReportWidget.js" defer></script>
+<script type="module" src="/src/components/ProtectedRoute.js"></script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tohfa Admin | Orders & Disputes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+  <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .pulsing-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .watermark-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.06;
+            z-index: 0;
+            background-repeat: no-repeat;
+            background-position: bottom right;
+        }
+    </style>
+
+</head>
+<body class="bg-[#FFF8E7] text-text-default min-h-screen">
+<div class="watermark-overlay" style="background-image: url('/img/textures/natural-paper.png'); background-size: 300px; filter: grayscale(100%) invert(20%);"></div>
+
+<!-- Side Navigation Shell -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 py-10 px-6 z-50 w-64 border-r border-outline-variant/30 bg-[#FFF8E7]">
+<div class="mb-14">
+<h1 class="font-headline-lg text-headline-lg italic text-[#14381F] leading-tight">Tohfa</h1>
+<p class="text-accent-caps font-accent-caps text-text-faint tracking-widest text-[10px] mt-1 opacity-70">Admin Console</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/dashboard.html">
+<span class="material-symbols-outlined text-[20px]">grid_view</span>
+<span class="font-label-btn text-label-btn">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/tohfa-originals.html">
+<span class="material-symbols-outlined text-[20px]">stars</span>
+<span class="font-label-btn text-label-btn">Tohfa Specials</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/sellers.html">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span class="font-label-btn text-label-btn">Sellers & KYC</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-[#14381F] text-white rounded-full transition-all" href="/admin/orders.html">
+<span class="material-symbols-outlined text-[20px]">shopping_cart</span>
+<span class="font-label-btn text-label-btn">Orders & Disputes</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/categories.html">
+<span class="material-symbols-outlined text-[20px]">category</span>
+<span class="font-label-btn text-label-btn">Categories</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/products.html">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="font-label-btn text-label-btn">Products</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/audit-logs.html">
+<span class="material-symbols-outlined text-[20px]">history_edu</span>
+<span class="font-label-btn text-label-btn">Audit Logs</span>
+</a>
+</nav>
+<!-- Profile Footer -->
+<div class="mt-auto pt-6 border-t border-outline-variant/20 flex items-center gap-3">
+<div class="h-10 w-10 rounded-full bg-sage-soft flex items-center justify-center text-primary font-bold text-xs shrink-0">TA</div>
+<div class="overflow-hidden">
+<p class="text-[13px] font-bold text-text-default truncate leading-tight">Tohfa Admin</p>
+<p class="text-[11px] text-text-faint font-data-meta truncate">Master Access</p>
+</div>
+</div>
+</aside>
+
+<!-- Top Bar Shell -->
+<header class="fixed top-0 right-0 h-[60px] z-40 bg-bg-primary flex items-center justify-between px-8 w-[calc(100%-256px)] border-b border-outline-variant">
+<div class="flex items-center space-x-4">
+<h2 class="font-headline-md text-headline-md text-primary">Tohfa Orders & Dispute Authority</h2>
+</div>
+<div class="flex items-center space-x-4">
+<div class="flex items-center space-x-3">
+<div class="text-right hidden sm:block">
+<p class="text-body-sm font-bold leading-none">Studio Manager</p>
+<p class="text-data-meta text-text-faint">Super-Admin Privileges</p>
+</div>
+<img alt="Admin Profile" class="w-8 h-8 rounded-full border border-outline-variant object-cover" src="/uploads/avatars/default-avatar.png" loading="lazy" />
+</div>
+<button id="logout-btn" class="cursor-pointer active:opacity-70 text-text-muted hover:text-highlight-gold transition-colors">
+<span class="material-symbols-outlined">logout</span>
+</button>
+</div>
+</header>
+
+<!-- Main Content -->
+<main class="ml-64 pt-[60px] min-h-screen relative z-10 p-container-margin">
+<div class="max-w-7xl mx-auto space-y-stack-md">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-section-gap pt-6">
+<div>
+<h3 class="font-headline-lg text-headline-lg text-primary-container mb-1">Platform Orders</h3>
+<p class="font-serif-ui-md text-serif-ui-md italic text-text-muted opacity-80">Full transaction history with emergency Razorpay refund and logistics override controls</p>
+</div>
+</div>
+
+<!-- Bulk Note / Flagged Banner -->
+<div id="flagged-banner" class="hidden bg-primary-container/5 border border-primary/20 rounded-xl p-4 flex items-center justify-between mb-8 shadow-[rgba(61,107,79,0.08)_0px_2px_8px]">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-highlight-gold">warning</span>
+<p class="text-body-md text-text-default">
+<span id="flagged-count" class="font-bold">0</span> orders are flagged for refund review.
+</p>
+</div>
+<button id="flagged-link" class="text-primary font-bold hover:underline flex items-center gap-1">
+Review flagged <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+
+<!-- Filter Bar -->
+<div class="bg-bg-primary p-6 rounded-2xl border border-outline-variant/30 shadow-[rgba(61,107,79,0.08)_0px_2px_8px] space-y-6">
+<div id="filter-buttons-container" class="flex flex-wrap items-center gap-3">
+<button id="filter-all" class="px-5 py-2 rounded-full font-label-btn text-white bg-primary transition-colors">All</button>
+<button id="filter-pending" class="px-5 py-2 rounded-full font-label-btn text-text-muted bg-[#FFF8E7] hover:bg-sage-soft/30 transition-colors">Pending</button>
+<button id="filter-processing" class="px-5 py-2 rounded-full font-label-btn text-text-muted bg-[#FFF8E7] hover:bg-sage-soft/30 transition-colors">Processing</button>
+<button id="filter-shipped" class="px-5 py-2 rounded-full font-label-btn text-text-muted bg-[#FFF8E7] hover:bg-sage-soft/30 transition-colors">Shipped</button>
+<button id="filter-delivered" class="px-5 py-2 rounded-full font-label-btn text-text-muted bg-[#FFF8E7] hover:bg-sage-soft/30 transition-colors">Delivered</button>
+<button id="filter-cancelled" class="px-5 py-2 rounded-full font-label-btn text-text-muted bg-[#FFF8E7] hover:bg-sage-soft/30 transition-colors">Cancelled</button>
+<button id="filter-refund-flagged" class="px-5 py-2 rounded-full font-label-btn text-text-muted bg-[#FFF8E7] hover:bg-sage-soft/30 transition-colors flex items-center gap-2">
+Refund Flagged
+<span class="w-2 h-2 rounded-full bg-highlight-gold pulsing-dot"></span>
+</button>
+</div>
+<div class="flex flex-wrap items-center gap-6 pt-4 border-t border-outline-variant/20">
+<div class="flex items-center gap-3">
+<label class="text-accent-caps text-text-faint">From</label>
+<input id="from-date-input" class="bg-[#FFF8E7] border border-[rgba(20,56,31,0.2)] rounded-lg px-4 py-2 text-body-sm focus:ring-primary focus:border-primary outline-none" type="date"/>
+</div>
+<div class="flex items-center gap-3">
+<label class="text-accent-caps text-text-faint">To</label>
+<input id="to-date-input" class="bg-[#FFF8E7] border border-[rgba(20,56,31,0.2)] rounded-lg px-4 py-2 text-body-sm focus:ring-primary focus:border-primary outline-none" type="date"/>
+</div>
+<div class="ml-auto relative w-full max-w-xs">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-text-faint">search</span>
+<input id="search-input" class="w-full bg-[#FFF8E7] border border-[rgba(20,56,31,0.2)] rounded-lg pl-10 pr-4 py-2 text-body-sm focus:ring-primary focus:border-primary outline-none" placeholder="Search order ID or buyer..." type="text"/>
+</div>
+</div>
+</div>
+
+<!-- Orders Table -->
+<div class="bg-bg-primary rounded-2xl border border-outline-variant/30 shadow-[rgba(61,107,79,0.08)_0px_4px_12px] overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface border-b border-[rgba(20,56,31,0.2)]/30">
+<th class="px-6 py-4 text-accent-caps text-text-faint">Order ID</th>
+<th class="px-6 py-4 text-accent-caps text-text-faint">Buyer</th>
+<th class="px-6 py-4 text-accent-caps text-text-faint">Artisan</th>
+<th class="px-6 py-4 text-accent-caps text-text-faint">Amount</th>
+<th class="px-6 py-4 text-accent-caps text-text-faint">Status</th>
+<th class="px-6 py-4 text-accent-caps text-text-faint text-center">Flag</th>
+<th class="px-6 py-4 text-accent-caps text-text-faint">Date</th>
+<th class="px-6 py-4 text-accent-caps text-text-faint text-right">Master Actions</th>
+</tr>
+</thead>
+<tbody id="orders-list" class="divide-y divide-outline-variant/10">
+<!-- Dynamic content -->
+</tbody>
+</table>
+</div>
+
+<!-- Pagination -->
+<div class="px-6 py-4 bg-bg-primary border-t border-outline-variant/20 flex items-center justify-between">
+<p id="pagination-info" class="text-body-sm text-text-faint">Showing 0 to 0 of 0 orders</p>
+<div id="pagination-pages" class="flex items-center space-x-1">
+<!-- Dynamic pagination links -->
+</div>
+</div>
+</div>
+
+<!-- Force Refund Modal -->
+<div id="refund-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+  <div class="bg-[#FFF8E7] border border-rose-800/30 rounded-2xl shadow-2xl max-w-md w-full p-6 text-stone-800">
+    <div class="flex items-center justify-between border-b border-stone-300 pb-3 mb-4">
+      <h3 class="font-serif font-bold text-lg text-rose-800 flex items-center gap-2">
+        <span>⚠️</span> Emergency Razorpay Refund
+      </h3>
+      <button id="close-refund-modal" class="text-stone-400 hover:text-stone-700">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <form id="refund-form" class="space-y-4">
+      <input type="hidden" id="refund-order-id" />
+      <div>
+        <label class="block text-xs font-mono uppercase text-stone-500 mb-1">Target Order</label>
+        <p id="refund-order-label" class="font-bold text-stone-900 text-sm font-mono"></p>
+      </div>
+      <div>
+        <label class="block text-xs font-mono uppercase text-stone-600 mb-1">Refund Reason *</label>
+        <textarea id="refund-reason" rows="3" required placeholder="State administrative reason for forcing instant refund..." class="w-full px-3 py-2 text-sm bg-white border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/30"></textarea>
+      </div>
+      <div>
+        <label class="block text-xs font-mono uppercase text-stone-600 mb-1">Custom Refund Amount (₹) (Optional - leave empty for full amount)</label>
+        <input type="number" step="0.01" id="refund-amount" placeholder="Full order amount" class="w-full px-3 py-2 text-sm bg-white border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/30">
+      </div>
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-stone-200 mt-4">
+        <button type="button" id="cancel-refund-btn" class="px-4 py-2 text-xs font-bold text-stone-600 hover:bg-stone-200 rounded-xl">Cancel</button>
+        <button type="submit" class="px-5 py-2 text-xs font-bold bg-rose-700 text-white rounded-xl hover:bg-rose-800 transition">Execute Refund</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Force Status Modal -->
+<div id="status-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+  <div class="bg-[#FFF8E7] border border-pine/30 rounded-2xl shadow-2xl max-w-md w-full p-6 text-stone-800">
+    <div class="flex items-center justify-between border-b border-stone-300 pb-3 mb-4">
+      <h3 class="font-serif font-bold text-lg text-[#14381F] flex items-center gap-2">
+        <span>📦</span> Force Update Order Status
+      </h3>
+      <button id="close-status-modal" class="text-stone-400 hover:text-stone-700">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <form id="status-form" class="space-y-4">
+      <input type="hidden" id="status-order-id" />
+      <div>
+        <label class="block text-xs font-mono uppercase text-stone-500 mb-1">Target Order</label>
+        <p id="status-order-label" class="font-bold text-stone-900 text-sm font-mono"></p>
+      </div>
+      <div>
+        <label class="block text-xs font-mono uppercase text-stone-600 mb-1">Select New Status *</label>
+        <select id="status-select" required class="w-full px-3 py-2 text-sm bg-white border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pine/30">
+          <option value="confirmed">Confirmed</option>
+          <option value="shipped">Shipped (In Transit)</option>
+          <option value="delivered">Delivered</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-mono uppercase text-stone-600 mb-1">Logistics / Admin Note</label>
+        <input type="text" id="status-note" placeholder="Courier pickup forced, AWB re-assigned..." class="w-full px-3 py-2 text-sm bg-white border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pine/30">
+      </div>
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-stone-200 mt-4">
+        <button type="button" id="cancel-status-btn" class="px-4 py-2 text-xs font-bold text-stone-600 hover:bg-stone-200 rounded-xl">Cancel</button>
+        <button type="submit" class="px-5 py-2 text-xs font-bold bg-[#14381F] text-[#FFF8E7] rounded-xl hover:bg-stone-800 transition">Force Update</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="h-20"></div>
+</div>
+</main>
+
+<script type="module">
+import adminApiClient from '/src/utils/adminApiClient.js';
+import { formatPaise } from '/src/utils/currency.js';
+
+let currentStatus = 'all';
+let fromDate = '';
+let toDate = '';
+let searchQuery = '';
+let currentPage = 1;
+let loadedOrders = [];
+
+// Modals
+const refundModal = document.getElementById('refund-modal');
+const statusModal = document.getElementById('status-modal');
+
+async function fetchOrders() {
+  try {
+    const res = await adminApiClient.get('/admin/orders', {
+      params: {
+        status: currentStatus,
+        from_date: fromDate,
+        to_date: toDate,
+        search: searchQuery,
+        page: currentPage,
+        per_page: 20
+      }
+    });
+
+    if (res.data?.success) {
+      const { orders, total, page, per_page, total_pages, refund_flagged_count } = res.data.data;
+      loadedOrders = orders || [];
+      
+      const banner = document.getElementById('flagged-banner');
+      const countEl = document.getElementById('flagged-count');
+      if (refund_flagged_count > 0) {
+        banner.classList.remove('hidden');
+        countEl.textContent = refund_flagged_count;
+      } else {
+        banner.classList.add('hidden');
+      }
+
+      renderOrders(loadedOrders);
+      renderPagination(total, page, per_page, total_pages);
+    }
+  } catch (err) {
+    console.error('Failed to fetch orders:', err);
+  }
+}
+
+function renderOrders(orders) {
+  const container = document.getElementById('orders-list');
+  container.innerHTML = '';
+
+  if (orders.length === 0) {
+    container.innerHTML = `
+      <tr>
+        <td colspan="8" class="px-6 py-10 text-center text-text-muted text-sm font-serif-ui-sm">
+          No orders found matching filters.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  orders.forEach(order => {
+    const tr = document.createElement('tr');
+    
+    if (order.is_refund_flagged) {
+      tr.className = 'bg-[#FFF8E7] border-l-[3px] border-l-highlight-gold hover:bg-surface-container-low transition-colors';
+    } else {
+      tr.className = 'bg-[#FFF8E7] hover:bg-surface-container-low/50 transition-colors';
+    }
+
+    let statusClass = '';
+    const st = (order.status || '').toLowerCase();
+    if (st === 'awaiting_payment' || st === 'pending') {
+      statusClass = 'bg-gold-soft text-highlight-gold';
+    } else if (st === 'payment_confirmed' || st === 'paid' || st === 'confirmed') {
+      statusClass = 'bg-sage-soft text-primary';
+    } else if (st === 'processing') {
+      statusClass = 'bg-violet-soft text-accent-violet';
+    } else if (st === 'shipped' || st === 'in_transit') {
+      statusClass = 'bg-sage-soft text-primary';
+    } else if (st === 'delivered') {
+      statusClass = 'bg-primary text-white';
+    } else if (st === 'cancelled') {
+      statusClass = 'bg-[#FFF8E7] text-[#6E6453]';
+    } else {
+      statusClass = 'bg-surface-variant text-on-surface-variant';
+    }
+
+    const flagIcon = order.is_refund_flagged
+      ? '<span class="material-symbols-outlined text-highlight-gold">warning</span>'
+      : '—';
+
+    tr.innerHTML = `
+      <td class="px-6 py-4 font-data-meta text-accent-violet">${order.order_id}</td>
+      <td class="px-6 py-4 font-body-sm font-bold text-text-default">${order.buyer_name}</td>
+      <td class="px-6 py-4 font-body-sm text-[#5A4A38]">${order.seller_name}</td>
+      <td class="px-6 py-4 font-data-price text-primary">${order.amount_display || formatPaise(order.amount_paise)}</td>
+      <td class="px-6 py-4">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${statusClass}">${order.status.replace(/_/g, ' ')}</span>
+      </td>
+      <td class="px-6 py-4 text-center">${flagIcon}</td>
+      <td class="px-6 py-4 font-data-meta text-text-faint">${order.created_ago}</td>
+      <td class="px-6 py-4 text-right">
+        <div class="flex items-center justify-end gap-1.5">
+          <button onclick="openForceStatusModal('${order.order_id}')" class="px-2.5 py-1 text-xs font-bold rounded-lg border border-pine/30 text-pine hover:bg-pine/10 transition" title="Force Order Status">
+            Status
+          </button>
+          <button onclick="openForceRefundModal('${order.order_id}')" class="px-2.5 py-1 text-xs font-bold rounded-lg border border-rose-700/40 text-rose-700 hover:bg-rose-50 transition" title="Force Razorpay Refund">
+            Refund
+          </button>
+          <a href="/admin/order-detail.html?id=${order.order_id}" class="p-1 text-text-muted hover:text-primary transition-colors inline-block" title="View Detail">
+            <span class="material-symbols-outlined text-[18px]">visibility</span>
+          </a>
+        </div>
+      </td>
+    `;
+    container.appendChild(tr);
+  });
+}
+
+window.openForceRefundModal = (orderId) => {
+  document.getElementById('refund-order-id').value = orderId;
+  document.getElementById('refund-order-label').textContent = `Order #${orderId}`;
+  document.getElementById('refund-reason').value = '';
+  document.getElementById('refund-amount').value = '';
+  refundModal.classList.remove('hidden');
+};
+
+window.openForceStatusModal = (orderId) => {
+  document.getElementById('status-order-id').value = orderId;
+  document.getElementById('status-order-label').textContent = `Order #${orderId}`;
+  document.getElementById('status-note').value = '';
+  statusModal.classList.remove('hidden');
+};
+
+document.getElementById('close-refund-modal').onclick = () => refundModal.classList.add('hidden');
+document.getElementById('cancel-refund-btn').onclick = () => refundModal.classList.add('hidden');
+document.getElementById('close-status-modal').onclick = () => statusModal.classList.add('hidden');
+document.getElementById('cancel-status-btn').onclick = () => statusModal.classList.add('hidden');
+
+document.getElementById('refund-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const orderId = document.getElementById('refund-order-id').value;
+  const reason = document.getElementById('refund-reason').value.trim();
+  const amount = parseFloat(document.getElementById('refund-amount').value) || undefined;
+
+  try {
+    const res = await adminApiClient.post(`/admin/orders/${orderId}/refund`, {
+      reason,
+      refundAmount: amount
+    });
+    if (res.data?.success) {
+      alert('Refund successfully executed via Razorpay and order cancelled!');
+      refundModal.classList.add('hidden');
+      fetchOrders();
+    }
+  } catch (err) {
+    alert('Refund failed: ' + (err.response?.data?.message || err.message));
+  }
+});
+
+document.getElementById('status-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const orderId = document.getElementById('status-order-id').value;
+  const status = document.getElementById('status-select').value;
+  const notes = document.getElementById('status-note').value.trim();
+
+  try {
+    const res = await adminApiClient.patch(`/admin/orders/${orderId}/force-status`, {
+      status,
+      notes
+    });
+    if (res.data?.success) {
+      alert(`Order status forced to ${status}.`);
+      statusModal.classList.add('hidden');
+      fetchOrders();
+    }
+  } catch (err) {
+    alert('Status update failed: ' + (err.response?.data?.message || err.message));
+  }
+});
+
+function renderPagination(total, page, per_page, total_pages) {
+  const start = total === 0 ? 0 : (page - 1) * per_page + 1;
+  const end = Math.min(page * per_page, total);
+  document.getElementById('pagination-info').textContent = `Showing ${start} to ${end} of ${total} orders`;
+
+  const container = document.getElementById('pagination-pages');
+  container.innerHTML = '';
+
+  const prevBtn = document.createElement('button');
+  prevBtn.className = `w-8 h-8 flex items-center justify-center text-text-muted hover:text-primary ${page === 1 ? 'opacity-50 pointer-events-none' : ''}`;
+  prevBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">chevron_left</span>';
+  prevBtn.addEventListener('click', () => {
+    if (page > 1) {
+      currentPage = page - 1;
+      fetchOrders();
+    }
+  });
+  container.appendChild(prevBtn);
+
+  for (let i = 1; i <= total_pages; i++) {
+    const pageBtn = document.createElement('button');
+    const isActive = i === page;
+    pageBtn.className = `w-8 h-8 rounded-full flex items-center justify-center font-label-btn ${isActive ? 'bg-primary text-white shadow-sm' : 'text-primary hover:bg-sage-soft/20'}`;
+    pageBtn.textContent = i;
+    pageBtn.addEventListener('click', () => {
+      currentPage = i;
+      fetchOrders();
+    });
+    container.appendChild(pageBtn);
+  }
+
+  const nextBtn = document.createElement('button');
+  nextBtn.className = `w-8 h-8 flex items-center justify-center text-text-muted hover:text-primary ${page === total_pages ? 'opacity-50 pointer-events-none' : ''}`;
+  nextBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">chevron_right</span>';
+  nextBtn.addEventListener('click', () => {
+    if (page < total_pages) {
+      currentPage = page + 1;
+      fetchOrders();
+    }
+  });
+  container.appendChild(nextBtn);
+}
+
+// Search with debounce
+let debounceTimeout;
+document.getElementById('search-input').addEventListener('input', (e) => {
+  clearTimeout(debounceTimeout);
+  debounceTimeout = setTimeout(() => {
+    searchQuery = e.target.value.trim();
+    currentPage = 1;
+    fetchOrders();
+  }, 300);
+});
+
+// Date Filters
+document.getElementById('from-date-input').addEventListener('change', (e) => {
+  fromDate = e.target.value;
+  currentPage = 1;
+  fetchOrders();
+});
+document.getElementById('to-date-input').addEventListener('change', (e) => {
+  toDate = e.target.value;
+  currentPage = 1;
+  fetchOrders();
+});
+
+// Status filters
+const statusFilters = [
+  { id: 'filter-all', status: 'all' },
+  { id: 'filter-pending', status: 'pending' },
+  { id: 'filter-processing', status: 'processing' },
+  { id: 'filter-shipped', status: 'shipped' },
+  { id: 'filter-delivered', status: 'delivered' },
+  { id: 'filter-cancelled', status: 'cancelled' },
+  { id: 'filter-refund-flagged', status: 'refund_flagged' }
+];
+
+statusFilters.forEach(({ id, status }) => {
+  const btn = document.getElementById(id);
+  if (btn) {
+    btn.addEventListener('click', () => {
+      statusFilters.forEach(f => {
+        const otherBtn = document.getElementById(f.id);
+        if (otherBtn) {
+          otherBtn.className = 'px-5 py-2 rounded-full font-label-btn text-text-muted bg-[#FFF8E7] hover:bg-sage-soft/30 transition-colors';
+        }
+      });
+      btn.className = 'px-5 py-2 rounded-full font-label-btn text-white bg-primary transition-colors';
+      
+      currentStatus = status;
+      currentPage = 1;
+      fetchOrders();
+    });
+  }
+});
+
+// Review flagged button in banner
+document.getElementById('flagged-link').addEventListener('click', () => {
+  const flaggedBtn = document.getElementById('filter-refund-flagged');
+  if (flaggedBtn) flaggedBtn.click();
+});
+
+// Logout
+document.getElementById('logout-btn').addEventListener('click', () => {
+  sessionStorage.removeItem('tohfa_admin_token');
+});
+
+// Initial load
+document.addEventListener('DOMContentLoaded', fetchOrders);
+</script>
+</body></html>

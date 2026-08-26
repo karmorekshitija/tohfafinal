@@ -1,0 +1,328 @@
+/**
+ * ═══════════════════════════════════════════════════
+ *  FILE: frontend/src/responsive.css
+ *  LAYER: Frontend — Global Responsive & Design Overrides
+ *  PURPOSE: Mobile responsiveness, touch target scaling,
+ *           card layouts, and bottom navigation styling.
+ * ═══════════════════════════════════════════════════
+ */
+
+/* Ensure the body hides horizontal overflow and wraps content cleanly */
+html, body {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background-color: #FFF8E7 !important;
+  color: #1C1C1C !important;
+}
+
+/* Universal background enforcement for Cosmic Latte #FFF8E7 */
+html, body, main, section, .seller-main-panel, .seller-layout-container, seller-layout, .buyer-bottom-nav {
+  background-color: #FFF8E7 !important;
+}
+
+/* Adjust base line height for body readability on mobile */
+@media (max-width: 767px) {
+  body {
+    line-height: 1.5 !important;
+    font-size: 15px !important;
+  }
+}
+
+/* iOS Safari auto-zoom prevention: inputs must be >= 16px */
+@media (max-width: 767px) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
+/* Aspect-ratio helper for responsive media */
+.responsive-media-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+.responsive-media-container iframe,
+.responsive-media-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Layout overrides for general sections on mobile */
+@media (max-width: 767px) {
+  /* Enforce horizontal padding for content areas */
+  .px-margin-desktop,
+  .px-64,
+  .px-32 {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  
+  /* Enforce 2 columns for product listing feeds on all mobile viewports */
+  #product-grid,
+  #results-grid,
+  #related-treasures-grid,
+  #catalog-grid,
+  #custom-grid,
+  #product-feed-grid,
+  #sponsored-product-grid,
+  #feed-skeletons,
+  #makes-grid,
+  .product-grid,
+  .search-results-grid,
+  .category-product-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  /* Flex row stacks */
+  .flex-row,
+  .md\:flex-row {
+    flex-direction: column !important;
+  }
+  
+  .keep-row {
+    flex-direction: row !important;
+  }
+
+  /* Tables to Cards fallback helper */
+  .table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+}
+
+/* ==========================================================================
+   Buyer Header / Navbar collapses & Mobile Menu
+   ========================================================================== */
+@media (max-width: 1023px) {
+  header.h-20 {
+    height: 60px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  
+  header a.text-\[32px\] {
+    font-size: 24px !important;
+  }
+  
+  header nav.hidden.md\:flex {
+    display: none !important;
+  }
+}
+
+/* Mobile drawer styles */
+#mobile-menu-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 100vh;
+  background-color: #FFF8E7;
+  border-right: 1px solid rgba(20, 56, 31, 0.12);
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+}
+#mobile-menu-drawer.active {
+  transform: translateX(0) !important;
+}
+
+#mobile-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+#mobile-menu-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   Buyer Mobile Bottom Navigation
+   ========================================================================== */
+.buyer-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background-color: #FFF8E7;
+  border-top: 1px solid rgba(20, 56, 31, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 100;
+  box-shadow: 0 -2px 10px rgba(20, 56, 31, 0.05);
+}
+
+@media (min-width: 768px) {
+  .buyer-bottom-nav {
+    display: none !important;
+  }
+}
+
+.page-with-bottom-nav main {
+  padding-bottom: 76px !important;
+}
+
+/* ==========================================================================
+   Admin Panel UI overrides (max-width: 1023px)
+   ========================================================================== */
+@media (max-width: 1023px) {
+  main.ml-64, main.ml-60 {
+    margin-left: 0 !important;
+    padding: 16px !important;
+  }
+
+  header.fixed.top-0.right-0 {
+    width: 100% !important;
+    left: 0 !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    height: 56px !important;
+  }
+
+  aside.w-64, aside.w-60 {
+    width: 260px !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    background-color: #FFF8E7 !important;
+  }
+  aside.w-64.active, aside.w-60.active, aside[data-sidebar="admin"].active {
+    transform: translateX(0) !important;
+  }
+}
+
+/* ==========================================================================
+   Seller Studio UI overrides (max-width: 1023px)
+   ========================================================================== */
+@media (max-width: 1023px) {
+  .seller-main-panel {
+    margin-left: 0 !important;
+    padding: 80px 16px 80px 16px !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+  }
+
+  .seller-topbar-header {
+    left: 0 !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  seller-sidebar aside {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  seller-sidebar.active aside {
+    transform: translateX(0) !important;
+  }
+}
+
+/* ==========================================================================
+   Global Footer adjustments
+   ========================================================================== */
+footer {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+@media (max-width: 767px) {
+  footer .grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+    text-align: left !important;
+  }
+  footer .flex.gap-md,
+  footer .flex.gap-4,
+  footer .flex.gap-6 {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+  }
+}
+
+/* ==========================================================================
+   Global Form & Input overrides
+   ========================================================================== */
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select,
+  .form-input {
+    width: 100% !important;
+    font-size: 16px !important;
+    min-height: 44px !important;
+    box-sizing: border-box !important;
+  }
+  
+  label,
+  .form-label {
+    display: block !important;
+    margin-bottom: 4px !important;
+    text-align: left !important;
+    width: 100% !important;
+  }
+}
+
+/* Mobile card-row for tables */
+@media (max-width: 767px) {
+  .mobile-card-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px;
+    background: #FFF8E7;
+    border: 1px solid rgba(20, 56, 31, 0.12);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(20, 56, 31, 0.04);
+  }
+  .mobile-card-row-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(20, 56, 31, 0.6);
+  }
+  .mobile-card-row-value {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: #1C1C1C;
+  }
+  .mobile-card-table thead { display: none !important; }
+  .mobile-card-table tbody tr {
+    display: block !important;
+  }
+}
+
+/* Touch targets and accessibility */
+button,
+a.btn,
+.tap-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-delay: 0s !important;
+    animation-duration: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}
