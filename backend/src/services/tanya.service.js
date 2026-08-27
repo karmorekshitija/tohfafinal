@@ -48,7 +48,7 @@ async function getProductCatalogContext() {
     }
 
     if (!products || !products.length) {
-      return 'Currently, various handmade personalized gifts, jewelry, home decor, candles, and bespoke artisan items are listed on Tohfa.';
+      return null;
     }
 
     const items = products.map(r => 
@@ -58,7 +58,7 @@ async function getProductCatalogContext() {
     return `Available Products in Tohfa Live Inventory (Strict Grounding Catalog):\n${items.join('\n')}`;
   } catch (err) {
     console.error('[Tanya] Failed to fetch product catalog context:', err.message);
-    return 'Handmade curated artisan gifts are available on Tohfa.';
+    return null;
   }
 }
 
@@ -71,6 +71,10 @@ async function getProductCatalogContext() {
 async function chat(userMessage, history = []) {
   try {
     const catalogContext = await getProductCatalogContext();
+
+    if (!catalogContext) {
+      return "Namaste! ✨ Explore our popular categories like Candles, Pottery, and Custom Portraits at [Browse Categories](/buyer/categories.html).";
+    }
 
     const systemInstruction = `You are Tanya, Tohfa's friendly, warm, and expert AI Gift Assistant (AI Gift Guide) at thetohfa.in.
 Tohfa is an artisanal marketplace for handcrafted and personalized gifts made by independent Indian sellers and makers.

@@ -129,7 +129,7 @@ async function forgotPassword(req, res, next) {
     const normalized = authService.normalizeEmail(email);
 
     const { rows } = await query(
-      'SELECT id, email FROM users WHERE LOWER(TRIM(email)) = $1 AND (is_active = true OR is_active = 1)',
+      'SELECT id, email FROM users WHERE LOWER(TRIM(email)) = $1 AND is_active = true',
       [normalized]
     );
 

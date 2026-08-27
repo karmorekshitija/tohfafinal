@@ -331,11 +331,7 @@
                     <span id="stat-reviews" class="text-xl md:text-2xl font-headline-sm text-primary font-bold">0</span>
                     <span class="text-[10px] font-label-md text-secondary uppercase tracking-wider">Reviews</span>
                 </div>
-                <div class="w-px h-8 bg-outline-variant/30"></div>
-                <div class="flex flex-col items-center">
-                    <span id="stat-followers" class="text-xl md:text-2xl font-headline-sm text-primary font-bold">0</span>
-                    <span class="text-[10px] font-label-md text-secondary uppercase tracking-wider">Followers</span>
-                </div>
+
             </div>
 
             <div class="flex flex-row lg:flex-col gap-3 shrink-0 w-full lg:w-auto justify-center">
@@ -347,10 +343,7 @@
                     <span class="material-symbols-outlined text-[18px]">share</span>
                     <span>Share</span>
                 </button>
-                <button id="follow-btn" onclick="toggleFollow()" class="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-primary text-on-primary hover:opacity-90 transition-all font-label-md text-sm shadow-md cursor-pointer active:scale-95 duration-200">
-                    <span class="material-symbols-outlined text-[18px]" id="follow-icon">person_add</span>
-                    <span id="follow-text">Follow</span>
-                </button>
+
             </div>
         </section>
 
@@ -946,7 +939,7 @@
             // Set Stats
             document.getElementById('stat-rating').innerText = profile.review_count > 0 ? profile.avg_rating.toFixed(1) : 'New';
             document.getElementById('stat-reviews').innerText = profile.review_count;
-            document.getElementById('stat-followers').innerText = formatCount(profile.followers_count);
+
 
             // Set Avatar
             const avatarEl = document.getElementById('seller-avatar');
@@ -969,8 +962,7 @@
                 coverFallback.classList.remove('hidden');
             }
 
-            // Set Follow status
-            updateFollowButtonState(profile.is_following);
+
 
             // About Story Setup
             const headlineEl = document.getElementById('about-headline');
@@ -1020,32 +1012,6 @@
                     `;
                     bento.appendChild(cell);
                 });
-            }
-        }
-
-        function updateFollowButtonState(isFollowing) {
-            const btn = document.getElementById('follow-btn');
-            const icon = document.getElementById('follow-icon');
-            const text = document.getElementById('follow-text');
-            if (!btn) return;
-            
-            const isOwner = currentUser && sellerProfile && currentUser.id === sellerProfile.id;
-            if (isOwner) {
-                btn.className = "flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-primary text-on-primary opacity-50 cursor-not-allowed font-label-md text-sm shadow-md";
-                if (icon) icon.innerText = "person";
-                if (text) text.innerText = "Own Shop";
-                btn.disabled = true;
-                return;
-            }
-            
-            if (isFollowing) {
-                btn.className = "flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg border border-primary text-primary hover:bg-primary hover:text-white transition-all font-label-md text-sm cursor-pointer active:scale-95 duration-200";
-                if (icon) icon.innerText = "person_check";
-                if (text) text.innerText = "Following";
-            } else {
-                btn.className = "flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-primary text-on-primary hover:opacity-90 transition-all font-label-md text-sm shadow-md cursor-pointer active:scale-95 duration-200";
-                if (icon) icon.innerText = "person_add";
-                if (text) text.innerText = "Follow";
             }
         }
 
@@ -1591,52 +1557,6 @@
                 loadReviews(e.target.value);
             }, 350);
         });
-
-        // -- Follow/Unfollow --
-        window.toggleFollow = async function() {
-            if (currentUser && sellerProfile && currentUser.id === sellerProfile.id) {
-                window.Toast?.show("You cannot follow yourself", "error");
-                return;
-            }
-            if (!isLoggedIn) {
-                window.Toast?.show("Please log in to follow artisans", "error");
-                /* login bypassed */
-                return;
-            }
-            if (!sellerProfile) return;
-
-            const isFollowing = sellerProfile.is_following;
-            try {
-                if (isFollowing) {
-                    let res;
-                    try {
-                        res = await apiClient.delete(`/sellers/${sellerId}/follow`);
-                    } catch (_) {
-                        res = await apiClient.delete(`/buyer/follow/${sellerId}`).catch(() => apiClient.delete(`/follows/${sellerId}`));
-                    }
-                    if (res && res.data && res.data.success) {
-                        sellerProfile.is_following = false;
-                        sellerProfile.followers_count = Math.max(0, sellerProfile.followers_count - 1);
-                        window.Toast?.show(`Unfollowed ${sellerProfile.shop_name}`, "success");
-                    }
-                } else {
-                    let res;
-                    try {
-                        res = await apiClient.post(`/sellers/${sellerId}/follow`);
-                    } catch (_) {
-                        res = await apiClient.post(`/buyer/follow/${sellerId}`).catch(() => apiClient.post(`/follows/${sellerId}`));
-                    }
-                    if (res && res.data && res.data.success) {
-                        sellerProfile.is_following = true;
-                        sellerProfile.followers_count += 1;
-                        window.Toast?.show(`Following ${sellerProfile.shop_name}`, "success");
-                    }
-                }
-                updateProfileUI(sellerProfile);
-            } catch (err) {
-                console.error("Failed to toggle follow status:", err);
-            }
-        };
 
         // -- Cart & Wishlist Add Actions --
         window.talkToSeller = async function(e, productId, btn) {

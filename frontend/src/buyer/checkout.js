@@ -230,7 +230,32 @@ window.initiatePayment = async () => {
       discount_amount: discountAmount
     };
 
-    const orderRes = await api.post('/api/orders', orderPayload);
+    let orderRes;
+    try {
+      orderRes = await api.post('/api/orders', orderPayload);
+    } catch (apiErr) {
+      if (apiErr.status === 409 && apiErr.data?.is_overflow) {
+        payBtn.classList.remove('btn-loading');
+        payBtn.disabled = false;
+        
+        const confirmOverflow = confirm('Artisan is busy. Submit request without payment?');
+        if (confirmOverflow) {
+          try {
+            await api.post('/api/orders/overflow', {
+              address_id: selectedAddressId,
+              cart_item_ids: null // assuming full cart
+            });
+            showToast('Overflow request submitted! The seller will review it soon.', 'success');
+            setTimeout(() => window.location.href = './profile.html', 2000);
+          } catch (overflowErr) {
+            showToast(overflowErr.message || 'Failed to submit overflow request.', 'error');
+          }
+        }
+        return;
+      }
+      throw apiErr;
+    }
+
     const orders = orderRes?.data?.orders || (orderRes?.data ? [orderRes.data] : []);
 
     if (!orders.length) {

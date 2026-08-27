@@ -719,8 +719,10 @@ async function listAuditLogs(req, res, next) {
 
 async function listAllProducts(req, res, next) {
   try {
-    const { page = 1, limit = 50, search = '', category_id } = req.query;
-    const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+    const { page = 1, per_page = 10, limit = 10, search = '', category_id, filter = 'all' } = req.query;
+    const limitNum = parseInt(per_page || limit, 10);
+    const pageNum = parseInt(page, 10);
+    const offset = (pageNum - 1) * limitNum;
 
     let sql = `
       SELECT p.*, sp.store_name, c.name AS category_name,
@@ -740,12 +742,85 @@ async function listAllProducts(req, res, next) {
       params.push(category_id);
       sql += ` AND p.category_id = $${params.length}`;
     }
+    if (filter === 'sponsored') {
+      sql += ` AND p.is_sponsored = TRUE`;
+    } else if (filter === 'non_sponsored') {
+      sql += ` AND (p.is_sponsored = FALSE OR p.is_sponsored IS NULL)`;
+    }
 
-    sql += ` ORDER BY p.priority_rank DESC, p.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
-    params.push(parseInt(limit, 10), offset);
+    const countSql = `SELECT COUNT(*) AS total FROM (${sql}) AS sub`;
+    const { rows: countRows } = await query(countSql, params);
+    const total = parseInt(countRows[0].total, 10);
+
+    const { rows: sponsoredRows } = await query(`SELECT COUNT(*) AS total FROM products WHERE status != 'deleted' AND is_sponsored = TRUE`);
+    const sponsoredCount = parseInt(sponsoredRows[0].total, 10);
+
+    sql += ` ORDER BY p.priority_rank DESC NULLS LAST, p.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    params.push(limitNum, offset);
 
     const { rows } = await query(sql, params);
-    return res.json({ success: true, data: rows });
+    
+    const formattedRows = rows.map(r => ({
+      ...r,
+      image_url: r.primary_image,
+      seller_name: r.store_name,
+      price_paise: Math.round(Number(r.base_price) * 100)
+    }));
+
+    return res.json({ 
+      success: true, 
+      data: {
+        products: formattedRows,
+        total,
+        page: pageNum,
+        per_page: limitNum,
+        total_pages: Math.ceil(total / limitNum) || 1,
+        sponsored_count: sponsoredCount
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function createProduct(req, res, next) {
+  try {
+    const { name, description, base_price, category_id, seller_id, image_url, is_tohfa_original = true } = req.body;
+    
+    if (!name || !base_price || !seller_id) {
+      return res.status(400).json({ success: false, message: 'Name, price, and seller are required.' });
+    }
+
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now();
+
+    const { rows } = await query(`
+      INSERT INTO products (
+        seller_id, category_id, name, slug, description, base_price, 
+        is_tohfa_original, status, stock_quantity, preparation_days
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 'active', 50, 1)
+      RETURNING *
+    `, [seller_id, category_id || null, name, slug, description || '', base_price, is_tohfa_original]);
+
+    const newProduct = rows[0];
+
+    if (image_url) {
+      await query(
+        'INSERT INTO product_images (product_id, url, sort_order) VALUES ($1, $2, 0)',
+        [newProduct.id, image_url]
+      );
+    }
+
+    await logAdminAction({
+      adminId: req.user.id,
+      actionType: 'ADMIN_CREATED_PRODUCT',
+      targetEntity: 'products',
+      targetId: newProduct.id,
+      details: { name, seller_id, is_tohfa_original },
+      ipAddress: req.ip
+    });
+
+    return res.status(201).json({ success: true, data: newProduct });
   } catch (err) {
     next(err);
   }
@@ -1222,6 +1297,7 @@ module.exports = {
   getAuditLogs: listAuditLogs,
   listAllProducts,
   getAllProducts: listAllProducts,
+  createProduct,
   toggleProductStatus,
   toggleSponsor,
   deleteProduct,

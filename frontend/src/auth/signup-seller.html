@@ -58,6 +58,32 @@
 
       <!-- Signup Form -->
       <form id="seller-signup-form" class="space-y-4" novalidate>
+        <!-- Store Name -->
+        <div>
+          <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1.5" for="store_name">Store Name *</label>
+          <input class="w-full bg-[#FFF8E7] border border-[#14381F]/20 rounded-xl px-4 py-3 text-base text-[#1C1C1C] outline-none focus:border-[#14381F] focus:ring-2 focus:ring-[#14381F]/10 transition-all" id="store_name" name="store_name" placeholder="Mitti Clay Studio" type="text" required />
+          <p id="store-name-error" class="hidden text-[#C0392B] text-[12px] mt-1">Store Name is required.</p>
+        </div>
+
+        <!-- Craft Category -->
+        <div>
+          <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1.5" for="craft_specialty">Craft Category / Specialty</label>
+          <select class="w-full bg-[#FFF8E7] border border-[#14381F]/20 rounded-xl px-4 py-3 text-base text-[#1C1C1C] outline-none focus:border-[#14381F] focus:ring-2 focus:ring-[#14381F]/10 transition-all" id="craft_specialty" name="craft_specialty">
+            <option value="">Select a specialty...</option>
+            <option value="Pottery & Ceramics">Pottery & Ceramics</option>
+            <option value="Textiles & Handlooms">Textiles & Handlooms</option>
+            <option value="Jewelry">Jewelry</option>
+            <option value="Woodworking">Woodworking</option>
+            <option value="Painting & Fine Arts">Painting & Fine Arts</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <!-- Short Bio -->
+        <div>
+          <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1.5" for="bio">Short Bio (Optional)</label>
+          <textarea class="w-full bg-[#FFF8E7] border border-[#14381F]/20 rounded-xl px-4 py-3 text-base text-[#1C1C1C] outline-none focus:border-[#14381F] focus:ring-2 focus:ring-[#14381F]/10 transition-all" id="bio" name="bio" placeholder="Tell us a bit about your craft..." rows="2"></textarea>
+        </div>
         <!-- Full Name -->
         <div>
           <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1.5" for="full_name">Full Legal Name *</label>
@@ -182,9 +208,17 @@
       const email = document.getElementById('email').value.trim();
       const phone = document.getElementById('phone').value.trim();
       const password = pwInput.value;
+      const storeName = document.getElementById('store_name').value.trim();
+      const craftSpecialty = document.getElementById('craft_specialty').value;
+      const bio = document.getElementById('bio').value.trim();
       const agreedTerms = document.getElementById('terms-checkbox').checked;
 
       let isValid = true;
+
+      if (!storeName) {
+        document.getElementById('store-name-error').classList.remove('hidden');
+        isValid = false;
+      }
 
       if (!fullName) {
         document.getElementById('name-error').classList.remove('hidden');
@@ -226,7 +260,10 @@
             email: email,
             phone: phone,
             password: password,
-            role: 'seller'
+            role: 'seller',
+            storeName: storeName,
+            craftSpecialty: craftSpecialty,
+            bio: bio
           })
         });
 
@@ -242,7 +279,7 @@
         if (token) sessionStorage.setItem('tohfa_access_token', token);
         if (user) sessionStorage.setItem('tohfa_user', JSON.stringify(user));
 
-        window.location.replace('/buyer/become-seller.html');
+        window.location.replace('/seller/onboarding.html');
 
       } catch (err) {
         console.error('Seller signup error:', err);

@@ -985,7 +985,7 @@ async function getPayoutOverview(req, res, next) {
               AND so.status = 'delivered'
               AND COALESCE(so.delivered_at, so.created_at) <= NOW() - INTERVAL '7 days'
               AND so.payout_status NOT IN ('paid', 'completed')),
-           (SELECT SUM(o.total_amount)
+           (SELECT SUM(o.total_amount * 0.95)
             FROM orders o
             WHERE o.seller_id = $1
               AND o.status = 'delivered'
@@ -1025,7 +1025,7 @@ async function getPayoutOverview(req, res, next) {
                 OR (so.status = 'delivered' AND COALESCE(so.delivered_at, so.created_at) > NOW() - INTERVAL '7 days')
               )
               AND so.payout_status NOT IN ('paid', 'completed')),
-           (SELECT SUM(o.total_amount)
+           (SELECT SUM(o.total_amount * 0.95)
             FROM orders o
             WHERE o.seller_id = $1
               AND o.payment_status = 'paid'
@@ -1131,7 +1131,7 @@ async function requestPayout(req, res, next) {
               AND so.status = 'delivered'
               AND COALESCE(so.delivered_at, so.created_at) <= NOW() - INTERVAL '7 days'
               AND so.payout_status NOT IN ('paid', 'completed')),
-           (SELECT SUM(o.total_amount)
+           (SELECT SUM(o.total_amount * 0.95)
             FROM orders o
             WHERE o.seller_id = $1
               AND o.status = 'delivered'

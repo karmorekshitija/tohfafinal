@@ -24,7 +24,7 @@ async function initCategories() {
   try {
     const res = await fetch('/api/products/categories');
     const json = await res.json();
-    categoriesCatalog = json.data || [];
+    categoriesCatalog = Array.isArray(json.data?.categories) ? json.data.categories : (Array.isArray(json.data) ? json.data : []);
 
     const catSelect = document.getElementById('prod-category');
     if (catSelect) {

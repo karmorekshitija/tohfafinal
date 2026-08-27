@@ -54,7 +54,8 @@ async function sendSellerOrderNotification(phoneNumber, { orderId, buyerName, am
     if (!to || !twilioClient || !WHATSAPP_FROM) return false;
 
     const shortId = String(orderId).slice(0, 8);
-    const body = `🎁 New Order on Tohfa Studio!\nOrder #${shortId} placed by ${buyerName || 'a customer'} for ₹${amount}.\nCheck details & update fulfillment: https://thetohfa.in/seller/desktop/orders.html`;
+    // FIX: Removed /desktop/ subpath
+    const body = `🎁 New Order on Tohfa Studio!\nOrder #${shortId} placed by ${buyerName || 'a customer'} for ₹${amount}.\nCheck details & update fulfillment: https://thetohfa.in/seller/orders.html`;
 
     await twilioClient.messages.create({
       from: WHATSAPP_FROM,
@@ -76,7 +77,8 @@ async function sendCustomizationQuoteNotification(phoneNumber, { sellerStoreName
     const to = formatWhatsAppNumber(phoneNumber);
     if (!to || !twilioClient || !WHATSAPP_FROM) return false;
 
-    const body = `🎁 Quote Received!\n${sellerStoreName} sent a quote of ₹${quoteAmount} for your custom request on "${productName}".\nReview and confirm your order: https://thetohfa.in/buyer/desktop/profile.html`;
+    // FIX: Removed /desktop/ subpath and changed to orders.html
+    const body = `🎁 Quote Received!\n${sellerStoreName} sent a quote of ₹${quoteAmount} for your custom request on "${productName}".\nReview and confirm your order: https://thetohfa.in/buyer/orders.html`;
 
     await twilioClient.messages.create({
       from: WHATSAPP_FROM,
@@ -90,9 +92,33 @@ async function sendCustomizationQuoteNotification(phoneNumber, { sellerStoreName
   }
 }
 
+/**
+ * Send customization proof preview notification to buyer
+ */
+async function sendProofPreviewNotification(phoneNumber, { sellerStoreName, productName, proofImageUrl }) {
+  try {
+    const to = formatWhatsAppNumber(phoneNumber);
+    if (!to || !twilioClient || !WHATSAPP_FROM) return false;
+
+    // FIX: Removed /desktop/ subpath and changed to orders.html
+    const body = `🎨 Crafting Preview Ready!\n${sellerStoreName} has uploaded a proof for your custom order "${productName}".\nPlease review and approve before dispatch: https://thetohfa.in/buyer/orders.html\n\nPreview Image: ${proofImageUrl}`;
+
+    await twilioClient.messages.create({
+      from: WHATSAPP_FROM,
+      to,
+      body,
+    });
+    return true;
+  } catch (err) {
+    console.error(`[WhatsApp] Proof preview alert failed for ${phoneNumber}:`, err.message);
+    return false;
+  }
+}
+
 module.exports = {
   formatWhatsAppNumber,
   sendOccasionReminder,
   sendSellerOrderNotification,
   sendCustomizationQuoteNotification,
+  sendProofPreviewNotification,
 };

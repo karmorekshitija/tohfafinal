@@ -38,109 +38,6 @@ async function saveConfig(req, res, next) {
   }
 }
 
-/**
- * POST /api/customization/request
- * Buyer submits dynamic custom request
- */
-async function createRequest(req, res, next) {
-  try {
-    const buyerId = req.user.id;
-    const result = await customizationService.createRequest(buyerId, req.body);
-    return res.status(201).json({ success: true, data: result });
-  } catch (err) {
-    next(err);
-  }
-}
-
-/**
- * GET /api/customization/requests
- * Seller views their pending/active/quoted customization queue
- */
-async function getSellerRequests(req, res, next) {
-  try {
-    const sellerId = req.user.id;
-    const { status } = req.query;
-    const list = await customizationService.getRequestsForSeller(sellerId, status);
-    return res.json({ success: true, data: list });
-  } catch (err) {
-    next(err);
-  }
-}
-
-/**
- * GET /api/customization/buyer
- * Buyer views their submitted customization requests
- */
-async function getBuyerRequests(req, res, next) {
-  try {
-    const buyerId = req.user.id;
-    const list = await customizationService.getRequestsForBuyer(buyerId);
-    return res.json({ success: true, data: list });
-  } catch (err) {
-    next(err);
-  }
-}
-
-/**
- * GET /api/customization/request/:id
- * Single request details
- */
-async function getRequestById(req, res, next) {
-  try {
-    const { id } = req.params;
-    const userId = req.user.id;
-
-    const { rows } = await query(
-      `SELECT cr.*, p.name AS product_name, u_b.name AS buyer_name, u_b.phone AS buyer_phone,
-              u_s.name AS seller_name, sp.store_name, sp.whatsapp_number
-       FROM customization_requests cr
-       JOIN products p ON p.id = cr.product_id
-       JOIN users u_b ON u_b.id = cr.buyer_id
-       JOIN users u_s ON u_s.id = cr.seller_id
-       LEFT JOIN seller_profiles sp ON sp.user_id = u_s.id
-       WHERE cr.id = $1 AND (cr.buyer_id = $2 OR cr.seller_id = $2 OR $3 = 'admin')`,
-      [id, userId, req.user.role]
-    );
-
-    if (!rows.length) {
-      return res.status(404).json({ success: false, message: 'Request not found.' });
-    }
-
-    return res.json({ success: true, data: rows[0] });
-  } catch (err) {
-    next(err);
-  }
-}
-
-/**
- * POST /api/customization/request/:id/quote
- * Seller sends single quote
- */
-async function sendQuote(req, res, next) {
-  try {
-    const { id } = req.params;
-    const sellerId = req.user.id;
-    const result = await customizationService.sendQuote(id, sellerId, req.body);
-    return res.json({ success: true, data: result });
-  } catch (err) {
-    next(err);
-  }
-}
-
-/**
- * POST /api/customization/request/:id/pay
- * Buyer accepts quote & prepares Razorpay payment
- */
-async function payQuote(req, res, next) {
-  try {
-    const { id } = req.params;
-    const buyerId = req.user.id;
-    const paymentData = await customizationService.payQuote(id, buyerId);
-    return res.json({ success: true, data: paymentData });
-  } catch (err) {
-    next(err);
-  }
-}
 
 /**
  * POST /api/customization/proof
@@ -280,12 +177,6 @@ async function getProof(req, res, next) {
 module.exports = {
   getConfig,
   saveConfig,
-  createRequest,
-  getSellerRequests,
-  getBuyerRequests,
-  getRequestById,
-  sendQuote,
-  payQuote,
   uploadProof,
   approveProof,
   rejectProof,

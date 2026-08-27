@@ -10,301 +10,91 @@
 
 const { query, getClient } = require('../config/db');
 
-// Strip internal-only fields from product rows
+// Strip internal-only fields from product rows and normalize fields for all frontend views
 function sanitizeProduct(p) {
+  if (!p) return null;
   const { is_tohfa_original, ...rest } = p;
-  return rest;
+  const price = parseFloat(p.base_price || p.price || 0);
+  const pricePaise = Math.round(price * 100);
+  const primaryImg = (Array.isArray(p.images) && p.images.length > 0 && p.images[0]?.url)
+    ? p.images[0].url
+    : (p.image_url || p.primary_image || null);
+  const sellerName = p.store_name || p.seller_name || 'Artisan Studio';
+  const sellerAvatar = p.profile_photo || p.avatar_url || null;
+
+  return {
+    ...rest,
+    price,
+    price_paise: pricePaise,
+    stock_qty: p.stock_quantity ?? p.stock_qty ?? 99,
+    image_url: primaryImg,
+    primary_image: primaryImg,
+    seller_name: sellerName,
+    store_name: sellerName,
+    seller: {
+      id: p.seller_id,
+      seller_name: sellerName,
+      store_name: sellerName,
+      avatar_url: sellerAvatar
+    },
+    category: p.category_name ? {
+      id: p.category_id,
+      name: p.category_name,
+      slug: p.category_slug || ''
+    } : (p.category || null),
+    listing_type: (p.customization_mode === 'fixed' || p.customization_mode === 'open') ? 'custom' : 'standard',
+    is_customized: p.customization_mode === 'fixed' || p.customization_mode === 'open' || Boolean(p.is_customizable),
+    avg_rating: parseFloat(p.avg_rating || 5.0),
+    review_count: parseInt(p.review_count || 0, 10),
+    type: p.is_sponsored ? 'sponsored' : 'organic'
+  };
 }
 
 // ---------------------------------------------------------------------------
 // GET /api/products/categories & /api/categories  (PUBLIC — used by buyer home/search/categories)
 // ---------------------------------------------------------------------------
-const CATEGORY_CATALOG = [
-  {
-    id: "cat-art-portraits",
-    name: "Art & Portraits",
-    display_name: "Art & Portraits",
-    slug: "art-portraits",
-    product_count: 0,
-    image_url: "/img/categories/art_prints.jpg",
-    subcategories: [
-      { id: "sub-caricatures", name: "Caricatures" },
-      { id: "sub-couple-portraits", name: "Couple Portraits" },
-      { id: "sub-digital-portraits", name: "Digital Portraits" },
-      { id: "sub-family-portraits", name: "Family Portraits" },
-      { id: "sub-paintings", name: "Paintings" },
-      { id: "sub-pet-portraits", name: "Pet Portraits" },
-      { id: "sub-sketches", name: "Sketches" }
-    ]
-  },
-  {
-    id: "cat-candles-fragrance",
-    name: "Candles & Fragrance",
-    display_name: "Candles & Fragrance",
-    slug: "candles-fragrance",
-    product_count: 5,
-    image_url: "/img/categories/candles.jpg",
-    subcategories: [
-      { id: "sub-botanical-candles", name: "Botanical Candles" },
-      { id: "sub-soy-wax", name: "Soy Wax" },
-      { id: "sub-incense", name: "Incense" },
-      { id: "sub-wax-melts", name: "Wax Melts" }
-    ]
-  },
-  {
-    id: "cat-ceramics-pottery",
-    name: "Ceramics & Pottery",
-    display_name: "Ceramics & Pottery",
-    slug: "ceramics-pottery",
-    product_count: 15,
-    image_url: "/img/categories/ceramics.jpg",
-    subcategories: [
-      { id: "sub-bowls-serveware", name: "Bowls & Serveware" },
-      { id: "sub-cups-mugs", name: "Cups & Mugs" },
-      { id: "sub-studio-pottery", name: "Studio Pottery Decor" },
-      { id: "sub-vases-planters", name: "Vases & Planters" }
-    ]
-  },
-  {
-    id: "cat-couples",
-    name: "Couples",
-    display_name: "Couples",
-    slug: "couples",
-    product_count: 9,
-    image_url: "/img/categories/custom_portraits.jpg",
-    subcategories: [
-      { id: "sub-anniversary-gifts", name: "Anniversary Gifts" },
-      { id: "sub-candles-couples", name: "Candles" },
-      { id: "sub-customized-gifts-couples", name: "Customized Gifts" },
-      { id: "sub-flowers-couples", name: "Flowers" },
-      { id: "sub-hampers-couples", name: "Hampers" },
-      { id: "sub-home-decor-couples", name: "Home Decor" },
-      { id: "sub-jewellery-couples", name: "Jewellery" },
-      { id: "sub-keychains-couples", name: "Keychains" },
-      { id: "sub-lamps-couples", name: "Lamps" },
-      { id: "sub-letters-cards-couples", name: "Letters & Cards" },
-      { id: "sub-matching-accessories", name: "Matching Accessories" },
-      { id: "sub-portraits-couples", name: "Portraits" },
-      { id: "sub-proposal-gifts", name: "Proposal Gifts" },
-      { id: "sub-scrapbooks-memory-books", name: "Scrapbooks & Memory Books" }
-    ]
-  },
-  {
-    id: "cat-crochet",
-    name: "Crochet",
-    display_name: "Crochet",
-    slug: "crochet",
-    product_count: 0,
-    image_url: "/img/categories/dried_florals.jpg",
-    subcategories: [
-      { id: "sub-bags-crochet", name: "Bags" },
-      { id: "sub-flower-bouquets", name: "Flower Bouquets" },
-      { id: "sub-keychains-crochet", name: "Keychains" },
-      { id: "sub-other-flowers", name: "Other Flowers" },
-      { id: "sub-phone-cases", name: "Phone Cases" },
-      { id: "sub-plushies", name: "Plushies" },
-      { id: "sub-roses", name: "Roses" },
-      { id: "sub-sunflowers", name: "Sunflowers" }
-    ]
-  },
-  {
-    id: "cat-customized-gifts",
-    name: "Customized Gifts",
-    display_name: "Customized Gifts",
-    slug: "customized-gifts",
-    product_count: 29,
-    image_url: "/img/categories/art_prints.jpg",
-    subcategories: [
-      { id: "sub-coasters", name: "Coasters" },
-      { id: "sub-frames", name: "Frames" },
-      { id: "sub-keychains-cust", name: "Keychains" },
-      { id: "sub-letters", name: "Letters" },
-      { id: "sub-memory-books", name: "Memory Books" },
-      { id: "sub-name-lamps", name: "Name Lamps" },
-      { id: "sub-name-plates", name: "Name Plates" },
-      { id: "sub-personalized-bottles", name: "Personalized Bottles" },
-      { id: "sub-phone-covers", name: "Phone Covers" },
-      { id: "sub-polaroid-sets", name: "Polaroid Sets" },
-      { id: "sub-qr-code-gifts", name: "QR Code Gifts" },
-      { id: "sub-scrapbooks", name: "Scrapbooks" },
-      { id: "sub-spotify-plaques", name: "Spotify Plaques" }
-    ]
-  },
-  {
-    id: "cat-fabric-crafts",
-    name: "Fabric Crafts",
-    display_name: "Fabric Crafts",
-    slug: "fabric-crafts",
-    product_count: 0,
-    image_url: "/img/categories/skincare.jpg",
-    subcategories: [
-      { id: "sub-embroidery", name: "Embroidery" },
-      { id: "sub-knitted-items", name: "Knitted Items" },
-      { id: "sub-tote-bags", name: "Tote Bags" }
-    ]
-  },
-  {
-    id: "cat-festivals",
-    name: "Festivals",
-    display_name: "Festivals",
-    slug: "festivals",
-    product_count: 0,
-    image_url: "/img/categories/candles.jpg",
-    subcategories: [
-      { id: "sub-christmas", name: "Christmas" },
-      { id: "sub-diwali", name: "Diwali" },
-      { id: "sub-eid", name: "Eid" },
-      { id: "sub-holi", name: "Holi" },
-      { id: "sub-karwa-chauth", name: "Karwa Chauth" },
-      { id: "sub-navratri", name: "Navratri" },
-      { id: "sub-rakhi", name: "Rakhi" }
-    ]
-  },
-  {
-    id: "cat-hampers",
-    name: "Hampers",
-    display_name: "Hampers",
-    slug: "hampers",
-    product_count: 0,
-    image_url: "/img/categories/woodcraft.jpg",
-    subcategories: [
-      { id: "sub-anime-hampers", name: "Anime Hampers" },
-      { id: "sub-anniversary-hampers", name: "Anniversary Hampers" },
-      { id: "sub-baby-shower-hampers", name: "Baby Shower Hampers" },
-      { id: "sub-birthday-hampers", name: "Birthday Hampers" },
-      { id: "sub-bridesmaid-hampers", name: "Bridesmaid Hampers" },
-      { id: "sub-chocolate-hampers", name: "Chocolate Hampers" },
-      { id: "sub-corporate-hampers", name: "Corporate Hampers" },
-      { id: "sub-couple-hampers", name: "Couple Hampers" },
-      { id: "sub-diwali-hampers", name: "Diwali Hampers" },
-      { id: "sub-farewell-hampers", name: "Farewell Hampers" },
-      { id: "sub-friendship-hampers", name: "Friendship Hampers" },
-      { id: "sub-groom-gang-hampers", name: "Groom Gang Hampers" },
-      { id: "sub-holi-hampers", name: "Holi Hampers" },
-      { id: "sub-period-comfort-hampers", name: "Period Comfort Hampers" },
-      { id: "sub-rakhi-hampers", name: "Rakhi Hampers" },
-      { id: "sub-skincare-hampers", name: "Skincare Hampers" },
-      { id: "sub-sweet-hampers", name: "Sweet Hampers" },
-      { id: "sub-valentine-hampers", name: "Valentine Hampers" },
-      { id: "sub-wedding-hampers", name: "Wedding Hampers" }
-    ]
-  },
-  {
-    id: "cat-home-decor",
-    name: "Home Decor",
-    display_name: "Home Decor",
-    slug: "home-decor",
-    product_count: 12,
-    image_url: "/img/categories/ceramics.jpg",
-    subcategories: [
-      { id: "sub-candles-decor", name: "Candles" },
-      { id: "sub-clay-articles", name: "Clay Articles" },
-      { id: "sub-decorative-frames", name: "Decorative Frames" },
-      { id: "sub-name-boards", name: "Name Boards" },
-      { id: "sub-planters", name: "Planters" },
-      { id: "sub-resin-decor", name: "Resin Decor" },
-      { id: "sub-wall-art", name: "Wall Art" }
-    ]
-  },
-  {
-    id: "cat-jewellery",
-    name: "Jewellery",
-    display_name: "Jewellery",
-    slug: "jewellery",
-    product_count: 22,
-    image_url: "/img/categories/jewellery.jpg",
-    subcategories: [
-      { id: "sub-anklets", name: "Anklets" },
-      { id: "sub-beaded-jewellery", name: "Beaded Jewellery" },
-      { id: "sub-clay-jewellery", name: "Clay Jewellery" },
-      { id: "sub-couple-jewellery", name: "Couple Jewellery" },
-      { id: "sub-crochet-jewellery", name: "Crochet Jewellery" },
-      { id: "sub-earrings", name: "Earrings" },
-      { id: "sub-hair-accessories", name: "Hair Accessories" },
-      { id: "sub-necklaces", name: "Necklaces" },
-      { id: "sub-pendants", name: "Pendants" },
-      { id: "sub-personalized-jewellery", name: "Personalized Jewellery" },
-      { id: "sub-resin-jewellery", name: "Resin Jewellery" },
-      { id: "sub-rings", name: "Rings" }
-    ]
-  },
-  {
-    id: "cat-journals-stationery",
-    name: "Journals & Stationery",
-    display_name: "Journals & Stationery",
-    slug: "journals-stationery",
-    product_count: 10,
-    image_url: "/img/categories/journals.jpg",
-    subcategories: [
-      { id: "sub-handmade-paper", name: "Handmade Paper" },
-      { id: "sub-linen-journals", name: "Linen Journals" },
-      { id: "sub-planners", name: "Planners" },
-      { id: "sub-wax-seal-kits", name: "Wax Seal Kits" }
-    ]
-  },
-  {
-    id: "cat-paintings",
-    name: "Paintings",
-    display_name: "Paintings",
-    slug: "paintings",
-    product_count: 4,
-    image_url: "/img/categories/art_prints.jpg",
-    subcategories: [
-      { id: "sub-acrylic", name: "Acrylic" },
-      { id: "sub-canvas-art", name: "Canvas Art" },
-      { id: "sub-mini-canvas", name: "Mini Canvas" },
-      { id: "sub-watercolour", name: "Watercolour" }
-    ]
-  },
-  {
-    id: "cat-textile-arts",
-    name: "Textile Arts",
-    display_name: "Textile Arts",
-    slug: "textile-arts",
-    product_count: 14,
-    image_url: "/img/categories/ceramics.jpg",
-    subcategories: [
-      { id: "sub-handwoven-rugs", name: "Handwoven Rugs" },
-      { id: "sub-macrame", name: "Macrame" },
-      { id: "sub-tapestries", name: "Tapestries" }
-    ]
-  },
-  {
-    id: "cat-wedding-rituals",
-    name: "Wedding & Rituals",
-    display_name: "Wedding & Rituals",
-    slug: "wedding-rituals",
-    product_count: 0,
-    image_url: "/img/categories/candles.jpg",
-    subcategories: [
-      { id: "sub-haldi-essentials", name: "Haldi Essentials" },
-      { id: "sub-mehendi-essentials", name: "Mehendi Essentials" },
-      { id: "sub-return-gifts", name: "Return Gifts" },
-      { id: "sub-shagun-envelopes", name: "Shagun Envelopes" },
-      { id: "sub-wedding-decor", name: "Wedding Decor" },
-      { id: "sub-wedding-hampers", name: "Wedding Hampers" },
-      { id: "sub-wedding-nameplates", name: "Wedding Nameplates" }
-    ]
-  }
-];
-
 async function listCategories(req, res, next) {
   try {
     const { rows } = await query(
       `SELECT id, name, slug, parent_id, sort_order
        FROM categories
-       WHERE is_active = TRUE
        ORDER BY sort_order ASC, name ASC`
     ).catch(() => ({ rows: [] }));
 
     if (rows && rows.length > 0) {
-      // Merge with catalog
-      return res.json({ success: true, data: { categories: CATEGORY_CATALOG, raw: rows } });
+      const rootCategories = [];
+      const categoriesMap = {};
+
+      rows.forEach(row => {
+        if (!row.parent_id) {
+          categoriesMap[row.id] = {
+            id: row.id,
+            name: row.name,
+            display_name: row.name,
+            slug: row.slug,
+            product_count: 0,
+            image_url: `/img/categories/${row.slug}.jpg`, // e.g., /img/categories/candles.jpg
+            subcategories: []
+          };
+          rootCategories.push(categoriesMap[row.id]);
+        }
+      });
+
+      rows.forEach(row => {
+        if (row.parent_id && categoriesMap[row.parent_id]) {
+          categoriesMap[row.parent_id].subcategories.push({
+            id: row.id,
+            name: row.name
+          });
+        }
+      });
+
+      return res.json({ success: true, data: { categories: rootCategories, raw: rows } });
     }
 
-    return res.json({ success: true, data: { categories: CATEGORY_CATALOG } });
+    return res.json({ success: true, data: { categories: [] } });
   } catch (err) {
-    return res.json({ success: true, data: { categories: CATEGORY_CATALOG } });
+    return res.json({ success: true, data: { categories: [] } });
   }
 }
 
@@ -365,9 +155,10 @@ async function listProducts(req, res, next) {
       conditions.push(`(p.is_sponsored = TRUE OR p.view_count > 5 OR p.is_tohfa_original = TRUE)`);
     }
 
-    // Filter active products and verified sellers (CHK-05)
+    // Filter active products and verified sellers (CHK-05), plus Tohfa Specials
     conditions.push(`(
-      (sp.verification_status = 'verified' AND (sp.is_active IS NULL OR sp.is_active = TRUE))
+      p.is_tohfa_original = TRUE
+      OR (sp.verification_status = 'verified' AND (sp.is_active IS NULL OR sp.is_active = TRUE))
       OR (s.verification_status = 'verified' AND (s.is_active IS NULL OR s.is_active = TRUE))
       OR sp.is_approved = TRUE
       OR s.is_approved = TRUE
@@ -460,17 +251,21 @@ async function forYouFeed(req, res, next) {
          LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
          WHERE (p.status = 'active' OR p.is_active = TRUE)
            AND (
-             sp.verification_status = 'verified'
+             p.is_tohfa_original = TRUE
+             OR sp.verification_status = 'verified'
              OR s.verification_status = 'verified'
              OR sp.is_approved = TRUE
              OR s.is_approved = TRUE
              OR (sp.user_id IS NULL AND s.user_id IS NULL)
            )
-           AND p.category_id IN (
-             SELECT DISTINCT p2.category_id FROM product_views pv
-             JOIN products p2 ON p2.id = pv.product_id
-             WHERE pv.user_id = $1
-             LIMIT 5
+           AND (
+             NOT EXISTS (SELECT 1 FROM product_views WHERE user_id = $1)
+             OR p.category_id IN (
+               SELECT DISTINCT p2.category_id FROM product_views pv
+               JOIN products p2 ON p2.id = pv.product_id
+               WHERE pv.user_id = $1
+               LIMIT 5
+             )
            )
          GROUP BY p.id, sp.store_name, s.store_name
          ORDER BY RANDOM()
@@ -495,7 +290,8 @@ async function forYouFeed(req, res, next) {
          LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
          WHERE (p.status = 'active' OR p.is_active = TRUE)
            AND (
-             sp.verification_status = 'verified'
+             p.is_tohfa_original = TRUE
+             OR sp.verification_status = 'verified'
              OR s.verification_status = 'verified'
              OR sp.is_approved = TRUE
              OR s.is_approved = TRUE
@@ -548,7 +344,8 @@ async function searchProducts(req, res, next) {
        LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
        WHERE (p.status = 'active' OR p.is_active = TRUE)
          AND (
-           sp.verification_status = 'verified'
+           p.is_tohfa_original = TRUE
+           OR sp.verification_status = 'verified'
            OR s.verification_status = 'verified'
            OR sp.is_approved = TRUE
            OR s.is_approved = TRUE

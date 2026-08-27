@@ -7,7 +7,9 @@
 
 'use strict';
 
-const { Pool } = require('pg');
+const { Pool, neonConfig } = require('@neondatabase/serverless');
+const ws = require('ws');
+neonConfig.webSocketConstructor = ws; // Use WebSockets to bypass firewalls
 
 const isLocalDb = (process.env.DATABASE_URL || '').includes('localhost') || (process.env.DATABASE_URL || '').includes('127.0.0.1');
 
@@ -16,7 +18,7 @@ const pool = new Pool({
   ssl: isLocalDb ? false : { rejectUnauthorized: false }, // Neon requires SSL, localhost does not
   max: 20,             // max connections in pool
   idleTimeoutMillis: 30_000,
-  connectionTimeoutMillis: 5_000,
+  connectionTimeoutMillis: 30_000, // Increased to allow Neon scale-to-zero cold starts
 });
 
 pool.on('error', (err) => {

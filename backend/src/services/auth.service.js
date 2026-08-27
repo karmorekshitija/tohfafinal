@@ -392,6 +392,17 @@ async function login(data) {
     if (demoUser && DEMO_PASSWORDS.includes(password)) {
       const accessToken = signAccessToken({ id: demoUser.id, email: demoUser.email, role: demoUser.role, isSellerApproved: true });
       const refreshToken = signRefreshToken({ id: demoUser.id, email: demoUser.email, role: demoUser.role, isSellerApproved: true });
+      
+      // FIX BUG-07: Persist refresh tokens for demo users so they can be refreshed.
+      // Silently catch errors if demo user doesn't exist in DB to prevent FK violation.
+      const hashedRT = hashRefreshToken(refreshToken);
+      await query(
+        `INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
+         VALUES ($1, $2, NOW() + INTERVAL '7 days')
+         ON CONFLICT (token_hash) DO UPDATE SET expires_at = EXCLUDED.expires_at`,
+        [demoUser.id, hashedRT]
+      ).catch(() => {});
+
       return {
         user: { id: demoUser.id, name: demoUser.name, email: demoUser.email, role: demoUser.role, phone: demoUser.phone, store_name: demoUser.store_name },
         admin: demoUser.role === 'admin' ? demoUser : undefined,
@@ -503,6 +514,17 @@ async function adminLogin(data) {
         };
         const accessToken = signAccessToken({ id: demoUser.id, email: demoUser.email, role: demoUser.role, isSellerApproved: true });
         const refreshToken = signRefreshToken({ id: demoUser.id, email: demoUser.email, role: demoUser.role, isSellerApproved: true });
+        
+        // FIX BUG-07: Persist refresh tokens for demo users so they can be refreshed.
+        // Silently catch errors if demo user doesn't exist in DB to prevent FK violation.
+        const hashedRT = hashRefreshToken(refreshToken);
+        await query(
+          `INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
+           VALUES ($1, $2, NOW() + INTERVAL '7 days')
+           ON CONFLICT (token_hash) DO UPDATE SET expires_at = EXCLUDED.expires_at`,
+          [demoUser.id, hashedRT]
+        ).catch(() => {});
+
         return {
           user: { id: demoUser.id, name: demoUser.name, email: demoUser.email, role: demoUser.role, phone: demoUser.phone },
           admin: demoUser,

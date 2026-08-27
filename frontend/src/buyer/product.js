@@ -75,8 +75,8 @@ function renderProductUI(p) {
   const thumbsMarkup = images.length > 1
     ? `<div class="gallery-thumbs">
         ${images.map((img, i) => `
-          <div class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="switchImage('${img.url}', this)">
-            <img src="${img.url}" alt="Thumbnail">
+          <div class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="switchImage('${img.url || img}', this)">
+            <img src="${img.url || img}" alt="Thumbnail" onerror="this.src='https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&q=80'">
           </div>
         `).join('')}
        </div>`
@@ -85,7 +85,7 @@ function renderProductUI(p) {
   // Fixed customization / options markup (single options path)
   const fixedMarkup = fixedOptions.length
     ? `
-      <div class="card" style="padding: var(--space-4); margin-top: var(--space-4); background: rgba(205, 237, 179, 0.15); border-color: var(--color-accent);">
+      <div class="card" style="padding: var(--space-4); margin-top: var(--space-4); background: #DCE6D8; border-color: var(--color-accent);">
         <h4 style="font-family: var(--font-display); font-size: var(--text-md); color: var(--color-primary); margin-bottom: var(--space-3);">Personalization & Options</h4>
         <div class="flex flex-col gap-3">
           ${fixedOptions.map(opt => `
@@ -125,7 +125,8 @@ function renderProductUI(p) {
        </a>`
     : '';
 
-  const isOutOfStock = p.stock_quantity !== undefined && p.stock_quantity !== null && Number(p.stock_quantity) <= 0;
+  const isCustomizable = p.is_customizable || p.is_customized || (p.customization_mode && p.customization_mode !== 'none') || p.listing_type === 'custom';
+  const isOutOfStock = !isCustomizable && (p.status === 'sold_out' || (p.stock_quantity !== undefined && p.stock_quantity !== null && Number(p.stock_quantity) <= 0));
 
   container.innerHTML = `
     <!-- Left: Gallery -->

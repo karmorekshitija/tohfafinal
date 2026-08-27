@@ -116,7 +116,9 @@ async function getSellerSummary(req, res, next) {
       `SELECT o.id, o.total_amount, o.status, o.created_at,
               COALESCE(u.full_name, u.display_name, 'Buyer') AS buyer_name,
               COALESCE(
-                (SELECT oi.product_name FROM order_items oi WHERE oi.order_id = o.id LIMIT 1),
+                (SELECT p2.name FROM order_items oi2 
+                 JOIN products p2 ON p2.id = oi2.product_id 
+                 WHERE oi2.order_id = o.id LIMIT 1),
                 'Handcrafted Creation'
               ) AS item_title,
               COALESCE(
@@ -351,57 +353,41 @@ async function getRevenueChart(req, res, next) {
  * GET /api/admin/dashboard/footfall
  * Query params: period=7d|30d|custom, start=YYYY-MM-DD, end=YYYY-MM-DD
  * Returns: [{ date: 'YYYY-MM-DD', unique_visitors: number, new_signups: number }]
- * unique_visitors — distinct users who viewed any product that day (product_views table)
- * new_signups     — users whose account was created that day (users.created_at)
+ * NOTE: unique_visitors is estimated from order placements per day (orders.buyer_id). A dedicated product_views event table would give more accurate data.
  */
 async function getFootfall(req, res, next) {
   try {
     const { period = '7d', start = '', end = '' } = req.query;
+    const { condition, params } = buildDateRange(period, start, end, 1);
 
-    // Build conditions using viewed_at for product_views
-    let pvCondition, pvParams;
-    if (period === 'custom' && start && end) {
-      pvCondition = `DATE(viewed_at) BETWEEN $1 AND $2`;
-      pvParams = [start, end];
-    } else {
-      const days = period === '30d' ? 30 : 7;
-      pvCondition = `viewed_at >= NOW() - INTERVAL '${days} days'`;
-      pvParams = [];
-    }
-
-    // Unique visitors from product_views
-    const { rows: visitorRows } = await query(
-      `SELECT DATE(viewed_at) AS date, COUNT(DISTINCT user_id) AS unique_visitors
-       FROM product_views
-       WHERE ${pvCondition}
-       GROUP BY DATE(viewed_at)
+    // Proxy for daily active buyers: count distinct buyers who placed orders that day
+    const { rows: activeRows } = await query(
+      `SELECT DATE(created_at) AS date, COUNT(DISTINCT buyer_id) AS unique_visitors
+       FROM orders
+       WHERE ${condition}
+       GROUP BY DATE(created_at)
        ORDER BY date ASC`,
-      pvParams
+      params
     );
 
-    // New signups from users.created_at (reuse buildDateRange for users table)
-    const { condition: uCondition, params: uParams } = buildDateRange(period, start, end, 1);
+    // New user signups per day
     const { rows: signupRows } = await query(
       `SELECT DATE(created_at) AS date, COUNT(id) AS new_signups
        FROM users
-       WHERE ${uCondition}
+       WHERE ${condition}
        GROUP BY DATE(created_at)
        ORDER BY date ASC`,
-      uParams
+      params
     );
 
     // Merge both result sets by date
     const byDate = {};
-    for (const r of visitorRows) {
-      const d = r.date instanceof Date
-        ? r.date.toISOString().slice(0, 10)
-        : String(r.date).slice(0, 10);
+    for (const r of activeRows) {
+      const d = r.date instanceof Date ? r.date.toISOString().slice(0, 10) : String(r.date).slice(0, 10);
       byDate[d] = { date: d, unique_visitors: parseInt(r.unique_visitors, 10), new_signups: 0 };
     }
     for (const r of signupRows) {
-      const d = r.date instanceof Date
-        ? r.date.toISOString().slice(0, 10)
-        : String(r.date).slice(0, 10);
+      const d = r.date instanceof Date ? r.date.toISOString().slice(0, 10) : String(r.date).slice(0, 10);
       if (byDate[d]) {
         byDate[d].new_signups = parseInt(r.new_signups, 10);
       } else {

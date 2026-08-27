@@ -43,6 +43,9 @@
 
       <!-- Quick Summary Badges -->
       <div class="flex items-center gap-3">
+        <button id="add-product-btn" class="px-5 py-2.5 bg-pine text-[#FFF8E7] rounded-xl font-bold text-sm hover:bg-stone-800 transition shadow-sm flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">add</span> Add Product
+        </button>
         <div class="px-4 py-2 bg-white/80 border border-pine/15 rounded-xl shadow-sm text-center">
           <span class="text-xs text-text-muted font-mono uppercase">Curated Specials</span>
           <p id="specials-count" class="text-xl font-bold text-pine">0</p>
@@ -98,7 +101,6 @@
         </table>
       </div>
     </div>
-  </main>
 
   <!-- Edit Tohfa Special Modal -->
   <div id="edit-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -155,6 +157,63 @@
         </div>
       </form>
     </div>
+  </div>
+
+  <!-- Create Product Modal -->
+  <div id="create-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#FFF8E7] border border-pine/20 rounded-2xl shadow-2xl max-w-lg w-full p-6 text-stone-800 animate-fadeIn max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-pine/10 pb-4 mb-4">
+        <h3 class="font-serif font-bold text-lg text-[#14381F] flex items-center gap-2">
+          <span class="material-symbols-outlined text-[20px]">add_box</span> Create Tohfa Special Product
+        </h3>
+        <button id="close-create-modal-btn" class="text-stone-400 hover:text-stone-700">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <form id="create-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-mono uppercase text-stone-600 mb-1">Product Name *</label>
+          <input type="text" id="create-name" required class="w-full px-3.5 py-2 text-sm bg-white border border-pine/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-pine/30">
+        </div>
+        
+        <div>
+          <label class="block text-xs font-mono uppercase text-stone-600 mb-1">Description</label>
+          <textarea id="create-desc" rows="3" class="w-full px-3.5 py-2 text-sm bg-white border border-pine/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-pine/30"></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-mono uppercase text-stone-600 mb-1">Base Price (₹) *</label>
+            <input type="number" id="create-price" required min="1" class="w-full px-3.5 py-2 text-sm bg-white border border-pine/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-pine/30">
+          </div>
+          <div>
+            <label class="block text-xs font-mono uppercase text-stone-600 mb-1">Category</label>
+            <select id="create-category" class="w-full px-3.5 py-2 text-sm bg-white border border-pine/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-pine/30">
+              <option value="">Select Category...</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-mono uppercase text-stone-600 mb-1">Assign to Artisan (Seller) *</label>
+          <select id="create-seller" required class="w-full px-3.5 py-2 text-sm bg-white border border-pine/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-pine/30">
+            <option value="">Loading sellers...</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-mono uppercase text-stone-600 mb-1">Image URL</label>
+          <input type="url" id="create-image" placeholder="https://..." class="w-full px-3.5 py-2 text-sm bg-white border border-pine/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-pine/30">
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-pine/10 mt-6">
+          <button type="button" id="cancel-create-modal-btn" class="px-4 py-2 text-xs font-bold text-stone-600 hover:bg-stone-200/50 rounded-xl">Cancel</button>
+          <button type="submit" class="px-5 py-2 text-xs font-bold bg-[#14381F] text-[#FFF8E7] rounded-xl hover:bg-stone-800 transition shadow-sm">Create Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
   </main>
 
   <script type="module">
@@ -344,7 +403,67 @@
     });
 
     // Initial load
-    document.addEventListener('DOMContentLoaded', loadCatalog);
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCatalog();
+      loadFormDependencies();
+    });
+
+    // Create Modal Logic
+    const addProductBtn = document.getElementById('add-product-btn');
+    const createModal = document.getElementById('create-modal');
+    const closeCreateBtn = document.getElementById('close-create-modal-btn');
+    const cancelCreateBtn = document.getElementById('cancel-create-modal-btn');
+    const createForm = document.getElementById('create-form');
+    
+    async function loadFormDependencies() {
+      try {
+        const selRes = await adminApiClient.get('/admin/sellers', { params: { limit: 100 } });
+        if (selRes.data?.success) {
+          const select = document.getElementById('create-seller');
+          select.innerHTML = '<option value="">Select Artisan (Seller)...</option>' + 
+            selRes.data.data.map(s => `<option value="${s.id}">${s.store_name || s.name}</option>`).join('');
+        }
+        
+        const catRes = await adminApiClient.get('/admin/categories');
+        if (catRes.data?.success) {
+          const select = document.getElementById('create-category');
+          select.innerHTML = '<option value="">Select Category...</option>' + 
+            catRes.data.data.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        }
+      } catch (err) {
+        console.error("Failed to load form dependencies", err);
+      }
+    }
+
+    function hideCreateModal() {
+      createModal.classList.add('hidden');
+    }
+
+    addProductBtn.addEventListener('click', () => createModal.classList.remove('hidden'));
+    closeCreateBtn.addEventListener('click', hideCreateModal);
+    cancelCreateBtn.addEventListener('click', hideCreateModal);
+
+    createForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const payload = {
+          name: document.getElementById('create-name').value.trim(),
+          description: document.getElementById('create-desc').value.trim(),
+          base_price: parseFloat(document.getElementById('create-price').value),
+          category_id: document.getElementById('create-category').value || null,
+          seller_id: document.getElementById('create-seller').value,
+          image_url: document.getElementById('create-image').value.trim(),
+          is_tohfa_original: true
+        };
+        
+        await adminApiClient.post('/admin/products', payload);
+        createForm.reset();
+        hideCreateModal();
+        loadCatalog();
+      } catch (err) {
+        alert('Failed to create product: ' + (err.response?.data?.message || err.message));
+      }
+    });
   </script>
 </body>
 </html>

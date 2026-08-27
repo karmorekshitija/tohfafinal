@@ -8,7 +8,7 @@
 'use strict';
 
 const { query } = require('../config/db');
-const { placeOrders } = require('../services/order.service');
+const { placeOrders, createOverflowOrder } = require('../services/order.service');
 const paymentService = require('../services/payment.service');
 const { createNotification } = require('./notification.controller');
 
@@ -24,11 +24,34 @@ async function placeOrder(req, res, next) {
       return res.status(400).json({ success: false, message: 'address_id is required.' });
     }
 
-    const result = await placeOrders(buyerId, address_id, cart_item_ids || null, {
-      coupon_code: coupon_code || coupon || code,
-      coupon_id,
-    });
-    return res.status(201).json({ success: true, data: result });
+    try {
+      const result = await placeOrders(buyerId, address_id, cart_item_ids || null, {
+        coupon_code: coupon_code || coupon || code,
+        coupon_id,
+      });
+      return res.status(201).json({ success: true, data: result });
+    } catch (placeErr) {
+      if (placeErr.is_overflow) {
+        return res.status(409).json({ success: false, message: placeErr.message, is_overflow: true });
+      }
+      throw placeErr;
+    }
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function placeOverflowOrder(req, res, next) {
+  try {
+    const buyerId = req.user.id;
+    const { address_id, cart_item_ids } = req.body;
+
+    if (!address_id) {
+      return res.status(400).json({ success: false, message: 'address_id is required.' });
+    }
+
+    const overflowOrder = await createOverflowOrder(buyerId, address_id, cart_item_ids || null);
+    return res.status(201).json({ success: true, data: { overflow_order: overflowOrder } });
   } catch (err) {
     next(err);
   }
@@ -457,8 +480,8 @@ async function handleOverflowOrder(req, res, next) {
       : ov.items_snapshot;
 
     const { rows: orderRows } = await query(
-      `INSERT INTO orders (buyer_id, seller_id, address_id, total_amount, status)
-       VALUES ($1, $2, $3, $4, 'confirmed')
+      `INSERT INTO orders (buyer_id, seller_id, address_id, total_amount, status, payment_status)
+       VALUES ($1, $2, $3, $4, 'pending', 'pending')
        RETURNING *`,
       [ov.buyer_id, sellerId, ov.address_id, ov.total_amount]
     );
@@ -480,17 +503,39 @@ async function handleOverflowOrder(req, res, next) {
       );
     }
 
+    // Generate Razorpay Order for payment link
+    const razorpayOrder = await paymentService.createRazorpayOrder(
+      ov.total_amount,
+      `OFLOW-${order.id}`
+    );
+
     await query(
       "UPDATE overflow_orders SET status = 'accepted', updated_at = NOW() WHERE id = $1",
       [id]
     );
 
+    // BUG-03: Clear the buyer's cart items now that the seller has accepted.
+    // Use the already-parsed `items` array (which includes `id` from the snapshot saved by createOverflowOrder).
+    const cartItemIds = Array.isArray(items) ? items.map(i => i.id).filter(Boolean) : [];
+
+    if (cartItemIds.length > 0) {
+      await query(
+        `DELETE FROM cart_items
+         WHERE id = ANY($1::uuid[])
+           AND (buyer_id = $2 OR cart_id IN (SELECT id FROM carts WHERE user_id = $2))`,
+        [cartItemIds, ov.buyer_id]
+      ).catch(err => console.warn('[Overflow Accept] Cart clear failed (non-fatal):', err.message));
+    }
+
+    // BUG-04: Provide a payment link to the buyer (removed /desktop/ from URL)
+    const paymentLink = `https://thetohfa.in/buyer/pay-overflow.html?orderId=${order.id}&amount=${ov.total_amount}&rzpId=${razorpayOrder.id}`;
+
     await createNotification(
       ov.buyer_id,
       'order_placed',
-      'Order confirmed',
-      'Your overflow order has been accepted by the seller!',
-      { order_id: order.id }
+      'Overflow Order Accepted',
+      `Your overflow order has been accepted by the seller! Please complete the payment to confirm the order: ${paymentLink}`,
+      { order_id: order.id, payment_link: paymentLink }
     );
 
     return res.status(201).json({ success: true, data: { order } });
@@ -932,6 +977,7 @@ async function rejectRefund(req, res, next) {
 
 module.exports = {
   placeOrder,
+  placeOverflowOrder,
   getBuyerOrders,
   getSellerOrders,
   getAdminOrders,
@@ -944,4 +990,3 @@ module.exports = {
   approveRefund,
   rejectRefund,
 };
-

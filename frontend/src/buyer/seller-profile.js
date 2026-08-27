@@ -16,7 +16,6 @@ const heroEl = document.getElementById('sellerHero');
 const gridEl = document.getElementById('sellerProductsGrid');
 const countBadge = document.getElementById('productCountBadge');
 
-let isFollowing = false;
 
 async function loadSellerProfile() {
   if (!sellerId) {
@@ -65,9 +64,6 @@ function renderHero(s) {
       </div>
 
       <div class="flex gap-2 items-center">
-        <button id="followBtn" class="btn btn-sm btn-primary" onclick="toggleFollow('${s.user_id || sellerId}')">
-          + Follow Studio
-        </button>
         ${waBtn}
       </div>
     </div>
@@ -104,50 +100,5 @@ async function loadSellerProducts() {
   }
 }
 
-window.toggleFollow = async (targetId) => {
-  if (!isLoggedIn()) {
-    showToast('Please sign in to follow artisans.', 'info');
-    return;
-  }
-  const btn = document.getElementById('followBtn');
-  const countEl = document.getElementById('sellerFollowersCount');
-  try {
-    if (!isFollowing) {
-      try {
-        await api.post(`/api/sellers/${targetId}/follow`);
-      } catch (_) {
-        await api.post(`/api/buyer/follow/${targetId}`).catch(() => api.post(`/follows/${targetId}`));
-      }
-      isFollowing = true;
-      if (btn) {
-        btn.textContent = '✓ Following';
-        btn.classList.replace('btn-primary', 'btn-secondary');
-      }
-      if (countEl) {
-        const c = parseInt(countEl.textContent || '0', 10);
-        countEl.textContent = `${c + 1}`;
-      }
-      showToast('Following artisan studio! 🌟', 'success');
-    } else {
-      try {
-        await api.delete(`/api/sellers/${targetId}/follow`);
-      } catch (_) {
-        await api.delete(`/api/buyer/follow/${targetId}`).catch(() => api.delete(`/follows/${targetId}`));
-      }
-      isFollowing = false;
-      if (btn) {
-        btn.textContent = '+ Follow Studio';
-        btn.classList.replace('btn-secondary', 'btn-primary');
-      }
-      if (countEl) {
-        const c = parseInt(countEl.textContent || '1', 10);
-        countEl.textContent = `${Math.max(0, c - 1)}`;
-      }
-      showToast('Unfollowed studio.', 'info');
-    }
-  } catch (err) {
-    showToast(err.message || 'Follow action failed.', 'error');
-  }
-};
 
 loadSellerProfile();

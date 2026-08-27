@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
+    "@neondatabase/serverless": "^1.1.0",
     "bcrypt": "^5.1.1",
     "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
@@ -28,7 +29,8 @@
     "pg": "^8.13.1",
     "razorpay": "^2.9.6",
     "twilio": "^5.3.7",
-    "uuid": "^10.0.0"
+    "uuid": "^10.0.0",
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "jest": "^29.7.0",

@@ -8,6 +8,10 @@
  */
 'use strict';
 
+if (!process.env.JWT_ACCESS_SECRET) {
+  console.warn('[SECURITY WARNING] JWT_ACCESS_SECRET env var not set. Using hardcoded fallback — NEVER do this in production.');
+}
+
 const jwt = require('jsonwebtoken');
 const { query } = require('../config/db');
 
@@ -21,7 +25,8 @@ async function authMiddleware(req, res, next) {
   const token = authHeader.split(' ')[1];
 
   try {
-    const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+    // FIX BUG-02: Use fallback secret for verify
+    const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET || 'tohfa_jwt_access_secret_key_2026');
 
     // Support demo mode / demo user IDs if in development
     if (
@@ -30,6 +35,10 @@ async function authMiddleware(req, res, next) {
       payload.id &&
       String(payload.id).startsWith('d0000000-')
     ) {
+      // FIX SEC-02: Warn if demo login is active in a non-development-like environment
+      if (process.env.NODE_ENV === 'production') {
+        console.error('[SECURITY] Demo login bypass triggered in production! Set ALLOW_DEMO_LOGIN=false immediately.');
+      }
       req.user = payload;
       return next();
     }

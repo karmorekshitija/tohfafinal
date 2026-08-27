@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Tohfa v2 — Buyer Controller
  * File: src/controllers/buyer.controller.js
  * Role: HTTP handlers for buyer profile, addresses, bulk inquiries, zip gifts, and followed artisans.
@@ -513,7 +513,7 @@ async function updateOwnProfile(req, res, next) {
            profile_photo_url = COALESCE($3, profile_photo_url),
            cover_photo_url   = COALESCE($4, cover_photo_url),
            updated_at        = NOW()
-       WHERE id = $5 AND (is_active = true OR is_active = 1)
+       WHERE id = $5 AND is_active = true
        RETURNING id, name, email, phone,
                  profile_photo_url, profile_photo_url AS profile_photo,
                  cover_photo_url, cover_photo_url AS cover_photo,
@@ -542,7 +542,7 @@ async function getPublicProfile(req, res, next) {
               profile_photo_url, profile_photo_url AS profile_photo,
               cover_photo_url, cover_photo_url AS cover_photo,
               created_at
-       FROM users WHERE id = $1 AND (is_active = true OR is_active = 1)`,
+       FROM users WHERE id = $1 AND is_active = true`,
       [userId]
     );
     if (!rows.length) {

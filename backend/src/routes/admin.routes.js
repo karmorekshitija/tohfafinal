@@ -69,6 +69,7 @@ router.post('/seller-applications/:id/reject', adminController.rejectSeller);
 
 // 3. Products & Tohfa Specials
 router.get('/products', adminController.listAllProducts);
+router.post('/products', adminController.createProduct);
 router.patch('/products/:productId/status', adminController.toggleProductStatus);
 router.patch('/products/:id/status', adminController.toggleProductStatus);
 router.patch('/products/:id/sponsor', adminController.toggleSponsor);

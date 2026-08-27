@@ -78,7 +78,7 @@ async function addToWishlist(req, res, next) {
       `INSERT INTO wishlists (user_id, product_id)
        VALUES ($1, $2)
        ON CONFLICT (user_id, product_id) DO NOTHING
-       RETURNING id, product_id, added_at`,
+       RETURNING id, product_id, created_at`,
       [userId, product_id]
     );
 

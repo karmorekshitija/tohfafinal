@@ -725,71 +725,7 @@ function rowHTML(l) {
 }
 
 // ── Load listings ─────────────────────────────────────────────
-const MOCK_LISTINGS = [
-    {
-        listing_id: "mock-1",
-        title: "Golden Fern Study No. 4",
-        category: "Art Print",
-        price_paise: 850000,
-        stock_count: 1,
-        status: "active",
-        cover_photo_url: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        listing_id: "mock-2",
-        title: "Archival Wildflower Seeds",
-        category: "Curated Seeds",
-        price_paise: 220000,
-        stock_count: 4,
-        status: "active",
-        cover_photo_url: "/img/linen_journal.jpg"
-    },
-    {
-        listing_id: "mock-3",
-        title: "Forest Floor Ceramic Bowl",
-        category: "Handmade Ceramic",
-        price_paise: 1400000,
-        stock_count: 12,
-        status: "paused",
-        cover_photo_url: "https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        listing_id: "mock-4",
-        title: "Linen Studio Apron",
-        category: "Textiles",
-        price_paise: 350000,
-        stock_count: 0,
-        status: "active",
-        cover_photo_url: "/img/linen_journal.jpg"
-    },
-    {
-        listing_id: "mock-5",
-        title: "Hand-Woven Willow Tray",
-        category: "Home Decor",
-        price_paise: 195000,
-        stock_count: 8,
-        status: "active",
-        cover_photo_url: "https://images.unsplash.com/photo-1590736969955-71cb94801758?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        listing_id: "mock-6",
-        title: "Pressed Lavender Soy Candle",
-        category: "Aromatherapy",
-        price_paise: 75000,
-        stock_count: 20,
-        status: "active",
-        cover_photo_url: "https://images.unsplash.com/photo-1603006905003-be475563bc59?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        listing_id: "mock-7",
-        title: "Eucalyptus Leaf Ceramic Mug",
-        category: "Handmade Ceramic",
-        price_paise: 95000,
-        stock_count: 3,
-        status: "draft",
-        cover_photo_url: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=500&auto=format&fit=crop&q=60"
-    }
-];
+const MOCK_LISTINGS = [];
 
 async function loadListings(forceFetch = false) {
     const tableContainer = document.getElementById('listings-table-container');

@@ -183,22 +183,48 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
   const verifiedCoupon = couponParam ? await verifyAndFetchCoupon(couponParam, cartGrossTotal) : null;
   const totalDiscount = verifiedCoupon ? verifiedCoupon.discount_amount : 0;
 
+  // Buyer pays a 5% platform fee added to the subtotal
+  const buyerPlatformFee = parseFloat((cartGrossTotal * 0.05).toFixed(2));
+
   // Server-side shipping fee calculation (e.g. Free shipping >= ₹999, else ₹50)
   const shippingAmount = cartGrossTotal >= 999 ? 0 : 50;
-  const finalParentTotal = parseFloat(Math.max(0, (cartGrossTotal - totalDiscount + shippingAmount)).toFixed(2));
+  const finalParentTotal = parseFloat(Math.max(0, (cartGrossTotal + buyerPlatformFee - totalDiscount + shippingAmount)).toFixed(2));
 
-  // 3. Group by seller
+  // 3. Group by seller and check capacity
   const sellerGroups = {};
   for (const item of cartItems) {
-    if (item.vacation_mode || item.store_visibility === false || item.store_visibility === 'hidden') continue;
-    if (!sellerGroups[item.seller_id]) sellerGroups[item.seller_id] = [];
-    sellerGroups[item.seller_id].push(item);
+    if (item.store_visibility === false || item.store_visibility === 'hidden') continue;
+    if (!sellerGroups[item.seller_id]) sellerGroups[item.seller_id] = { items: [], capacity_limit: item.capacity_limit, vacation_mode: item.vacation_mode };
+    sellerGroups[item.seller_id].items.push(item);
   }
 
   if (!Object.keys(sellerGroups).length) {
     const err = new Error('All sellers for selected items are currently on vacation or unavailable.');
     err.status = 400;
     throw err;
+  }
+
+  // Check capacity for each seller
+  for (const sellerId of Object.keys(sellerGroups)) {
+    const group = sellerGroups[sellerId];
+    if (group.vacation_mode) {
+      const err = new Error('Artisan is busy. Submit request without payment?');
+      err.status = 409;
+      err.is_overflow = true;
+      throw err;
+    }
+    const { rows: activeRows } = await query(`
+      SELECT COUNT(*) as active_count
+      FROM seller_orders
+      WHERE seller_id = $1 AND status IN ('order_placed', 'pending', 'confirmed', 'in_crafting')
+    `, [sellerId]);
+    const activeCount = parseInt(activeRows[0].active_count, 10);
+    if (activeCount >= group.capacity_limit) {
+      const err = new Error('Artisan is busy. Submit request without payment?');
+      err.status = 409;
+      err.is_overflow = true;
+      throw err;
+    }
   }
 
   const client = await getClient();
@@ -210,14 +236,20 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
     await client.query('BEGIN');
 
     // 4. Create the ONE Parent Order (CHK-25: for Razorpay payment and invoice)
+    // BUG-05: For single-seller orders, set seller_id on the parent order
+    // For multi-seller, use the first/primary seller's ID
+    const sellerIds = Object.keys(sellerGroups);
+    const primarySellerId = sellerIds[0] || cartItems[0]?.seller_id || null;
+
     const { rows: parentOrderRows } = await client.query(
       `INSERT INTO orders
-         (user_id, buyer_id, address_id, total_amount, discount_amount, shipping_amount,
+         (user_id, buyer_id, seller_id, address_id, total_amount, discount_amount, shipping_amount,
           coupon_id, payment_method, payment_status, status, payout_status, shipping_address, notes)
-       VALUES ($1, $1, $2, $3, $4, $5, $6, 'razorpay', 'pending', 'pending', 'pending', $7, $8)
+       VALUES ($1, $1, $2, $3, $4, $5, $6, $7, 'razorpay', 'pending', 'pending', 'pending', $8, $9)
        RETURNING *`,
       [
         buyerId,
+        primarySellerId,
         addressId,
         finalParentTotal.toFixed(2),
         totalDiscount.toFixed(2),
@@ -231,12 +263,11 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
     parentOrder = parentOrderRows[0];
 
     // 5. Create split 'seller_orders' records (one per vendor) & corresponding 'order_items'
-    const sellerIds = Object.keys(sellerGroups);
     let remainingDiscountToDistribute = totalDiscount;
 
     for (let i = 0; i < sellerIds.length; i++) {
       const sellerId = sellerIds[i];
-      const items = sellerGroups[sellerId];
+      const items = sellerGroups[sellerId].items;
       const commissionRate = parseFloat(items[0].commission_rate || 10.00);
 
       // Server-side subtotal for this seller
@@ -255,7 +286,7 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
       }
 
       // Platform commission and net seller payout calculations
-      const platformCommission = parseFloat(((sellerSubtotal * (commissionRate / 100))).toFixed(2));
+      const platformCommission = parseFloat((sellerSubtotal * 0.05).toFixed(2));
       const sellerPayoutAmount = parseFloat(Math.max(0, sellerSubtotal - platformCommission).toFixed(2));
       const sellerShippingFee = i === 0 ? shippingAmount : 0;
 
@@ -355,5 +386,85 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
   };
 }
 
-module.exports = { placeOrders };
+async function createOverflowOrder(buyerId, addressId, cartItemIds) {
+  // 1. Fetch cart items (similar to placeOrders)
+  let cartQuery = `
+    SELECT ci.id, ci.product_id, ci.variant_id, ci.quantity,
+           COALESCE(ci.customization_payload, ci.customization_data, '{}'::jsonb) AS customization_payload,
+           p.base_price, p.stock_quantity, p.seller_id, p.name AS product_name,
+           COALESCE(pv.additional_price, 0) AS variant_additional_price
+    FROM cart_items ci
+    JOIN products p ON p.id = ci.product_id
+    LEFT JOIN product_variants pv ON pv.id = ci.variant_id
+    WHERE (ci.buyer_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
+      AND (p.status = 'active' OR p.is_active = TRUE)
+  `;
+  let cartParams = [buyerId];
+
+  if (cartItemIds && cartItemIds.length) {
+    cartQuery += ` AND ci.id = ANY($2::uuid[])`;
+    cartParams.push(cartItemIds);
+  }
+
+  const { rows: rawCartItems } = await query(cartQuery, cartParams);
+  if (!rawCartItems.length) {
+    const err = new Error('No active items found in cart.');
+    err.status = 400;
+    throw err;
+  }
+
+  const cartItems = rawCartItems.map(item => {
+    const qty = Math.max(1, parseInt(item.quantity, 10) || 1);
+    const variantDelta = parseFloat(item.variant_additional_price || 0);
+    const unitPrice = parseFloat((parseFloat(item.base_price) + variantDelta).toFixed(2));
+    return {
+      ...item,
+      quantity: qty,
+      unit_price: unitPrice,
+      subtotal: parseFloat((unitPrice * qty).toFixed(2)),
+    };
+  });
+
+  const cartGrossTotal = cartItems.reduce((sum, item) => sum + item.subtotal, 0);
+  const buyerPlatformFee = parseFloat((cartGrossTotal * 0.05).toFixed(2));
+  const totalAmount = parseFloat((cartGrossTotal + buyerPlatformFee).toFixed(2));
+  
+  const sellerId = cartItems[0].seller_id; // Assume single seller for overflow, or pick first
+
+  const itemsSnapshot = cartItems.map(item => ({
+    id: item.id, // Added for deferred cart clearing
+    product_id: item.product_id,
+    variant_id: item.variant_id,
+    quantity: item.quantity,
+    unit_price: item.unit_price,
+    base_price: item.base_price,
+    customization_data: item.customization_payload,
+    product_name: item.product_name
+  }));
+
+  const { rows: ovRows } = await query(
+    `INSERT INTO overflow_orders (buyer_id, seller_id, address_id, total_amount, status, items_snapshot)
+     VALUES ($1, $2, $3, $4, 'pending', $5)
+     RETURNING *`,
+    [buyerId, sellerId, addressId, totalAmount, JSON.stringify(itemsSnapshot)]
+  );
+
+  const overflowOrder = ovRows[0];
+
+  // Notify seller
+  await createNotification(
+    sellerId,
+    'new_overflow_order',
+    'New Overflow Request',
+    `You have received a new overflow request from a buyer. Review it in your dashboard.`,
+    { overflow_order_id: overflowOrder.id }
+  ).catch(() => {});
+
+  // BUG-03: Cart clearing logic has been removed from here. 
+  // It will now be cleared in order.controller.js when the seller accepts.
+
+  return overflowOrder;
+}
+
+module.exports = { placeOrders, createOverflowOrder };
 

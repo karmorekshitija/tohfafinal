@@ -32,7 +32,7 @@ async function loadHomepageData() {
   try {
     // 1. Fetch Categories
     const catRes = await api.get('/api/products/categories');
-    const categories = Array.isArray(catRes?.data) ? catRes.data : [];
+    const categories = Array.isArray(catRes?.data?.categories) ? catRes.data.categories : (Array.isArray(catRes?.data) ? catRes.data : []);
     renderCategoryTabs(categories);
 
     // 2. Fetch Hero Banners

@@ -35,7 +35,7 @@ const logisticsRoutes      = require('./src/routes/logistics.routes');
 const webhookRoutes        = require('./src/routes/webhook.routes');
 
 // Middleware imports
-const { rateLimiter }   = require('./src/middleware/rateLimiter');
+const { rateLimiter, tanyaRateLimiter }   = require('./src/middleware/rateLimiter');
 const { errorHandler }  = require('./src/middleware/errorHandler');
 const { authMiddleware } = require('./src/middleware/auth');
 
@@ -141,8 +141,8 @@ app.use('/api/review',        reviewRoutes);   // Alias
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/notification',  notificationRoutes); // Alias
 app.use('/api/analytics',     analyticsRoutes);
-app.use('/api/tanya',         tanyaRoutes);
-app.use('/api/chatbot',       tanyaRoutes);   // Alias for Tanya AI Chatbot
+app.use('/api/tanya',         tanyaRateLimiter, tanyaRoutes); // Added rate limiter for Tanya AI
+app.use('/api/chatbot',       tanyaRateLimiter, tanyaRoutes);   // Alias for Tanya AI Chatbot
 app.use('/api/logistics',     logisticsRoutes);
 
 
@@ -155,6 +155,10 @@ app.get('/api/products/featured', (req, res, next) => {
 });
 app.get('/api/categories', productController.listCategories);
 app.get('/api/category/all', productController.listCategories);
+app.get('/api/categories/:slug/products', (req, res, next) => {
+  req.query.category_id = req.params.slug;
+  return productController.listProducts(req, res, next);
+});
 app.get('/api/logistics/check', logisticsController.checkServiceability);
 app.post('/api/wishlist/add', authMiddleware, wishlistController.addToWishlist);
 app.put('/api/cart/update', authMiddleware, cartController.updateCartItem);
@@ -171,10 +175,20 @@ app.get('/api/home/feed', productController.forYouFeed);
 app.get('/api/ui-settings/public', adminController.listBanners);
 app.get('/api/capacity/check', (req, res) => res.json({ success: true, data: { available: true, is_available: true, message: 'Maker is accepting orders.' } }));
 app.get('/api/capacity/check-cart', (req, res) => res.json({ success: true, data: { available: true, is_available: true, items: [] } }));
-app.get('/api/messages/conversations', (req, res) => res.json({ success: true, data: { conversations: [] } }));
-app.post('/api/messages/conversations', (req, res) => res.json({ success: true, data: { id: 'conv-new', messages: [] } }));
-app.get('/api/messages/:id', (req, res) => res.json({ success: true, data: { messages: [] } }));
-app.post('/api/messages/:id', (req, res) => res.json({ success: true, data: { message: 'Sent' } }));
+// ---------------------------------------------------------------------------
+// MESSAGING — Not Yet Implemented
+// These routes return 501 to signal to the frontend that messaging is not
+// available yet. Do NOT return fake 200 responses as they mislead the UI.
+// ---------------------------------------------------------------------------
+const _notImplemented = (req, res) => res.status(501).json({
+  success: false,
+  message: 'Messaging is not yet available. This feature is coming soon.',
+  code: 'FEATURE_NOT_IMPLEMENTED',
+});
+app.get('/api/messages/conversations', _notImplemented);
+app.post('/api/messages/conversations', _notImplemented);
+app.get('/api/messages/:id', _notImplemented);
+app.post('/api/messages/:id', _notImplemented);
 
 // ---------------------------------------------------------------------------
 // 404 HANDLER — for unmatched API routes

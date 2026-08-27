@@ -39,3 +39,4 @@ Thumbs.db
 .vercel/
 .turbo/
 *.local
+.neon

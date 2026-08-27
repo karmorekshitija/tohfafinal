@@ -38,20 +38,37 @@ async function loadOrderDetail() {
   }
 }
 
-function getMilestoneStep(status) {
+function getMilestoneStep(status, items = []) {
   const s = (status || '').toLowerCase();
   if (['delivered', 'completed'].includes(s)) return 4;
   if (['shipped', 'dispatched', 'in_transit', 'out_for_delivery'].includes(s)) return 3;
-  if (['proof_uploaded', 'proof_approved', 'design_proof_approved', 'packed'].includes(s)) return 2;
-  if (['confirmed', 'crafting', 'in_progress', 'processing'].includes(s)) return 1;
-  return 0; // pending, order_placed, awaiting_payment
+  
+  const anyProofApproved = items.some(it => ['proof_approved', 'design_proof_approved'].includes(it.customization_status));
+  if (['packed'].includes(s) || anyProofApproved) return 2;
+  
+  if (['crafting', 'in_progress', 'processing'].includes(s)) return 1;
+  return 0; // pending, confirmed, order_placed
+}
+
+function formatCustomization(data) {
+  if (!data) return '';
+  if (typeof data === 'string') {
+    try { data = JSON.parse(data); } catch { return data; }
+  }
+  if (typeof data === 'object') {
+    return Object.entries(data)
+      .map(([k, v]) => {
+         const niceKey = k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+         return `${niceKey}: ${v}`;
+      }).join(', ');
+  }
+  return String(data);
 }
 
 function renderOrderUI(o) {
-  const currentIndex = getMilestoneStep(o.status);
-  const progressPercent = (currentIndex / 4) * 100;
-
   const items = Array.isArray(o.items) ? o.items : [];
+  const currentIndex = getMilestoneStep(o.status, items);
+  const progressPercent = (currentIndex / 4) * 100;
 
   const trackingMarkup = o.tracking_id
     ? `
@@ -130,7 +147,7 @@ function renderOrderUI(o) {
         </div>
         <div class="timeline-step ${currentIndex >= 2 ? 'completed' : ''}">
           <div class="timeline-dot">3</div>
-          <span class="text-xs font-medium">Proof Approved</span>
+          <span class="text-xs font-medium">${isCustomized ? 'Proof Approved' : 'Packed'}</span>
         </div>
         <div class="timeline-step ${currentIndex >= 3 ? 'completed' : ''}">
           <div class="timeline-dot">4</div>
@@ -155,7 +172,7 @@ function renderOrderUI(o) {
               <div>
                 <h4 style="font-size:var(--text-sm); font-weight:var(--weight-semibold);">${it.product_name || 'Artisan Item'}</h4>
                 <div class="text-xs" style="color:var(--color-text-muted);">Quantity: ${it.quantity}</div>
-                ${it.customization_data ? `<div class="text-xs" style="color:var(--color-primary); font-style:italic;">Customization: ${JSON.stringify(it.customization_data)}</div>` : ''}
+                ${it.customization_data ? `<div class="text-xs" style="color:var(--color-primary); font-style:italic;">Customization: ${formatCustomization(it.customization_data)}</div>` : ''}
               </div>
               <span class="text-price-sm">${formatPrice(Number(it.unit_price) * it.quantity)}</span>
             </div>

@@ -322,7 +322,21 @@ export function renderTanya() {
       try {
         const res   = await api.post('/api/tanya/chat', { message: text, history });
         const reply = res?.data?.reply || 'Please explore our curated artisan collections!';
-        loadingMsg.innerHTML = reply.replace(/\n/g, '<br>');
+        
+        let sanitizedReply = reply
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+          
+        sanitizedReply = sanitizedReply.replace(
+          /\[([^\]]+)\]\(([^)]+)\)/g, 
+          '<a href="$2" style="color: var(--color-gold, #C8A96E); font-weight: 600; text-decoration: underline; text-underline-offset: 2px;">$1</a>'
+        );
+        sanitizedReply = sanitizedReply.replace(/\n/g, '<br>');
+        
+        loadingMsg.innerHTML = sanitizedReply;
         history.push({ role: 'user',  parts: [{ text }] });
         history.push({ role: 'model', parts: [{ text: reply }] });
       } catch {

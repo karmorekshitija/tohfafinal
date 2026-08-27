@@ -36,7 +36,7 @@ async function init() {
 async function loadCategories() {
   try {
     const res = await api.get('/api/products/categories');
-    const categories = res?.data || [];
+    const categories = Array.isArray(res?.data?.categories) ? res.data.categories : (Array.isArray(res?.data) ? res.data : []);
     categoryFilter.innerHTML = `<option value="">All Categories</option>` +
       categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
   } catch { /* empty */ }

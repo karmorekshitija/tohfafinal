@@ -283,8 +283,6 @@ form.addEventListener('submit', async (e) => {
     };
     sessionStorage.setItem(`tohfa_cart_customization_${productId}`, JSON.stringify(cartCustomizationMeta));
 
-    // Submit customization request to artisan
-    await api.post('/api/customization/request', payload).catch(() => {});
 
     // Also add customized item to cart
     try {

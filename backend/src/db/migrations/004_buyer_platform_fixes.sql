@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- Migration: 004_buyer_platform_fixes.sql
 -- Description: Buyer platform and schema audit fixes
 -- 1. Create coupons table
