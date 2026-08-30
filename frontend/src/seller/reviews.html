@@ -18,7 +18,7 @@
     <script src="/seller/js/seller-utils.js"></script>
         
     <style>
-        body { font-family: 'DM Sans', sans-serif; background-color: #FFF8E7; }
+        body { font-family: 'DM Sans', sans-serif; background-color: #FFF8E7; color: #1C1C1A; }
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
         .star-filled { font-variation-settings: 'FILL' 1; color: #14381F; }
 
@@ -488,21 +488,28 @@
         const viewStoreBtn = document.getElementById('view-store-btn');
         if (viewStoreBtn) {
             viewStoreBtn.addEventListener('click', () => {
+                const authToken = (typeof window !== 'undefined' && window.authStorage?.getItem('tohfa_access_token')) ||
+                                  sessionStorage.getItem('tohfa_access_token') ||
+                                  sessionStorage.getItem('tohfa_auth_token') ||
+                                  localStorage.getItem('tohfa_access_token') ||
+                                  localStorage.getItem('tohfa_auth_token') ||
+                                  token || '';
                 fetch(`${API_BASE_URL}/api/seller/profile`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
                 })
                 .then(res => res.json())
                 .then(data => {
-                    const profileData = data.data || data;
-                    if (profileData && (profileData.user_id || profileData.seller_id || profileData.id)) {
-                        window.location.href = `/buyer/seller-profile.html?id=${profileData.user_id || profileData.seller_id || profileData.id}`;
+                    const profile = data.data?.profile || data.profile || data.data || data;
+                    const sellerId = profile?.user_id || profile?.seller_id || profile?.id;
+                    if (sellerId) {
+                        window.location.href = `/buyer/seller-profile.html?id=${sellerId}`;
                     } else {
-                        window.location.href = '/';
+                        window.location.href = '/seller/dashboard.html';
                     }
                 })
                 .catch(err => {
                     console.error('Error fetching seller profile:', err);
-                    window.location.href = '/';
+                    window.location.href = '/seller/dashboard.html';
                 });
             });
         }

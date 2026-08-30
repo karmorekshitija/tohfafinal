@@ -53,12 +53,25 @@ async function loadProduct() {
   }
 }
 
+function getImagesForVariant(variant, p) {
+  if (variant) {
+    if (Array.isArray(variant.images) && variant.images.length > 0) {
+      const valid = variant.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || img))).filter(Boolean);
+      if (valid.length > 0) return valid.map(url => ({ url }));
+    }
+    if (variant.image_url) {
+      return [{ url: variant.image_url }];
+    }
+  }
+  if (Array.isArray(p.images) && p.images.length > 0) {
+    const valid = p.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || img))).filter(Boolean);
+    if (valid.length > 0) return valid.map(url => ({ url }));
+  }
+  return [{ url: p.image_url || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&q=80' }];
+}
+
 function renderProductUI(p) {
   document.title = `${p.name} | Tohfa`;
-
-  const images = Array.isArray(p.images) && p.images.length
-    ? p.images.map(img => ({ url: img.url || img }))
-    : [{ url: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&q=80' }];
 
   const variants = Array.isArray(p.variants) ? p.variants : [];
   const fixedOptions = Array.isArray(p.fixed_customization_options) ? p.fixed_customization_options : [];
@@ -68,18 +81,60 @@ function renderProductUI(p) {
     selectedVariant = variants[0];
   }
 
+  const activeImages = getImagesForVariant(selectedVariant, p);
+
+  const tags = Array.isArray(p.tags) ? p.tags : [];
+  const tagsMarkup = tags.length
+    ? `<div class="product-tags-container" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--space-2); margin-bottom: var(--space-2);">
+        ${tags.map(t => `<span class="tag-chip" style="font-size: 11px; padding: 3px 10px; background: rgba(20,56,31,0.06); border: 1px solid rgba(20,56,31,0.15); border-radius: 9999px; color: var(--color-primary); font-weight: 500; font-family: 'DM Sans', sans-serif;">#${escapeHtml(t.replace(/-/g, ' '))}</span>`).join('')}
+       </div>`
+    : '';
+
   // Calculate current price
   const activePrice = Number(p.base_price) + (selectedVariant ? Number(selectedVariant.additional_price || 0) : 0);
 
   // Gallery markup
-  const thumbsMarkup = images.length > 1
-    ? `<div class="gallery-thumbs">
-        ${images.map((img, i) => `
-          <div class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="switchImage('${img.url || img}', this)">
-            <img src="${img.url || img}" alt="Thumbnail" onerror="this.src='https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&q=80'">
-          </div>
-        `).join('')}
-       </div>`
+  const thumbsMarkup = activeImages.length > 1
+    ? activeImages.map((img, i) => `
+        <div class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="switchImage('${img.url || img}', this)">
+          <img src="${img.url || img}" alt="Thumbnail" onerror="this.src='https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&q=80'">
+        </div>
+      `).join('')
+    : '';
+
+  // Variants markup
+  const variantsMarkup = variants.length > 0
+    ? `
+      <div class="card" style="padding: var(--space-4); margin-top: var(--space-4); background: #FAF6EE; border: 1px solid rgba(20,56,31,0.15); border-radius: var(--radius-md);">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--space-2);">
+          <label style="font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-primary);">
+            Choose Option:
+          </label>
+          <span id="variantLabel" style="font-size: var(--text-xs); font-weight: 600; color: var(--color-moss);">
+            ${selectedVariant?.variant_name || selectedVariant?.color_name || ''}
+          </span>
+        </div>
+        <div class="flex flex-wrap gap-2.5" id="variantSwatches">
+          ${variants.map((v, i) => {
+            const hasHex = Boolean(v.color_hex && /^#[0-9A-F]{6}$/i.test(v.color_hex));
+            const thumbImg = (Array.isArray(v.images) && v.images.length > 0) ? (v.images[0]?.url || v.images[0]) : v.image_url;
+            const isActive = (selectedVariant && selectedVariant.id === v.id) || (!selectedVariant && i === 0);
+            return `
+              <button
+                type="button"
+                class="variant-btn ${isActive ? 'active' : ''}"
+                style="display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 9999px; border: 1.5px solid ${isActive ? 'var(--color-primary)' : 'rgba(20,56,31,0.2)'}; background: ${isActive ? 'rgba(20,56,31,0.08)' : 'white'}; cursor: pointer; transition: all 0.2s ease;"
+                onclick="selectVariant(${v.id}, this)"
+              >
+                ${thumbImg ? `<img src="${thumbImg}" alt="${v.variant_name || v.color_name || 'Variant'}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(0,0,0,0.15);" onerror="this.style.display='none'">` : (hasHex ? `<span style="width: 14px; height: 14px; border-radius: 50%; background-color: ${v.color_hex}; border: 1px solid rgba(0,0,0,0.2); display: inline-block;"></span>` : '')}
+                <span style="font-size: 13px; font-weight: 600; color: var(--color-primary);">${v.variant_name || v.color_name || 'Option'}</span>
+                ${Number(v.additional_price) !== 0 ? `<span style="font-size: 11px; opacity: 0.7;">(${Number(v.additional_price) > 0 ? '+' : ''}${formatPrice(v.additional_price)})</span>` : ''}
+              </button>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `
     : '';
 
   // Fixed customization / options markup (single options path)
@@ -129,22 +184,25 @@ function renderProductUI(p) {
   const isOutOfStock = !isCustomizable && (p.status === 'sold_out' || (p.stock_quantity !== undefined && p.stock_quantity !== null && Number(p.stock_quantity) <= 0));
 
   container.innerHTML = `
-    <!-- Left: Gallery -->
+    <!-- Left: Gallery & Style Selector -->
     <div>
       <div class="gallery-main">
-        <img id="mainImage" src="${images[0].url}" alt="${p.name}">
+        <img id="mainImage" src="${activeImages[0]?.url || ''}" alt="${p.name}">
       </div>
-      ${thumbsMarkup}
+      <div id="galleryThumbsContainer" class="gallery-thumbs">
+        ${thumbsMarkup}
+      </div>
+      ${variantsMarkup}
     </div>
 
     <!-- Right: Product Information & Purchase -->
     <div class="flex flex-col">
       <div class="flex justify-between items-start">
         <div>
-          <span class="badge badge-accent" style="margin-bottom: var(--space-2);">${p.category_name || 'Handcrafted'}</span>
-          ${p.is_tohfa_original ? `<span class="badge" style="background: linear-gradient(135deg, #d4af37, #f3e5ab); color: #5a4500; font-weight: 700; border: 1px solid #c59b27; margin-bottom: var(--space-2); margin-left: 6px; box-shadow: 0 1px 3px rgba(197,155,39,0.3);">✨ Tohfa Original</span>` : ''}
+          <span class="badge badge-accent" style="margin-bottom: var(--space-2);">${p.category_name || p.category?.name || 'Handcrafted'}</span>
           ${isOutOfStock ? `<span class="badge badge-warning" style="margin-bottom: var(--space-2); margin-left: 6px;">Out of Stock</span>` : ''}
           <h1 style="font-family: var(--font-display); font-size: var(--text-3xl); color: var(--color-primary);">${p.name}</h1>
+          ${tagsMarkup}
         </div>
         <button id="wishlistBtn" class="product-card__wishlist-btn" style="position:static;" onclick="toggleProductWishlist('${p.id}')">
           <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
@@ -163,7 +221,7 @@ function renderProductUI(p) {
       </div>
 
       <div style="margin-top: var(--space-4);">
-        <span id="productPriceDisplay" class="text-price" style="font-size: var(--text-2xl);">${formatPrice(p.base_price)}</span>
+        <span id="productPriceDisplay" class="text-price" style="font-size: var(--text-2xl);">${formatPrice(activePrice)}</span>
         <span class="text-small" style="margin-left: var(--space-2);">(Inclusive of all artisan taxes)</span>
       </div>
 
@@ -209,6 +267,11 @@ function renderProductUI(p) {
   }
 }
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 // Window actions
 window.switchImage = (url, thumbEl) => {
   document.getElementById('mainImage').src = url;
@@ -217,16 +280,59 @@ window.switchImage = (url, thumbEl) => {
 };
 
 window.selectVariant = (variantId, el) => {
-  document.querySelectorAll('.swatch-circle').forEach(s => s.classList.remove('active'));
-  el.classList.add('active');
+  document.querySelectorAll('.variant-btn').forEach(s => {
+    s.classList.remove('active');
+    s.style.borderColor = 'rgba(20,56,31,0.2)';
+    s.style.background = 'white';
+  });
+  if (el) {
+    el.classList.add('active');
+    el.style.borderColor = 'var(--color-primary)';
+    el.style.background = 'rgba(20,56,31,0.08)';
+  }
 
   const variants = currentProduct?.variants || [];
   selectedVariant = variants.find(v => v.id === variantId) || null;
 
   if (selectedVariant) {
-    document.getElementById('variantLabel').textContent = selectedVariant.color_name || selectedVariant.size || '';
+    const labelEl = document.getElementById('variantLabel');
+    if (labelEl) labelEl.textContent = selectedVariant.variant_name || selectedVariant.color_name || '';
+
     const newPrice = Number(currentProduct.base_price) + Number(selectedVariant.additional_price || 0);
-    document.getElementById('productPriceDisplay').textContent = formatPrice(newPrice);
+    const priceDisplay = document.getElementById('productPriceDisplay');
+    if (priceDisplay) priceDisplay.textContent = formatPrice(newPrice);
+
+    // Swap gallery images to isolated variant images
+    const variantImages = getImagesForVariant(selectedVariant, currentProduct);
+    const mainImg = document.getElementById('mainImage');
+    if (mainImg && variantImages.length > 0) {
+      mainImg.src = variantImages[0].url;
+    }
+
+    const thumbsContainer = document.getElementById('galleryThumbsContainer');
+    if (thumbsContainer) {
+      if (variantImages.length > 1) {
+        thumbsContainer.innerHTML = variantImages.map((img, i) => `
+          <div class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="switchImage('${img.url || img}', this)">
+            <img src="${img.url || img}" alt="Thumbnail" onerror="this.src='https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&q=80'">
+          </div>
+        `).join('');
+      } else {
+        thumbsContainer.innerHTML = '';
+      }
+    }
+
+    const isOutOfStock = Number(selectedVariant.stock_qty) <= 0;
+    const addBtn = document.getElementById('addToCartBtn');
+    const buyBtn = document.getElementById('buyNowBtn');
+    if (addBtn) {
+      addBtn.disabled = isOutOfStock;
+      addBtn.textContent = isOutOfStock ? 'Out of Stock' : 'Add to Cart 🛍️';
+    }
+    if (buyBtn) {
+      buyBtn.disabled = isOutOfStock;
+      buyBtn.textContent = isOutOfStock ? 'Currently Unavailable' : 'Buy Now';
+    }
   }
 };
 

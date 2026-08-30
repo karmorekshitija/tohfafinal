@@ -32,6 +32,8 @@ router.get('/for-you', (req, res, next) => {
   }
   next();
 }, productController.forYouFeed);
+router.get('/sponsored', productController.getSponsoredProducts);
+router.get('/trending', productController.getTrendingProducts);
 router.get('/search', productController.searchProducts);
 router.get('/search-suggestions', async (req, res) => {
   const { q = '' } = req.query;
@@ -42,6 +44,11 @@ router.get('/trending-searches', async (req, res) => {
 });
 router.get('/seller/:sellerId', productController.getSellerProducts);
 router.get('/:id', productController.getProduct);
+router.post('/:id/event', (req, res) => {
+  return res.json({ success: true, message: 'Event logged.' });
+});
+router.get('/:id/recommendations', productController.getRecommendations);
+router.get('/:id/more-like-this', productController.getRecommendations);
 router.post('/:id/view', (req, res, next) => {
   const authHeader = req.headers['authorization'];
   if (authHeader && authHeader.startsWith('Bearer ')) {

@@ -14,7 +14,7 @@
 
   const NAV_ITEMS = [
     { name: 'Dashboard',      href: '/admin/dashboard.html',      icon: 'grid_view'          },
-    { name: 'Tohfa Specials', href: '/admin/tohfa-originals.html', icon: 'stars'              },
+    { name: 'Special Orders', href: '/admin/special-orders.html', icon: 'stars'              },
     { name: 'Artisans & KYC', href: '/admin/sellers.html',         icon: 'group'              },
     { name: 'All Products',   href: '/admin/products.html',        icon: 'inventory_2'        },
     { name: 'Orders',         href: '/admin/orders.html',          icon: 'shopping_bag'       },
@@ -23,7 +23,6 @@
     { name: 'Our Story',      href: '/admin/our-story.html',       icon: 'auto_stories'       },
     { name: 'Reports',        href: '/admin/reports.html',         icon: 'flag'               },
     { name: 'Audit Logs',     href: '/admin/audit-logs.html',      icon: 'history_edu'        },
-    // UI Settings permanently deleted
   ];
 
   function renderSidebar() {

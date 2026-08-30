@@ -328,6 +328,17 @@
         </a>
       </li>
       <li>
+        <button type="button" class="w-full flex items-center justify-between p-3 hover:bg-[#14381F]/5 rounded-xl transition-all group cursor-pointer text-left" id="btn-report-problem">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-700 group-hover:bg-amber-500/15 transition-colors">
+              <span class="material-symbols-outlined text-[20px]">report_problem</span>
+            </div>
+            <span class="font-['DM_Sans',sans-serif] font-medium text-[15px] text-[#14381F]">Report a Problem</span>
+          </div>
+          <span class="material-symbols-outlined text-[#587A5B] group-hover:translate-x-1 transition-transform text-[20px]" data-icon="chevron_right">chevron_right</span>
+        </button>
+      </li>
+      <li>
         <a class="flex items-center justify-between p-3 hover:bg-[#14381F]/5 rounded-xl transition-all group no-underline" href="/buyer/our-story.html">
           <div class="flex items-center gap-3">
             <div class="w-8 h-8 rounded-lg bg-[#14381F]/10 flex items-center justify-center text-[#14381F] group-hover:bg-[#14381F]/15 transition-colors">
@@ -467,7 +478,7 @@
                 }
             }
         } catch(err) {}
-        window.location.href = '/buyer/become-seller.html';
+        window.location.href = '/auth/signup-seller.html';
     }
     window.handleSellerEntryPoint = handleSellerEntryPoint;
 
@@ -524,29 +535,22 @@
         // Avatar images
         const bigAvatar = document.getElementById('profile-avatar-img');
         const bigAvatarContainer = document.getElementById('profile-avatar-container');
-        const initialChar = (profile.display_name || profile.full_name || 'A').charAt(0).toUpperCase();
-        const svgFallback = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%233D6B4F'/><text x='50' y='55' font-family='DM Sans, sans-serif' font-size='40' font-weight='bold' fill='white' dominant-baseline='middle' text-anchor='middle'>${initialChar}</text></svg>`;
+        const defaultAvatar = '/img/default-avatar.png';
+        const isLegacyAvatar = (url) => !url || url.includes('default-avatar.png');
+        const finalAvatar = (!isLegacyAvatar(profile.avatar_url)) ? profile.avatar_url : defaultAvatar;
 
         if (bigAvatar) {
             bigAvatar.onerror = () => {
-                bigAvatar.src = svgFallback;
+                bigAvatar.src = defaultAvatar;
             };
-            if (profile.avatar_url) {
-                bigAvatar.src = profile.avatar_url;
-                bigAvatar.onload = () => {
-                    bigAvatar.classList.remove('opacity-0');
-                    if (bigAvatarContainer) {
-                        bigAvatarContainer.classList.remove('animate-pulse');
-                    }
-                };
-                if (bigAvatar.complete) {
-                    bigAvatar.classList.remove('opacity-0');
-                    if (bigAvatarContainer) {
-                        bigAvatarContainer.classList.remove('animate-pulse');
-                    }
+            bigAvatar.src = finalAvatar;
+            bigAvatar.onload = () => {
+                bigAvatar.classList.remove('opacity-0');
+                if (bigAvatarContainer) {
+                    bigAvatarContainer.classList.remove('animate-pulse');
                 }
-            } else {
-                bigAvatar.src = svgFallback;
+            };
+            if (bigAvatar.complete) {
                 bigAvatar.classList.remove('opacity-0');
                 if (bigAvatarContainer) {
                     bigAvatarContainer.classList.remove('animate-pulse');
@@ -556,11 +560,7 @@
         
         const navAvatar = document.getElementById('nav-avatar');
         if (navAvatar) {
-            if (profile.avatar_url) {
-                navAvatar.innerHTML = `<img src="${profile.avatar_url}" alt="Avatar" class="w-full h-full object-cover" loading="lazy" />`;
-            } else if (profile.display_name) {
-                navAvatar.innerText = profile.display_name.substring(0, 1).toUpperCase();
-            }
+            navAvatar.innerHTML = `<img src="${finalAvatar}" alt="Avatar" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='${defaultAvatar}';" />`;
         }
 
         // Activity Hub counts
@@ -717,16 +717,8 @@
                     console.error("Failed to fetch profile avatar:", err);
                 }
                 
-                let avatarHtml = '';
-                if (avatarUrl) {
-                    avatarHtml = `<img src="${avatarUrl}" alt="Profile" class="w-10 h-10 rounded-full border border-[rgba(20,56,31,0.2)] object-cover cursor-pointer" onclick="window.location.href='profile.html'" loading="lazy" />`;
-                } else {
-                    avatarHtml = `
-                        <a href="/buyer/profile.html" class="w-10 h-10 rounded-full bg-[#14381F] flex items-center justify-center text-white font-bold border border-[rgba(20,56,31,0.2)] text-sm overflow-hidden flex-shrink-0 cursor-pointer">
-                            ${initial}
-                        </a>
-                    `;
-                }
+                const finalNavAvatar = avatarUrl || '/img/default-avatar.png';
+                const avatarHtml = `<img src="${finalNavAvatar}" alt="Profile" class="w-10 h-10 rounded-full border border-[rgba(20,56,31,0.2)] object-cover cursor-pointer" onclick="window.location.href='/buyer/profile.html'" loading="lazy" onerror="this.onerror=null; this.src='/img/default-avatar.png';" />`;
 
                 if (authContainer) {
                     authContainer.innerHTML = avatarHtml;
@@ -943,6 +935,111 @@
             saveBtn.innerHTML = originalText;
         }
     };
+
+    /* -- Report a Problem Modal Logic -- */
+    const reportOverlay = document.getElementById('report-modal-overlay');
+    const reportCard = document.getElementById('report-modal-card');
+    const reportForm = document.getElementById('report-problem-form');
+    const reportFeedback = document.getElementById('report-form-feedback');
+    const reportBtn = document.getElementById('btn-report-problem');
+
+    window.openReportModal = function() {
+        if (!reportOverlay || !reportCard) return;
+        if (reportForm) reportForm.reset();
+        if (reportFeedback) {
+            reportFeedback.className = 'hidden text-xs p-3 rounded-lg leading-relaxed';
+            reportFeedback.textContent = '';
+        }
+        reportOverlay.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            reportCard.classList.remove('scale-92', 'opacity-0');
+            reportCard.classList.add('scale-100', 'opacity-100');
+        });
+    };
+
+    window.closeReportModal = function() {
+        if (!reportOverlay || !reportCard) return;
+        reportCard.classList.remove('scale-100', 'opacity-100');
+        reportCard.classList.add('scale-92', 'opacity-0');
+        setTimeout(() => {
+            reportOverlay.classList.add('hidden');
+        }, 300);
+    };
+
+    if (reportBtn) {
+        reportBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.openReportModal();
+        });
+    }
+
+    document.getElementById('report-modal-cancel')?.addEventListener('click', window.closeReportModal);
+    document.getElementById('report-modal-close-btn')?.addEventListener('click', window.closeReportModal);
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && reportOverlay && !reportOverlay.classList.contains('hidden')) {
+            window.closeReportModal();
+        }
+    });
+
+    reportOverlay?.addEventListener('click', (e) => {
+        if (e.target === reportOverlay) {
+            window.closeReportModal();
+        }
+    });
+
+    reportForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitBtn = document.getElementById('report-modal-submit');
+        const typeSelect = document.getElementById('report-issue-type');
+        const reasonInput = document.getElementById('report-issue-reason');
+
+        const type = typeSelect ? typeSelect.value : '';
+        const reason = reasonInput ? reasonInput.value.trim() : '';
+
+        if (!type || !reason) return;
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span><span>Submitting...</span>';
+        }
+
+        if (reportFeedback) {
+            reportFeedback.classList.add('hidden');
+        }
+
+        try {
+            const res = await apiClient.post('/reports', { type, reason });
+            if (res.data && res.data.success) {
+                if (reportFeedback) {
+                    reportFeedback.className = 'text-xs p-3 rounded-lg leading-relaxed bg-[#f0f7ee] text-[#14381F] border border-[rgba(20,56,31,0.2)] font-semibold';
+                    reportFeedback.textContent = 'Thank you. Your report has been submitted successfully to our team.';
+                    reportFeedback.classList.remove('hidden');
+                }
+                setTimeout(() => {
+                    window.closeReportModal();
+                }, 1600);
+            } else {
+                if (reportFeedback) {
+                    reportFeedback.className = 'text-xs p-3 rounded-lg leading-relaxed bg-red-50 text-red-700 border border-red-200';
+                    reportFeedback.textContent = res.data?.message || 'Failed to submit report. Please try again.';
+                    reportFeedback.classList.remove('hidden');
+                }
+            }
+        } catch (err) {
+            console.error('Report submission failed:', err);
+            if (reportFeedback) {
+                reportFeedback.className = 'text-xs p-3 rounded-lg leading-relaxed bg-red-50 text-red-700 border border-red-200';
+                reportFeedback.textContent = err.response?.data?.message || 'An error occurred while submitting your report. Please try again.';
+                reportFeedback.classList.remove('hidden');
+            }
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>Submit Report</span>';
+            }
+        }
+    });
 </script>
 
 <!-- Logout Confirmation Modal (Desktop Overlay) -->
@@ -1041,6 +1138,60 @@
     </div>
 </div>
 
+<!-- Report a Problem Modal (Desktop Overlay) -->
+<div id="report-modal-overlay" class="hidden fixed inset-0 z-[9999] flex items-center justify-center p-4" style="background: rgba(30,61,15,0.45); backdrop-filter: blur(12px);">
+    <div id="report-modal-card" class="bg-[#FFF8E7] rounded-[20px] p-8 md:p-10 max-w-md w-full shadow-[0_24px_48px_rgba(30,61,15,0.18)] transform scale-92 opacity-0 transition-all duration-300 ease-[cubic-bezier(0.34,1.2,0.64,1)] flex flex-col relative overflow-hidden max-h-[90vh]">
+        <!-- Decorative Accent Blur -->
+        <div class="absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 bg-[#14381F]/5 rounded-full blur-2xl pointer-events-none"></div>
+        
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6 pb-4 border-b border-[rgba(20,56,31,0.2)]/20 relative z-10">
+            <div>
+                <h2 class="font-serif font-bold text-2xl text-[#1A1A1A]">Report a Problem</h2>
+                <p class="font-sans text-[11px] text-[#6B6B6B] mt-0.5">Let us know what went wrong so our team can help</p>
+            </div>
+            <button id="report-modal-close-btn" type="button" class="text-[#6B6B6B] hover:text-[#ba1a1a] transition-colors p-1 flex items-center justify-center cursor-pointer">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <!-- Form Body -->
+        <form id="report-problem-form" class="space-y-4 relative z-10">
+            <!-- Issue Type Dropdown -->
+            <div class="space-y-1">
+                <label class="font-sans text-xs font-semibold text-[#6B6B6B] uppercase tracking-wider block" for="report-issue-type">Issue Type</label>
+                <select id="report-issue-type" required class="w-full bg-[#FFF8E7] border border-[#14381F]/20 rounded-xl px-4 py-2.5 text-sm text-[#1A1A1A] font-['DM_Sans',sans-serif] focus:outline-none focus:border-[#14381F] focus:ring-1 focus:ring-[#14381F] transition-all">
+                    <option value="" disabled selected>Select an issue type...</option>
+                    <option value="Payment Issue">Payment Issue</option>
+                    <option value="Order Issue">Order Issue</option>
+                    <option value="Seller / Shop Issue">Seller / Shop Issue</option>
+                    <option value="Product Issue">Product Issue</option>
+                    <option value="App Bug / Technical Issue">App Bug / Technical Issue</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <!-- Elaboration Text Field -->
+            <div class="space-y-1">
+                <label class="font-sans text-xs font-semibold text-[#6B6B6B] uppercase tracking-wider block" for="report-issue-reason">Problem Details</label>
+                <textarea id="report-issue-reason" required rows="4" placeholder="Please describe the issue in your own words..." class="w-full bg-[#FFF8E7] border border-[#14381F]/20 rounded-xl p-3.5 text-sm text-[#1A1A1A] font-['DM_Sans',sans-serif] focus:outline-none focus:border-[#14381F] focus:ring-1 focus:ring-[#14381F] transition-all resize-none"></textarea>
+            </div>
+
+            <!-- Feedback message -->
+            <div id="report-form-feedback" class="hidden text-xs p-3 rounded-lg leading-relaxed"></div>
+
+            <!-- Actions -->
+            <div class="mt-6 pt-4 border-t border-[rgba(20,56,31,0.2)]/20 flex gap-3">
+                <button type="button" id="report-modal-cancel" class="flex-1 bg-transparent border-[1.5px] border-[#14381F] text-[#14381F] font-semibold text-sm py-3 rounded-[10px] hover:bg-[#14381F]/5 transition-all duration-200 active:scale-[0.98] cursor-pointer">
+                    Cancel
+                </button>
+                <button type="submit" id="report-modal-submit" class="flex-1 bg-[#14381F] text-white font-semibold text-sm py-3 rounded-[10px] hover:bg-[#2e5140] transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
+                    <span>Submit Report</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script>
 async function handleFooterSellerLink(e) {
@@ -1074,7 +1225,7 @@ async function handleFooterSellerLink(e) {
     console.error("Error checking seller status:", err);
   }
   
-  window.location.href = isMobile ? '/mobile-buyer/become-seller.html' : '/buyer/become-seller.html';
+  window.location.href = '/auth/signup-seller.html';
 }
 
 // Check if we need to auto-redirect back to dashboard/signup after login redirect

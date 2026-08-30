@@ -1,9 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="light" lang="en">
 <head>
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="shortcut icon" href="/favicon.ico">
 <script type="module" src="/src/components/AdminSidebar.js"></script>
+<script src="/src/components/DetailModal.js"></script>
 <script type="module" src="/src/components/ReportWidget.js" defer></script>
 <script type="module" src="/src/components/ProtectedRoute.js"></script>
   <meta charset="utf-8"/>
@@ -35,7 +36,7 @@
   <div class="watermark-overlay"></div>
 
   <!-- Shared Sidebar Component Injected Dynamically -->
-  <aside></aside>
+  <aside data-sidebar="admin"></aside>
 
   <!-- Top Navigation Header -->
   <header class="fixed top-0 right-0 w-[calc(100%-256px)] h-[60px] bg-[#FFF8E7] border-b border-outline-variant flex justify-between items-center px-8 z-40">
@@ -247,15 +248,15 @@
       if (r.related_to_type === 'order' && r.related_to_id) {
         linkEl.textContent = `Order ${r.related_to_id}`;
         linkEl.className = 'font-bold text-primary hover:underline cursor-pointer';
-        linkEl.onclick = () => window.location.href = `/admin/order-detail.html?id=${r.related_to_id}`;
+        linkEl.onclick = () => DetailModal.showOrder(r.related_to_id);
       } else if (r.related_to_type === 'seller' && r.related_to_id) {
         linkEl.textContent = `Seller ID: ${r.related_to_id}`;
         linkEl.className = 'font-bold text-primary hover:underline cursor-pointer';
-        linkEl.onclick = () => window.location.href = `/admin/seller-detail.html?id=${r.related_to_id}`;
+        linkEl.onclick = () => DetailModal.showSeller(r.related_to_id);
       } else if (r.related_to_type === 'product' && r.related_to_id) {
         linkEl.textContent = `Product ID: ${r.related_to_id}`;
         linkEl.className = 'font-bold text-primary hover:underline cursor-pointer';
-        linkEl.onclick = () => window.location.href = `/admin/products.html?search=${encodeURIComponent(r.related_to_id)}`;
+        linkEl.onclick = () => DetailModal.showProduct(r.related_to_id);
       } else {
         linkEl.textContent = 'General Feedback';
         linkEl.className = 'font-medium text-text-muted';

@@ -12,7 +12,8 @@ import { isLoggedIn } from '../js/auth.js';
 // Init nav, tabs, tanya bubble, footer
 initBuyerShell({ activeTab: 'home' });
 
-const forYouGrid = document.getElementById('forYouGrid');
+const forYouGrid = document.getElementById('forYouGrid') || document.getElementById('product-feed-grid');
+const sponsoredGrid = document.getElementById('sponsoredGrid') || document.getElementById('sponsored-product-grid');
 const newArrivalsGrid = document.getElementById('newArrivalsGrid');
 const bestSellersGrid = document.getElementById('bestSellersGrid');
 const categoryTabs = document.getElementById('categoryTabs');
@@ -24,6 +25,7 @@ if (openStoryHeroBtn) {
 }
 
 // Initial skeleton load
+if (sponsoredGrid) showSkeletons(sponsoredGrid, PRODUCT_CARD_SKELETON, 8);
 if (forYouGrid) showSkeletons(forYouGrid, PRODUCT_CARD_SKELETON, 8);
 if (newArrivalsGrid) showSkeletons(newArrivalsGrid, PRODUCT_CARD_SKELETON, 4);
 if (bestSellersGrid) showSkeletons(bestSellersGrid, PRODUCT_CARD_SKELETON, 4);
@@ -38,26 +40,33 @@ async function loadHomepageData() {
     // 2. Fetch Hero Banners
     loadBanners();
 
-    // 3. Fetch For You Feed
+    // 3. Fetch Sponsored Products
+    try {
+      const sponRes = await api.get('/api/products/sponsored?limit=8');
+      const sponProds = Array.isArray(sponRes?.data?.products) ? sponRes.data.products : (Array.isArray(sponRes?.data) ? sponRes.data : []);
+      if (sponsoredGrid) renderProducts(sponsoredGrid, sponProds);
+    } catch { /* empty */ }
+
+    // 5. Fetch For You Feed
     const forYouRes = await api.get('/api/products/for-you');
     const products = Array.isArray(forYouRes?.data?.products) ? forYouRes.data.products : (Array.isArray(forYouRes?.data) ? forYouRes.data : []);
     if (forYouGrid) renderProducts(forYouGrid, products.slice(0, 8));
 
-    // 4. Fetch New Arrivals
+    // 6. Fetch New Arrivals
     try {
       const newRes = await api.get('/api/products?limit=4');
       const newProds = Array.isArray(newRes?.data?.products) ? newRes.data.products : (Array.isArray(newRes?.data) ? newRes.data : []);
       if (newArrivalsGrid) renderProducts(newArrivalsGrid, newProds.slice(0, 4));
     } catch { /* empty */ }
 
-    // 5. Fetch Best Sellers
+    // 7. Fetch Best Sellers
     try {
       const bestRes = await api.get('/api/products?limit=4');
       const bestProds = Array.isArray(bestRes?.data?.products) ? bestRes.data.products : (Array.isArray(bestRes?.data) ? bestRes.data : []);
       if (bestSellersGrid) renderProducts(bestSellersGrid, bestProds.slice(0, 4));
     } catch { /* empty */ }
 
-    // 6. Render Category-specific strips
+    // 8. Render Category-specific strips
     renderCategoryStrips(categories.slice(0, 4));
   } catch (err) {
     console.error('Homepage load error:', err);

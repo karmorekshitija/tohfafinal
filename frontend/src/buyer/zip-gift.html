@@ -5,369 +5,394 @@
   <link rel="shortcut icon" href="/favicon.ico">
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>ZipGift — Instant Digital Artisan Gift Cards | Tohfa</title>
+  <title>ZipGift — Coming Soon | Tohfa</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/src/tailwind.css">
   <link rel="stylesheet" href="/src/responsive.css">
-
-  <!-- Confetti library -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script type="module" src="/src/components/ProtectedRoute.js"></script>
 
   <style>
-    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+    }
     body {
       background-color: #FFF8E7;
+      color: #1C1C1A;
+      font-family: 'DM Sans', sans-serif;
       -webkit-font-smoothing: antialiased;
     }
-    .preset-amount-btn.active {
-      background-color: #14381F;
-      color: #FFF8E7;
-      border-color: #14381F;
-      box-shadow: 0 4px 12px rgba(20,56,31,0.18);
+    .skeleton-base {
+      background-color: #dddad3;
     }
-    .theme-card-option.active {
-      outline: 3px solid #14381F;
-      outline-offset: 2px;
+    .skeleton-detail {
+      background-color: #d0cdc6;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
   </style>
 </head>
 
 <body class="bg-[#FFF8E7] text-[#1C1C1A] font-['DM_Sans'] antialiased min-h-screen flex flex-col justify-between overflow-x-hidden">
+  
   <!-- Top Navigation Bar (LOCKED) -->
-<header
-  class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-4 md:px-8 lg:px-12 h-16 md:h-20 transition-colors"
-  style="background-color: #273328; background-image: url('/img/taskbar-texture.png'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
->
-  <!-- Brand Logo -->
-  <div class="flex items-center flex-1">
-    <a
-      href="/buyer/home.html"
-      class="select-none"
-      style="font-family: 'Playfair Display', serif; font-size: clamp(24px, 4vw, 32px); font-style: italic; color: #FAF6EE; text-decoration: none;"
-    >
-      Tohfa<span style="color: #FAF6EE; opacity: 0.7;">.</span>
-    </a>
-  </div>
-
-  <!-- Desktop Navigation Links -->
-  <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
-    <a
-      href="/buyer/home.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
-    >
-      <span class="material-symbols-outlined text-[20px]">home</span>
-      <span>Home</span>
-    </a>
-    <a
-      href="/buyer/categories.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
-    >
-      <span class="material-symbols-outlined text-[20px]">category</span>
-      <span>Category</span>
-    </a>
-    <a
-      href="/buyer/zip-gift.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE] border-b-2 border-[#FAF6EE] transition-colors no-underline font-medium"
-    >
-      <span class="material-symbols-outlined text-[20px]">bolt</span>
-      <span>ZipGift</span>
-    </a>
-    <a
-      href="/buyer/profile.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
-    >
-      <span class="material-symbols-outlined text-[20px]">person</span>
-      <span>Profile</span>
-    </a>
-  </nav>
-
-  <!-- Right side items -->
-  <div class="flex items-center justify-end flex-1 gap-1 sm:gap-2">
-    <!-- Search Button -->
-    <a
-      href="/buyer/search.html?focus=true"
-      id="header-search-btn"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
-      title="Search"
-    >
-      <span class="material-symbols-outlined text-[22px]">search</span>
-    </a>
-
-    <!-- Wishlist Button -->
-    <a
-      href="/buyer/wishlist.html"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
-      title="Saved Makes"
-    >
-      <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
-      <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
-    </a>
-
-    <!-- Cart Button -->
-    <a
-      href="/buyer/cart.html"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
-      title="Shopping Cart"
-    >
-      <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
-      <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
-    </a>
-
-    <!-- Notifications Button -->
-    <a
-      href="/buyer/notifications.html"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
-      title="Notifications"
-    >
-      <span class="material-symbols-outlined text-[22px]">notifications</span>
-      <span id="nav-notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
-      <span id="nav-notif-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
-    </a>
-
-    <!-- Auth Container -->
-    <div id="auth-buttons-container" class="flex items-center gap-2 ml-2 md:ml-4"></div>
-  </div>
-</header>
-
-  <!-- Hero Header -->
-  <section class="max-w-6xl w-full mx-auto px-4 md:px-8 pt-8 pb-4">
-    <div class="text-center max-w-2xl mx-auto">
-      <span class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#14381F]/10 text-[#14381F] text-xs font-mono font-semibold uppercase tracking-wider mb-3">
-        <span class="material-symbols-outlined text-sm">bolt</span> Instant Artisan Gifting
-      </span>
-      <h1 class="font-['Playfair_Display'] text-3xl md:text-4xl lg:text-5xl font-bold italic text-[#14381F] mb-3">
-        Send a ZipGift Card
-      </h1>
-      <p class="text-[#6E6453] text-sm md:text-base leading-relaxed">
-        Give the gift of pure handcrafted elegance. Delivered instantly via email or WhatsApp, redeemable across 10,000+ independent Indian artisans.
-      </p>
+  <header
+    class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-3 sm:px-6 md:px-8 lg:px-12 h-14 md:h-20 transition-colors"
+    style="background-color: #273328; background-image: url('/img/taskbar-texture.png'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
+  >
+    <!-- Brand Logo -->
+    <div class="flex items-center flex-shrink-0">
+      <a
+        href="/buyer/home.html"
+        class="select-none"
+        style="font-family: 'Playfair Display', serif; font-size: clamp(22px, 3.5vw, 32px); font-style: italic; color: #FAF6EE; text-decoration: none;"
+      >
+        Tohfa<span style="color: #FAF6EE; opacity: 0.7;">.</span>
+      </a>
     </div>
-  </section>
 
-  <!-- Interactive Gift Card Studio (BUY-13) -->
-  <main class="flex-1 max-w-6xl w-full mx-auto px-4 md:px-8 py-6">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <!-- Desktop Navigation Links -->
+    <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+      <a
+        href="/buyer/home.html"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      >
+        <span class="material-symbols-outlined text-[20px]">home</span>
+        <span>Home</span>
+      </a>
+      <a
+        href="/buyer/categories.html"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      >
+        <span class="material-symbols-outlined text-[20px]">category</span>
+        <span>Category</span>
+      </a>
+      <a
+        href="/buyer/zip-gift.html"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE] border-b-2 border-[#FAF6EE] transition-colors no-underline font-medium"
+      >
+        <span class="material-symbols-outlined text-[20px]">bolt</span>
+        <span>ZipGift</span>
+      </a>
+      <a
+        href="/buyer/profile.html"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      >
+        <span class="material-symbols-outlined text-[20px]">person</span>
+        <span>Profile</span>
+      </a>
+    </nav>
 
-      <!-- Left Column: Interactive Form -->
-      <div class="lg:col-span-7 bg-[#FDF9F2] rounded-3xl border border-[#EBE3D3] p-6 md:p-8 shadow-sm">
-        <form id="zip-gift-form" class="space-y-6">
+    <!-- Right side items -->
+    <div class="flex items-center justify-end gap-1 sm:gap-2 flex-shrink-0">
+      <!-- Search Button -->
+      <a
+        href="/buyer/search.html?focus=true"
+        id="header-search-btn"
+        class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+        title="Search"
+      >
+        <span class="material-symbols-outlined text-[20px] sm:text-[22px]">search</span>
+      </a>
 
-          <!-- 1. Select Theme -->
-          <div>
-            <label class="block text-xs uppercase tracking-wider font-bold text-[#14381F] mb-3 font-mono">1. Choose Card Design Theme</label>
-            <div class="grid grid-cols-3 gap-3">
-              <button type="button" class="theme-card-option active p-3 rounded-2xl border border-[#14381F]/20 text-center transition-all bg-[#14381F] text-[#FFF8E7]" data-theme="royal-sage">
-                <span class="block text-lg mb-1">🌿</span>
-                <span class="text-[11px] font-semibold block">Royal Sage</span>
-              </button>
-              <button type="button" class="theme-card-option p-3 rounded-2xl border border-[#14381F]/20 text-center transition-all bg-[#C8973A] text-white" data-theme="festive-gold">
-                <span class="block text-lg mb-1">✨</span>
-                <span class="text-[11px] font-semibold block">Festive Gold</span>
-              </button>
-              <button type="button" class="theme-card-option p-3 rounded-2xl border border-[#14381F]/20 text-center transition-all bg-[#8B4513] text-[#FFF8E7]" data-theme="terracotta">
-                <span class="block text-lg mb-1">🏺</span>
-                <span class="text-[11px] font-semibold block">Terracotta</span>
-              </button>
-            </div>
-          </div>
+      <!-- Wishlist Button -->
+      <a
+        href="/buyer/wishlist.html"
+        class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+        title="Saved Makes"
+      >
+        <span class="material-symbols-outlined text-[20px] sm:text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+        <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#14381F] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+      </a>
 
-          <!-- 2. Select Amount -->
-          <div>
-            <label class="block text-xs uppercase tracking-wider font-bold text-[#14381F] mb-3 font-mono">2. Choose Gift Value</label>
-            <div class="grid grid-cols-4 gap-2 mb-3">
-              <button type="button" class="preset-amount-btn px-3 py-2.5 rounded-xl border border-[#14381F]/20 text-xs font-bold text-[#14381F] hover:bg-[#14381F]/10 transition-all cursor-pointer" data-amount="500">₹500</button>
-              <button type="button" class="preset-amount-btn active px-3 py-2.5 rounded-xl border border-[#14381F]/20 text-xs font-bold text-[#14381F] hover:bg-[#14381F]/10 transition-all cursor-pointer" data-amount="1000">₹1,000</button>
-              <button type="button" class="preset-amount-btn px-3 py-2.5 rounded-xl border border-[#14381F]/20 text-xs font-bold text-[#14381F] hover:bg-[#14381F]/10 transition-all cursor-pointer" data-amount="2500">₹2,500</button>
-              <button type="button" class="preset-amount-btn px-3 py-2.5 rounded-xl border border-[#14381F]/20 text-xs font-bold text-[#14381F] hover:bg-[#14381F]/10 transition-all cursor-pointer" data-amount="5000">₹5,000</button>
-            </div>
-            <div class="relative">
-              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#6E6453]">₹</span>
-              <input type="number" id="custom-amount-input" min="100" max="50000" placeholder="Or enter custom amount in ₹ (e.g. 1500)" value="1000" class="w-full pl-8 pr-4 py-2.5 rounded-xl border border-[#285C3A]/20 bg-white text-xs font-semibold text-[#1C1C1A] focus:outline-none focus:border-[#14381F]"/>
-            </div>
-          </div>
+      <!-- Cart Button -->
+      <a
+        href="/buyer/cart.html"
+        class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+        title="Shopping Cart"
+      >
+        <span class="material-symbols-outlined text-[20px] sm:text-[22px]">shopping_bag</span>
+        <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#14381F] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+      </a>
 
-          <!-- 3. Recipient Details -->
-          <div class="space-y-4">
-            <label class="block text-xs uppercase tracking-wider font-bold text-[#14381F] font-mono">3. Recipient &amp; Occasion</label>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-[11px] text-[#6E6453] mb-1">Recipient's Full Name <span class="text-red-600">*</span></label>
-                <input type="text" id="recipient-name" placeholder="e.g. Ananya Patel" required class="w-full px-4 py-2.5 rounded-xl border border-[#285C3A]/20 bg-white text-xs text-[#1C1C1A] focus:outline-none focus:border-[#14381F]"/>
-              </div>
-              <div>
-                <label class="block text-[11px] text-[#6E6453] mb-1">Occasion</label>
-                <select id="gift-occasion" class="w-full px-3.5 py-2.5 rounded-xl border border-[#285C3A]/20 bg-white text-xs text-[#1C1C1A] focus:outline-none focus:border-[#14381F] cursor-pointer">
-                  <option value="Birthday Celebration 🎂">Birthday Celebration 🎂</option>
-                  <option value="Anniversary &amp; Love 💍">Anniversary &amp; Love 💍</option>
-                  <option value="Festive Wishes ✨">Festive Wishes ✨</option>
-                  <option value="Heartfelt Thank You 💐">Heartfelt Thank You 💐</option>
-                  <option value="Wedding Blessings 🪔">Wedding Blessings 🪔</option>
-                  <option value="Housewarming Joy 🏡">Housewarming Joy 🏡</option>
-                </select>
-              </div>
-            </div>
+      <!-- Notifications Button -->
+      <a
+        href="/buyer/notifications.html"
+        class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+        title="Notifications"
+      >
+        <span class="material-symbols-outlined text-[20px] sm:text-[22px]">notifications</span>
+        <span id="nav-notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
+        <span id="nav-notif-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
+      </a>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-[11px] text-[#6E6453] mb-1">Recipient's Email Address <span class="text-red-600">*</span></label>
-                <input type="email" id="recipient-email" placeholder="ananya@example.com" required class="w-full px-4 py-2.5 rounded-xl border border-[#285C3A]/20 bg-white text-xs text-[#1C1C1A] focus:outline-none focus:border-[#14381F]"/>
-              </div>
-              <div>
-                <label class="block text-[11px] text-[#6E6453] mb-1">Recipient's WhatsApp (Optional)</label>
-                <input type="tel" id="recipient-phone" placeholder="10-digit mobile number" class="w-full px-4 py-2.5 rounded-xl border border-[#285C3A]/20 bg-white text-xs text-[#1C1C1A] focus:outline-none focus:border-[#14381F]"/>
-              </div>
-            </div>
+      <!-- Auth Container (Desktop Only) -->
+      <div id="auth-buttons-container" class="hidden md:flex items-center gap-2 ml-2 md:ml-4"></div>
+    </div>
+  </header>
 
-            <div>
-              <label class="block text-[11px] text-[#6E6453] mb-1">Personal Handwritten Note</label>
-              <textarea id="gift-message" rows="3" placeholder="Write a warm, personalized message to accompany your gift..." class="w-full px-4 py-2.5 rounded-xl border border-[#285C3A]/20 bg-white text-xs text-[#1C1C1A] focus:outline-none focus:border-[#14381F]">Wishing you endless joy, love, and light with this handcrafted Tohfa gift card!</textarea>
-            </div>
-          </div>
-
-          <!-- Submit Button -->
-          <div class="pt-2">
-            <button type="submit" id="generate-zipgift-btn" class="w-full py-4 rounded-xl bg-[#14381F] text-[#FFF8E7] font-semibold text-sm hover:bg-[#285C3A] active:scale-[0.99] transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer">
-              <span class="material-symbols-outlined text-lg">redeem</span>
-              <span id="btn-submit-text">Create &amp; Issue ZipGift Card (₹1,000)</span>
-            </button>
-          </div>
-
-        </form>
-      </div>
-
-      <!-- Right Column: Live Digital Card Preview & Issued Voucher Container -->
-      <div class="lg:col-span-5 space-y-6">
-
-        <!-- Card Preview -->
-        <div class="sticky top-28">
-          <h3 class="text-xs uppercase tracking-wider font-bold text-[#14381F] mb-3 font-mono">Live Card Preview</h3>
-          
-          <div id="card-preview-container" class="w-full rounded-3xl p-6 md:p-8 text-[#FFF8E7] shadow-xl relative overflow-hidden transition-all duration-300 bg-gradient-to-br from-[#14381F] to-[#273328] border border-[#C8973A]/30">
-            <!-- Brand mark -->
-            <div class="flex justify-between items-start mb-6">
-              <span class="font-['Playfair_Display'] italic text-2xl font-bold tracking-tight text-[#FAF6EE]">Tohfa<span class="text-[#C8973A]">.</span></span>
-              <span class="px-2.5 py-0.5 rounded-full bg-[#FAF6EE]/10 border border-[#FAF6EE]/20 text-[10px] uppercase font-mono tracking-widest text-[#FAF6EE]">ZipGift Pass</span>
-            </div>
-
-            <!-- Value Display -->
-            <div class="mb-6">
-              <span class="text-xs font-mono uppercase tracking-wider text-[#A8B89A] block">Gift Card Value</span>
-              <span id="preview-amount-display" class="font-['Playfair_Display'] text-4xl font-bold text-[#FAF6EE]">₹1,000</span>
-            </div>
-
-            <!-- Message & Recipient -->
-            <div class="space-y-2 border-t border-[#FAF6EE]/15 pt-4">
-              <div>
-                <span class="text-[10px] font-mono text-[#A8B89A] uppercase">For:</span>
-                <span id="preview-recipient-display" class="text-sm font-semibold ml-1 text-[#FAF6EE]">Ananya Patel</span>
-              </div>
-              <div>
-                <span class="text-[10px] font-mono text-[#A8B89A] uppercase">Occasion:</span>
-                <span id="preview-occasion-display" class="text-xs ml-1 text-[#FAF6EE]">Birthday Celebration 🎂</span>
-              </div>
-              <p id="preview-message-display" class="text-xs italic text-[#FAF6EE]/80 line-clamp-3 leading-relaxed mt-2 bg-black/15 p-2.5 rounded-xl border border-white/10">
-                "Wishing you endless joy, love, and light with this handcrafted Tohfa gift card!"
-              </p>
-            </div>
-
-            <!-- Watermark Motif -->
-            <div class="absolute -right-8 -bottom-8 opacity-10 pointer-events-none">
-              <span class="material-symbols-outlined text-[160px]">redeem</span>
-            </div>
-          </div>
-
-          <!-- Generated Voucher Success Box (Hidden by default) -->
-          <div id="voucher-success-box" class="hidden mt-6 bg-emerald-50 border border-emerald-300 rounded-3xl p-6 shadow-sm space-y-4 animate-fade-in">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-emerald-700 text-white flex items-center justify-center text-xl">🎉</div>
-              <div>
-                <h4 class="font-['Playfair_Display'] text-emerald-900 font-bold text-lg">ZipGift Card Issued!</h4>
-                <p class="text-xs text-emerald-700">Digital voucher is active and ready to share.</p>
-              </div>
-            </div>
-
-            <div class="bg-white border border-emerald-200 rounded-2xl p-4 flex justify-between items-center">
-              <div>
-                <span class="text-[10px] uppercase font-mono text-emerald-800 tracking-wider block">VOUCHER CODE</span>
-                <span id="voucher-code-display" class="font-mono text-lg font-bold text-emerald-900 tracking-widest select-all">TOHFA-ZIP-82914</span>
-              </div>
-              <button type="button" id="copy-voucher-btn" class="px-3.5 py-1.5 bg-emerald-800 text-white rounded-lg text-xs font-bold hover:bg-emerald-900 active:scale-95 transition-all">Copy</button>
-            </div>
-
-            <div class="flex gap-2">
-              <button type="button" id="share-whatsapp-btn" class="flex-1 py-2.5 bg-[#25D366] text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-95 transition-all shadow-sm">
-                <span>Share via WhatsApp</span>
-              </button>
-              <button type="button" id="share-email-btn" class="flex-1 py-2.5 bg-[#14381F] text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-95 transition-all shadow-sm">
-                <span>Email Card</span>
-              </button>
-            </div>
-          </div>
-
+  <!-- Main Canvas: ZipGift Coming Soon Responsive View -->
+  <main class="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-6 md:py-8">
+    <div class="relative bg-[#FDF9F2] rounded-2xl md:rounded-3xl border border-[#EBE3D3]/70 overflow-hidden shadow-xs">
+      
+      <!-- Blurred / Dimmed Skeleton Layer -->
+      <div class="skeleton-content p-4 sm:p-6 md:p-8 lg:p-10 select-none grayscale opacity-55 blur-[2.5px] pointer-events-none">
+        
+        <!-- Hero Banner Skeleton -->
+        <div class="w-full h-[140px] sm:h-[180px] md:h-[260px] skeleton-base rounded-xl md:rounded-2xl mb-6 md:mb-8 flex items-center justify-center">
+          <div class="w-1/2 sm:w-1/3 h-8 md:h-10 skeleton-detail rounded-full"></div>
         </div>
 
+        <!-- Categories Row Skeleton -->
+        <div class="flex items-center justify-between gap-3 sm:gap-4 md:gap-6 mb-6 md:mb-8 overflow-hidden no-scrollbar">
+          <div class="flex flex-col items-center gap-2 flex-shrink-0">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-18 md:h-18 rounded-full skeleton-detail"></div>
+            <div class="w-10 sm:w-12 h-2.5 sm:h-3 skeleton-detail rounded-full"></div>
+          </div>
+          <div class="flex flex-col items-center gap-2 flex-shrink-0">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-18 md:h-18 rounded-full skeleton-detail"></div>
+            <div class="w-12 sm:w-14 h-2.5 sm:h-3 skeleton-detail rounded-full"></div>
+          </div>
+          <div class="flex flex-col items-center gap-2 flex-shrink-0">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-18 md:h-18 rounded-full skeleton-detail"></div>
+            <div class="w-9 sm:w-10 h-2.5 sm:h-3 skeleton-detail rounded-full"></div>
+          </div>
+          <div class="flex flex-col items-center gap-2 flex-shrink-0">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-18 md:h-18 rounded-full skeleton-detail"></div>
+            <div class="w-14 sm:w-16 h-2.5 sm:h-3 skeleton-detail rounded-full"></div>
+          </div>
+          <div class="flex flex-col items-center gap-2 flex-shrink-0">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-18 md:h-18 rounded-full skeleton-detail"></div>
+            <div class="w-10 sm:w-12 h-2.5 sm:h-3 skeleton-detail rounded-full"></div>
+          </div>
+          <div class="hidden sm:flex flex-col items-center gap-2 flex-shrink-0">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-18 md:h-18 rounded-full skeleton-detail"></div>
+            <div class="w-12 sm:w-14 h-2.5 sm:h-3 skeleton-detail rounded-full"></div>
+          </div>
+        </div>
+
+        <!-- Product Grid Skeleton -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+          <!-- Card 1 -->
+          <div class="space-y-2">
+            <div class="aspect-[4/3] skeleton-base rounded-lg sm:rounded-xl"></div>
+            <div class="w-1/3 h-2.5 skeleton-detail rounded-full"></div>
+            <div class="w-2/3 h-3.5 skeleton-base rounded-full"></div>
+            <div class="flex justify-between items-center pt-1">
+              <div class="w-1/4 h-4 skeleton-detail rounded-full"></div>
+              <div class="w-1/3 h-6 skeleton-detail rounded-full"></div>
+            </div>
+          </div>
+          <!-- Card 2 -->
+          <div class="space-y-2">
+            <div class="aspect-[4/3] skeleton-base rounded-lg sm:rounded-xl"></div>
+            <div class="w-1/3 h-2.5 skeleton-detail rounded-full"></div>
+            <div class="w-2/3 h-3.5 skeleton-base rounded-full"></div>
+            <div class="flex justify-between items-center pt-1">
+              <div class="w-1/4 h-4 skeleton-detail rounded-full"></div>
+              <div class="w-1/3 h-6 skeleton-detail rounded-full"></div>
+            </div>
+          </div>
+          <!-- Card 3 -->
+          <div class="space-y-2">
+            <div class="aspect-[4/3] skeleton-base rounded-lg sm:rounded-xl"></div>
+            <div class="w-1/3 h-2.5 skeleton-detail rounded-full"></div>
+            <div class="w-2/3 h-3.5 skeleton-base rounded-full"></div>
+            <div class="flex justify-between items-center pt-1">
+              <div class="w-1/4 h-4 skeleton-detail rounded-full"></div>
+              <div class="w-1/3 h-6 skeleton-detail rounded-full"></div>
+            </div>
+          </div>
+          <!-- Card 4 -->
+          <div class="space-y-2">
+            <div class="aspect-[4/3] skeleton-base rounded-lg sm:rounded-xl"></div>
+            <div class="w-1/3 h-2.5 skeleton-detail rounded-full"></div>
+            <div class="w-2/3 h-3.5 skeleton-base rounded-full"></div>
+            <div class="flex justify-between items-center pt-1">
+              <div class="w-1/4 h-4 skeleton-detail rounded-full"></div>
+              <div class="w-1/3 h-6 skeleton-detail rounded-full"></div>
+            </div>
+          </div>
+          <!-- Card 5 -->
+          <div class="hidden lg:block space-y-2">
+            <div class="aspect-[4/3] skeleton-base rounded-lg sm:rounded-xl"></div>
+            <div class="w-1/3 h-2.5 skeleton-detail rounded-full"></div>
+            <div class="w-2/3 h-3.5 skeleton-base rounded-full"></div>
+            <div class="flex justify-between items-center pt-1">
+              <div class="w-1/4 h-4 skeleton-detail rounded-full"></div>
+              <div class="w-1/3 h-6 skeleton-detail rounded-full"></div>
+            </div>
+          </div>
+          <!-- Card 6 -->
+          <div class="hidden lg:block space-y-2">
+            <div class="aspect-[4/3] skeleton-base rounded-lg sm:rounded-xl"></div>
+            <div class="w-1/3 h-2.5 skeleton-detail rounded-full"></div>
+            <div class="w-2/3 h-3.5 skeleton-base rounded-full"></div>
+            <div class="flex justify-between items-center pt-1">
+              <div class="w-1/4 h-4 skeleton-detail rounded-full"></div>
+              <div class="w-1/3 h-6 skeleton-detail rounded-full"></div>
+            </div>
+          </div>
+          <!-- Card 7 -->
+          <div class="hidden lg:block space-y-2">
+            <div class="aspect-[4/3] skeleton-base rounded-lg sm:rounded-xl"></div>
+            <div class="w-1/3 h-2.5 skeleton-detail rounded-full"></div>
+            <div class="w-2/3 h-3.5 skeleton-base rounded-full"></div>
+            <div class="flex justify-between items-center pt-1">
+              <div class="w-1/4 h-4 skeleton-detail rounded-full"></div>
+              <div class="w-1/3 h-6 skeleton-detail rounded-full"></div>
+            </div>
+          </div>
+          <!-- Card 8 -->
+          <div class="hidden lg:block space-y-2">
+            <div class="aspect-[4/3] skeleton-base rounded-lg sm:rounded-xl"></div>
+            <div class="w-1/3 h-2.5 skeleton-detail rounded-full"></div>
+            <div class="w-2/3 h-3.5 skeleton-base rounded-full"></div>
+            <div class="flex justify-between items-center pt-1">
+              <div class="w-1/4 h-4 skeleton-detail rounded-full"></div>
+              <div class="w-1/3 h-6 skeleton-detail rounded-full"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Dimming Overlay Layer -->
+      <div class="absolute inset-0 z-10 bg-[#FDF9F2]/80 backdrop-blur-[3px] pointer-events-none"></div>
+
+      <!-- Centered "coming soon" Text Overlay -->
+      <div class="absolute inset-0 z-20 flex flex-col items-center justify-center px-4 text-center pointer-events-none select-none">
+        <h1
+          class="font-['Playfair_Display'] italic font-bold tracking-[0.06em] leading-[1.1] text-[#14381F]"
+          style="font-size: clamp(38px, 6.5vw, 76px);"
+        >
+          coming soon
+        </h1>
+        <p class="font-['DM_Sans'] text-xs sm:text-sm text-[#587A5B] font-semibold tracking-wider uppercase mt-2 sm:mt-3">
+          ZipGift · Instant Artisan Gifting
+        </p>
       </div>
 
     </div>
   </main>
 
   <!-- Standard Tohfa Footer -->
-  <footer style="position:relative;overflow:hidden;background:#273328;color:#FFF8E7;padding-top:64px;padding-bottom:32px;" class="mt-8">
-    <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:repeat(1,1fr);gap:48px;margin-bottom:80px;position:relative;z-index:10;" class="tohfa-footer-grid">
-      <!-- Brand -->
-      <div>
-        <h2 style="font-family:'Playfair Display',serif;font-size:44px;font-style:italic;color:#FFF8E7;margin-bottom:16px;">Tohfa.</h2>
-        <p style="font-family:'DM Sans',sans-serif;color:#FFF8E7;margin-bottom:8px;font-weight:500;">Thoughtful Gifting, Made Effortless.</p>
-        <p style="font-family:'DM Sans',sans-serif;color:#A8B89A;margin-bottom:32px;line-height:1.6;">India's first home for handcrafted gifts, celebrating the soul of artisanal craftsmanship.</p>
+  <footer class="relative overflow-hidden mt-10 sm:mt-16" style="background-color: #273328; color: #FAF6EE;">
+    <!-- Desktop Footer Grid (>= 768px) -->
+    <div class="hidden md:block max-w-[1280px] mx-auto px-6 pt-10 pb-8 relative z-10">
+      <div class="grid grid-cols-5 gap-8 mb-10">
+        <!-- Brand column -->
+        <div class="col-span-2">
+          <h2 style="font-family: 'Playfair Display', serif; font-size: 36px; font-style: italic; color: #FAF6EE; margin-bottom: 8px;">
+            Tohfa.
+          </h2>
+          <p style="font-family: 'DM Sans', sans-serif; color: #FAF6EE; margin-bottom: 6px; font-weight: 500; font-size: 14px;">
+            Thoughtful Gifting, Made Effortless.
+          </p>
+          <p style="font-family: 'DM Sans', sans-serif; color: #A8B89A; line-height: 1.5; font-size: 13px; max-width: 280px;">
+            India's first home for handcrafted gifts, celebrating the soul of artisanal craftsmanship.
+          </p>
+        </div>
+
+        <!-- Company links -->
+        <div>
+          <h3 style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(168,191,165,0.7); margin-bottom: 14px;">
+            Company
+          </h3>
+          <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
+            <li><a href="/buyer/home.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Home</a></li>
+            <li><a href="/buyer/our-story.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Our Story</a></li>
+            <li><a href="/buyer/terms-conditions.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Terms of Service</a></li>
+            <li><a href="/buyer/terms-conditions.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Privacy Policy</a></li>
+          </ul>
+        </div>
+
+        <!-- For Sellers -->
+        <div>
+          <h3 style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(168,191,165,0.7); margin-bottom: 14px;">
+            For Sellers
+          </h3>
+          <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
+            <li><a href="/auth/signup-seller.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Sell on Tohfa</a></li>
+            <li><a href="/seller/dashboard.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Seller Studio</a></li>
+          </ul>
+        </div>
+
+        <!-- Support -->
+        <div>
+          <h3 style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(168,191,165,0.7); margin-bottom: 14px;">
+            Support
+          </h3>
+          <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
+            <li><a href="/buyer/faq.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">FAQs</a></li>
+            <li><a href="/buyer/terms-conditions.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Terms &amp; Conditions</a></li>
+          </ul>
+        </div>
       </div>
-      <!-- Company -->
-      <div>
-        <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#C8973A;margin-bottom:32px;">Company</h3>
-        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
-          <li><a href="/buyer/home.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#C8973A'" onmouseout="this.style.color='#FFF8E7'">Home</a></li>
-          <li><a href="/buyer/our-story.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#C8973A'" onmouseout="this.style.color='#FFF8E7'">Our Story</a></li>
-        </ul>
-      </div>
-      <!-- For Sellers -->
-      <div>
-        <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#C8973A;margin-bottom:32px;">For Sellers</h3>
-        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
-          <li><a href="/buyer/become-seller.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#C8973A'" onmouseout="this.style.color='#FFF8E7'">Sell on Tohfa</a></li>
-          <li><a href="/seller/dashboard.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#C8973A'" onmouseout="this.style.color='#FFF8E7'">Seller Studio</a></li>
-        </ul>
-      </div>
-      <!-- For Buyers -->
-      <div>
-        <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#C8973A;margin-bottom:32px;">For Buyers</h3>
-        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
-          <li><a href="/buyer/zip-gift.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#C8973A'" onmouseout="this.style.color='#FFF8E7'">Zip Gift ✨</a></li>
-          <li><a href="/buyer/occasions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#C8973A'" onmouseout="this.style.color='#FFF8E7'">Occasions 📅</a></li>
-        </ul>
-      </div>
-      <!-- Support -->
-      <div>
-        <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#C8973A;margin-bottom:32px;">Support</h3>
-        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
-          <li><a href="/buyer/faq.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#C8973A'" onmouseout="this.style.color='#FFF8E7'">FAQs</a></li>
-          <li><a href="/buyer/terms-conditions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#C8973A'" onmouseout="this.style.color='#FFF8E7'">Terms &amp; Conditions</a></li>
-        </ul>
+
+      <!-- Desktop Bottom bar -->
+      <div class="border-t border-white/10 pt-4 flex justify-between items-center text-xs text-[#FAF6EE]/60">
+        <span>&copy; 2026 Tohfa Marketplace. All rights reserved.</span>
+        <span>Handcrafted with <span class="text-[#C85A32]">&hearts;</span> in India</span>
       </div>
     </div>
-    <div style="max-width:1280px;margin:0 auto;padding:0 24px;border-top:1px solid rgba(255,255,255,0.1);padding-top:24px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#A8B89A;">
-      <span>© 2026 Tohfa. All rights reserved.</span>
-      <span>Handcrafted with ❤️ in India</span>
+
+    <!-- Mobile Compact 2-Column Footer (< 768px) -->
+    <div class="block md:hidden px-4 pt-6 pb-6 relative z-10">
+      <div class="mb-4">
+        <h2 style="font-family: 'Playfair Display', serif; font-size: 24px; font-style: italic; color: #FAF6EE; margin-bottom: 2px;">
+          Tohfa<span style="opacity: 0.6;">.</span>
+        </h2>
+        <p style="font-family: 'DM Sans', sans-serif; color: rgba(255,248,231,0.7); font-size: 12px; line-height: 1.4;">
+          Thoughtful Gifting, Made Effortless.
+        </p>
+      </div>
+
+      <!-- 2-Column Mobile Links -->
+      <div class="grid grid-cols-2 gap-4 border-t border-white/10 pt-4 mb-4">
+        <!-- Column 1: Company -->
+        <div>
+          <h3 style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(168,191,165,0.7); margin-bottom: 8px;">
+            Company
+          </h3>
+          <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
+            <li><a href="/buyer/home.html" class="text-[#FAF6EE]/90 no-underline">Home</a></li>
+            <li><a href="/buyer/our-story.html" class="text-[#FAF6EE]/90 no-underline">Our Story</a></li>
+            <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Terms of Service</a></li>
+            <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Privacy Policy</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 2: Discover & Sellers -->
+        <div>
+          <h3 style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(168,191,165,0.7); margin-bottom: 8px;">
+            Artisans &amp; Help
+          </h3>
+          <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
+            <li><a href="/auth/signup-seller.html" class="text-[#FAF6EE]/90 no-underline">Sell on Tohfa</a></li>
+            <li><a href="/seller/dashboard.html" class="text-[#FAF6EE]/90 no-underline">Seller Studio</a></li>
+            <li><a href="/buyer/faq.html" class="text-[#FAF6EE]/90 no-underline">FAQs</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Mobile Bottom bar -->
+      <div class="border-t border-white/10 pt-3 flex justify-between items-center text-[11px] text-[#FAF6EE]/50">
+        <span>&copy; 2026 Tohfa</span>
+        <span>Handcrafted with <span class="text-[#C85A32]">&hearts;</span></span>
+      </div>
     </div>
-    <style>
-      @media (min-width: 768px) {
-        .tohfa-footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr 1fr !important; }
-      }
-    </style>
   </footer>
 
   <script type="module" src="/src/buyer/zip-gift.js"></script>
 </body>
 </html>
+

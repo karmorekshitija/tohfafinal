@@ -13,7 +13,7 @@ const orderController = require('../controllers/order.controller');
 const analyticsController = require('../controllers/analytics.controller');
 const { authMiddleware } = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
-const { uploadBannerImage } = require('../middleware/upload');
+const { uploadBannerImage, uploadCategoryImage } = require('../middleware/upload');
 const { authRateLimiter } = require('../middleware/rateLimiter');
 const { validate, schemas } = require('../middleware/validate');
 
@@ -40,6 +40,7 @@ router.get('/dashboard/footfall', analyticsController.getFootfall);
 router.get('/dashboard/top-products', analyticsController.getPlatformTopProducts);
 router.get('/dashboard/seller-activity', adminController.listSellers);
 router.get('/audit-logs', adminController.listAuditLogs);
+router.get('/audit-logs/:id/diff', adminController.getAuditLogDiff);
 
 // 2. Sellers & KYC Authority
 router.get('/sellers', adminController.listSellers);
@@ -67,21 +68,25 @@ router.get('/seller-applications', (req, res, next) => {
 router.post('/seller-applications/:id/approve', adminController.approveSeller);
 router.post('/seller-applications/:id/reject', adminController.rejectSeller);
 
+// 2.1 TOFA Special Admin-Owned Shops
+router.get('/special-shops', adminController.listSpecialShops);
+router.post('/special-shops', adminController.createSpecialShop);
+router.put('/special-shops/:id', adminController.updateSpecialShop);
+router.patch('/special-shops/:id', adminController.updateSpecialShop);
+router.post('/special-shops/:id/switch-session', adminController.switchSessionToSpecialShop);
+router.post('/special-shops/:id/impersonate', adminController.switchSessionToSpecialShop);
+router.get('/special-shops/:sellerId/switch-session', adminController.switchSessionToSpecialShop);
+router.get('/dashboard/revenue-breakdown', adminController.getRevenueBreakdown);
+
 // 3. Products & Tohfa Specials
 router.get('/products', adminController.listAllProducts);
 router.post('/products', adminController.createProduct);
+router.put('/products/:id', adminController.updateProduct);
+router.patch('/products/:id', adminController.updateProduct);
 router.patch('/products/:productId/status', adminController.toggleProductStatus);
 router.patch('/products/:id/status', adminController.toggleProductStatus);
 router.patch('/products/:id/sponsor', adminController.toggleSponsor);
 router.delete('/products/:id', adminController.deleteProduct);
-
-router.patch('/tohfa-specials/:id', adminController.toggleTohfaSpecial);
-router.post('/tohfa-specials/:id', adminController.toggleTohfaSpecial);
-router.patch('/tohfa-specials/:productId', adminController.toggleTohfaSpecial);
-router.post('/tohfa-specials/:productId', adminController.toggleTohfaSpecial);
-router.get('/tohfa-originals', adminController.listTohfaOriginals);
-router.post('/tohfa-originals', adminController.addTohfaOriginal);
-router.delete('/tohfa-originals/:sellerId', adminController.removeTohfaOriginal);
 
 // 4. Orders & Emergency Dispute Resolution
 router.get('/orders', orderController.getAdminOrders);
@@ -118,9 +123,9 @@ router.post('/users/:userId/status', adminController.toggleUserStatus);
 
 
 // 7. Categories & Subcategories
-router.post('/categories', adminController.createCategory);
-router.put('/categories/:id', adminController.updateCategory);
-router.patch('/categories/:id', adminController.updateCategory);
+router.post('/categories', uploadCategoryImage, adminController.createCategory);
+router.put('/categories/:id', uploadCategoryImage, adminController.updateCategory);
+router.patch('/categories/:id', uploadCategoryImage, adminController.updateCategory);
 router.delete('/categories/:id', adminController.deleteCategory);
 router.post('/subcategories', adminController.createSubcategory);
 router.patch('/subcategories/:id', adminController.updateSubcategory);
@@ -136,13 +141,13 @@ router.post('/banners', uploadBannerImage, adminController.createBanner);
 router.patch('/banners/:id/toggle', adminController.toggleBanner);
 router.delete('/banners/:id', adminController.deleteBanner);
 
-router.post('/our-story', (req, res, next) => {
+router.post('/our-story', uploadCategoryImage, (req, res, next) => {
   const { sellerId, seller_id } = req.body;
   req.params.sellerId = sellerId || seller_id;
   return adminController.featureSeller(req, res, next);
 });
-router.post('/our-story/:sellerId', adminController.featureSeller);
-router.put('/our-story/:sellerId', adminController.featureSeller);
+router.post('/our-story/:sellerId', uploadCategoryImage, adminController.featureSeller);
+router.put('/our-story/:sellerId', uploadCategoryImage, adminController.featureSeller);
 router.delete('/our-story/:sellerId', adminController.unfeatureSeller);
 
 // 10. Reports

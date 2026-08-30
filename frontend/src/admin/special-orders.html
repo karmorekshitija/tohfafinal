@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Tohfa Admin | Special Sellers Orders</title>
+
+  <!-- Scripts & Components -->
+  <script type="module" src="/src/components/ProtectedRoute.js"></script>
+  <script type="module" src="/src/components/AdminSidebar.js"></script>
+  <script src="/src/components/DetailModal.js"></script>
+  <script type="module" src="/src/components/ReportWidget.js" defer></script>
+
+  <!-- Fonts & Tailwind CSS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body class="bg-[#FFF8E7] text-[#1C1C1C] min-h-screen">
+
+  <!-- Dynamic Admin Sidebar -->
+  <aside data-sidebar="admin"></aside>
+
+  <!-- Top Bar Shell -->
+  <header class="fixed top-0 right-0 h-[60px] z-30 bg-[#FFF8E7]/90 backdrop-blur-md flex items-center justify-between px-8 w-[calc(100%-240px)] border-b border-[#14381F]/10">
+    <div class="flex items-center gap-3">
+      <span class="material-symbols-outlined text-2xl text-[#14381F]">stars</span>
+      <h2 class="text-base font-bold text-[#14381F] font-['Playfair_Display',serif]">Tohfa Special Orders Desk</h2>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="text-right hidden sm:block">
+        <p class="text-xs font-bold leading-none text-[#14381F]">Admin Console</p>
+        <p class="text-[10px] text-gray-500 font-mono">Special Shops Oversight</p>
+      </div>
+      <button onclick="adminLogout()" class="p-1.5 text-gray-500 hover:text-rose-600 transition-colors" title="Logout">
+        <span class="material-symbols-outlined text-xl">logout</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="ml-60 pt-[75px] min-h-screen p-8 max-w-7xl space-y-6">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div>
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#14381F] text-[#FFF8E7] mb-2 shadow-sm">
+          <span class="material-symbols-outlined text-sm text-[#C5A059]">verified</span> Admin-Managed Stores
+        </div>
+        <h1 class="text-2xl font-bold font-['Playfair_Display',serif] text-[#14381F]">Special Sellers Orders</h1>
+        <p class="text-xs text-gray-600 mt-1">Orders placed for in-house and admin-managed artisan brands (Tohfa Specials).</p>
+      </div>
+      <button onclick="fetchSpecialOrders()" class="px-4 py-2 rounded-xl text-xs font-bold bg-white hover:bg-gray-50 border border-[#14381F]/15 text-[#14381F] transition-all flex items-center gap-1.5 shadow-sm">
+        <span class="material-symbols-outlined text-base">refresh</span> Refresh List
+      </button>
+    </div>
+
+    <!-- Summary KPI Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div class="p-4 bg-white rounded-2xl border border-[#14381F]/10 shadow-sm space-y-1">
+        <p class="text-xs text-gray-500 font-medium">Total Special Orders</p>
+        <p id="kpi-total-orders" class="text-2xl font-bold text-[#14381F] font-mono">0</p>
+      </div>
+      <div class="p-4 bg-white rounded-2xl border border-[#14381F]/10 shadow-sm space-y-1">
+        <p class="text-xs text-gray-500 font-medium">Special Gross Revenue</p>
+        <p id="kpi-total-revenue" class="text-2xl font-bold text-[#14381F] font-mono">₹0</p>
+      </div>
+      <div class="p-4 bg-white rounded-2xl border border-[#14381F]/10 shadow-sm space-y-1">
+        <p class="text-xs text-gray-500 font-medium">Pending Fulfillment</p>
+        <p id="kpi-pending-orders" class="text-2xl font-bold text-amber-600 font-mono">0</p>
+      </div>
+      <div class="p-4 bg-white rounded-2xl border border-[#14381F]/10 shadow-sm space-y-1">
+        <p class="text-xs text-gray-500 font-medium">Completed / Delivered</p>
+        <p id="kpi-delivered-orders" class="text-2xl font-bold text-emerald-700 font-mono">0</p>
+      </div>
+    </div>
+
+    <!-- Filters & Table Card -->
+    <div class="bg-white rounded-2xl border border-[#14381F]/10 shadow-sm overflow-hidden flex flex-col">
+      <!-- Search & Status Filter -->
+      <div class="p-4 border-b border-[#14381F]/10 flex flex-col sm:flex-row items-center justify-between gap-3 bg-gray-50/50">
+        <div class="flex items-center gap-2 w-full sm:w-80">
+          <span class="material-symbols-outlined text-gray-400 text-lg">search</span>
+          <input 
+            type="text" 
+            id="order-search" 
+            placeholder="Search by buyer, order ref, store..."
+            class="w-full bg-transparent text-xs text-gray-800 placeholder-gray-400 focus:outline-none"
+            oninput="handleSearch()"
+          />
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <label for="status-filter" class="text-xs text-gray-500 font-medium">Status:</label>
+          <select id="status-filter" onchange="fetchSpecialOrders()" class="bg-white border border-[#14381F]/15 rounded-xl px-3 py-1.5 text-xs text-gray-700 font-medium focus:outline-none">
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="processing">Processing</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Orders Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-[#14381F]/5 text-[#14381F] font-bold border-b border-[#14381F]/10">
+            <tr>
+              <th class="p-4">Order Ref / ID</th>
+              <th class="p-4">Customer</th>
+              <th class="p-4">Special Store</th>
+              <th class="p-4">Date</th>
+              <th class="p-4">Amount</th>
+              <th class="p-4">Status</th>
+              <th class="p-4">Payment</th>
+              <th class="p-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="orders-table-body" class="divide-y divide-gray-100">
+            <tr>
+              <td colspan="8" class="p-8 text-center text-gray-400">
+                <span class="material-symbols-outlined text-3xl animate-spin text-[#14381F]">progress_activity</span>
+                <p class="text-xs mt-2 font-medium">Loading Tohfa Special orders...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div id="pagination-bar" class="p-4 border-t border-[#14381F]/10 flex items-center justify-between text-xs text-gray-500">
+        <span id="page-info">Showing page 1</span>
+        <div class="flex items-center gap-2">
+          <button id="btn-prev" onclick="changePage(-1)" class="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">Previous</button>
+          <button id="btn-next" onclick="changePage(1)" class="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">Next</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let currentPage = 1;
+    let allOrders = [];
+
+    function formatCurrency(val) {
+      return '₹' + (Number(val) || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    }
+
+    function getAuthHeaders() {
+      const token = sessionStorage.getItem('tohfa_admin_token') || localStorage.getItem('tohfa_admin_token') || sessionStorage.getItem('token') || '';
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+      };
+    }
+
+    async function fetchSpecialOrders() {
+      const tbody = document.getElementById('orders-table-body');
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" class="p-8 text-center text-gray-400">
+            <span class="material-symbols-outlined text-3xl animate-spin text-[#14381F]">progress_activity</span>
+            <p class="text-xs mt-2 font-medium">Loading Tohfa Special orders...</p>
+          </td>
+        </tr>
+      `;
+
+      try {
+        const status = document.getElementById('status-filter').value;
+        let url = `/api/admin/orders?special_only=true&page=${currentPage}&limit=30`;
+        if (status) url += `&status=${encodeURIComponent(status)}`;
+
+        const res = await fetch(url, { headers: getAuthHeaders() });
+        const json = await res.json();
+
+        if (json.success && json.data) {
+          allOrders = json.data.orders || [];
+          renderOrders(allOrders);
+          updateKPIs(allOrders, json.data.total);
+
+          // Update Pagination
+          const total = json.data.total || allOrders.length;
+          const limit = json.data.limit || 30;
+          const totalPages = Math.ceil(total / limit) || 1;
+          document.getElementById('page-info').textContent = `Showing page ${currentPage} of ${totalPages} (${total} total orders)`;
+          document.getElementById('btn-prev').disabled = currentPage <= 1;
+          document.getElementById('btn-next').disabled = currentPage >= totalPages;
+        } else {
+          tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-rose-600 font-medium">Failed to load orders: ${json.message || 'Unknown error'}</td></tr>`;
+        }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-rose-600 font-medium">Network error loading special orders.</td></tr>`;
+      }
+    }
+
+    function renderOrders(orders) {
+      const tbody = document.getElementById('orders-table-body');
+      if (!orders.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="p-12 text-center text-gray-500">
+              <span class="material-symbols-outlined text-4xl text-gray-300 mb-2">shopping_bag</span>
+              <p class="text-sm font-bold text-gray-700">No Tohfa Special orders found</p>
+              <p class="text-xs text-gray-400 mt-1">Orders placed for admin-managed special shops will appear here.</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = orders.map(o => {
+        const orderRef = o.order_ref || `TOHFA-${String(o.id).substring(0, 8).toUpperCase()}`;
+        const buyer = o.buyer_name || 'Customer';
+        const store = o.store_name || 'Tohfa Special Store';
+        const date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }) : 'n/a';
+        const amount = formatCurrency(o.total_amount || o.amount_paid);
+        const status = o.status || 'pending';
+        const payment = o.payment_status || 'pending';
+
+        return `
+          <tr class="hover:bg-gray-50/80 cursor-pointer transition-colors" onclick="DetailModal.showOrder('${o.id}')">
+            <td class="p-4 font-mono font-bold text-[#14381F]">${orderRef}</td>
+            <td class="p-4 font-medium text-gray-900">${buyer}</td>
+            <td class="p-4">
+              <span class="inline-flex items-center gap-1 font-semibold text-[#14381F]">
+                <span class="material-symbols-outlined text-xs text-[#C5A059]">stars</span> ${store}
+              </span>
+            </td>
+            <td class="p-4 text-gray-500 font-mono">${date}</td>
+            <td class="p-4 font-mono font-bold text-gray-900">${amount}</td>
+            <td class="p-4" onclick="event.stopPropagation()">
+              <button onclick="DetailModal.showStatusModal('${o.id}', '${status}', '${(o.notes || '').replace(/'/g, "\\'")}')" 
+                      class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-transform active:scale-95 hover:opacity-90 flex items-center gap-1 ${
+                status === 'delivered' ? 'bg-emerald-100 text-emerald-800' :
+                status === 'shipped' ? 'bg-blue-100 text-blue-800' :
+                status === 'cancelled' ? 'bg-rose-100 text-rose-800' :
+                'bg-amber-100 text-amber-800'
+              }" title="Click to update status & buyer note">
+                <span>${status}</span>
+                <span class="material-symbols-outlined text-[12px]">edit</span>
+              </button>
+            </td>
+            <td class="p-4">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                payment === 'paid' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                payment === 'refunded' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
+                'bg-amber-50 text-amber-700 border border-amber-200'
+              }">${payment}</span>
+            </td>
+            <td class="p-4 text-right" onclick="event.stopPropagation()">
+              <div class="flex items-center justify-end gap-2">
+                <button onclick="DetailModal.showStatusModal('${o.id}', '${status}', '${(o.notes || '').replace(/'/g, "\\'")}')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold border border-[#14381F]/20 text-[#14381F] hover:bg-gray-50 transition-all shadow-xs flex items-center gap-1" title="Update status & message">
+                  <span class="material-symbols-outlined text-sm">local_shipping</span> Status
+                </button>
+                <button onclick="DetailModal.showOrder('${o.id}')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#14381F] text-[#FFF8E7] hover:bg-[#14381F]/90 transition-all shadow-sm">
+                  Details
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function updateKPIs(orders, totalCount) {
+      document.getElementById('kpi-total-orders').textContent = totalCount || orders.length;
+      
+      const totalRev = orders.reduce((acc, o) => acc + (parseFloat(o.total_amount) || 0), 0);
+      document.getElementById('kpi-total-revenue').textContent = formatCurrency(totalRev);
+
+      const pending = orders.filter(o => o.status === 'pending' || o.status === 'processing').length;
+      document.getElementById('kpi-pending-orders').textContent = pending;
+
+      const delivered = orders.filter(o => o.status === 'delivered').length;
+      document.getElementById('kpi-delivered-orders').textContent = delivered;
+    }
+
+    function handleSearch() {
+      const q = document.getElementById('order-search').value.toLowerCase().trim();
+      if (!q) {
+        renderOrders(allOrders);
+        return;
+      }
+      const filtered = allOrders.filter(o => 
+        (o.order_ref && o.order_ref.toLowerCase().includes(q)) ||
+        (o.buyer_name && o.buyer_name.toLowerCase().includes(q)) ||
+        (o.store_name && o.store_name.toLowerCase().includes(q)) ||
+        String(o.id).includes(q)
+      );
+      renderOrders(filtered);
+    }
+
+    function changePage(delta) {
+      currentPage += delta;
+      if (currentPage < 1) currentPage = 1;
+      fetchSpecialOrders();
+    }
+
+    window.fetchSpecialOrders = fetchSpecialOrders;
+    document.addEventListener('DOMContentLoaded', fetchSpecialOrders);
+  </script>
+</body>
+</html>

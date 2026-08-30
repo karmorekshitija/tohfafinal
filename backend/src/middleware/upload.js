@@ -92,6 +92,19 @@ const uploadProofImage = multer({
   limits: { fileSize: 10 * 1024 * 1024 },
 }).single('proof');
 
+// Category image (admin)
+const uploadCategoryImage = multer({
+  storage: new CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder: 'tohfa/categories',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+      transformation: [{ width: 800, height: 800, crop: 'fill', quality: 'auto' }],
+    },
+  }),
+  limits: { fileSize: 10 * 1024 * 1024 },
+}).single('image');
+
 /**
  * Wrap multer middleware to propagate errors to Express error handler
  */
@@ -115,6 +128,7 @@ module.exports = {
   uploadCoverPhoto:    handleUpload(uploadCoverPhoto),
   uploadRefImages:     handleUpload(uploadRefImages),
   uploadBannerImage:   handleUpload(uploadBannerImage),
+  uploadCategoryImage:  handleUpload(uploadCategoryImage),
   uploadProofImage:    handleUpload(uploadProofImage),
 };
 

@@ -102,6 +102,24 @@ async function shipOrder(req, res, next) {
     }
 
     const order = rows[0];
+
+    const eligible = await logisticsService.isEligibleForIThink(order.seller_id);
+    if (!eligible) {
+      await query(
+        `UPDATE orders SET notes = CASE WHEN notes ILIKE '%Manual/Admin Fulfillment%' THEN notes ELSE COALESCE(notes, '') || ' [Manual/Admin Fulfillment Required]' END, updated_at = NOW() WHERE id = $1`,
+        [order.id]
+      ).catch(() => {});
+
+      return res.json({
+        success: true,
+        data: {
+          manual_fulfillment_required: true,
+          message: 'Order belongs to a Tohfa Special / Admin-managed shop. Manual or admin fulfillment is required; automated courier waybill is skipped.',
+          order,
+        },
+      });
+    }
+
     const dispatchResult = await logisticsService.createShipment(order);
 
     return res.json({
@@ -128,6 +146,34 @@ async function generateAWB(req, res, next) {
 
     if (!orderId) {
       return res.status(400).json({ success: false, message: 'Order ID is required to generate an AWB.' });
+    }
+
+    const { rows } = await query(
+      'SELECT * FROM orders WHERE id = $1' + (isAdmin ? '' : ' AND seller_id = $2'),
+      isAdmin ? [orderId] : [orderId, sellerId]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'Order not found or unauthorized.' });
+    }
+
+    const order = rows[0];
+    const eligible = await logisticsService.isEligibleForIThink(order.seller_id);
+    if (!eligible) {
+      await query(
+        `UPDATE orders SET notes = CASE WHEN notes ILIKE '%Manual/Admin Fulfillment%' THEN notes ELSE COALESCE(notes, '') || ' [Manual/Admin Fulfillment Required]' END, updated_at = NOW() WHERE id = $1`,
+        [order.id]
+      ).catch(() => {});
+
+      return res.json({
+        success: true,
+        message: 'Order belongs to a Tohfa Special / Admin-managed shop. Manual courier dispatch is required.',
+        data: {
+          manual_fulfillment_required: true,
+          order,
+          label_url: `/api/logistics/label/${order.id}`,
+        }
+      });
     }
 
     const result = await logisticsService.generateSellerAWB(orderId, isAdmin ? null : sellerId);

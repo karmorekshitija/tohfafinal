@@ -20,6 +20,9 @@ const { validate, schemas } = require('../middleware/validate');
 // Onboarding & application
 router.post('/apply', authMiddleware, sellerController.applyAsSeller);
 router.get('/application-status', authMiddleware, sellerController.getApplicationStatus);
+router.post('/complete-onboarding', authMiddleware, sellerOnly, sellerController.completeOnboarding);
+router.post('/onboarding', authMiddleware, sellerOnly, sellerController.completeOnboarding);
+router.put('/onboarding-details', authMiddleware, sellerOnly, sellerController.completeOnboarding);
 
 // Studio Profile
 router.get('/profile', authMiddleware, sellerOnly, sellerController.getOwnSellerProfile);
@@ -43,6 +46,7 @@ router.put('/addresses/:id', authMiddleware, sellerOnly, validate(schemas.addres
 router.delete('/addresses/:id', authMiddleware, sellerOnly, buyerController.deleteAddress);
 
 // Listings / Products
+router.get('/catalog/summary', authMiddleware, sellerOnly, sellerController.getCatalogSummary);
 router.get('/listings', authMiddleware, sellerOnly, (req, res, next) => {
   req.params.sellerId = req.user.id;
   return productController.getSellerProducts(req, res, next);
@@ -50,6 +54,10 @@ router.get('/listings', authMiddleware, sellerOnly, (req, res, next) => {
 router.get('/listings/:id', authMiddleware, sellerOnly, productController.getProduct);
 router.post('/listings', authMiddleware, sellerOnly, validate(schemas.createProduct), productController.createProduct);
 router.put('/listings/:id', authMiddleware, sellerOnly, productController.updateProduct);
+router.patch('/listings/:id', authMiddleware, sellerOnly, productController.updateProduct);
+router.patch('/listings/:id/discount', authMiddleware, sellerOnly, sellerController.updateListingDiscount);
+router.post('/listings/bulk-discount', authMiddleware, sellerOnly, sellerController.bulkDiscountListings);
+router.post('/listings/bulk-discount-all', authMiddleware, sellerOnly, sellerController.bulkDiscountAllListings);
 router.post('/listings/:id/pause', authMiddleware, sellerOnly, (req, res, next) => {
   req.body.status = 'paused';
   return productController.updateProductStatus(req, res, next);
@@ -65,11 +73,12 @@ router.get('/orders', authMiddleware, sellerOnly, sellerController.getSellerOrde
 router.get('/orders/:id', authMiddleware, sellerOnly, sellerController.getSellerOrderDetail);
 router.patch('/orders/:id/status', authMiddleware, sellerOnly, sellerController.updateSellerOrderStatus);
 router.post('/orders/:id/status', authMiddleware, sellerOnly, sellerController.updateSellerOrderStatus);
+router.patch('/orders/:id/tracking', authMiddleware, sellerOnly, sellerController.updateOrderTracking);
+router.post('/orders/:id/tracking', authMiddleware, sellerOnly, sellerController.updateOrderTracking);
 router.post('/orders/custom-proof', authMiddleware, sellerOnly, sellerController.uploadCustomProof);
 router.post('/orders/:id/proof', authMiddleware, sellerOnly, sellerController.uploadCustomProof);
 router.get('/orders/:id/label', authMiddleware, sellerOnly, sellerController.getOrderLabel);
 router.post('/orders/:id/awb', authMiddleware, sellerOnly, sellerController.generateOrderAWB);
-router.get('/overflow-requests', authMiddleware, sellerOnly, orderController.getOverflowOrders);
 
 // Dashboard & Analytics
 router.get('/dashboard-metrics', authMiddleware, sellerOnly, sellerController.getDashboardMetrics);
@@ -81,9 +90,19 @@ router.get('/analytics/full', authMiddleware, sellerOnly, sellerController.getSe
 // Payouts & Finance
 router.get('/payouts', authMiddleware, sellerOnly, sellerController.getPayoutOverview);
 router.get('/payouts/overview', authMiddleware, sellerOnly, sellerController.getPayoutOverview);
-router.get('/earnings', authMiddleware, sellerOnly, sellerController.getPayoutOverview);
+router.get('/earnings', authMiddleware, sellerOnly, sellerController.getSellerEarnings);
+router.get('/earnings/graph', authMiddleware, sellerOnly, sellerController.getSellerEarningsGraph);
 router.post('/payouts/request', authMiddleware, sellerOnly, sellerController.requestPayout);
 router.post('/payouts', authMiddleware, sellerOnly, sellerController.requestPayout);
+router.get('/payouts/history', authMiddleware, sellerOnly, sellerController.getPaymentHistory);
+router.get('/receiving-details', authMiddleware, sellerOnly, sellerController.getReceivingDetails);
+router.post('/receiving-details', authMiddleware, sellerOnly, sellerController.saveReceivingDetails);
+router.get('/tax', authMiddleware, sellerOnly, sellerController.getTaxSettings);
+router.post('/tax', authMiddleware, sellerOnly, sellerController.saveTaxSettings);
+router.get('/invoices', authMiddleware, sellerOnly, sellerController.getSellerInvoices);
+router.get('/invoices/all', authMiddleware, sellerOnly, sellerController.getSellerInvoices);
+router.get('/disputes', authMiddleware, sellerOnly, sellerController.getSellerDisputes);
+router.get('/disputes/all', authMiddleware, sellerOnly, sellerController.getSellerDisputes);
 
 // Reviews
 router.get('/reviews', authMiddleware, sellerOnly, (req, res, next) => {

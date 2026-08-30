@@ -1,9 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="light" lang="en">
 <head>
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="shortcut icon" href="/favicon.ico">
 <script type="module" src="/src/components/AdminSidebar.js"></script>
+<script src="/src/components/DetailModal.js"></script>
 <script type="module" src="/src/components/ReportWidget.js" defer></script>
 <script type="module" src="/src/components/ProtectedRoute.js"></script>
   <meta charset="utf-8"/>
@@ -37,7 +38,7 @@
   <div class="watermark-overlay"></div>
 
   <!-- Shared Sidebar Component Injected Dynamically -->
-  <aside></aside>
+  <aside data-sidebar="admin"></aside>
 
   <!-- Top Navigation Header -->
   <header class="fixed top-0 right-0 w-[calc(100%-256px)] h-[60px] bg-[#FFF8E7] border-b border-outline-variant flex justify-between items-center px-8 z-40">
@@ -57,21 +58,21 @@
     </section>
 
     <!-- Stats Row -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
       <!-- Card 1 -->
-      <div class="bg-[#FFF8E7] p-6 rounded-xl border border-outline-variant/30 border-l-4 border-l-highlight-gold shadow-sm flex flex-col justify-between">
+      <div class="bg-[#FFF8E7] p-4 sm:p-6 rounded-xl border border-outline-variant/30 border-l-4 border-l-highlight-gold shadow-sm flex flex-col justify-between">
         <span class="text-xs font-bold text-text-muted uppercase tracking-wider">Total Revenue</span>
         <h2 id="stat-revenue" class="font-headline-lg text-3xl text-primary mt-2">₹0.00</h2>
         <span class="text-[11px] text-[#14381F] font-semibold mt-1">Platform Sales (all-time)</span>
       </div>
       <!-- Card 2 -->
-      <div class="bg-[#FFF8E7] p-6 rounded-xl border border-outline-variant/30 border-l-4 border-l-primary shadow-sm flex flex-col justify-between">
+      <div class="bg-[#FFF8E7] p-4 sm:p-6 rounded-xl border border-outline-variant/30 border-l-4 border-l-primary shadow-sm flex flex-col justify-between">
         <span class="text-xs font-bold text-text-muted uppercase tracking-wider">Orders Today</span>
         <h2 id="stat-orders" class="font-headline-lg text-3xl text-primary mt-2">0</h2>
         <span class="text-[11px] text-text-muted mt-1" id="stat-orders-prev">Today's transactions</span>
       </div>
       <!-- Card 3 -->
-      <div class="bg-[#FFF8E7] p-6 rounded-xl border border-outline-variant/30 border-l-4 border-l-accent-violet shadow-sm flex flex-col justify-between cursor-pointer hover:shadow-md transition-shadow" onclick="window.location.href='/admin/sellers.html?tab=applications'">
+      <div class="bg-[#FFF8E7] p-4 sm:p-6 rounded-xl border border-outline-variant/30 border-l-4 border-l-accent-violet shadow-sm flex flex-col justify-between cursor-pointer hover:shadow-md transition-shadow" onclick="window.location.href='/admin/sellers.html?tab=applications'">
         <span class="text-xs font-bold text-text-muted uppercase tracking-wider">Artisan Sellers</span>
         <h2 id="stat-sellers" class="font-headline-lg text-3xl text-primary mt-2">0</h2>
         <span class="text-[11px] text-[#7B5EA7] font-semibold mt-1 flex items-center gap-1.5" id="pending-apps-container">
@@ -80,7 +81,7 @@
         </span>
       </div>
       <!-- Card 4 -->
-      <div class="bg-[#FFF8E7] p-6 rounded-xl border border-outline-variant/30 border-l-4 border-l-secondary-container shadow-sm flex flex-col justify-between">
+      <div class="bg-[#FFF8E7] p-4 sm:p-6 rounded-xl border border-outline-variant/30 border-l-4 border-l-secondary-container shadow-sm flex flex-col justify-between">
         <span class="text-xs font-bold text-text-muted uppercase tracking-wider">Registered Buyers</span>
         <h2 id="stat-buyers" class="font-headline-lg text-3xl text-primary mt-2">0</h2>
         <span class="text-[11px] text-[#49663f] font-semibold mt-1">Artisan Admirers</span>
@@ -189,7 +190,7 @@
         if (res.data && res.data.success) {
           const s = res.data.data;
           document.getElementById('stat-revenue').textContent = formatPaise(s.total_revenue || 0);
-          document.getElementById('stat-orders').textContent = s.revenue_today > 0 ? (s.total_orders_today || '1') : '0';
+          document.getElementById('stat-orders').textContent = (s.total_orders_today !== undefined && s.total_orders_today !== null) ? String(s.total_orders_today) : '0';
           document.getElementById('stat-sellers').textContent = s.total_sellers || 0;
           document.getElementById('stat-buyers').textContent = s.total_buyers || 0;
 
@@ -325,8 +326,11 @@
         const res = await adminApiClient.get('/admin/dashboard/top-products?limit=5');
         const listEl = document.getElementById('viral-products-list');
         listEl.innerHTML = '';
-        if (res.data && res.data.success && res.data.data.length > 0) {
-          res.data.data.forEach(p => {
+        const raw = res.data?.data;
+        const products = Array.isArray(raw) ? raw : (raw?.products || []);
+
+        if (products && products.length > 0) {
+          products.forEach(p => {
             const score = p.viral_score || 0;
             const tr = document.createElement('tr');
             tr.className = 'border-b border-outline-variant/10 hover:bg-[#FFF8E7]/20 transition-colors';
@@ -354,11 +358,14 @@
 
     async function loadSellerActivity() {
       try {
-        const res = await adminApiClient.get('/admin/dashboard/seller-activity');
+        const res = await adminApiClient.get('/admin/dashboard/seller-activity?limit=5');
         const listEl = document.getElementById('seller-activity-list');
         listEl.innerHTML = '';
-        if (res.data && res.data.success && res.data.data.length > 0) {
-          res.data.data.forEach(s => {
+        const raw = res.data?.data;
+        const sellers = Array.isArray(raw) ? raw : (raw?.sellers || []);
+
+        if (sellers && sellers.length > 0) {
+          sellers.forEach(s => {
             const initial = s.name ? s.name.charAt(0).toUpperCase() : 'S';
             const rawDate = s.last_order_at;
             let displayDate = 'No sales yet';
@@ -374,14 +381,16 @@
             const item = document.createElement('div');
             item.className = 'flex items-center justify-between p-3 bg-[#FFF8E7] rounded-lg border border-outline-variant/20 hover:shadow-sm duration-200 transition-all cursor-pointer';
             item.addEventListener('click', () => {
-              window.location.href = `/admin/seller-detail.html?id=${s.id}`;
+              if (typeof DetailModal !== 'undefined' && DetailModal.showSeller) {
+                DetailModal.showSeller(s.id);
+              }
             });
             item.innerHTML = `
               <div class="flex items-center gap-3">
                 <div class="h-9 w-9 rounded-full bg-secondary-container flex items-center justify-center text-primary font-bold text-xs shrink-0">${initial}</div>
                 <div>
                   <h4 class="text-sm font-semibold text-text-default leading-tight">${s.name}</h4>
-                  <p class="text-[11px] text-text-faint font-data-meta mt-0.5">${s.shop_name || 'Artisan Shop'}</p>
+                  <p class="text-[11px] text-text-faint font-data-meta mt-0.5">${s.store_name || s.shop_name || 'Artisan Shop'}</p>
                 </div>
               </div>
               <div class="text-right">

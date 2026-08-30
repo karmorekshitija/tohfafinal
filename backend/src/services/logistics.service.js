@@ -20,11 +20,15 @@ const { createNotification } = require('../controllers/notification.controller')
 async function isEligibleForIThink(sellerId) {
   try {
     const { rows } = await query(
-      'SELECT seller_type FROM seller_profiles WHERE user_id = $1',
+      `SELECT COALESCE(sp.is_admin_managed, s.is_admin_managed, FALSE) AS is_admin_managed
+       FROM users u
+       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+       LEFT JOIN sellers s ON (s.user_id = u.id OR s.id = u.id)
+       WHERE u.id = $1`,
       [sellerId]
     );
     if (!rows.length) return false;
-    return rows[0].seller_type === 'regular';
+    return !rows[0].is_admin_managed;
   } catch (err) {
     console.error('[Logistics] Failed to check seller type:', err.message);
     return false;
@@ -298,6 +302,14 @@ async function generateSellerAWB(orderId, sellerId) {
   }
 
   const order = rows[0];
+  const eligible = await isEligibleForIThink(order.seller_id);
+  if (!eligible) {
+    const err = new Error('Order belongs to a Tohfa Special / Admin-managed shop. Automated courier waybill generation is not eligible; manual logistics handling is required.');
+    err.status = 400;
+    err.manual_fulfillment_required = true;
+    throw err;
+  }
+
   const shipment = await createShipment(order);
 
   return {

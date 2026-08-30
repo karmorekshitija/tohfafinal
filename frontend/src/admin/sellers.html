@@ -4,6 +4,7 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="shortcut icon" href="/favicon.ico">
   <script type="module" src="/src/components/AdminSidebar.js"></script>
+  <script src="/src/components/DetailModal.js"></script>
   <script type="module" src="/src/components/ReportWidget.js" defer></script>
   <script type="module" src="/src/components/ProtectedRoute.js"></script>
   <meta charset="utf-8"/>
@@ -89,54 +90,8 @@
 <body class="bg-[#FFF8E7] text-text-default font-body-md min-h-screen overflow-x-hidden">
 <div class="watermark-overlay"></div>
 
-<!-- SideNavBar -->
-<aside class="flex flex-col h-screen fixed left-0 top-0 py-10 px-6 z-50 w-64 border-r border-outline-variant/30 bg-[#FFF8E7]">
-  <div class="mb-14">
-    <h1 class="font-headline-lg text-headline-lg italic text-[#14381F] leading-tight">Tohfa</h1>
-    <p class="text-accent-caps font-accent-caps text-text-faint tracking-widest text-[10px] mt-1 opacity-70">Admin Console</p>
-  </div>
-  <nav class="flex-1 space-y-1">
-    <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/dashboard.html">
-      <span class="material-symbols-outlined text-[20px]">grid_view</span>
-      <span class="font-label-btn text-label-btn">Dashboard</span>
-    </a>
-    <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/tohfa-originals.html">
-      <span class="material-symbols-outlined text-[20px]">stars</span>
-      <span class="font-label-btn text-label-btn">Tohfa Specials</span>
-    </a>
-    <a class="flex items-center gap-3 px-4 py-3 bg-[#14381F] text-white rounded-full transition-all" href="/admin/sellers.html">
-      <span class="material-symbols-outlined text-[20px]">group</span>
-      <span class="font-label-btn text-label-btn">Sellers & KYC</span>
-    </a>
-    <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/orders.html">
-      <span class="material-symbols-outlined text-[20px]">shopping_cart</span>
-      <span class="font-label-btn text-label-btn">Orders</span>
-    </a>
-    <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/categories.html">
-      <span class="material-symbols-outlined text-[20px]">category</span>
-      <span class="font-label-btn text-label-btn">Categories</span>
-    </a>
-    <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/products.html">
-      <span class="material-symbols-outlined text-[20px]">inventory_2</span>
-      <span class="font-label-btn text-label-btn">Products</span>
-    </a>
-    <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/reports.html">
-      <span class="material-symbols-outlined text-[20px]">flag</span>
-      <span class="font-label-btn text-label-btn">Reports</span>
-    </a>
-    <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/audit-logs.html">
-      <span class="material-symbols-outlined text-[20px]">history_edu</span>
-      <span class="font-label-btn text-label-btn">Audit Logs</span>
-    </a>
-  </nav>
-  <div class="mt-auto pt-6 border-t border-outline-variant/20 flex items-center gap-3">
-    <div class="h-10 w-10 rounded-full bg-sage-soft flex items-center justify-center text-primary font-bold text-xs shrink-0">TA</div>
-    <div class="overflow-hidden">
-      <p class="text-[13px] font-bold text-text-default truncate leading-tight">Tohfa Admin</p>
-      <p class="text-[11px] text-text-faint font-data-meta truncate">Master Access</p>
-    </div>
-  </div>
-</aside>
+<!-- Dynamic SideNavBar -->
+<aside data-sidebar="admin"></aside>
 
 <!-- TopNavBar -->
 <header class="fixed top-0 right-0 w-[calc(100%-256px)] h-[60px] bg-surface-ivory border-b border-outline-variant flex justify-between items-center px-8 z-40">
@@ -161,6 +116,10 @@
   <!-- Tab Bar Layout -->
   <div class="flex border-b border-sage-border mb-8">
     <button id="tab-active-sellers" class="tab-btn active focus:outline-none">Active Sellers</button>
+    <button id="tab-special-shops" class="tab-btn focus:outline-none flex items-center gap-1.5">
+      <span>✨ TOHFA Special Shops</span>
+      <span id="special-shops-count-badge" class="ml-1.5 px-2 py-0.5 text-xs bg-amber-100 text-amber-900 rounded-full font-bold">0</span>
+    </button>
     <button id="tab-applications" class="tab-btn focus:outline-none">Seller Applications</button>
   </div>
 
@@ -203,6 +162,45 @@
       <div id="pagination-pages" class="flex items-center gap-1">
         <!-- Dynamic page numbers -->
       </div>
+    </div>
+  </div>
+
+  <!-- TOHFA SPECIAL ADMIN-OWNED SHOPS VIEW -->
+  <div id="special-shops-view" class="space-y-6 hidden">
+    <!-- Summary Header & Action Bar -->
+    <div class="bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-transparent border border-amber-500/30 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-800 text-xl shrink-0">✨</div>
+        <div>
+          <h3 class="font-bold text-[#14381F] text-base">Internal Platform-Operated Artisan Studios (TOHFA Specials)</h3>
+          <p class="text-xs text-stone-700 mt-0.5 leading-relaxed">
+            TOHFA Special shops are owned and operated by Tohfa administration. To buyers and public visitors, they look and act 100% like regular independent artisan shops. Click <strong>"Enter Studio"</strong> to switch into any shop’s seller dashboard.
+          </p>
+        </div>
+      </div>
+      <button id="open-create-special-shop-btn" class="px-5 py-2.5 bg-[#14381F] hover:bg-stone-800 text-[#FFF8E7] rounded-xl font-bold text-xs shadow transition-transform active:scale-95 flex items-center gap-2 shrink-0">
+        <span class="material-symbols-outlined text-[18px]">add_business</span>
+        <span>Create TOHFA Special Shop</span>
+      </button>
+    </div>
+
+    <!-- Data Table Section -->
+    <div class="bg-[#FFF8E7] rounded-xl overflow-hidden border border-sage-border shadow-sm mb-8">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-parchment border-b border-sage-border">
+            <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase">Shop Name & Brand</th>
+            <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase">Internal Login / Email</th>
+            <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase text-center">Status</th>
+            <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase text-center">Active Items</th>
+            <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase text-right">Revenue (GMV)</th>
+            <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase text-center">Admin Controls</th>
+          </tr>
+        </thead>
+        <tbody id="special-shops-list" class="divide-y divide-sage-border/50">
+          <!-- Dynamic Special Shops -->
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -254,7 +252,7 @@
 
 <!-- KYC APPROVAL MODAL -->
 <div id="kyc-approve-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-  <div class="bg-[#FFF8E7] border border-sage-border rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+  <div class="bg-[#FFF8E7] border border-sage-border rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
     <div class="flex items-center justify-between border-b border-sage-border/50 pb-3">
       <div class="flex items-center gap-2 text-primary font-bold text-lg">
         <span class="material-symbols-outlined text-green-700">verified_user</span>
@@ -270,6 +268,8 @@
         <p class="font-bold text-ink-deep text-sm" id="approve-modal-store-name">Artisan Store</p>
         <p class="text-text-muted" id="approve-modal-seller-email">seller@example.com</p>
       </div>
+
+      <div id="approve-modal-kyc-details"></div>
 
       <div>
         <label class="block text-xs font-bold uppercase tracking-wider text-ink-deep mb-1">
@@ -377,6 +377,90 @@
   </div>
 </div>
 
+<!-- CREATE TOFA SPECIAL SHOP MODAL -->
+<div id="create-special-shop-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+  <div class="bg-[#FFF8E7] border border-sage-border rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between border-b border-sage-border/50 pb-3">
+      <div class="flex items-center gap-2 text-primary font-bold text-lg">
+        <span class="material-symbols-outlined text-amber-700">add_business</span>
+        <span>Create TOFA Special Shop</span>
+      </div>
+      <button id="close-create-special-shop-btn" class="text-text-muted hover:text-text-default">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <form id="create-special-shop-form" class="space-y-4">
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-ink-deep mb-1">
+          Store / Brand Name *
+        </label>
+        <input id="special-store-name" required type="text" placeholder="e.g. Crochet Art, The Candle Story, Nails Diva"
+               class="w-full bg-white border border-sage-border rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 form-row-2col">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-ink-deep mb-1">
+            Store Slug / Handle *
+          </label>
+          <input id="special-store-slug" required type="text" placeholder="e.g. crochet-art"
+                 class="w-full bg-white border border-sage-border rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-ink-deep mb-1">
+            Admin Login Email *
+          </label>
+          <input id="special-store-email" required type="email" placeholder="crochetart@thetohfa.in"
+                 class="w-full bg-white border border-sage-border rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none" />
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-ink-deep mb-1">
+          Craft Specialty / Primary Category
+        </label>
+        <input id="special-store-specialty" type="text" placeholder="e.g. Nails & Beauty, Scented Candles, Resin Art, Floral Bouquets"
+               class="w-full bg-white border border-sage-border rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none" />
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-ink-deep mb-1">
+          Shop Bio & Brand Story
+        </label>
+        <textarea id="special-store-bio" rows="2" placeholder="Describe the artisan craft, materials used, brand aesthetic..."
+                  class="w-full bg-white border border-sage-border rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none"></textarea>
+      </div>
+
+      <div class="border-t border-sage-border/40 pt-3">
+        <p class="text-xs font-bold uppercase tracking-wider text-ink-deep mb-2">Pickup / Dispatch Origin</p>
+        <div class="grid grid-cols-2 gap-3 form-row-2col">
+          <div>
+            <label class="block text-[10px] text-text-muted mb-0.5">City</label>
+            <input id="special-store-city" type="text" placeholder="Jaipur"
+                   class="w-full bg-white border border-sage-border rounded-lg p-2 text-xs focus:ring-1 focus:ring-primary outline-none" />
+          </div>
+          <div>
+            <label class="block text-[10px] text-text-muted mb-0.5">State</label>
+            <input id="special-store-state" type="text" placeholder="Rajasthan"
+                   class="w-full bg-white border border-sage-border rounded-lg p-2 text-xs focus:ring-1 focus:ring-primary outline-none" />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-sage-border/50">
+        <button type="button" id="cancel-create-special-shop-btn" class="px-4 py-2 border border-sage-border text-ink-soft rounded-lg text-xs font-bold hover:bg-surface-container">
+          Cancel
+        </button>
+        <button type="submit" id="submit-create-special-shop-btn" class="px-5 py-2 bg-[#14381F] hover:bg-stone-800 text-white rounded-lg text-xs font-bold shadow transition-transform active:scale-95 flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px]">check_circle</span>
+          <span>Create & Launch Studio</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- API Wiring Module Script -->
 <script type="module">
 import adminApiClient from '/src/utils/adminApiClient.js';
@@ -392,32 +476,75 @@ let activeModalSellerId = null;
 
 // UI Elements
 const tabActiveSellers = document.getElementById('tab-active-sellers');
+const tabSpecialShops = document.getElementById('tab-special-shops');
 const tabApplications = document.getElementById('tab-applications');
 const activeSellersView = document.getElementById('active-sellers-view');
+const specialShopsView = document.getElementById('special-shops-view');
 const applicationsView = document.getElementById('applications-view');
 
 // Modals
 const approveModal = document.getElementById('kyc-approve-modal');
 const rejectModal = document.getElementById('kyc-reject-modal');
-const suspendModal = document.getElementById('suspend-seller-modal');
-
 function showToast(message, type = 'success') {
-  alert(message);
+  let container = document.getElementById('admin-toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'admin-toast-container';
+    container.className = 'fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-md pointer-events-none';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  const isError = type === 'error';
+  const bgColor = isError ? 'bg-rose-950/90 border-rose-500 text-rose-100' : 'bg-[#14381F] border-[#587A5B] text-[#FAF6EE]';
+  const icon = isError ? 'error' : 'check_circle';
+
+  toast.className = `flex items-center gap-3 px-4 py-3 rounded-xl border shadow-xl backdrop-blur-md transition-all duration-300 pointer-events-auto transform translate-y-4 opacity-0 ${bgColor}`;
+  toast.innerHTML = `
+    <span class="material-symbols-outlined text-[20px] shrink-0">${icon}</span>
+    <p class="text-xs font-medium leading-snug">${message}</p>
+  `;
+
+  container.appendChild(toast);
+  requestAnimationFrame(() => {
+    toast.classList.remove('translate-y-4', 'opacity-0');
+  });
+
+  setTimeout(() => {
+    toast.classList.add('opacity-0', 'translate-y-2');
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
 }
 
 // Tab switcher
 tabActiveSellers.addEventListener('click', () => {
   tabActiveSellers.classList.add('active');
+  tabSpecialShops?.classList.remove('active');
   tabApplications.classList.remove('active');
   activeSellersView.classList.remove('hidden');
+  specialShopsView?.classList.add('hidden');
   applicationsView.classList.add('hidden');
   fetchSellers();
 });
 
+if (tabSpecialShops) {
+  tabSpecialShops.addEventListener('click', () => {
+    tabSpecialShops.classList.add('active');
+    tabActiveSellers.classList.remove('active');
+    tabApplications.classList.remove('active');
+    specialShopsView.classList.remove('hidden');
+    activeSellersView.classList.add('hidden');
+    applicationsView.classList.add('hidden');
+    fetchSpecialShops();
+  });
+}
+
 tabApplications.addEventListener('click', () => {
   tabApplications.classList.add('active');
   tabActiveSellers.classList.remove('active');
+  tabSpecialShops?.classList.remove('active');
   applicationsView.classList.remove('hidden');
+  specialShopsView?.classList.add('hidden');
   activeSellersView.classList.add('hidden');
   fetchApplications();
 });
@@ -532,6 +659,7 @@ function renderSellers(sellers) {
     const sellerName = seller.store_name || seller.name || 'Artisan Store';
     const initials = (seller.name || seller.store_name || 'SA').slice(0, 2).toUpperCase();
 
+    const sellerId = seller.user_id || seller.id;
     tr.innerHTML = `
       <td class="px-6 py-4">
         <div class="flex items-center gap-3">
@@ -539,8 +667,8 @@ function renderSellers(sellers) {
             ${initials}
           </div>
           <div>
-            <p class="font-bold text-ink-deep leading-tight text-sm">${sellerName}</p>
-            <p class="text-[11px] text-text-muted mt-0.5">${seller.seller_type === 'special' ? '✨ Special Partner' : 'Handicraft Artisan'}</p>
+            <button class="text-left font-bold text-ink-deep leading-tight text-sm hover:underline cursor-pointer block" onclick="DetailModal.showSeller('${sellerId}')">${sellerName}</button>
+            <p class="text-[11px] text-text-muted mt-0.5">${seller.is_admin_managed ? '✨ Tohfa Special' : 'Handicraft Artisan'}</p>
           </div>
         </div>
       </td>
@@ -566,11 +694,111 @@ function renderSellers(sellers) {
 
 function attachSellerEventListeners() {
   document.querySelectorAll('.open-kyc-approve-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       activeModalSellerId = e.currentTarget.getAttribute('data-id');
-      document.getElementById('approve-modal-store-name').textContent = e.currentTarget.getAttribute('data-name');
-      document.getElementById('approve-modal-seller-email').textContent = e.currentTarget.getAttribute('data-email');
+      const storeName = e.currentTarget.getAttribute('data-name');
+      const email = e.currentTarget.getAttribute('data-email');
+      document.getElementById('approve-modal-store-name').textContent = storeName;
+      document.getElementById('approve-modal-seller-email').textContent = email;
       document.getElementById('commission-rate-input').value = '10';
+
+      const kycContainer = document.getElementById('approve-modal-kyc-details');
+      if (kycContainer) {
+        kycContainer.innerHTML = `<div class="p-4 text-center text-xs text-text-muted flex items-center justify-center gap-2"><span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span> Loading KYC verification application...</div>`;
+        try {
+          const detailRes = await adminApiClient.get(`/admin/sellers/${activeModalSellerId}`);
+          const seller = detailRes.data?.data || detailRes.data || {};
+          
+          const craft = seller.seller_type || 'Artisan';
+          const pan = seller.pan_number || 'Not provided';
+          const gst = seller.gst_number || 'Not provided / Unregistered';
+          const capacity = (seller.daily_capacity_min || seller.daily_capacity_max) 
+            ? `${seller.daily_capacity_min || 1}–${seller.daily_capacity_max || '+'} items/day`
+            : 'Not specified';
+          const insta = seller.instagram_handle 
+            ? `@${seller.instagram_handle} ${seller.instagram_followers ? `(${seller.instagram_followers} followers)` : ''}`
+            : 'Not connected';
+          const phoneStr = seller.whatsapp_number || seller.phone || 'N/A';
+
+          const portfolioImgs = Array.isArray(seller.portfolio_images) 
+            ? seller.portfolio_images 
+            : (seller.portfolio_images ? [seller.portfolio_images] : []);
+
+          const hasAddress = seller.pickup_address && (seller.pickup_address.city || seller.pickup_address.address_line1);
+          const hasBank = seller.bank_details && (seller.bank_details.account_number || seller.bank_details.bank?.account_number);
+
+          let studioSetupHtml = '';
+          if (seller.onboarding_completed || (hasAddress && hasBank)) {
+            const addr = seller.pickup_address || {};
+            const bank = seller.bank_details?.bank || seller.bank_details || {};
+            const addrStr = [addr.address_line1, addr.address_line2, addr.city, addr.state, addr.pincode].filter(Boolean).join(', ') || 'Saved';
+            const bankStr = bank.account_number ? `${bank.bank_name || 'Bank'} (A/C: ••••${String(bank.account_number).slice(-4)}, IFSC: ${bank.ifsc_code || '-'})` : 'Saved';
+            studioSetupHtml = `
+              <div class="mt-2.5 pt-2 border-t border-sage-border/40 text-[11px] space-y-1 text-[#14381F]">
+                <div><strong>📍 Studio Pickup:</strong> <span class="text-text-muted">${addrStr}</span></div>
+                <div><strong>🏦 Payout Bank:</strong> <span class="text-text-muted">${bankStr}</span></div>
+              </div>
+            `;
+          } else {
+            studioSetupHtml = `
+              <div class="mt-2 p-2.5 bg-amber-50 rounded-xl border border-amber-200/70 text-amber-900 text-[11px] flex items-start gap-2">
+                <span class="material-symbols-outlined text-[16px] text-amber-700 shrink-0 mt-0.5">info</span>
+                <span><strong>Studio Setup:</strong> Pickup address & payout bank details will be completed by the artisan in Seller Studio upon KYC approval.</span>
+              </div>
+            `;
+          }
+
+          let portfolioHtml = '';
+          if (portfolioImgs.length > 0) {
+            portfolioHtml = `
+              <div>
+                <strong class="text-primary block mb-1">🎨 Portfolio & Work:</strong>
+                <div class="flex flex-wrap gap-2">
+                  ${portfolioImgs.map(url => `
+                    <a href="${url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-sage-border/60 rounded-lg text-primary text-[11px] font-bold hover:bg-parchment hover:underline shadow-2xs">
+                      <span class="material-symbols-outlined text-[13px]">open_in_new</span>
+                      <span>${url.length > 35 ? url.substring(0, 32) + '...' : url}</span>
+                    </a>
+                  `).join('')}
+                </div>
+              </div>
+            `;
+          }
+
+          kycContainer.innerHTML = `
+            <div class="p-3.5 bg-parchment/60 rounded-xl border border-sage-border/40 text-[11px] space-y-2.5 max-h-[300px] overflow-y-auto">
+              <div class="grid grid-cols-2 gap-2 text-[11px]">
+                <div><strong class="text-primary">👤 Artisan:</strong> ${seller.name || 'Artisan'}</div>
+                <div><strong class="text-primary">📱 Phone:</strong> ${phoneStr}</div>
+                <div><strong class="text-primary">🏷️ Craft:</strong> ${craft}</div>
+                <div><strong class="text-primary">📦 Daily Capacity:</strong> ${capacity}</div>
+                <div><strong class="text-primary">📸 Instagram:</strong> ${insta}</div>
+                <div><strong class="text-primary">🆔 PAN:</strong> <span class="font-mono font-bold">${pan}</span></div>
+              </div>
+              <div class="flex items-center gap-2">
+                <strong class="text-primary">🏛️ GSTIN:</strong> <span class="font-mono text-text-muted">${gst}</span>
+              </div>
+              ${seller.bio ? `<div><strong class="text-primary">📖 Artisan Story & Bio:</strong> <p class="text-text-muted mt-0.5 leading-relaxed">${seller.bio}</p></div>` : ''}
+              ${portfolioHtml}
+              ${studioSetupHtml}
+            </div>
+          `;
+        } catch (err) {
+          console.error('Failed to load KYC verification detail:', err);
+          const errStatus = err.response?.status;
+          const errMsg = err.response?.data?.message || err.message || 'Unable to load seller KYC record';
+          kycContainer.innerHTML = `
+            <div class="p-3 bg-red-50 text-red-800 rounded-xl border border-red-200 text-xs space-y-1">
+              <div class="font-bold flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px]">error</span>
+                <span>Failed to load detailed KYC application data ${errStatus ? `(HTTP ${errStatus})` : ''}</span>
+              </div>
+              <p class="text-[11px] text-red-700">${errMsg}</p>
+            </div>
+          `;
+        }
+      }
+
       approveModal.classList.remove('hidden');
     });
   });
@@ -600,12 +828,12 @@ function attachSellerEventListeners() {
         try {
           const res = await adminApiClient.patch(`/admin/sellers/${id}/kyc`, { status: 'verified' });
           if (res.data?.success) {
-            alert('Artisan store reactivated successfully!');
+            showToast('Artisan store reactivated successfully!', 'success');
             fetchSellers();
             fetchApplications();
           }
         } catch (err) {
-          alert(err.response?.data?.message || 'Failed to reactivate seller.');
+          showToast(err.response?.data?.message || 'Failed to reactivate seller.', 'error');
         }
       }
     });
@@ -635,12 +863,12 @@ document.getElementById('confirm-approve-btn').addEventListener('click', async (
 
     if (res.data?.success) {
       approveModal.classList.add('hidden');
-      alert('Seller KYC verified and commission rate updated successfully!');
+      showToast('Seller KYC verified and commission rate updated successfully!', 'success');
       fetchSellers();
       fetchApplications();
     }
   } catch (err) {
-    alert(err.response?.data?.message || 'Failed to verify seller KYC.');
+    showToast(err.response?.data?.message || 'Failed to verify seller KYC.', 'error');
   }
 });
 
@@ -657,12 +885,12 @@ document.getElementById('confirm-reject-btn').addEventListener('click', async ()
 
     if (res.data?.success) {
       rejectModal.classList.add('hidden');
-      alert('Seller application/KYC rejected.');
+      showToast('Seller application/KYC rejected.', 'info');
       fetchSellers();
       fetchApplications();
     }
   } catch (err) {
-    alert(err.response?.data?.message || 'Failed to reject KYC.');
+    showToast(err.response?.data?.message || 'Failed to reject KYC.', 'error');
   }
 });
 
@@ -673,17 +901,17 @@ document.getElementById('confirm-suspend-btn').addEventListener('click', async (
 
   try {
     const res = await adminApiClient.patch(`/admin/sellers/${activeModalSellerId}/suspend`, {
-      ban_reason: reason
+      reason: reason
     });
 
     if (res.data?.success) {
       suspendModal.classList.add('hidden');
-      alert('Artisan store suspended successfully.');
+      showToast('Artisan store suspended successfully.', 'success');
       fetchSellers();
       fetchApplications();
     }
   } catch (err) {
-    alert(err.response?.data?.message || 'Failed to suspend seller.');
+    showToast(err.response?.data?.message || 'Failed to suspend seller.', 'error');
   }
 });
 
@@ -1007,9 +1235,236 @@ document.getElementById('export-csv-btn').addEventListener('click', async () => 
     }
   } catch (err) {
     console.error("CSV Export failed:", err);
-    alert("Failed to export CSV. Please try again.");
+    showToast("Failed to export CSV. Please try again.", "error");
   }
 });
+
+/* ---------------- TOHFA SPECIAL SHOPS LOGIC ---------------- */
+const openCreateSpecialShopBtn = document.getElementById('open-create-special-shop-btn');
+const closeCreateSpecialShopBtn = document.getElementById('close-create-special-shop-btn');
+const cancelCreateSpecialShopBtn = document.getElementById('cancel-create-special-shop-btn');
+const createSpecialShopForm = document.getElementById('create-special-shop-form');
+
+if (openCreateSpecialShopBtn) {
+  openCreateSpecialShopBtn.addEventListener('click', () => {
+    createSpecialShopModal.classList.remove('hidden');
+  });
+}
+if (closeCreateSpecialShopBtn) {
+  closeCreateSpecialShopBtn.addEventListener('click', () => {
+    createSpecialShopModal.classList.add('hidden');
+  });
+}
+if (cancelCreateSpecialShopBtn) {
+  cancelCreateSpecialShopBtn.addEventListener('click', () => {
+    createSpecialShopModal.classList.add('hidden');
+  });
+}
+
+const storeNameInput = document.getElementById('special-store-name');
+const storeSlugInput = document.getElementById('special-store-slug');
+const storeEmailInput = document.getElementById('special-store-email');
+
+if (storeNameInput && storeSlugInput && storeEmailInput) {
+  storeNameInput.addEventListener('input', () => {
+    const val = storeNameInput.value.trim().toLowerCase();
+    const slug = val.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    storeSlugInput.value = slug;
+    if (!storeEmailInput.value || storeEmailInput.value.endsWith('@thetohfa.in')) {
+      storeEmailInput.value = slug ? `${slug.replace(/-/g, '')}@thetohfa.in` : '';
+    }
+  });
+}
+
+if (createSpecialShopForm) {
+  createSpecialShopForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = document.getElementById('submit-create-special-shop-btn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span> Creating...`;
+
+    try {
+      const payload = {
+        store_name: document.getElementById('special-store-name').value.trim(),
+        slug: document.getElementById('special-store-slug').value.trim(),
+        email: document.getElementById('special-store-email').value.trim(),
+        bio: document.getElementById('special-store-bio').value.trim(),
+        craft_specialty: document.getElementById('special-store-specialty')?.value.trim() || '',
+        pickup_address: {
+          city: document.getElementById('special-store-city').value.trim() || 'Jaipur',
+          state: document.getElementById('special-store-state').value.trim() || 'Rajasthan',
+          country: 'India'
+        }
+      };
+
+      const res = await adminApiClient.post('/admin/special-shops', payload);
+      if (res.data?.success) {
+        showToast(res.data.message || 'TOHFA Special shop created successfully!', 'success');
+        createSpecialShopModal.classList.add('hidden');
+        createSpecialShopForm.reset();
+        fetchSpecialShops();
+      }
+    } catch (err) {
+      console.error('Failed to create special shop:', err);
+      showToast(err.response?.data?.message || 'Failed to create TOHFA Special shop.', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<span class="material-symbols-outlined text-[16px]">check_circle</span><span>Create & Launch Studio</span>`;
+    }
+  });
+}
+
+async function fetchSpecialShops() {
+  try {
+    const res = await adminApiClient.get('/admin/special-shops');
+    if (res.data?.success) {
+      const shops = res.data.data || [];
+      const badge = document.getElementById('special-shops-count-badge');
+      if (badge) badge.textContent = shops.length;
+      renderSpecialShops(shops);
+    }
+  } catch (err) {
+    console.error('Failed to fetch special shops:', err);
+  }
+}
+
+function renderSpecialShops(shops) {
+  const listEl = document.getElementById('special-shops-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+
+  if (!shops || shops.length === 0) {
+    listEl.innerHTML = `
+      <tr>
+        <td colspan="6" class="px-6 py-12 text-center text-text-muted text-sm">
+          <div class="flex flex-col items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-4xl text-amber-600">store</span>
+            <p class="font-medium text-ink-deep">No TOHFA Special shops found.</p>
+            <p class="text-xs text-text-muted">Click "Create TOHFA Special Shop" to launch your first platform-operated brand.</p>
+          </div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  shops.forEach(shop => {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-surface-container/50 transition-colors';
+
+    const revenuePaise = parseFloat(shop.total_revenue || 0) * 100;
+    const formattedRevenue = typeof formatPaise === 'function' ? formatPaise(revenuePaise) : `₹${parseFloat(shop.total_revenue || 0).toLocaleString('en-IN')}`;
+
+    tr.innerHTML = `
+      <td class="px-6 py-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-amber-600/10 border border-amber-600/30 flex items-center justify-center text-amber-900 font-bold text-sm shrink-0">
+            ${(shop.store_name || 'T')[0].toUpperCase()}
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="font-bold text-ink-deep text-sm">${shop.store_name || 'Special Shop'}</span>
+              <span class="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest bg-amber-100 text-amber-900 border border-amber-300 rounded">TOHFA Special</span>
+            </div>
+            <p class="text-xs text-text-muted font-mono">@${shop.slug || 'slug'}</p>
+          </div>
+        </div>
+      </td>
+      <td class="px-6 py-4 text-xs font-mono text-ink-soft">
+        ${shop.email || '—'}
+      </td>
+      <td class="px-6 py-4 text-center">
+        <span class="px-2.5 py-1 text-[11px] font-bold rounded-full ${shop.is_active !== false ? 'bg-green-100 text-green-800' : 'bg-stone-200 text-stone-700'}">
+          ${shop.is_active !== false ? 'Active & Live' : 'Paused'}
+        </span>
+      </td>
+      <td class="px-6 py-4 text-center font-bold text-xs text-ink-deep">
+        ${shop.product_count || 0}
+      </td>
+      <td class="px-6 py-4 text-right font-bold text-xs text-[#14381F]">
+        ${formattedRevenue}
+      </td>
+      <td class="px-6 py-4 text-center">
+        <div class="flex items-center justify-center gap-2">
+          <button data-action="enter-studio" data-id="${shop.id || shop.user_id}"
+                  class="px-3.5 py-1.5 bg-[#14381F] hover:bg-stone-800 text-[#FFF8E7] rounded-lg text-xs font-bold shadow-sm transition-transform active:scale-95 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[15px]">launch</span>
+            <span>Enter Studio</span>
+          </button>
+          <a href="/buyer/seller-profile.html?id=${shop.id || shop.user_id}" target="_blank"
+             class="p-1.5 text-text-muted hover:text-primary hover:bg-surface-container rounded-lg transition-colors" title="View Public Storefront">
+            <span class="material-symbols-outlined text-[18px]">visibility</span>
+          </a>
+        </div>
+      </td>
+    `;
+
+    listEl.appendChild(tr);
+  });
+
+  listEl.querySelectorAll('button[data-action="enter-studio"]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const shopId = btn.getAttribute('data-id');
+      btn.disabled = true;
+      btn.innerHTML = `<span class="material-symbols-outlined animate-spin text-[14px]">progress_activity</span> Launching...`;
+
+      try {
+        const res = await adminApiClient.post(`/admin/special-shops/${shopId}/switch-session`);
+        if (res.data?.success) {
+          const { user, accessToken, refreshToken, token } = res.data.data;
+          const jwtToken = token || accessToken;
+          const userStr = JSON.stringify(user);
+
+          // Clear any conflicting stale tokens
+          localStorage.removeItem('token');
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('auth_token');
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('accessToken');
+          sessionStorage.removeItem('auth_token');
+
+          // Sync tokens across both sessionStorage & localStorage
+          sessionStorage.setItem('tohfa_access_token', jwtToken);
+          sessionStorage.setItem('tohfa_auth_token', jwtToken);
+          localStorage.setItem('tohfa_access_token', jwtToken);
+          localStorage.setItem('tohfa_auth_token', jwtToken);
+          localStorage.setItem('token', jwtToken);
+          localStorage.setItem('accessToken', jwtToken);
+
+          if (refreshToken) {
+            sessionStorage.setItem('tohfa_refresh_token', refreshToken);
+            localStorage.setItem('tohfa_refresh_token', refreshToken);
+          }
+
+          // Sync user profiles across all key variants
+          sessionStorage.setItem('tohfa_user', userStr);
+          localStorage.setItem('tohfa_user', userStr);
+          sessionStorage.setItem('tohfa_user_data', userStr);
+          localStorage.setItem('tohfa_user_data', userStr);
+          sessionStorage.setItem('tohfa_user_role', 'seller');
+          localStorage.setItem('tohfa_user_role', 'seller');
+
+          // Set switch context for Admin Mode banner
+          sessionStorage.setItem('tohfa_admin_switch_context', JSON.stringify({
+            actingAs: user.store_name || user.name,
+            shopId: shopId,
+            returnUrl: '/admin/sellers.html?tab=specials'
+          }));
+
+          showToast('Switching to studio session...', 'success');
+          setTimeout(() => {
+            window.location.href = '/seller/dashboard.html';
+          }, 300);
+        }
+      } catch (err) {
+        showToast(err.response?.data?.message || 'Failed to switch into studio session.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = `<span class="material-symbols-outlined text-[15px]">launch</span><span>Enter Studio</span>`;
+      }
+    });
+  });
+}
 
 // Logout
 document.getElementById('logout-btn').addEventListener('click', () => {
@@ -1021,10 +1476,13 @@ document.getElementById('logout-btn').addEventListener('click', () => {
 // Initial load
 document.addEventListener('DOMContentLoaded', () => {
   updatePendingBadge();
+  fetchSpecialShops();
   const urlParams = new URLSearchParams(window.location.search);
   const tab = urlParams.get('tab');
   if (tab === 'applications') {
     tabApplications.click();
+  } else if (tab === 'specials' || tab === 'special-shops') {
+    tabSpecialShops?.click();
   } else {
     fetchSellers();
   }

@@ -147,7 +147,7 @@
         <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-6 border-b border-[#285C3A]/10">
           <div class="relative group cursor-pointer" onclick="document.getElementById('avatar-file-input').click()">
             <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-[#14381F]/20 bg-[#FAF6EE] shadow-sm">
-              <img id="avatar-preview" src="/uploads/avatars/default-avatar.png" alt="Profile avatar" class="w-full h-full object-cover"/>
+              <img id="avatar-preview" src="/img/default-avatar.png" alt="Profile avatar" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='/img/default-avatar.png';"/>
             </div>
             <div class="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
               <span class="material-symbols-outlined text-xl">photo_camera</span>
@@ -190,10 +190,10 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="grid grid-cols-2 gap-3 sm:gap-4 form-row-2col">
             <div>
               <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">City / Location</label>
-              <input type="text" id="profile-city" placeholder="e.g. Mumbai, Maharashtra" class="w-full px-4 py-3 rounded-xl border border-[#285C3A]/20 bg-[#FFF8E7] text-sm text-[#1C1C1A] focus:outline-none focus:border-[#14381F]"/>
+              <input type="text" id="profile-city" placeholder="e.g. Mumbai" class="w-full px-4 py-3 rounded-xl border border-[#285C3A]/20 bg-[#FFF8E7] text-sm text-[#1C1C1A] focus:outline-none focus:border-[#14381F]"/>
             </div>
             <div>
               <label class="block text-[11px] uppercase tracking-wider font-bold text-[#14381F] mb-1 font-mono">Preferred State</label>
@@ -232,7 +232,7 @@
     import { initSearchOverlay } from '/buyer/searchOverlay.js';
     initSearchOverlay();
 
-    let currentAvatarUrl = '/uploads/avatars/default-avatar.png';
+    let currentAvatarUrl = '/img/default-avatar.png';
 
     async function loadProfile() {
       const token = sessionStorage.getItem('tohfa_access_token');
@@ -256,7 +256,7 @@
           document.getElementById('profile-state').value = user.state || '';
           document.getElementById('profile-bio').value = user.bio || '';
 
-          if (user.profile_photo_url) {
+          if (user.profile_photo_url && !user.profile_photo_url.includes('default-avatar.png')) {
             currentAvatarUrl = user.profile_photo_url;
             document.getElementById('avatar-preview').src = user.profile_photo_url;
           }
@@ -281,7 +281,7 @@
     });
 
     document.getElementById('remove-avatar-btn')?.addEventListener('click', () => {
-      currentAvatarUrl = '/uploads/avatars/default-avatar.png';
+      currentAvatarUrl = '/img/default-avatar.png';
       document.getElementById('avatar-preview').src = currentAvatarUrl;
       fileInput.value = '';
     });
@@ -289,20 +289,19 @@
     // Form submission
     document.getElementById('edit-profile-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const token = sessionStorage.getItem('tohfa_access_token');
       const saveBtn = document.getElementById('save-btn');
+      saveBtn.disabled = true;
+      saveBtn.innerText = 'Saving...';
 
+      const token = sessionStorage.getItem('tohfa_access_token');
       const payload = {
-        name: document.getElementById('profile-name').value.trim(),
-        phone: document.getElementById('profile-phone').value.trim(),
-        city: document.getElementById('profile-city').value.trim(),
-        state: document.getElementById('profile-state').value.trim(),
-        bio: document.getElementById('profile-bio').value.trim(),
+        name: document.getElementById('profile-name').value,
+        phone: document.getElementById('profile-phone').value,
+        city: document.getElementById('profile-city').value,
+        state: document.getElementById('profile-state').value,
+        bio: document.getElementById('profile-bio').value,
         profile_photo_url: currentAvatarUrl
       };
-
-      saveBtn.disabled = true;
-      saveBtn.innerHTML = `<span>Saving...</span>`;
 
       try {
         const res = await fetch('/api/buyer/profile', {
@@ -314,34 +313,32 @@
           body: JSON.stringify(payload)
         });
         const json = await res.json();
-
         if (json.success) {
-          // Update cached user
-          const cachedUser = sessionStorage.getItem('tohfa_user');
-          if (cachedUser) {
+          const userStr = sessionStorage.getItem('tohfa_user');
+          if (userStr) {
             try {
-              const u = JSON.parse(cachedUser);
+              const u = JSON.parse(userStr);
               u.name = payload.name;
-              u.phone = payload.phone;
+              u.full_name = payload.name;
               u.profile_photo_url = payload.profile_photo_url;
+              u.avatar_url = payload.profile_photo_url;
               sessionStorage.setItem('tohfa_user', JSON.stringify(u));
             } catch(e) {}
           }
           window.location.href = '/buyer/profile.html';
         } else {
-          alert(json.message || 'Failed to update profile.');
-          saveBtn.disabled = false;
-          saveBtn.innerHTML = `<span class="material-symbols-outlined text-base">save</span><span>Save Profile</span>`;
+          alert(json.message || 'Failed to update profile');
         }
       } catch (err) {
-        console.error('Update profile error:', err);
-        alert('An error occurred while saving profile.');
+        console.error('Update error:', err);
+        alert('An error occurred while saving.');
+      } finally {
         saveBtn.disabled = false;
-        saveBtn.innerHTML = `<span class="material-symbols-outlined text-base">save</span><span>Save Profile</span>`;
+        saveBtn.innerText = 'Save Changes';
       }
     });
 
-    document.addEventListener('DOMContentLoaded', loadProfile);
+    loadProfile();
 
     // Check Auth State for Navbar
     function checkAuthState() {
@@ -349,16 +346,15 @@
       const authContainer = document.getElementById('auth-buttons-container');
       if (token) {
         const cachedUser = sessionStorage.getItem('tohfa_user');
-        let initial = 'U';
+        let avatarUrl = '/img/default-avatar.png';
         if (cachedUser) {
           try {
             const u = JSON.parse(cachedUser);
-            if (u.name) initial = u.name.charAt(0).toUpperCase();
-            else if (u.full_name) initial = u.full_name.charAt(0).toUpperCase();
+            if (u.avatar_url || u.profile_photo_url) avatarUrl = u.avatar_url || u.profile_photo_url;
           } catch(e) {}
         }
         if (authContainer) {
-          authContainer.innerHTML = `<a href="/buyer/profile.html" class="w-9 h-9 rounded-full bg-[#FAF6EE] text-[#14381F] flex items-center justify-center font-bold text-sm overflow-hidden flex-shrink-0 shadow-sm no-underline hover:bg-white">${initial}</a>`;
+          authContainer.innerHTML = `<a href="/buyer/profile.html" class="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 shadow-sm block hover:opacity-90 transition-opacity"><img src="${avatarUrl}" alt="Profile" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='/img/default-avatar.png';" /></a>`;
         }
       }
     }

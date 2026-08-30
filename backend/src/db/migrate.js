@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Tohfa v2 — Database Migration Runner
  * File: backend/src/db/migrate.js
  * Role: Executes database schema and sequential migration files in exact order:
@@ -20,6 +20,16 @@ const MIGRATION_FILES = [
   path.join(__dirname, 'migrations', '004_buyer_platform_fixes.sql'),
   path.join(__dirname, 'migrations', '005_tohfa_specials_and_admin_authority.sql'),
   path.join(__dirname, 'migrations', '006_master_audit_schema_sync.sql'),
+  path.join(__dirname, 'migrations', '007_schema_fixes.sql'),
+  path.join(__dirname, 'migrations', '008_apply_specials_schema.sql'),
+  path.join(__dirname, 'migrations', '009_tofa_special_admin_owned_shops.sql'),
+  path.join(__dirname, 'migrations', '010_variant_images_multi.sql'),
+  path.join(__dirname, 'migrations', '011_cleanup_tohfa_specials_legacy_schema.sql'),
+  path.join(__dirname, 'migrations', '012_seller_capacity_social_fields.sql'),
+  path.join(__dirname, 'migrations', '013_categories_schema_sync.sql'),
+  path.join(__dirname, 'migrations', '015_reports_schema_sync.sql'),
+  path.join(__dirname, 'migrations', '016_order_items_customization_columns.sql'),
+  path.join(__dirname, 'migrations', '017_seller_onboarding_split.sql'),
 ];
 
 async function runMigrations() {

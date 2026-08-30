@@ -2,13 +2,13 @@
  * Tohfa v2 — Order Controller
  * File: src/controllers/order.controller.js
  * Role: HTTP handlers for orders — place, list (buyer/seller/admin), detail,
- *       status update, overflow queue management.
+ *       status update, and cancellation.
  *       All SQL uses parameterized $1..$N syntax via the query() helper.
  */
 'use strict';
 
 const { query } = require('../config/db');
-const { placeOrders, createOverflowOrder } = require('../services/order.service');
+const { placeOrders } = require('../services/order.service');
 const paymentService = require('../services/payment.service');
 const { createNotification } = require('./notification.controller');
 
@@ -24,34 +24,11 @@ async function placeOrder(req, res, next) {
       return res.status(400).json({ success: false, message: 'address_id is required.' });
     }
 
-    try {
-      const result = await placeOrders(buyerId, address_id, cart_item_ids || null, {
-        coupon_code: coupon_code || coupon || code,
-        coupon_id,
-      });
-      return res.status(201).json({ success: true, data: result });
-    } catch (placeErr) {
-      if (placeErr.is_overflow) {
-        return res.status(409).json({ success: false, message: placeErr.message, is_overflow: true });
-      }
-      throw placeErr;
-    }
-  } catch (err) {
-    next(err);
-  }
-}
-
-async function placeOverflowOrder(req, res, next) {
-  try {
-    const buyerId = req.user.id;
-    const { address_id, cart_item_ids } = req.body;
-
-    if (!address_id) {
-      return res.status(400).json({ success: false, message: 'address_id is required.' });
-    }
-
-    const overflowOrder = await createOverflowOrder(buyerId, address_id, cart_item_ids || null);
-    return res.status(201).json({ success: true, data: { overflow_order: overflowOrder } });
+    const result = await placeOrders(buyerId, address_id, cart_item_ids || null, {
+      coupon_code: coupon_code || coupon || code,
+      coupon_id,
+    });
+    return res.status(201).json({ success: true, data: result });
   } catch (err) {
     next(err);
   }
@@ -204,19 +181,21 @@ async function getSellerOrders(req, res, next) {
 // ---------------------------------------------------------------------------
 async function getAdminOrders(req, res, next) {
   try {
-    const { page = '1', limit = '20', status, seller_id, from_date, to_date } = req.query;
+    const { page = '1', limit = '20', per_page, status, seller_id, from_date, to_date, special_only, exclude_special, search } = req.query;
+    const limitVal = per_page || limit;
     const pageNum  = Math.max(1, parseInt(page, 10));
-    const limitNum = Math.min(100, parseInt(limit, 10));
+    const limitNum = Math.min(100, parseInt(limitVal, 10));
     const offset   = (pageNum - 1) * limitNum;
 
     const conditions = [];
     const params = [];
 
-    if (status) {
+    // Filter by status only when it is a specific real status (not 'all' or empty)
+    if (status && status.toLowerCase() !== 'all' && status.trim() !== '') {
       params.push(status);
-      conditions.push(`o.status = $${params.length}`);
+      conditions.push(`(o.status ILIKE $${params.length} OR o.status = $${params.length})`);
     }
-    if (seller_id) {
+    if (seller_id && seller_id !== 'all') {
       params.push(seller_id);
       conditions.push(`o.seller_id = $${params.length}`);
     }
@@ -228,6 +207,15 @@ async function getAdminOrders(req, res, next) {
       params.push(to_date);
       conditions.push(`o.created_at <= $${params.length}`);
     }
+    if (special_only === 'true' || special_only === true) {
+      conditions.push(`sp.is_admin_managed = TRUE`);
+    } else if (special_only === 'false' || special_only === false || exclude_special === 'true' || exclude_special === true) {
+      conditions.push(`(sp.is_admin_managed IS NOT TRUE)`);
+    }
+    if (search && search.trim() !== '') {
+      params.push(`%${search.trim()}%`);
+      conditions.push(`(o.id::text ILIKE $${params.length} OR COALESCE(o.order_ref, '') ILIKE $${params.length} OR u.name ILIKE $${params.length} OR sp.store_name ILIKE $${params.length})`);
+    }
 
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
     params.push(limitNum);
@@ -236,11 +224,25 @@ async function getAdminOrders(req, res, next) {
     const offsetIdx = params.length;
 
     const { rows } = await query(
-      `SELECT o.id, o.buyer_id, o.seller_id, o.total_amount, o.status, o.created_at,
-              u.name AS buyer_name, sp.store_name
+      `SELECT o.id, COALESCE(o.order_ref, 'TOHFA-' || UPPER(SUBSTRING(o.id::text, 1, 8))) AS order_ref,
+              o.id AS order_id,
+              o.buyer_id, o.seller_id, o.total_amount,
+              COALESCE(o.total_paise, o.total_amount * 100) AS amount_paise,
+              o.total_amount AS amount_paid,
+              '₹' || o.total_amount AS amount_display,
+              o.status, o.payment_status, o.created_at,
+              COALESCE(o.studio_notes, '') AS notes,
+              COALESCE(a.line1 || CASE WHEN a.city IS NOT NULL THEN ', ' || a.city ELSE '' END, '') AS shipping_address,
+              COALESCE(u.name, 'Valued Buyer') AS buyer_name,
+              u.email AS buyer_email, u.phone AS buyer_phone,
+              COALESCE(sp.store_name, 'Tohfa Studio') AS seller_name,
+              COALESCE(sp.store_name, 'Tohfa Studio') AS store_name,
+              COALESCE(sp.is_admin_managed, FALSE) AS is_admin_managed,
+              a.line1, a.line2, a.city, a.state, a.pincode, a.phone AS address_phone, a.full_name AS address_name
        FROM orders o
        LEFT JOIN users u ON u.id = o.buyer_id
        LEFT JOIN seller_profiles sp ON sp.user_id = o.seller_id
+       LEFT JOIN addresses a ON a.id = o.address_id
        ${where}
        ORDER BY o.created_at DESC
        LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
@@ -248,17 +250,33 @@ async function getAdminOrders(req, res, next) {
     );
 
     const { rows: countRows } = await query(
-      `SELECT COUNT(*) AS total FROM orders o ${where}`,
+      `SELECT COUNT(*) AS total 
+       FROM orders o 
+       LEFT JOIN users u ON u.id = o.buyer_id
+       LEFT JOIN seller_profiles sp ON sp.user_id = o.seller_id
+       ${where}`,
       params.slice(0, params.length - 2)
     );
+
+    const totalCount = parseInt(countRows[0]?.total || 0, 10);
+    const totalPages = Math.ceil(totalCount / limitNum);
+
+    const formattedOrders = rows.map(o => ({
+      ...o,
+      created_ago: o.created_at ? new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'recently',
+      is_refund_flagged: false
+    }));
 
     return res.json({
       success: true,
       data: {
-        orders: rows,
-        total: parseInt(countRows[0].total, 10),
+        orders: formattedOrders,
+        total: totalCount,
         page: pageNum,
         limit: limitNum,
+        per_page: limitNum,
+        total_pages: totalPages,
+        refund_flagged_count: 0
       },
     });
   } catch (err) {
@@ -275,13 +293,35 @@ async function getOrderById(req, res, next) {
     const { role, id: userId } = req.user;
 
     const { rows } = await query(
-      `SELECT o.id, o.buyer_id, o.seller_id, o.address_id, o.total_amount, o.status, o.created_at,
-              u.name AS buyer_name, u.email AS buyer_email,
-              sp.store_name,
-              a.line1, a.line2, a.city, a.state, a.pincode, a.name AS address_name, a.phone AS address_phone,
+      `SELECT o.id, COALESCE(o.order_ref, 'TOHFA-' || UPPER(SUBSTRING(o.id::text, 1, 8))) AS order_ref,
+              o.buyer_id, o.seller_id, o.address_id, o.total_amount, o.total_amount AS amount_paid,
+              o.status, o.payment_status, o.created_at,
+              COALESCE(o.studio_notes, '') AS notes,
+              COALESCE(a.line1 || CASE WHEN a.city IS NOT NULL THEN ', ' || a.city ELSE '' END, '') AS shipping_address,
+              u.name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone,
+              sp.store_name, COALESCE(sp.is_admin_managed, FALSE) AS is_admin_managed,
+              a.line1, a.line2, a.city, a.state, a.pincode, a.full_name AS address_name, a.phone AS address_phone,
               COALESCE(
-                (SELECT json_agg(oi)
-                 FROM order_items oi WHERE oi.order_id = o.id),
+                (SELECT json_agg(json_build_object(
+                  'id', oi.id,
+                  'product_id', oi.product_id,
+                  'variant_id', oi.variant_id,
+                  'quantity', oi.quantity,
+                  'unit_price', COALESCE(oi.unit_price_paise / 100.0, 0),
+                  'product_name', COALESCE(oi.product_name, p.name, 'Handcrafted Item'),
+                  'variant_name', COALESCE(oi.variant_name, pv.variant_name),
+                  'customization_text', '',
+                  'image_url', COALESCE(
+                    oi.image_url,
+                    (SELECT pi.url FROM product_images pi WHERE pi.product_id = oi.product_id ORDER BY pi.sort_order LIMIT 1),
+                    (p.images)[1],
+                    '/img/placeholder-product.png'
+                  )
+                ))
+                 FROM order_items oi
+                 LEFT JOIN products p ON p.id = oi.product_id
+                 LEFT JOIN product_variants pv ON pv.id = oi.variant_id
+                 WHERE oi.order_id = o.id),
                 '[]'
               ) AS items
        FROM orders o
@@ -406,139 +446,6 @@ async function updateOrderStatus(req, res, next) {
     );
 
     return res.json({ success: true, data: { order } });
-  } catch (err) {
-    next(err);
-  }
-}
-
-// ---------------------------------------------------------------------------
-// GET /api/orders/overflow  — seller's overflow queue
-// ---------------------------------------------------------------------------
-async function getOverflowOrders(req, res, next) {
-  try {
-    const sellerId = req.user.id;
-
-    const { rows } = await query(
-      `SELECT oo.id, oo.buyer_id, oo.total_amount, oo.status,
-              oo.items_snapshot, oo.created_at,
-              u.name AS buyer_name
-       FROM overflow_orders oo
-       LEFT JOIN users u ON u.id = oo.buyer_id
-       WHERE oo.seller_id = $1
-       ORDER BY oo.created_at ASC`,
-      [sellerId]
-    );
-
-    return res.json({ success: true, data: { overflow_orders: rows } });
-  } catch (err) {
-    next(err);
-  }
-}
-
-// ---------------------------------------------------------------------------
-// PATCH /api/orders/overflow/:id  — seller accepts or declines
-// ---------------------------------------------------------------------------
-async function handleOverflowOrder(req, res, next) {
-  try {
-    const { id } = req.params;
-    const sellerId = req.user.id;
-    const { action } = req.body; // 'accept' | 'decline'
-
-    if (!['accept', 'decline'].includes(action)) {
-      return res.status(400).json({ success: false, message: "action must be 'accept' or 'decline'." });
-    }
-
-    const { rows: ovRows } = await query(
-      "SELECT * FROM overflow_orders WHERE id = $1 AND seller_id = $2 AND status = 'pending'",
-      [id, sellerId]
-    );
-
-    if (!ovRows.length) {
-      return res.status(404).json({ success: false, message: 'Overflow order not found or already handled.' });
-    }
-
-    const ov = ovRows[0];
-
-    if (action === 'decline') {
-      await query(
-        "UPDATE overflow_orders SET status = 'declined', updated_at = NOW() WHERE id = $1",
-        [id]
-      );
-      await createNotification(
-        ov.buyer_id,
-        'overflow_declined',
-        'Order could not be processed',
-        'The seller could not accept your order at this time. Please try again later.',
-        { overflow_order_id: id }
-      );
-      return res.json({ success: true, data: { message: 'Overflow order declined.' } });
-    }
-
-    // Accept: create a real order from the snapshot
-    const items = typeof ov.items_snapshot === 'string'
-      ? JSON.parse(ov.items_snapshot)
-      : ov.items_snapshot;
-
-    const { rows: orderRows } = await query(
-      `INSERT INTO orders (buyer_id, seller_id, address_id, total_amount, status, payment_status)
-       VALUES ($1, $2, $3, $4, 'pending', 'pending')
-       RETURNING *`,
-      [ov.buyer_id, sellerId, ov.address_id, ov.total_amount]
-    );
-    const order = orderRows[0];
-
-    for (const item of items) {
-      await query(
-        `INSERT INTO order_items
-           (order_id, product_id, variant_id, quantity, unit_price, customization_data)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [
-          order.id,
-          item.product_id,
-          item.variant_id || null,
-          item.quantity,
-          item.unit_price || item.base_price,
-          item.customization_data ? JSON.stringify(item.customization_data) : null,
-        ]
-      );
-    }
-
-    // Generate Razorpay Order for payment link
-    const razorpayOrder = await paymentService.createRazorpayOrder(
-      ov.total_amount,
-      `OFLOW-${order.id}`
-    );
-
-    await query(
-      "UPDATE overflow_orders SET status = 'accepted', updated_at = NOW() WHERE id = $1",
-      [id]
-    );
-
-    // BUG-03: Clear the buyer's cart items now that the seller has accepted.
-    // Use the already-parsed `items` array (which includes `id` from the snapshot saved by createOverflowOrder).
-    const cartItemIds = Array.isArray(items) ? items.map(i => i.id).filter(Boolean) : [];
-
-    if (cartItemIds.length > 0) {
-      await query(
-        `DELETE FROM cart_items
-         WHERE id = ANY($1::uuid[])
-           AND (buyer_id = $2 OR cart_id IN (SELECT id FROM carts WHERE user_id = $2))`,
-        [cartItemIds, ov.buyer_id]
-      ).catch(err => console.warn('[Overflow Accept] Cart clear failed (non-fatal):', err.message));
-    }
-
-    // BUG-04: Provide a payment link to the buyer (removed /desktop/ from URL)
-    const paymentLink = `https://thetohfa.in/buyer/pay-overflow.html?orderId=${order.id}&amount=${ov.total_amount}&rzpId=${razorpayOrder.id}`;
-
-    await createNotification(
-      ov.buyer_id,
-      'order_placed',
-      'Overflow Order Accepted',
-      `Your overflow order has been accepted by the seller! Please complete the payment to confirm the order: ${paymentLink}`,
-      { order_id: order.id, payment_link: paymentLink }
-    );
-
-    return res.status(201).json({ success: true, data: { order } });
   } catch (err) {
     next(err);
   }
@@ -733,23 +640,30 @@ async function listRefundRequests(req, res, next) {
     const { rows } = await query(
       `SELECT rr.*,
               o.status AS order_status, o.payment_status AS order_payment_status,
-              o.total_amount AS order_total_amount, o.created_at AS order_created_at,
+              o.total_amount AS order_total_amount, o.created_at AS order_date,
+              o.created_at AS order_created_at,
               u_b.name AS buyer_name, u_b.email AS buyer_email, u_b.phone AS buyer_phone,
               u_s.name AS seller_name, u_s.email AS seller_email,
-              sp.store_name,
-              p.razorpay_payment_id, p.razorpay_order_id,
+              COALESCE(sp.store_name, u_s.name, 'Artisan Studio') AS store_name,
+              COALESCE(
+                (SELECT oi.product_name FROM order_items oi WHERE oi.order_id = rr.order_id LIMIT 1),
+                'Handcrafted Creation'
+              ) AS product_name,
+              COALESCE(
+                (SELECT pr.customization_mode FROM order_items oi JOIN products pr ON pr.id = oi.product_id WHERE oi.order_id = rr.order_id LIMIT 1),
+                'none'
+              ) AS customization_mode,
               COALESCE(
                 (SELECT json_agg(json_build_object(
                   'id', oi.id,
                   'product_id', oi.product_id,
                   'quantity', oi.quantity,
-                  'unit_price', oi.unit_price,
-                  'product_name', pr.name,
-                  'customization_mode', pr.customization_mode,
-                  'customization_data', oi.customization_data
+                  'unit_price', COALESCE(oi.unit_price_paise / 100.0, 0),
+                  'product_name', COALESCE(oi.product_name, pr.name, 'Handcrafted Item'),
+                  'customization_mode', COALESCE(pr.customization_mode, 'none')
                 ))
                 FROM order_items oi
-                JOIN products pr ON pr.id = oi.product_id
+                LEFT JOIN products pr ON pr.id = oi.product_id
                 WHERE oi.order_id = rr.order_id),
                 '[]'
               ) AS items
@@ -758,7 +672,6 @@ async function listRefundRequests(req, res, next) {
        JOIN users u_b ON u_b.id = rr.buyer_id
        JOIN users u_s ON u_s.id = rr.seller_id
        LEFT JOIN seller_profiles sp ON sp.user_id = rr.seller_id
-       LEFT JOIN payments p ON p.order_id = rr.order_id AND p.status = 'paid'
        ${where}
        ORDER BY rr.created_at DESC
        LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
@@ -815,34 +728,7 @@ async function approveRefund(req, res, next) {
       });
     }
 
-    // Fetch payment record for Razorpay refund
-    const { rows: payRows } = await query(
-      `SELECT * FROM payments WHERE order_id = $1 AND status = 'paid' ORDER BY created_at DESC LIMIT 1`,
-      [refundReq.order_id]
-    );
-
     let razorpayRefundId = null;
-    if (payRows.length && payRows[0].razorpay_payment_id) {
-      try {
-        const refundRes = await paymentService.refundPayment(
-          payRows[0].razorpay_payment_id,
-          refundReq.amount,
-          {
-            order_id: refundReq.order_id,
-            refund_request_id: refundReq.id,
-          }
-        );
-        razorpayRefundId = refundRes?.id || null;
-      } catch (refundErr) {
-        console.error('[Razorpay Refund Error]:', refundErr.message);
-        if (process.env.NODE_ENV === 'production' && !payRows[0].razorpay_payment_id.startsWith('pay_mock')) {
-          return res.status(500).json({
-            success: false,
-            message: `Razorpay refund processing failed: ${refundErr.message}`,
-          });
-        }
-      }
-    }
 
     // Update refund request status
     const { rows: updatedRefundRows } = await query(
@@ -862,20 +748,18 @@ async function approveRefund(req, res, next) {
       [refundReq.order_id]
     );
 
-    // Update payments table
-    await query(
-      `UPDATE payments SET status = 'refunded', updated_at = NOW() WHERE order_id = $1`,
-      [refundReq.order_id]
-    );
-
     // Restock product inventory
-    await query(
-      `UPDATE products p
-       SET stock_quantity = p.stock_quantity + oi.quantity, updated_at = NOW()
-       FROM order_items oi
-       WHERE oi.order_id = $1 AND p.id = oi.product_id`,
-      [refundReq.order_id]
-    );
+    try {
+      await query(
+        `UPDATE products p
+         SET stock_quantity = p.stock_quantity + oi.quantity, updated_at = NOW()
+         FROM order_items oi
+         WHERE oi.order_id = $1 AND p.id = oi.product_id`,
+        [refundReq.order_id]
+      );
+    } catch (e) {
+      console.warn('[Inventory restock notice]:', e.message);
+    }
 
     // Notify buyer
     await createNotification(
@@ -977,15 +861,12 @@ async function rejectRefund(req, res, next) {
 
 module.exports = {
   placeOrder,
-  placeOverflowOrder,
   getBuyerOrders,
   getSellerOrders,
   getAdminOrders,
   getOrderById,
   updateOrderStatus,
   cancelOrder,
-  getOverflowOrders,
-  handleOverflowOrder,
   listRefundRequests,
   approveRefund,
   rejectRefund,

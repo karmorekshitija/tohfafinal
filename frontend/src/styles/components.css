@@ -1111,17 +1111,22 @@
 
 .footer__grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-8);
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-6) var(--space-4);
   max-width: var(--max-width-content);
   margin: 0 auto;
   padding: 0 var(--padding-page-x-mobile);
+}
+
+.footer__grid > div:first-child {
+  grid-column: span 2;
 }
 
 @media (min-width: 768px) {
   .footer__grid {
     grid-template-columns: repeat(2, 1fr);
     padding: 0 var(--padding-page-x-tablet);
+    gap: var(--space-8);
   }
 }
 
@@ -1129,6 +1134,9 @@
   .footer__grid {
     grid-template-columns: 2fr 1fr 1fr 1fr;
     padding: 0 var(--padding-page-x-desktop);
+  }
+  .footer__grid > div:first-child {
+    grid-column: span 1;
   }
 }
 
@@ -1841,8 +1849,8 @@
 
 .promise-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-4);
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
 }
 
 @media (min-width: 768px) {

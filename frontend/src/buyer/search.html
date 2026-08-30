@@ -215,15 +215,15 @@
 
     <!-- Top Navigation Bar (LOCKED) -->
 <header
-  class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-4 md:px-8 lg:px-12 h-16 md:h-20 transition-colors"
+  class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-3 sm:px-6 md:px-8 lg:px-12 h-14 md:h-20 transition-colors"
   style="background-color: #273328; background-image: url('/img/taskbar-texture.png'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
 >
   <!-- Brand Logo -->
-  <div class="flex items-center flex-1">
+  <div class="flex items-center flex-shrink-0">
     <a
       href="/buyer/home.html"
       class="select-none"
-      style="font-family: 'Playfair Display', serif; font-size: clamp(24px, 4vw, 32px); font-style: italic; color: #FAF6EE; text-decoration: none;"
+      style="font-family: 'Playfair Display', serif; font-size: clamp(22px, 3.5vw, 32px); font-style: italic; color: #FAF6EE; text-decoration: none;"
     >
       Tohfa<span style="color: #FAF6EE; opacity: 0.7;">.</span>
     </a>
@@ -262,64 +262,64 @@
   </nav>
 
   <!-- Right side items -->
-  <div class="flex items-center justify-end flex-1 gap-1 sm:gap-2">
+  <div class="flex items-center justify-end gap-1 sm:gap-2 flex-shrink-0">
     <!-- Search Button -->
     <a
       href="/buyer/search.html?focus=true"
       id="header-search-btn"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
       title="Search"
     >
-      <span class="material-symbols-outlined text-[22px]">search</span>
+      <span class="material-symbols-outlined text-[20px] sm:text-[22px]">search</span>
     </a>
 
     <!-- Wishlist Button -->
     <a
       href="/buyer/wishlist.html"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
       title="Saved Makes"
     >
-      <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+      <span class="material-symbols-outlined text-[20px] sm:text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
       <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
     </a>
 
     <!-- Cart Button -->
     <a
       href="/buyer/cart.html"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
       title="Shopping Cart"
     >
-      <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
+      <span class="material-symbols-outlined text-[20px] sm:text-[22px]">shopping_bag</span>
       <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
     </a>
 
     <!-- Notifications Button -->
     <a
       href="/buyer/notifications.html"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
       title="Notifications"
     >
-      <span class="material-symbols-outlined text-[22px]">notifications</span>
+      <span class="material-symbols-outlined text-[20px] sm:text-[22px]">notifications</span>
       <span id="nav-notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
       <span id="nav-notif-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
     </a>
 
-    <!-- Auth Container -->
-    <div id="auth-buttons-container" class="flex items-center gap-2 ml-2 md:ml-4"></div>
+    <!-- Auth Container (Desktop Only) -->
+    <div id="auth-buttons-container" class="hidden md:flex items-center gap-2 ml-2 md:ml-4"></div>
   </div>
 </header>
 
     <!-- Main Content Area -->
-    <main class="pt-8 max-w-7xl mx-auto px-margin-desktop relative z-10 pb-24">
+    <main class="pt-4 sm:pt-6 max-w-7xl mx-auto px-3 sm:px-6 md:px-8 relative z-10 pb-24 w-full overflow-x-hidden">
         
         <!-- Search Input Bar -->
-        <div class="max-w-3xl mx-auto mb-8">
-            <div class="relative flex items-center bg-white border border-[#273328]/20 rounded-full shadow-sm hover:border-[#14381F] focus-within:border-[#14381F] focus-within:ring-2 focus-within:ring-[#14381F]/10 transition-all px-5 py-3">
-                <span class="material-symbols-outlined text-[#717972] mr-3 text-[24px]">search</span>
+        <div class="max-w-3xl mx-auto mb-5 sm:mb-8">
+            <div class="relative flex items-center bg-white border border-[#273328]/20 rounded-full shadow-sm hover:border-[#14381F] focus-within:border-[#14381F] focus-within:ring-2 focus-within:ring-[#14381F]/10 transition-all px-4 sm:px-5 py-2.5 sm:py-3">
+                <span class="material-symbols-outlined text-[#717972] mr-2.5 sm:mr-3 text-[20px] sm:text-[24px]">search</span>
                 <input
                     type="text"
                     id="search-input"
-                    class="w-full bg-transparent border-none outline-none font-['DM_Sans'] text-base text-[#1C1C1A] placeholder-[#717972]"
+                    class="w-full bg-transparent border-none outline-none font-['DM_Sans'] text-sm sm:text-base text-[#1C1C1A] placeholder-[#717972]"
                     placeholder="Search handcrafted gifts, artisans, occasions..."
                     autocomplete="off"
                 />
@@ -329,23 +329,20 @@
                     class="p-1 text-[#717972] hover:text-[#1C1C1A] rounded-full hover:bg-black/5 transition-colors cursor-pointer"
                     title="Clear search"
                 >
-                    <span class="material-symbols-outlined text-[20px]">close</span>
+                    <span class="material-symbols-outlined text-[18px] sm:text-[20px]">close</span>
                 </button>
             </div>
         </div>
         
         <!-- ==================== STATE 1: IDLE VIEW ==================== -->
-        <div id="idle-view" class="space-y-xl">
-            <!-- Mascot Greeting Block -->
-            <section class="flex items-center justify-center gap-xl my-lg">
-                <div class="relative w-[180px] h-[180px] flex-shrink-0">
-                    <img alt="Tohfa Mascot Greeting" class="w-full h-full object-contain" src="/img/artisan-mascot.png" loading="lazy" />
-                </div>
-                <div class="speech-bubble relative bg-ivory border border-sage p-lg rounded-xl max-w-md">
-                    <h1 class="font-title-serif italic text-[22px] text-ink mb-2 leading-tight">
-                        What would you like to gift today? ?
+        <div id="idle-view" class="space-y-6 sm:space-y-8">
+            <!-- Greeting Card (Clean Centered, No Mascot) -->
+            <section class="max-w-xl mx-auto my-3 sm:my-6 text-center px-2 w-full">
+                <div class="bg-[#FFF8E7] border border-[#14381F]/20 p-4 sm:p-5 rounded-2xl shadow-xs">
+                    <h1 class="font-['Playfair_Display'] italic text-lg sm:text-2xl text-[#1C1C1A] mb-1.5 leading-tight">
+                        What would you like to gift today? ✨
                     </h1>
-                    <p class="font-body-md text-[14px] text-on-surface-variant">
+                    <p class="font-['DM_Sans'] text-xs sm:text-sm text-[#605e57] leading-relaxed">
                         Search by product name, category, description, or seller.
                     </p>
                 </div>
@@ -418,6 +415,50 @@
                 </div>
                 <div id="recent-searches-list" class="bg-[#FFF8E7] rounded-xl border border-outline-variant/30 divide-y divide-outline-variant/30 overflow-hidden">
                     <!-- Recent searches injected here -->
+                </div>
+            </section>
+
+            <!-- 1. Idle Trending Now Products Grid -->
+            <section class="mt-8 sm:mt-10">
+                <div class="flex items-center justify-between mb-3 sm:mb-4">
+                    <div class="flex items-center gap-1.5 sm:gap-2">
+                        <span class="material-symbols-outlined text-amber-600 text-[20px] sm:text-[22px]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+                        <h2 class="font-['Playfair_Display'] font-bold text-base sm:text-xl text-[#14381F]">Trending Now</h2>
+                    </div>
+                    <span class="font-['DM_Sans'] text-xs text-[#7a7a6e]">Popular across Tohfa</span>
+                </div>
+                <div id="idle-trending-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
+                    <!-- Dynamic trending cards injected here -->
+                </div>
+            </section>
+
+            <!-- 2. Idle Sponsored Products Grid -->
+            <section class="mt-8 sm:mt-10">
+                <div class="bg-[#FAF6EE] border border-[rgba(20,56,31,0.15)] rounded-2xl p-3.5 sm:p-5">
+                    <div class="flex items-center justify-between mb-3 sm:mb-4">
+                        <div class="flex items-center gap-1.5 sm:gap-2">
+                            <span class="material-symbols-outlined text-[#14381F] text-[18px] sm:text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
+                            <h2 class="font-['Playfair_Display'] font-bold text-base sm:text-lg text-[#14381F]">Sponsored Creations</h2>
+                        </div>
+                        <span class="font-['DM_Sans'] text-[11px] sm:text-xs text-[#7a7a6e]">Featured Studios</span>
+                    </div>
+                    <div id="idle-sponsored-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
+                        <!-- Dynamic sponsored cards injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Idle For You Products Grid -->
+            <section class="mt-8 sm:mt-10">
+                <div class="flex items-center justify-between mb-3 sm:mb-4">
+                    <div class="flex items-center gap-1.5 sm:gap-2">
+                        <span class="material-symbols-outlined text-[#14381F] text-[20px] sm:text-[22px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                        <h2 class="font-['Playfair_Display'] font-bold text-base sm:text-xl text-[#14381F]">For You</h2>
+                    </div>
+                    <span class="font-['DM_Sans'] text-xs text-[#7a7a6e]">Curated artisan picks</span>
+                </div>
+                <div id="idle-for-you-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
+                    <!-- Dynamic for you cards injected here -->
                 </div>
             </section>
         </div>
@@ -591,8 +632,167 @@
                 }
             }
 
+            // Load idle discovery products grids
+            loadIdleDiscoveryGrids();
+
             // Setup Infinite Scroll
             window.addEventListener('scroll', handleScroll);
+        }
+
+        function renderCustomProductGrid(container, products) {
+            if (!container) return;
+            if (!products || products.length === 0) {
+                container.innerHTML = '<p class="text-xs text-[#7a7a6e] italic col-span-full py-4 text-center">Curating handcrafted artisan creations...</p>';
+                return;
+            }
+
+            container.innerHTML = products.map(p => {
+                const img = p.image_url || (Array.isArray(p.images) && p.images.length && p.images[0]?.url ? p.images[0].url : null) || p.primary_image || 'https://placehold.co/400x400/f4ede3/516447?text=Handcrafted';
+                const rawPrice = p.price_paise !== undefined && p.price_paise !== null
+                    ? (p.price_paise / 100)
+                    : (parseFloat(p.base_price || p.price || 0));
+                const price = `₹${rawPrice.toLocaleString('en-IN')}`;
+                const isWishlisted = !!p.is_wishlisted;
+
+                let ribbonHtml = '';
+                if (p.product_tag === 'Sponsored' || p.type === 'sponsored' || p.is_sponsored) {
+                    ribbonHtml = `
+                        <div class="ribbon-wrapper">
+                            <div class="ribbon-tag ribbon-sponsored">Sponsored</div>
+                        </div>
+                    `;
+                } else if (p.is_bestseller && p.listing_type === 'custom') {
+                    ribbonHtml = `
+                        <div class="ribbon-wrapper">
+                            <div class="ribbon-tag ribbon-bestseller ribbon-bestseller-double">BEST SELLER</div>
+                            <div class="ribbon-tag ribbon-custom ribbon-custom-double">CUSTOM</div>
+                        </div>
+                    `;
+                } else if (p.is_bestseller) {
+                    ribbonHtml = `
+                        <div class="ribbon-wrapper">
+                            <div class="ribbon-tag ribbon-bestseller">BEST SELLER</div>
+                        </div>
+                    `;
+                } else if (p.listing_type === 'custom') {
+                    ribbonHtml = `
+                        <div class="ribbon-wrapper">
+                            <div class="ribbon-tag ribbon-custom">CUSTOM</div>
+                        </div>
+                    `;
+                }
+
+                const isOwner = isProductOwned(p.seller_id);
+                const wishlistBtnHtml = isOwner
+                    ? `<button class="absolute top-1.5 right-1.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[rgba(250,246,238,0.85)] opacity-50 cursor-not-allowed flex items-center justify-center z-10" disabled onclick="event.stopPropagation();">
+                           <span class="material-symbols-outlined text-[15px] sm:text-[17px] text-[#14381F]" style="font-variation-settings: 'FILL' 0;">favorite</span>
+                       </button>`
+                    : `<button class="absolute top-1.5 right-1.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[rgba(250,246,238,0.9)] hover:scale-110 active:scale-95 transition-all duration-200 toggle-wishlist-btn flex items-center justify-center cursor-pointer shadow-xs z-10" data-id="${p.id}" data-wishlisted="${isWishlisted}" onclick="event.stopPropagation();">
+                           <span class="material-symbols-outlined text-[15px] sm:text-[17px] transition-all ${isWishlisted ? 'fill-icon text-red-500' : 'text-[#14381F]'}" style="font-variation-settings: 'FILL' ${isWishlisted ? 1 : 0};">favorite</span>
+                       </button>`;
+
+                const isCustomized = p.listing_type === 'custom' || p.customization_mode === 'fixed' || p.customization_mode === 'open';
+                const addToCartBtnHtml = isOwner
+                    ? `<button class="w-full bg-[#14381F]/20 text-[#605e57] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold opacity-50 cursor-not-allowed text-[11px] sm:text-xs" disabled onclick="event.stopPropagation();">
+                           Own Product
+                       </button>`
+                    : isCustomized
+                        ? `<button class="w-full bg-[#14381F] text-white py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:opacity-90 active:scale-[0.98] transition-all text-[11px] sm:text-xs talk-to-seller-btn" data-id="${p.id}" onclick="event.stopPropagation();">
+                               Talk to Seller
+                           </button>`
+                        : `<button class="w-full bg-[#14381F] text-white py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:opacity-90 active:scale-[0.98] transition-all text-[11px] sm:text-xs add-to-cart-btn" data-id="${p.id}" onclick="event.stopPropagation();">
+                               Add to Cart
+                           </button>`;
+
+                const sellerName = p.seller_name || p.store_name || (p.seller?.seller_name) || (p.seller?.store_name) || 'Artisan';
+
+                return `
+                    <div class="group bg-[#FAF6EE] border border-[rgba(20,56,31,0.15)] rounded-xl p-2.5 sm:p-3 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative" onclick="window.location.href='/buyer/product.html?id=${p.id}'" data-product-id="${p.id}">
+                        <div>
+                            <div class="relative aspect-square overflow-hidden rounded-lg bg-[#FAF6EE] mb-2 sm:mb-2.5">
+                                ${ribbonHtml}
+                                <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="${img}" alt="${p.name}" loading="lazy">
+                                ${wishlistBtnHtml}
+                            </div>
+                            <div class="flex flex-col gap-0.5 sm:gap-1 mb-2">
+                                <div class="flex items-center justify-between gap-1">
+                                    <span class="font-bold text-xs sm:text-sm md:text-[15px] text-[#14381F]" style="font-family: 'DM Sans', sans-serif;">${price}</span>
+                                    ${parseInt(p.review_count || 0, 10) > 0
+                                        ? `<div class="flex items-center gap-0.5 text-[10px] sm:text-xs text-[#605e57]">
+                                            <span class="text-[#14381F]">★</span>
+                                            <span class="font-semibold text-[#1C1C1A]">${parseFloat(p.avg_rating).toFixed(1)}</span>
+                                            <span class="text-[9px] sm:text-[11px]">(${parseInt(p.review_count, 10)})</span>
+                                           </div>`
+                                        : `<span class="bg-[#14381F]/10 text-[#14381F] text-[9px] sm:text-[10px] font-mono font-bold px-1 sm:px-1.5 py-0.5 rounded tracking-wider uppercase">New</span>`}
+                                </div>
+                                <h4 class="font-bold text-xs sm:text-sm leading-snug text-[#1C1C1A] line-clamp-2 min-h-[32px] sm:min-h-[38px]" style="font-family: 'Playfair Display', serif;">${p.name}</h4>
+                                <span class="text-[10px] sm:text-xs text-[#7a7a6e] hover:underline cursor-pointer truncate block" onclick="event.stopPropagation(); window.location.href='/buyer/seller-profile.html?id=${p.seller_id}'" style="font-family: 'DM Sans', sans-serif;">By ${sellerName}</span>
+                            </div>
+                        </div>
+                        <div class="w-full pt-0">
+                            ${addToCartBtnHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Bind click handlers
+            container.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    await handleAddToCart(id);
+                });
+            });
+
+            container.querySelectorAll('.talk-to-seller-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    await handleTalkToSeller(id, btn);
+                });
+            });
+
+            container.querySelectorAll('.toggle-wishlist-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    const wishlisted = btn.getAttribute('data-wishlisted') === 'true';
+                    await handleToggleWishlist(id, wishlisted, btn);
+                });
+            });
+        }
+
+        async function loadIdleDiscoveryGrids() {
+            // 1. Trending Now
+            try {
+                const trendRes = await apiClient.get('/products/trending?limit=8');
+                const trendProducts = trendRes.data?.data?.products || trendRes.data?.products || [];
+                const trendContainer = document.getElementById('idle-trending-grid');
+                if (trendContainer) renderCustomProductGrid(trendContainer, trendProducts);
+            } catch (e) {
+                console.error("Failed to load idle trending products:", e);
+            }
+
+            // 2. Sponsored
+            try {
+                const sponRes = await apiClient.get('/products/sponsored?limit=8');
+                const sponProducts = sponRes.data?.data?.products || sponRes.data?.products || [];
+                const sponContainer = document.getElementById('idle-sponsored-grid');
+                if (sponContainer) renderCustomProductGrid(sponContainer, sponProducts);
+            } catch (e) {
+                console.error("Failed to load idle sponsored products:", e);
+            }
+
+            // 3. For You
+            try {
+                const forYouRes = await apiClient.get('/products/for-you?limit=8');
+                const forYouProducts = forYouRes.data?.data?.products || forYouRes.data?.products || [];
+                const forYouContainer = document.getElementById('idle-for-you-grid');
+                if (forYouContainer) renderCustomProductGrid(forYouContainer, forYouProducts);
+            } catch (e) {
+                console.error("Failed to load idle for-you products:", e);
+            }
         }
 
         async function loadTrendingSearches() {
@@ -958,54 +1158,52 @@
                             <div class="ribbon-tag ribbon-custom">CUSTOM</div>
                         </div>
                     `;
-                }
-
-                const isOwner = isProductOwned(p.seller_id);
+                }                const isOwner = isProductOwned(p.seller_id);
                 const wishlistBtnHtml = isOwner
-                    ? `<button class="absolute top-2 right-2 sm:top-3 sm:right-3 p-1 sm:p-1.5 md:p-2 bg-transparent opacity-50 cursor-not-allowed flex items-center justify-center z-10" disabled onclick="event.stopPropagation();">
-                           <span class="material-symbols-outlined text-[14px] sm:text-[16px] md:text-[20px] text-secondary" style="font-variation-settings: 'FILL' 0;">favorite</span>
+                    ? `<button class="absolute top-1.5 right-1.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[rgba(250,246,238,0.85)] opacity-50 cursor-not-allowed flex items-center justify-center z-10" disabled onclick="event.stopPropagation();">
+                           <span class="material-symbols-outlined text-[15px] sm:text-[17px] text-[#14381F]" style="font-variation-settings: 'FILL' 0;">favorite</span>
                        </button>`
-                    : `<button class="absolute top-2 right-2 sm:top-3 sm:right-3 p-1 sm:p-1.5 md:p-2 bg-transparent hover:scale-110 active:scale-95 transition-all duration-200 toggle-wishlist-btn flex items-center justify-center cursor-pointer z-10" data-id="${p.id}" data-wishlisted="${isWishlisted}" onclick="event.stopPropagation();">
-                           <span class="material-symbols-outlined text-[14px] sm:text-[16px] md:text-[20px] transition-all ${isWishlisted ? 'fill-icon text-red-500' : 'text-secondary'}" style="font-variation-settings: 'FILL' ${isWishlisted ? 1 : 0};">favorite</span>
+                    : `<button class="absolute top-1.5 right-1.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[rgba(250,246,238,0.9)] hover:scale-110 active:scale-95 transition-all duration-200 toggle-wishlist-btn flex items-center justify-center cursor-pointer shadow-xs z-10" data-id="${p.id}" data-wishlisted="${isWishlisted}" onclick="event.stopPropagation();">
+                           <span class="material-symbols-outlined text-[15px] sm:text-[17px] transition-all ${isWishlisted ? 'fill-icon text-red-500' : 'text-[#14381F]'}" style="font-variation-settings: 'FILL' ${isWishlisted ? 1 : 0};">favorite</span>
                        </button>`;
 
                 const isCustomized = p.listing_type === 'custom';
                 const addToCartBtnHtml = isOwner
-                    ? `<button class="w-full bg-[#14381F]/20 text-[#605e57] py-2 rounded-lg font-semibold opacity-50 cursor-not-allowed text-sm" disabled onclick="event.stopPropagation();">
+                    ? `<button class="w-full bg-[#14381F]/20 text-[#605e57] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold opacity-50 cursor-not-allowed text-[11px] sm:text-xs" disabled onclick="event.stopPropagation();">
                            Own Product
                        </button>`
                     : isCustomized
-                        ? `<button class="w-full bg-[#14381F] text-white py-2 rounded-lg font-semibold hover:opacity-90 active:scale-[0.98] transition-all text-sm talk-to-seller-btn" data-id="${p.id}" onclick="event.stopPropagation();">
+                        ? `<button class="w-full bg-[#14381F] text-white py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:opacity-90 active:scale-[0.98] transition-all text-[11px] sm:text-xs talk-to-seller-btn" data-id="${p.id}" onclick="event.stopPropagation();">
                                Talk to Seller
                            </button>`
-                        : `<button class="w-full bg-[#14381F] text-white py-2 rounded-lg font-semibold hover:opacity-90 active:scale-[0.98] transition-all text-sm add-to-cart-btn" data-id="${p.id}" onclick="event.stopPropagation();">
+                        : `<button class="w-full bg-[#14381F] text-white py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:opacity-90 active:scale-[0.98] transition-all text-[11px] sm:text-xs add-to-cart-btn" data-id="${p.id}" onclick="event.stopPropagation();">
                                Add to Cart
                            </button>`;
 
                 return `
-                    <div class="group bg-[#FFF8E7] border border-[#c3c8c1] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative" onclick="window.location.href='/buyer/product.html?id=${p.id}'" data-product-id="${p.id}">
+                    <div class="group bg-[#FAF6EE] border border-[rgba(20,56,31,0.15)] rounded-xl p-2.5 sm:p-3 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative" onclick="window.location.href='/buyer/product.html?id=${p.id}'" data-product-id="${p.id}">
                         <div>
-                            <div class="relative aspect-square overflow-hidden rounded-xl bg-surface-container-lowest mb-4">
+                            <div class="relative aspect-square overflow-hidden rounded-lg bg-[#FAF6EE] mb-2 sm:mb-2.5">
                                 ${ribbonHtml}
                                 <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="${img}" alt="${p.name}" loading="lazy">
                                 ${wishlistBtnHtml}
                             </div>
-                            <div class="flex flex-col mb-4">
-                                <div class="flex items-center justify-between gap-2 mb-1">
-                                    <span class="font-bold text-lg text-[#14381F]">${price}</span>
+                            <div class="flex flex-col gap-0.5 sm:gap-1 mb-2">
+                                <div class="flex items-center justify-between gap-1">
+                                    <span class="font-bold text-xs sm:text-sm md:text-[15px] text-[#14381F]" style="font-family: 'DM Sans', sans-serif;">${price}</span>
                                     ${parseInt(p.review_count || 0, 10) > 0
-                                        ? `<div class="flex items-center gap-1 text-xs text-[#605e57]">
-                                            <span class="text-[#14381F] font-bold">?</span>
-                                            <span class="font-semibold text-on-surface">${parseFloat(p.avg_rating).toFixed(1)}</span>
-                                            <span>(${parseInt(p.review_count, 10)})</span>
-                                          </div>`
-                                        : `<span class="bg-[#14381F]/10 text-[#14381F] text-[10px] font-mono font-bold px-2 py-0.5 rounded tracking-wider uppercase">New</span>`}
+                                        ? `<div class="flex items-center gap-0.5 text-[10px] sm:text-xs text-[#605e57]">
+                                            <span class="text-[#14381F]">★</span>
+                                            <span class="font-semibold text-[#1C1C1A]">${parseFloat(p.avg_rating).toFixed(1)}</span>
+                                            <span class="text-[9px] sm:text-[11px]">(${parseInt(p.review_count, 10)})</span>
+                                           </div>`
+                                        : `<span class="bg-[#14381F]/10 text-[#14381F] text-[9px] sm:text-[10px] font-mono font-bold px-1 sm:px-1.5 py-0.5 rounded tracking-wider uppercase">New</span>`}
                                 </div>
-                                <h4 class="font-headline-lg font-bold text-on-surface line-clamp-1 mb-1" style="font-family: 'Playfair Display', serif;">${p.name}</h4>
-                                <span class="text-xs text-[#605e57] hover:underline cursor-pointer" onclick="event.stopPropagation(); window.location.href='/buyer/seller-profile.html?id=${p.seller_id}'">By ${p.seller_name || 'Artisan'}</span>
+                                <h4 class="font-bold text-xs sm:text-sm leading-snug text-[#1C1C1A] line-clamp-2 min-h-[32px] sm:min-h-[38px]" style="font-family: 'Playfair Display', serif;">${p.name}</h4>
+                                <span class="text-[10px] sm:text-xs text-[#7a7a6e] hover:underline cursor-pointer truncate block" onclick="event.stopPropagation(); window.location.href='/buyer/seller-profile.html?id=${p.seller_id}'" style="font-family: 'DM Sans', sans-serif;">By ${p.seller_name || 'Artisan'}</span>
                             </div>
                         </div>
-                        <div class="w-full font-['DM_Sans']">
+                        <div class="w-full pt-0">
                             ${addToCartBtnHtml}
                         </div>
                     </div>
@@ -1374,16 +1572,8 @@
                     console.error("Failed to fetch profile avatar:", err);
                 }
                 
-                let avatarHtml = '';
-                if (avatarUrl) {
-                    avatarHtml = `<img src="${avatarUrl}" alt="Profile" class="w-10 h-10 rounded-full border border-[rgba(20,56,31,0.2)] object-cover cursor-pointer" onclick="window.location.href='profile.html'" loading="lazy" />`;
-                } else {
-                    avatarHtml = `
-                        <a href="/buyer/profile.html" class="w-10 h-10 rounded-full bg-[#14381F] flex items-center justify-center text-white font-bold border border-[rgba(20,56,31,0.2)] text-sm overflow-hidden flex-shrink-0 cursor-pointer">
-                            ${initial}
-                        </a>
-                    `;
-                }
+                const finalNavAvatar = avatarUrl || '/img/default-avatar.png';
+                const avatarHtml = `<img src="${finalNavAvatar}" alt="Profile" class="w-10 h-10 rounded-full border border-[rgba(20,56,31,0.2)] object-cover cursor-pointer" onclick="window.location.href='/buyer/profile.html'" loading="lazy" onerror="this.onerror=null; this.src='/img/default-avatar.png';" />`;
 
                 if (authContainer) {
                     authContainer.innerHTML = avatarHtml;

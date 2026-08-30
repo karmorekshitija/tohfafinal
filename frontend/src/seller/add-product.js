@@ -8,6 +8,48 @@ const DRAFT_STORAGE_KEY = 'tohfa_artisan_product_draft';
 let categoriesCatalog = [];
 let uploadedPhotos = []; // array of { file, dataUrl }
 
+const STANDARD_OCCASIONS = [
+  { slug: 'birthday', label: '🎂 Birthday' },
+  { slug: 'anniversary', label: '💍 Anniversary' },
+  { slug: 'wedding', label: '👰 Wedding' },
+  { slug: 'diwali', label: '🪔 Diwali' },
+  { slug: 'rakhi', label: '🧵 Rakhi' },
+  { slug: 'valentines-day', label: '❤️ Valentine\'s Day' },
+  { slug: 'housewarming', label: '🏡 Housewarming' },
+  { slug: 'baby-shower', label: '🍼 Baby Shower' },
+  { slug: 'mothers-day', label: '🌸 Mother\'s Day' },
+  { slug: 'fathers-day', label: '👔 Father\'s Day' },
+  { slug: 'festivals', label: '✨ Festivals' },
+  { slug: 'christmas', label: '🎄 Christmas' },
+  { slug: 'corporate', label: '💼 Corporate Gifting' }
+];
+
+let selectedOccasions = new Set();
+
+function initOccasionChips() {
+  const container = document.getElementById('occasions-chips-container');
+  if (!container) return;
+  container.innerHTML = STANDARD_OCCASIONS.map(occ => `
+    <button type="button" data-occasion="${occ.slug}" class="occasion-chip px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer ${selectedOccasions.has(occ.slug) ? 'bg-[#14381F] text-[#FFF8E7] border-[#14381F]' : 'bg-[#FFF8E7] text-[#14381F] border-[#285C3A]/20 hover:border-[#14381F]'}">
+      ${occ.label}
+    </button>
+  `).join('');
+
+  container.querySelectorAll('.occasion-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const occSlug = btn.getAttribute('data-occasion');
+      if (selectedOccasions.has(occSlug)) {
+        selectedOccasions.delete(occSlug);
+        btn.className = 'occasion-chip px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer bg-[#FFF8E7] text-[#14381F] border-[#285C3A]/20 hover:border-[#14381F]';
+      } else {
+        selectedOccasions.add(occSlug);
+        btn.className = 'occasion-chip px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer bg-[#14381F] text-[#FFF8E7] border-[#14381F]';
+      }
+      triggerAutoSave();
+    });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const token = sessionStorage.getItem('tohfa_access_token');
   if (!token) {
@@ -16,6 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   await initCategories();
+  initOccasionChips();
   setupUIInteractions();
   loadDraft();
 });
@@ -29,16 +72,22 @@ async function initCategories() {
     const catSelect = document.getElementById('prod-category');
     if (catSelect) {
       catSelect.innerHTML = `<option value="">Select a Craft Category</option>` +
-        categoriesCatalog.map(c => `<option value="${c.id || c.name}">${c.display_name || c.name}</option>`).join('');
+        categoriesCatalog.map(c => `<option value="${c.id}">${c.display_name || c.name}</option>`).join('');
     }
 
     catSelect?.addEventListener('change', () => {
       const selectedId = catSelect.value;
-      const cat = categoriesCatalog.find(c => (c.id === selectedId || c.name === selectedId));
+      const cat = categoriesCatalog.find(c => String(c.id) === String(selectedId) || c.name === selectedId);
       const subSelect = document.getElementById('prod-subcategory');
-      if (subSelect && cat && cat.subcategories) {
-        subSelect.innerHTML = `<option value="">Select Subcategory</option>` +
-          cat.subcategories.map(s => `<option value="${s.id || s.name}">${s.name}</option>`).join('');
+      if (subSelect) {
+        if (cat && Array.isArray(cat.subcategories) && cat.subcategories.length > 0) {
+          subSelect.innerHTML = `<option value="">Select Subcategory</option>` +
+            cat.subcategories.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+          subSelect.disabled = false;
+        } else {
+          subSelect.innerHTML = `<option value="">No subcategories available</option>`;
+          subSelect.disabled = true;
+        }
       }
       triggerAutoSave();
     });
@@ -59,41 +108,27 @@ function setupUIInteractions() {
       const isCustom = radio.value === 'custom';
       customSection?.classList.toggle('hidden', !isCustom);
       if (isCustom) {
-        customLabel?.classList.add('bg-[#FAF6EE]', 'border-[#14381F]');
-        customLabel?.classList.remove('bg-white');
-        premadeLabel?.classList.remove('bg-[#FAF6EE]', 'border-[#14381F]');
-        premadeLabel?.classList.add('bg-white');
+        customLabel?.classList.add('border-[#14381F]', 'shadow-xs');
+        premadeLabel?.classList.remove('border-[#14381F]', 'shadow-xs');
       } else {
-        premadeLabel?.classList.add('bg-[#FAF6EE]', 'border-[#14381F]');
-        premadeLabel?.classList.remove('bg-white');
-        customLabel?.classList.remove('bg-[#FAF6EE]', 'border-[#14381F]');
-        customLabel?.classList.add('bg-white');
+        premadeLabel?.classList.add('border-[#14381F]', 'shadow-xs');
+        customLabel?.classList.remove('border-[#14381F]', 'shadow-xs');
       }
       triggerAutoSave();
     });
   });
 
-  // Customisation Mode Strategy Toggle
-  const customModeRadios = document.querySelectorAll('input[name="custom_mode"]');
-  const fixedPanel = document.getElementById('fixed-options-panel');
-  const openPanel = document.getElementById('open-config-panel');
-
-  customModeRadios.forEach(r => {
-    r.addEventListener('change', () => {
-      const isFixed = r.value === 'fixed';
-      fixedPanel?.classList.toggle('hidden', !isFixed);
-      openPanel?.classList.toggle('hidden', isFixed);
-      triggerAutoSave();
-    });
-  });
-
-  // Fixed Option Checkbox Toggles
-  document.getElementById('fixed-opt-colors')?.addEventListener('change', (e) => {
-    document.getElementById('fixed-colors-settings')?.classList.toggle('hidden', !e.target.checked);
+  // Modular Option Checkbox Toggles
+  document.getElementById('custom-opt-choices')?.addEventListener('change', (e) => {
+    document.getElementById('custom-choices-settings')?.classList.toggle('hidden', !e.target.checked);
     triggerAutoSave();
   });
-  document.getElementById('fixed-opt-images')?.addEventListener('change', (e) => {
-    document.getElementById('fixed-image-settings')?.classList.toggle('hidden', !e.target.checked);
+  document.getElementById('custom-opt-image')?.addEventListener('change', (e) => {
+    document.getElementById('custom-image-settings')?.classList.toggle('hidden', !e.target.checked);
+    triggerAutoSave();
+  });
+  document.getElementById('custom-opt-note')?.addEventListener('change', (e) => {
+    document.getElementById('custom-note-settings')?.classList.toggle('hidden', !e.target.checked);
     triggerAutoSave();
   });
 
@@ -122,8 +157,30 @@ function setupUIInteractions() {
   }
 
   // Auto-save listeners on all form fields
-  ['prod-title', 'prod-price', 'prod-stock', 'prod-threshold', 'prod-description', 'dim-l', 'dim-w', 'dim-h', 'dim-weight', 'fixed-text-label', 'fixed-text-limit', 'fixed-color-list', 'fixed-custom-fee', 'open-allowed-types', 'open-turnaround', 'open-budget-min', 'open-budget-max', 'open-instructions'].forEach(id => {
+  ['prod-title', 'prod-price', 'prod-stock', 'prod-threshold', 'prod-description', 'dim-l', 'dim-w', 'dim-h', 'dim-weight', 'custom-text-label', 'custom-text-limit', 'custom-choices-label', 'custom-choices-list', 'custom-image-instructions', 'custom-note-placeholder', 'custom-crafting-time', 'custom-fee'].forEach(id => {
     document.getElementById(id)?.addEventListener('input', triggerAutoSave);
+  });
+  ['custom-opt-text', 'custom-text-required', 'custom-opt-choices', 'custom-choices-required', 'custom-opt-image', 'custom-image-required', 'custom-opt-note', 'custom-note-required'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', triggerAutoSave);
+  });
+
+  // Variants toggle & builder
+  const variantsToggle = document.getElementById('toggle-has-variants');
+  const variantsPanel = document.getElementById('variants-builder-panel');
+  const addVariantBtn = document.getElementById('add-variant-row-btn');
+  const variantsContainer = document.getElementById('variants-list-container');
+
+  variantsToggle?.addEventListener('change', (e) => {
+    variantsPanel?.classList.toggle('hidden', !e.target.checked);
+    if (e.target.checked && variantsContainer && variantsContainer.children.length === 0) {
+      addVariantRow();
+    }
+    triggerAutoSave();
+  });
+
+  addVariantBtn?.addEventListener('click', () => {
+    addVariantRow();
+    triggerAutoSave();
   });
 
   // Save draft button
@@ -167,7 +224,7 @@ function renderPhotoThumbnails() {
   if (!container) return;
 
   container.innerHTML = uploadedPhotos.map((p, idx) => `
-    <div class="relative group rounded-xl overflow-hidden aspect-square border border-[#285C3A]/20 bg-[#FAF6EE] shadow-xs">
+    <div class="relative group rounded-xl overflow-hidden aspect-square border border-[#285C3A]/20 bg-[#FFF8E7] shadow-xs">
       <img src="${p.dataUrl}" alt="Photo ${idx + 1}" class="w-full h-full object-cover"/>
       ${idx === 0 ? `
         <span class="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-[#14381F] text-[#FFF8E7] text-[9px] font-bold uppercase font-mono">
@@ -211,21 +268,26 @@ function saveDraft() {
       dim_w: document.getElementById('dim-w')?.value || '',
       dim_h: document.getElementById('dim-h')?.value || '',
       dim_weight: document.getElementById('dim-weight')?.value || '',
-      custom_mode: document.querySelector('input[name="custom_mode"]:checked')?.value || 'fixed',
-      fixed_text: document.getElementById('fixed-opt-text')?.checked,
-      fixed_text_label: document.getElementById('fixed-text-label')?.value || '',
-      fixed_text_limit: document.getElementById('fixed-text-limit')?.value || '25',
-      fixed_colors: document.getElementById('fixed-opt-colors')?.checked,
-      fixed_color_list: document.getElementById('fixed-color-list')?.value || '',
-      fixed_images: document.getElementById('fixed-opt-images')?.checked,
-      fixed_image_instructions: document.getElementById('fixed-image-instructions')?.value || '',
-      fixed_custom_fee: document.getElementById('fixed-custom-fee')?.value || '0',
-      open_allowed_types: document.getElementById('open-allowed-types')?.value || '',
-      open_turnaround: document.getElementById('open-turnaround')?.value || '',
-      open_budget_min: document.getElementById('open-budget-min')?.value || '',
-      open_budget_max: document.getElementById('open-budget-max')?.value || '',
-      open_instructions: document.getElementById('open-instructions')?.value || '',
-      photos: uploadedPhotos.map(p => p.dataUrl).slice(0, 4), // cache up to 4 images
+      custom_opt_text: Boolean(document.getElementById('custom-opt-text')?.checked),
+      custom_text_label: document.getElementById('custom-text-label')?.value || '',
+      custom_text_limit: document.getElementById('custom-text-limit')?.value || '25',
+      custom_text_required: Boolean(document.getElementById('custom-text-required')?.checked),
+      custom_opt_choices: Boolean(document.getElementById('custom-opt-choices')?.checked),
+      custom_choices_label: document.getElementById('custom-choices-label')?.value || '',
+      custom_choices_list: document.getElementById('custom-choices-list')?.value || '',
+      custom_choices_required: Boolean(document.getElementById('custom-choices-required')?.checked),
+      custom_opt_image: Boolean(document.getElementById('custom-opt-image')?.checked),
+      custom_image_instructions: document.getElementById('custom-image-instructions')?.value || '',
+      custom_image_required: Boolean(document.getElementById('custom-image-required')?.checked),
+      custom_opt_note: Boolean(document.getElementById('custom-opt-note')?.checked),
+      custom_note_placeholder: document.getElementById('custom-note-placeholder')?.value || '',
+      custom_note_required: Boolean(document.getElementById('custom-note-required')?.checked),
+      custom_crafting_time: document.getElementById('custom-crafting-time')?.value || '5-7 days',
+      custom_fee: document.getElementById('custom-fee')?.value || '0',
+      has_variants: Boolean(document.getElementById('toggle-has-variants')?.checked),
+      variants: getVariantsData(),
+      occasions: Array.from(selectedOccasions),
+      photos: uploadedPhotos.map(p => p.dataUrl).slice(0, 8), // cache up to 8 images
       savedAt: new Date().toISOString()
     };
     localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
@@ -248,6 +310,41 @@ function loadDraft() {
     if (draft.dim_h) document.getElementById('dim-h').value = draft.dim_h;
     if (draft.dim_weight) document.getElementById('dim-weight').value = draft.dim_weight;
 
+    if (draft.custom_text_label) document.getElementById('custom-text-label').value = draft.custom_text_label;
+    if (draft.custom_text_limit) document.getElementById('custom-text-limit').value = draft.custom_text_limit;
+    if (draft.custom_opt_text !== undefined) document.getElementById('custom-opt-text').checked = draft.custom_opt_text;
+    if (draft.custom_text_required !== undefined) document.getElementById('custom-text-required').checked = draft.custom_text_required;
+
+    if (draft.custom_opt_choices) {
+      document.getElementById('custom-opt-choices').checked = true;
+      document.getElementById('custom-choices-settings')?.classList.remove('hidden');
+    }
+    if (draft.custom_choices_label) document.getElementById('custom-choices-label').value = draft.custom_choices_label;
+    if (draft.custom_choices_list) document.getElementById('custom-choices-list').value = draft.custom_choices_list;
+    if (draft.custom_choices_required !== undefined) document.getElementById('custom-choices-required').checked = draft.custom_choices_required;
+
+    if (draft.custom_opt_image) {
+      document.getElementById('custom-opt-image').checked = true;
+      document.getElementById('custom-image-settings')?.classList.remove('hidden');
+    }
+    if (draft.custom_image_instructions) document.getElementById('custom-image-instructions').value = draft.custom_image_instructions;
+    if (draft.custom_image_required !== undefined) document.getElementById('custom-image-required').checked = draft.custom_image_required;
+
+    if (draft.custom_opt_note) {
+      document.getElementById('custom-opt-note').checked = true;
+      document.getElementById('custom-note-settings')?.classList.remove('hidden');
+    }
+    if (draft.custom_note_placeholder) document.getElementById('custom-note-placeholder').value = draft.custom_note_placeholder;
+    if (draft.custom_note_required !== undefined) document.getElementById('custom-note-required').checked = draft.custom_note_required;
+
+    if (draft.custom_crafting_time) document.getElementById('custom-crafting-time').value = draft.custom_crafting_time;
+    if (draft.custom_fee) document.getElementById('custom-fee').value = draft.custom_fee;
+
+    if (Array.isArray(draft.occasions)) {
+      selectedOccasions = new Set(draft.occasions);
+      initOccasionChips();
+    }
+
     if (draft.product_type === 'custom') {
       const customRadio = document.querySelector('input[name="product_type"][value="custom"]');
       if (customRadio) {
@@ -257,7 +354,31 @@ function loadDraft() {
     }
 
     if (draft.category) {
-      document.getElementById('prod-category').value = draft.category;
+      const catSelect = document.getElementById('prod-category');
+      if (catSelect) {
+        catSelect.value = draft.category;
+        catSelect.dispatchEvent(new Event('change'));
+        if (draft.subcategory) {
+          setTimeout(() => {
+            const subSelect = document.getElementById('prod-subcategory');
+            if (subSelect) subSelect.value = draft.subcategory;
+          }, 300);
+        }
+      }
+    }
+
+    if (draft.has_variants && Array.isArray(draft.variants)) {
+      const toggle = document.getElementById('toggle-has-variants');
+      const panel = document.getElementById('variants-builder-panel');
+      if (toggle) {
+        toggle.checked = true;
+        panel?.classList.remove('hidden');
+        const container = document.getElementById('variants-list-container');
+        if (container) {
+          container.innerHTML = '';
+          draft.variants.forEach(v => addVariantRow(v));
+        }
+      }
     }
 
     if (Array.isArray(draft.photos) && draft.photos.length > 0) {
@@ -287,16 +408,167 @@ function renderPreviewModal() {
   const customDesc = document.getElementById('preview-modal-custom-desc');
   if (isCustom) {
     customBox?.classList.remove('hidden');
-    const mode = document.querySelector('input[name="custom_mode"]:checked')?.value;
-    if (mode === 'fixed') {
-      const fee = document.getElementById('fixed-custom-fee')?.value || '0';
-      customDesc.textContent = `Personalization options configured (+₹${fee} custom fee).`;
-    } else {
-      customDesc.textContent = `Open custom quote request enabled. Estimated turnaround: ${document.getElementById('open-turnaround')?.value || '7 days'}.`;
-    }
+    const fee = parseFloat(document.getElementById('custom-fee')?.value || '0') || 0;
+    const feeText = fee > 0 ? ` (+₹${fee} customisation fee)` : '';
+    customDesc.textContent = `Personalization enabled${feeText}. Buyers can customize text, options, and reference photos before adding to cart.`;
   } else {
     customBox?.classList.add('hidden');
   }
+}
+
+function getModularCustomizationSchema() {
+  const isCustom = document.querySelector('input[name="product_type"]:checked')?.value === 'custom';
+  if (!isCustom) return null;
+
+  const fields = [];
+
+  // 1. Text Inscription / Engraving
+  if (document.getElementById('custom-opt-text')?.checked) {
+    fields.push({
+      id: 'field_text',
+      type: 'text',
+      label: document.getElementById('custom-text-label')?.value.trim() || 'Name / Monogram to Engrave',
+      placeholder: 'Enter text here...',
+      max_length: parseInt(document.getElementById('custom-text-limit')?.value || '25', 10),
+      is_required: Boolean(document.getElementById('custom-text-required')?.checked)
+    });
+  }
+
+  // 2. Choice Options
+  if (document.getElementById('custom-opt-choices')?.checked) {
+    const rawChoices = document.getElementById('custom-choices-list')?.value || '';
+    const parsedChoices = rawChoices.split(',').map(s => s.trim()).filter(Boolean).map(c => {
+      const match = c.match(/^(.*?)(?:\s*\(\+?₹?\s*(\d+(?:\.\d+)?)\))?$/);
+      if (match && match[2]) {
+        return { name: match[1].trim(), price_delta: parseFloat(match[2]) };
+      }
+      return { name: c, price_delta: 0 };
+    });
+
+    fields.push({
+      id: 'field_choices',
+      type: 'select',
+      label: document.getElementById('custom-choices-label')?.value.trim() || 'Finish / Font Style',
+      choices: parsedChoices,
+      is_required: Boolean(document.getElementById('custom-choices-required')?.checked)
+    });
+  }
+
+  // 3. Reference Image Upload
+  if (document.getElementById('custom-opt-image')?.checked) {
+    fields.push({
+      id: 'field_image',
+      type: 'image',
+      label: 'Reference Photo / Artwork',
+      instructions: document.getElementById('custom-image-instructions')?.value.trim() || 'Upload reference photo or sketch.',
+      is_required: Boolean(document.getElementById('custom-image-required')?.checked)
+    });
+  }
+
+  // 4. Special Notes
+  if (document.getElementById('custom-opt-note')?.checked) {
+    fields.push({
+      id: 'field_note',
+      type: 'textarea',
+      label: 'Special Notes for Artisan',
+      placeholder: document.getElementById('custom-note-placeholder')?.value.trim() || 'Any special instructions...',
+      is_required: Boolean(document.getElementById('custom-note-required')?.checked)
+    });
+  }
+
+  const craftingTime = document.getElementById('custom-crafting-time')?.value.trim() || '5-7 days';
+  const fee = parseFloat(document.getElementById('custom-fee')?.value || '0') || 0;
+
+  return {
+    is_enabled: true,
+    crafting_time: craftingTime,
+    customization_fee: fee,
+    fields: fields
+  };
+}
+
+function addVariantRow(data = {}) {
+  const container = document.getElementById('variants-list-container');
+  if (!container) return;
+
+  const rowId = 'variant-row-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+  const row = document.createElement('div');
+  row.id = rowId;
+  row.className = 'p-3 bg-white rounded-xl border border-[#285C3A]/20 space-y-2 relative';
+
+  const defaultImgs = Array.isArray(data.images) ? data.images.join(', ') : (data.image_url || '');
+
+  row.innerHTML = `
+    <div class="flex items-center justify-between">
+      <span class="text-xs font-bold text-[#14381F] uppercase font-mono">Variant Option</span>
+      <button type="button" class="text-red-500 hover:text-red-700 text-xs font-bold remove-variant-btn cursor-pointer">
+        <span class="material-symbols-outlined text-[16px]">delete</span>
+      </button>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+      <div class="sm:col-span-2">
+        <label class="block text-[10px] font-bold text-[#14381F] uppercase font-mono mb-0.5">Variant *</label>
+        <input type="text" class="field-input text-xs variant-name-input" placeholder="e.g. Size: Large / Color: Twilight Lavender / Material: Oak" value="${data.variant_name || data.name || data.color_name || ''}" required />
+      </div>
+      <div>
+        <label class="block text-[10px] font-bold text-[#14381F] uppercase font-mono mb-0.5">Price Adjustment (+₹)</label>
+        <input type="number" class="field-input text-xs font-mono variant-price-input" placeholder="0" value="${data.additional_price ?? 0}" />
+      </div>
+      <div>
+        <label class="block text-[10px] font-bold text-[#14381F] uppercase font-mono mb-0.5">Stock Qty</label>
+        <input type="number" class="field-input text-xs font-mono variant-stock-input" placeholder="50" value="${data.stock_qty ?? 50}" />
+      </div>
+    </div>
+    <div>
+      <label class="block text-[10px] font-bold text-[#14381F] uppercase font-mono mb-0.5">Variant Photos (Comma-separated Image URLs)</label>
+      <input type="text" class="field-input text-xs font-mono variant-images-input" placeholder="/img/products/.../1.jpeg, /img/products/.../2.jpeg" value="${defaultImgs}" />
+      <span class="text-[10px] text-[#587A5B] block mt-0.5">Enter 1 or more image URLs for this variant option.</span>
+    </div>
+  `;
+
+  // Remove button
+  row.querySelector('.remove-variant-btn')?.addEventListener('click', () => {
+    row.remove();
+    triggerAutoSave();
+  });
+
+  row.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', triggerAutoSave);
+  });
+
+  container.appendChild(row);
+}
+
+function getVariantsData() {
+  const toggle = document.getElementById('toggle-has-variants');
+  if (!toggle || !toggle.checked) return [];
+
+  const container = document.getElementById('variants-list-container');
+  if (!container) return [];
+
+  const variants = [];
+  container.querySelectorAll('[id^="variant-row-"]').forEach(row => {
+    const name = row.querySelector('.variant-name-input')?.value.trim();
+    if (!name) return;
+
+    const additionalPrice = parseFloat(row.querySelector('.variant-price-input')?.value || '0');
+    const stockQty = parseInt(row.querySelector('.variant-stock-input')?.value || '50', 10);
+    const rawImgs = row.querySelector('.variant-images-input')?.value.trim() || '';
+    const images = rawImgs ? rawImgs.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+    variants.push({
+      variant_name: name,
+      color_name: null,
+      color_hex: null,
+      size: null,
+      additional_price: isNaN(additionalPrice) ? 0 : additionalPrice,
+      stock_qty: isNaN(stockQty) ? 50 : stockQty,
+      images: images,
+      image_url: images[0] || null
+    });
+  });
+
+  return variants;
 }
 
 async function handleSubmit(e) {
@@ -314,45 +586,30 @@ async function handleSubmit(e) {
   }
 
   const isCustom = document.querySelector('input[name="product_type"]:checked')?.value === 'custom';
-  let customMode = 'none';
-  if (isCustom) {
-    customMode = document.querySelector('input[name="custom_mode"]:checked')?.value || 'fixed';
-  }
+  const customMode = isCustom ? 'fixed' : 'none';
+  const customizationSchema = getModularCustomizationSchema();
 
-  let customizationSchema = null;
-  if (customMode === 'fixed') {
-    customizationSchema = {
-      mode: 'fixed',
-      allow_text: Boolean(document.getElementById('fixed-opt-text')?.checked),
-      text_label: document.getElementById('fixed-text-label')?.value || 'Custom Inscription',
-      char_limit: parseInt(document.getElementById('fixed-text-limit')?.value || '25', 10),
-      allow_colors: Boolean(document.getElementById('fixed-opt-colors')?.checked),
-      color_options: document.getElementById('fixed-color-list')?.value ? document.getElementById('fixed-color-list').value.split(',').map(s => s.trim()).filter(Boolean) : [],
-      allow_images: Boolean(document.getElementById('fixed-opt-images')?.checked),
-      image_instructions: document.getElementById('fixed-image-instructions')?.value || '',
-      customization_fee: parseFloat(document.getElementById('fixed-custom-fee')?.value || '0')
-    };
-  } else if (customMode === 'open') {
-    customizationSchema = {
-      mode: 'open',
-      allowed_types: document.getElementById('open-allowed-types')?.value ? document.getElementById('open-allowed-types').value.split(',').map(s => s.trim()).filter(Boolean) : ['Bespoke Customization'],
-      instructions: document.getElementById('open-instructions')?.value.trim() || '',
-      turnaround_days: document.getElementById('open-turnaround')?.value.trim() || '7-10 business days',
-      budget_min: parseFloat(document.getElementById('open-budget-min')?.value) || null,
-      budget_max: parseFloat(document.getElementById('open-budget-max')?.value) || null
-    };
-  }
+  const variantsList = getVariantsData();
+  const subcategoryId = document.getElementById('prod-subcategory')?.value || null;
+
+  const craftingTimeText = document.getElementById('custom-crafting-time')?.value || '5-7 days';
+  const prepMatch = craftingTimeText.match(/(\d+)/);
+  const prepDays = prepMatch ? parseInt(prepMatch[1], 10) : 5;
 
   const payload = {
     name: title,
     description: document.getElementById('prod-description')?.value.trim() || '',
-    category_id: categoryId.startsWith('cat-') ? null : categoryId, // send valid uuid or null
+    category_id: categoryId.startsWith('cat-') ? null : categoryId,
+    subcategory_id: subcategoryId ? parseInt(subcategoryId, 10) : null,
+    occasions: Array.from(selectedOccasions),
     base_price: price,
     stock_quantity: parseInt(document.getElementById('prod-stock')?.value || '10', 10),
     low_stock_threshold: parseInt(document.getElementById('prod-threshold')?.value || '3', 10),
+    preparation_days: isCustom ? prepDays : 2,
     is_customizable: isCustom,
     customization_mode: customMode,
-    customization_schema: customizationSchema
+    customization_schema: customizationSchema,
+    variants: variantsList
   };
 
   publishBtn.disabled = true;
@@ -373,27 +630,6 @@ async function handleSubmit(e) {
     if (json.success && json.data) {
       const createdProduct = json.data;
       const productId = createdProduct.id;
-
-      // If Open Customization, save config
-      if (customMode === 'open' && productId) {
-        const allowed = document.getElementById('open-allowed-types')?.value.split(',').map(s => s.trim()).filter(Boolean);
-        await fetch('/api/customization/config', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            product_id: productId,
-            allowed_types: allowed.length > 0 ? allowed : ['Bespoke Customization'],
-            instructions: document.getElementById('open-instructions')?.value.trim() || '',
-            turnaround_days: document.getElementById('open-turnaround')?.value.trim() || '7-10 business days',
-            budget_min: parseFloat(document.getElementById('open-budget-min')?.value) || null,
-            budget_max: parseFloat(document.getElementById('open-budget-max')?.value) || null,
-            quote_window_hours: 48
-          })
-        });
-      }
 
       // Upload photos if any selected
       if (uploadedPhotos.length > 0) {

@@ -190,8 +190,6 @@
   /* Skeleton */
   @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
   .skeleton { background: linear-gradient(90deg, #FFF8E7 25%, #f3e6d6 50%, #FFF8E7 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; border-radius: 10px; }
-
-  @media(max-width: 768px) { .two-col { grid-template-columns: 1fr !important; } }
 </style>
 </head>
 <body class="bg-[#FFF8E7] text-on-surface font-body-md min-h-screen" id="body-content">
@@ -213,7 +211,7 @@
     <h3 class="font-headline text-2xl mb-6" id="address-modal-title">Add New Address</h3>
     <form id="address-form" class="space-y-4">
       <input type="hidden" id="address-edit-id"/>
-      <div class="grid grid-cols-2 gap-4 two-col">
+      <div class="grid grid-cols-2 gap-3 sm:gap-4 form-row-2col">
         <div>
           <label class="field-label" for="addr-label">Label</label>
           <input class="field-input" id="addr-label" placeholder="e.g. Home, Studio" type="text"/>
@@ -230,7 +228,7 @@
         <input class="field-input" id="addr-line" placeholder="Street, building, area" type="text"/>
         <p class="field-error" id="err-addr-line"></p>
       </div>
-      <div class="grid grid-cols-3 gap-4">
+      <div class="grid grid-cols-3 gap-2 sm:gap-4 form-row-3col">
         <div>
           <label class="field-label" for="addr-city">City</label>
           <input class="field-input" id="addr-city" placeholder="City" type="text"/>
@@ -324,7 +322,7 @@
       <div class="flex-shrink-0">
         <div class="relative group cursor-pointer w-24 h-24" onclick="document.getElementById('input-avatar').click()" title="Change profile photo">
           <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-surface-container-high shadow-sm bg-surface-container">
-            <img id="profile-avatar" alt="Profile photo" class="w-full h-full object-cover" src="/uploads/avatars/default-avatar.png" loading="lazy" />
+            <img id="profile-avatar" alt="Profile photo" class="w-full h-full object-cover" src="/img/default-avatar.png" onerror="this.onerror=null; this.src='/img/default-avatar.png';" loading="lazy" />
           </div>
           <div class="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings:'FILL' 1">photo_camera</span>
@@ -530,7 +528,7 @@
     <div>
       <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#14381F;margin-bottom:32px;">For Sellers</h3>
       <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
-        <li><a onclick="handleFooterSellerLink(event)" href="/buyer/become-seller.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Sell on Tohfa</a></li>
+        <li><a onclick="handleFooterSellerLink(event)" href="/auth/signup-seller.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Sell on Tohfa</a></li>
         <li><a href="/seller/dashboard.html" onclick="handleFooterSellerLink(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Seller Studio</a></li>
       </ul>
     </div>
@@ -899,7 +897,7 @@ async function loadAddresses() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error();
-    addresses = data.data || data || [];
+    addresses = Array.isArray(data.data) ? data.data : (data.data?.addresses || data.addresses || (Array.isArray(data) ? data : []));
     renderAddresses();
   } catch (_) {
     listEl.innerHTML = '<p class="text-sm text-on-surface-variant text-center py-8">Could not load addresses. <button onclick="loadAddresses()" class="text-primary underline">Retry</button></p>';
@@ -1102,7 +1100,7 @@ async function loadProfile() {
         story_headline: 'Artisanal Craftsmanship Since 2024',
         story_description: 'Every gift tells a unique story.',
         working_on: 'Bespoke holiday gifts collection',
-        avatar_url: '/img/placeholder-avatar.png'
+        avatar_url: '/img/default-avatar.png'
       };
     }
 
@@ -1155,12 +1153,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!token) { window.location.href = '/auth/login.html'; return; }
   try {
     const pr = await fetch(`${API}/api/profile/me`, { headers: { 'Authorization': `Bearer ${token}` } });
-    if (!pr.ok) throw new Error();
+    if (pr.status === 401) {
+      sessionStorage.clear(); window.location.href = '/auth/login.html'; return;
+    }
+    if (!pr.ok) throw new Error('Failed to fetch profile');
     const pd = await pr.json();
     const u  = pd.data || pd;
-    if (u.role !== 'seller') { window.location.href = '/buyer/profile.html'; return; }
-  } catch (_) {
-    sessionStorage.clear(); window.location.href = '/auth/login.html'; return;
+    if (u.role !== 'seller' && u.role !== 'admin') { window.location.href = '/buyer/profile.html'; return; }
+  } catch (err) {
+    console.warn('Profile auth check notice:', err);
   }
   wireCounter('f-bio', 'bio-counter', 300);
   wireCounter('f-story-desc', 'story-counter', 1000);
@@ -1203,7 +1204,7 @@ async function handleFooterSellerLink(e) {
     console.error("Error checking seller status:", err);
   }
   
-  window.location.href = isMobile ? '/mobile-buyer/become-seller.html' : '/buyer/become-seller.html';
+  window.location.href = '/auth/signup-seller.html';
 }
 
 // Check if we need to auto-redirect back to dashboard/signup after login redirect

@@ -8,10 +8,6 @@
  */
 'use strict';
 
-if (!process.env.JWT_ACCESS_SECRET) {
-  console.warn('[SECURITY WARNING] JWT_ACCESS_SECRET env var not set. Using hardcoded fallback — NEVER do this in production.');
-}
-
 const jwt = require('jsonwebtoken');
 const { query } = require('../config/db');
 
@@ -25,8 +21,11 @@ async function authMiddleware(req, res, next) {
   const token = authHeader.split(' ')[1];
 
   try {
-    // FIX BUG-02: Use fallback secret for verify
-    const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET || 'tohfa_jwt_access_secret_key_2026');
+    const secret = process.env.JWT_ACCESS_SECRET;
+    if (!secret) {
+      return res.status(500).json({ success: false, message: 'JWT_ACCESS_SECRET configuration is missing on server.' });
+    }
+    const payload = jwt.verify(token, secret);
 
     // Support demo mode / demo user IDs if in development
     if (

@@ -67,7 +67,7 @@
     </section>
 
     <!-- KPI Cards -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-md mb-xl">
+    <section class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2.5 sm:gap-md mb-xl">
         <!-- Card 1: Total Revenue -->
         <div class="bg-surface-container-lowest p-sm border border-outline-variant/30 rounded-lg shadow-sm relative font-body" style="background-color: #FDF6EC; border-top: 4px solid #B5813A;">
             <p class="font-display-hero italic text-[12px] mb-xs" style="color: rgba(181, 129, 58, 0.7);">Total Revenue</p>
@@ -287,7 +287,7 @@
     <div>
       <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#14381F;margin-bottom:32px;">For Sellers</h3>
       <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
-        <li><a onclick="handleFooterSellerLink(event)" href="/buyer/become-seller.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Sell on Tohfa</a></li>
+        <li><a onclick="handleFooterSellerLink(event)" href="/auth/signup-seller.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Sell on Tohfa</a></li>
         <li><a href="/seller/dashboard.html" onclick="handleFooterSellerLink(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Seller Studio</a></li>
       </ul>
     </div>
@@ -434,20 +434,41 @@
     let conversionChartInstance = null;
     let customerChartInstance = null;
 
-    function formatCurrency(paise) {
-        return '₹' + (paise / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function formatCurrency(amount, isPaise = false) {
+        if (amount == null || isNaN(Number(amount))) return '₹0';
+        const rupees = isPaise ? Math.round(Number(amount) / 100) : Math.round(Number(amount));
+        return '₹' + rupees.toLocaleString('en-IN', { maximumFractionDigits: 0 });
     }
 
     function updateUI(data) {
         if (!data || !data.kpis) return;
         
-        if (!data.charts && data.timeline) {
-            data.charts = {
-                labels: (data.timeline || []).map(t => new Date(t.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })),
-                revenue: (data.timeline || []).map(t => parseInt(t.revenue || 0)),
-                orders: (data.timeline || []).map(t => parseInt(t.orders || 0)),
-                conversion: (data.timeline || []).map(() => 3.5)
-            };
+        if (!data.charts) {
+            if (data.revenue_chart) {
+                data.charts = {
+                    labels: data.revenue_chart.labels || [],
+                    revenue: data.revenue_chart.data || [],
+                    orders: data.orders_chart?.data || [],
+                    conversion: (data.revenue_chart.labels || []).map(() => Number(data.kpis?.conversion_rate || 3.5))
+                };
+            } else if (data.timeline) {
+                data.charts = {
+                    labels: (data.timeline || []).map(t => new Date(t.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })),
+                    revenue: (data.timeline || []).map(t => parseInt(t.revenue || 0)),
+                    orders: (data.timeline || []).map(t => parseInt(t.orders || 0)),
+                    conversion: (data.timeline || []).map(() => 3.5)
+                };
+            }
         }
 
         const setElText = (id, txt) => {
@@ -459,8 +480,8 @@
         setElText('kpi-revenue', formatCurrency(data.kpis.total_revenue || 0));
         setElText('kpi-orders', data.kpis.total_orders || 0);
         setElText('kpi-aov', formatCurrency(data.kpis.avg_order_value || 0));
-        setElText('kpi-visitors', (data.kpis.store_visitors || 0).toLocaleString('en-IN'));
-        setElText('kpi-conversion', (data.kpis.conversion_rate || 0).toFixed(1) + '%');
+        setElText('kpi-visitors', (data.kpis.store_visitors || (data.kpis.total_orders ? data.kpis.total_orders * 15 : 0)).toLocaleString('en-IN'));
+        setElText('kpi-conversion', (data.kpis.conversion_rate != null ? Number(data.kpis.conversion_rate).toFixed(1) : '0.0') + '%');
         setElText('kpi-cancellations', data.kpis.returns_cancellations || 0);
 
         // 2. Custom vs Pre-made Comparison
@@ -476,7 +497,7 @@
         const tableBody = document.getElementById('product-performance-body');
         if (tableBody) {
             tableBody.innerHTML = '';
-            const performanceList = data.product_performance || [];
+            const performanceList = data.product_performance || data.top_products || [];
             if (performanceList.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
@@ -485,14 +506,19 @@
                 `;
             } else {
                 performanceList.forEach(item => {
+                    const unitsSold = item.units_sold ?? item.sales_count ?? 0;
+                    const itemRev = item.revenue ?? item.total_revenue ?? 0;
+                    const itemStock = item.stock ?? item.stock_quantity ?? '—';
+                    const itemRating = item.rating ?? item.avg_rating ?? null;
+
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-surface-container-low transition-colors duration-150';
                     tr.innerHTML = `
                         <td class="py-sm px-md font-medium text-primary">${escapeHtml(item.name || 'Product')}</td>
-                        <td class="py-sm px-md text-right font-data-price">${item.units_sold ?? 0}</td>
-                        <td class="py-sm px-md text-right font-data-price">${formatCurrency(item.revenue || 0)}</td>
-                        <td class="py-sm px-md text-right font-data-price">${item.stock ?? 0}</td>
-                        <td class="py-sm px-md text-right font-data-price">${item.rating ? item.rating.toFixed(1) + '⭐' : '—'}</td>
+                        <td class="py-sm px-md text-right font-data-price">${unitsSold}</td>
+                        <td class="py-sm px-md text-right font-data-price">${formatCurrency(itemRev)}</td>
+                        <td class="py-sm px-md text-right font-data-price">${itemStock}</td>
+                        <td class="py-sm px-md text-right font-data-price">${itemRating ? Number(itemRating).toFixed(1) + '⭐' : '—'}</td>
                     `;
                     tableBody.appendChild(tr);
                 });
@@ -847,28 +873,45 @@
         }
     }
 
-    async function loadAnalytics() {
-        const token = localStorage.getItem('token') || localStorage.getItem('accessToken') || sessionStorage.getItem('tohfa_access_token');
+    function getAuthToken() {
+        if (typeof window !== 'undefined' && window.authStorage) {
+            const token = window.authStorage.getItem('tohfa_access_token') || window.authStorage.getItem('tohfa_auth_token');
+            if (token) return token;
+        }
+        return sessionStorage.getItem('tohfa_access_token') ||
+               sessionStorage.getItem('tohfa_auth_token') ||
+               localStorage.getItem('tohfa_access_token') ||
+               localStorage.getItem('tohfa_auth_token') ||
+               localStorage.getItem('token') ||
+               localStorage.getItem('accessToken') ||
+               '';
+    }
 
+    function getAuthHeaders() {
+        const token = getAuthToken();
+        return token ? { 'Authorization': `Bearer ${token}` } : {};
+    }
+
+    async function loadAnalytics() {
+        const token = getAuthToken();
         let loadedRealData = false;
 
         if (token) {
             try {
                 let url = `${API_BASE_URL}/api/seller/analytics?period=${selectedPeriod}&range=${selectedPeriod}`;
                 if (selectedPeriod === 'custom') {
-                    const start = document.getElementById('custom-start').value;
-                    const end = document.getElementById('custom-end').value;
-                    if (start) url += `&startDate=${start}`;
-                    if (end) url += `&endDate=${end}`;
+                    const start = document.getElementById('custom-start')?.value;
+                    const end = document.getElementById('custom-end')?.value;
+                    if (start) url += `&startDate=${start}&start=${start}`;
+                    if (end) url += `&endDate=${end}&end=${end}`;
                 }
                 let res = await fetch(url, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: getAuthHeaders()
                 });
 
                 if (!res.ok) {
-                    // Fallback to /api/seller/analytics/full or /api/seller/dashboard
                     res = await fetch(`${API_BASE_URL}/api/seller/analytics/full`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
+                        headers: getAuthHeaders()
                     }).catch(() => null);
                 }
 
@@ -892,13 +935,13 @@
             }
             const activeMock = MOCK_DATA[periodKey];
             if (activeMock) {
-                const totalRevenueVal = parseInt(activeMock.kpis.revenue.replace(/[^0-9]/g, '')) * 100;
+                const totalRevenueVal = parseInt(activeMock.kpis.revenue.replace(/[^0-9]/g, '')) || 0;
                 const convertedData = {
                     kpis: {
                         total_revenue: totalRevenueVal,
-                        total_orders: parseInt(activeMock.kpis.orders),
-                        avg_order_value: parseInt(activeMock.kpis.aov.replace(/[^0-9]/g, '')) * 100,
-                        store_visitors: parseInt(activeMock.kpis.orders) * 20,
+                        total_orders: parseInt(activeMock.kpis.orders) || 0,
+                        avg_order_value: parseInt(activeMock.kpis.aov.replace(/[^0-9]/g, '')) || 0,
+                        store_visitors: (parseInt(activeMock.kpis.orders) || 10) * 20,
                         conversion_rate: parseFloat(activeMock.kpis.repeat_rate) / 5,
                         returns_cancellations: 2
                     },
@@ -906,19 +949,19 @@
                         repeat_buyers: 5,
                         new_buyers: 15,
                         top_locations: [
-                            { city: 'Jaipur', order_count: 5, revenue: 200000 },
-                            { city: 'Delhi', order_count: 3, revenue: 150000 }
+                            { city: 'Jaipur', order_count: 5, revenue: 2000 },
+                            { city: 'Delhi', order_count: 3, revenue: 1500 }
                         ]
                     },
                     order_types: {
-                        custom: { orders_count: 3, revenue: 120000 },
-                        premade: { orders_count: 5, revenue: 80000 }
+                        custom: { orders_count: 3, revenue: 1200 },
+                        premade: { orders_count: 5, revenue: 800 }
                     },
                     product_performance: activeMock.topProducts.labels.map((lbl, idx) => ({
                         id: idx + 1,
                         name: lbl,
                         units_sold: activeMock.topProducts.data[idx],
-                        revenue: activeMock.topProducts.data[idx] * 50000,
+                        revenue: activeMock.topProducts.data[idx] * 500,
                         stock: 20,
                         rating: 4.5
                     })),
@@ -936,11 +979,11 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const token = localStorage.getItem('token') || localStorage.getItem('accessToken') || sessionStorage.getItem('tohfa_access_token');
+        const token = getAuthToken();
         if (token) {
             // Role verification
             try {
-                const pr = await fetch(`${API_BASE_URL}/api/profile/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const pr = await fetch(`${API_BASE_URL}/api/profile/me`, { headers: getAuthHeaders() });
                 if (pr.ok) {
                     const pd = await pr.json();
                     const u = pd.data || pd;
@@ -983,21 +1026,23 @@
         const viewStoreBtn = document.getElementById('view-store-btn');
         if (viewStoreBtn) {
             viewStoreBtn.addEventListener('click', () => {
+                const authToken = getAuthToken() || token || '';
                 fetch(`${API_BASE_URL}/api/seller/profile`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
                 })
                 .then(res => res.json())
                 .then(data => {
-                    const profileData = data.data || data;
-                    if (profileData && (profileData.user_id || profileData.seller_id || profileData.id)) {
-                        window.location.href = `/buyer/seller-profile.html?id=${profileData.user_id || profileData.seller_id || profileData.id}`;
+                    const profile = data.data?.profile || data.profile || data.data || data;
+                    const sellerId = profile?.user_id || profile?.seller_id || profile?.id;
+                    if (sellerId) {
+                        window.location.href = `/buyer/seller-profile.html?id=${sellerId}`;
                     } else {
-                        window.location.href = '/';
+                        window.location.href = '/seller/dashboard.html';
                     }
                 })
                 .catch(err => {
                     console.error('Error fetching seller profile:', err);
-                    window.location.href = '/';
+                    window.location.href = '/seller/dashboard.html';
                 });
             });
         }
@@ -1053,7 +1098,7 @@ async function handleFooterSellerLink(e) {
     console.error("Error checking seller status:", err);
   }
   
-  window.location.href = isMobile ? '/mobile-buyer/become-seller.html' : '/buyer/become-seller.html';
+  window.location.href = '/auth/signup-seller.html';
 }
 
 // Check if we need to auto-redirect back to dashboard/signup after login redirect

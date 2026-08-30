@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="light" lang="en">
 <head>
   <link rel="icon" type="image/png" href="/favicon.png">
@@ -12,6 +12,11 @@
   <link rel="stylesheet" href="/src/tailwind.css">
   <script type="module" src="/components/seller-components.js"></script>
   <script type="module" src="/src/components/ProtectedRoute.js"></script>
+  <script>
+    if (sessionStorage.getItem('tohfa_admin_switch_context')) {
+      window.location.replace('/seller/catalog.html');
+    }
+  </script>
   <style>
     body { background: #FFF8E7 !important; }
     .plans-hero {
@@ -134,7 +139,7 @@
     }
   </style>
 </head>
-<body class="bg-[#FFF8E7] font-['DM_Sans'] text-[#1C1C1C]">
+<body class="bg-[#FFF8E7] font-['DM_Sans'] text-[#1C1C1A]">
 
 <seller-layout active-tab="plans">
 

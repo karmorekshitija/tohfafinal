@@ -267,9 +267,28 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS priority_rank INT DEFAULT 0;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS special_packaging_available BOOLEAN DEFAULT TRUE;
 
 CREATE INDEX IF NOT EXISTS idx_products_seller_id ON products(seller_id);
-CREATE INDEX IF NOT EXISTS idx_products_category_id ON products(category_id);
 CREATE INDEX IF NOT EXISTS idx_products_tohfa_original ON products(is_tohfa_original) WHERE is_tohfa_original = TRUE;
 CREATE INDEX IF NOT EXISTS idx_products_priority_rank ON products(priority_rank DESC);
+
+-- Ensure product_variants columns exist
+CREATE TABLE IF NOT EXISTS product_variants (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id       UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  variant_name     TEXT,
+  color_name       TEXT,
+  color_hex        CHAR(7),
+  size             TEXT,
+  additional_price NUMERIC(10,2) NOT NULL DEFAULT 0,
+  stock_qty        INTEGER NOT NULL DEFAULT 0,
+  image_url        TEXT,
+  images           TEXT[] DEFAULT '{}',
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS variant_name TEXT;
+ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS images TEXT[] DEFAULT '{}';
+CREATE INDEX IF NOT EXISTS idx_product_variants_product_id ON product_variants(product_id);
 
 -- =============================================================================
 -- 6. PERSISTENT SHOPPING CARTS & CART ITEMS

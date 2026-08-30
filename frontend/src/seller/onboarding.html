@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="../styles/components.css">
   <link rel="stylesheet" href="../styles/animations.css">
 </head>
-<body style="background:var(--color-background); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:var(--space-4);">
+<body style="background:#FFF8E7; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:var(--space-4);">
   <div class="card animate-scale-in" style="max-width:500px; width:100%; padding:var(--space-8); text-align:center;">
     <div id="statusIcon" style="font-size:48px; margin-bottom:var(--space-3);">⏳</div>
     <h1 id="statusTitle" class="text-display" style="font-size:var(--text-2xl); color:var(--color-primary); margin-bottom:var(--space-2);">
@@ -32,11 +32,26 @@
     if (requireAuth()) {}
 
     async function checkStatus() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isSuspendedUrl = urlParams.get('status') === 'suspended';
+
+      if (isSuspendedUrl) {
+        document.getElementById('statusIcon').textContent = '🔒';
+        document.getElementById('statusTitle').textContent = 'Artisan Account Suspended';
+        document.getElementById('statusMsg').textContent = 'Your artisan store is temporarily suspended by administrative review. If you believe this is an error, please contact our artisan support team.';
+        document.getElementById('actionContainer').innerHTML = `<a href="mailto:support@tohfa.com" class="btn btn-secondary">Contact Artisan Support</a>`;
+      }
+
       try {
         const res = await api.get('/api/seller/application-status');
         const app = res?.data?.application || res?.data;
 
-        if (app?.is_approved) {
+        if (app?.verification_status === 'suspended' || app?.is_active === false) {
+          document.getElementById('statusIcon').textContent = '🔒';
+          document.getElementById('statusTitle').textContent = 'Artisan Account Suspended';
+          document.getElementById('statusMsg').textContent = 'Your artisan store is temporarily suspended by administrative review. If you believe this is an error, please contact our artisan support team.';
+          document.getElementById('actionContainer').innerHTML = `<a href="mailto:support@tohfa.com" class="btn btn-secondary">Contact Artisan Support</a>`;
+        } else if (app?.is_approved) {
           document.getElementById('statusIcon').textContent = '🎉';
           document.getElementById('statusTitle').textContent = 'Application Approved!';
           document.getElementById('statusMsg').textContent = 'Welcome to Tohfa Studio! Your artisan storefront is now live.';

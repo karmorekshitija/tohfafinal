@@ -65,7 +65,11 @@ function sanitizeIndianPhone(phone) {
  * @returns {string}
  */
 function signAccessToken(payload) {
-  return jwt.sign(payload, process.env.JWT_ACCESS_SECRET || 'tohfa_jwt_access_secret_key_2026', {
+  const secret = process.env.JWT_ACCESS_SECRET;
+  if (!secret) {
+    throw new Error('JWT_ACCESS_SECRET environment variable is missing.');
+  }
+  return jwt.sign(payload, secret, {
     expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
   });
 }
@@ -76,7 +80,11 @@ function signAccessToken(payload) {
  * @returns {string}
  */
 function signRefreshToken(payload) {
-  return jwt.sign({ ...payload, jti: crypto.randomUUID() }, process.env.JWT_REFRESH_SECRET || 'tohfa_jwt_refresh_secret_key_2026', {
+  const secret = process.env.JWT_REFRESH_SECRET;
+  if (!secret) {
+    throw new Error('JWT_REFRESH_SECRET environment variable is missing.');
+  }
+  return jwt.sign({ ...payload, jti: crypto.randomUUID() }, secret, {
     expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   });
 }
@@ -87,7 +95,11 @@ function signRefreshToken(payload) {
  * @returns {object} decoded payload
  */
 function verifyRefreshToken(token) {
-  return jwt.verify(token, process.env.JWT_REFRESH_SECRET || 'tohfa_jwt_refresh_secret_key_2026');
+  const secret = process.env.JWT_REFRESH_SECRET;
+  if (!secret) {
+    throw new Error('JWT_REFRESH_SECRET environment variable is missing.');
+  }
+  return jwt.verify(token, secret);
 }
 
 /**
@@ -191,21 +203,16 @@ async function register(data) {
   try {
     await client.query('BEGIN');
 
+    const userName = name || data.full_name || '';
     const { rows: userRows } = await client.query(
-      `INSERT INTO users (name, email, password_hash, phone, role, is_active)
-       VALUES ($1, $2, $3, $4, 'buyer', true)
-       RETURNING id, name, email, role, phone, created_at`,
-      [name, email, passwordHash, phone]
+      `INSERT INTO users (full_name, name, display_name, email, password_hash, phone, role, is_active)
+       VALUES ($1, $1, $1, $2, $3, $4, 'buyer', TRUE)
+       RETURNING id, full_name, name, email, role, phone, created_at`,
+      [userName, email, passwordHash, phone]
     );
     const user = userRows[0];
 
-    // Create shopping cart entry for buyer
-    await client.query(
-      `INSERT INTO carts (user_id)
-       VALUES ($1)
-       ON CONFLICT (user_id) DO NOTHING`,
-      [user.id]
-    );
+    // Note: cart is created lazily when first item is added (cart_items table)
 
     await client.query('COMMIT');
 
@@ -233,7 +240,8 @@ async function register(data) {
 /**
  * AUTH-03: Atomic Seller Registration & Profile Initialization
  * Uses a single DB transaction to create user row with role='seller' and initialize seller profile.
- * @param {{ name, email, phone, password, storeName, craftSpecialty, bio }} data
+ * Bank details are no longer collected at signup — collected post-approval in Seller Studio.
+ * @param {{ name, email, phone, password, storeName, craftSpecialty, bio, daily_capacity_min, daily_capacity_max, instagram_handle, instagram_followers }} data
  * @returns {{ user: object, accessToken: string, refreshToken: string, token: string }}
  */
 async function signupSeller(data) {
@@ -245,6 +253,12 @@ async function signupSeller(data) {
   const storeName = (data.storeName || data.store_name || data.shop_name || name || 'Artisan Studio').trim();
   const craftSpecialty = data.craftSpecialty || data.craft_specialty || data.specialty || '';
   const bio = data.bio || (craftSpecialty ? `Artisan specializing in ${craftSpecialty}` : 'Artisan specializing in handcrafted gifts');
+
+  // New fields: capacity & social (no bank details at signup)
+  const dailyCapacityMin = parseInt(data.daily_capacity_min || data.capacity_min || 0, 10) || null;
+  const dailyCapacityMax = parseInt(data.daily_capacity_max || data.capacity_max || 0, 10) || null;
+  const instagramHandle = (data.instagram_handle || data.instagram || '').trim().replace(/^@/, '') || null;
+  const instagramFollowers = data.instagram_followers || null;
 
   if (!email || !password || !name) {
     const err = new Error('Name, email, and password are required.');
@@ -267,50 +281,88 @@ async function signupSeller(data) {
   const baseSlug = storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'artisan';
   const storeSlug = `${baseSlug}-${Date.now()}`;
 
+  const pickupAddress = (typeof data.pickup_address === 'object' && data.pickup_address !== null && Object.keys(data.pickup_address).length > 0)
+    ? data.pickup_address
+    : (data.address_line1 || data.city ? {
+        address_line1: data.address_line1 || data.street || '',
+        address_line2: data.address_line2 || '',
+        city: data.city || '',
+        state: data.state || '',
+        pincode: data.pincode || data.postal_code || ''
+      } : {});
+
+  const panNumber = data.pan_number || data.pan || null;
+  const gstNumber = data.gst_number || data.gst || null;
+  const portfolioImages = Array.isArray(data.portfolio_images)
+    ? data.portfolio_images
+    : (data.portfolio_url ? [data.portfolio_url] : []);
+
   const client = await getClient();
   try {
     await client.query('BEGIN');
 
     // 1. Create User Row (role = 'seller')
+    const sellerUserName = name || data.full_name || '';
     const userRes = await client.query(
-      `INSERT INTO users (name, email, phone, password_hash, role, is_active)
-       VALUES ($1, $2, $3, $4, 'seller', true)
-       RETURNING id, name, email, role, phone, created_at`,
-      [name, email, phone, passwordHash]
+      `INSERT INTO users (full_name, name, display_name, email, phone, password_hash, role, is_active)
+       VALUES ($1, $1, $1, $2, $3, $4, 'seller', TRUE)
+       RETURNING id, full_name, name, email, role, phone, created_at`,
+      [sellerUserName, email, phone, passwordHash]
     );
     const user = userRes.rows[0];
 
     // 2. Initialize Master sellers row
     await client.query(
-      `INSERT INTO sellers (user_id, store_name, slug, bio, verification_status, is_active, is_approved, pickup_address, bank_details)
-       VALUES ($1, $2, $3, $4, 'pending_verification', true, false, '{}', '{}')
+      `INSERT INTO sellers (user_id, store_name, slug, bio, verification_status, is_active, is_approved, pickup_address, bank_details, onboarding_completed)
+       VALUES ($1, $2, $3, $4, 'pending_verification', TRUE, FALSE, $5, '{}', FALSE)
        ON CONFLICT (user_id) DO UPDATE SET
          store_name = EXCLUDED.store_name,
          slug = EXCLUDED.slug,
          bio = EXCLUDED.bio,
+         pickup_address = EXCLUDED.pickup_address,
          verification_status = 'pending_verification'`,
-      [user.id, storeName, storeSlug, bio]
+      [user.id, storeName, storeSlug, bio, JSON.stringify(pickupAddress)]
     );
 
-    // 3. Initialize seller_profiles row for backward compatibility
+    // Apply optional migration-added columns separately
     await client.query(
-      `INSERT INTO seller_profiles (user_id, store_name, slug, bio, verification_status, is_approved, is_active, pickup_address, bank_details)
-       VALUES ($1, $2, $3, $4, 'pending_verification', false, true, '{}', '{}')
+      `UPDATE sellers SET
+         pan_number = $2,
+         gst_number = $3,
+         portfolio_images = $4::text[],
+         applied_at = NOW(),
+         onboarding_completed = FALSE
+       WHERE user_id = $1`,
+      [user.id, panNumber, gstNumber, portfolioImages]
+    ).catch(() => {});
+
+    // 3. Initialize seller_profiles row
+    await client.query(
+      `INSERT INTO seller_profiles (user_id, store_name, slug, bio, seller_type, verification_status, is_approved, is_active, pickup_address, bank_details, pan_number, gst_number, portfolio_images, applied_at, onboarding_completed)
+       VALUES ($1, $2, $3, $4, 'regular', 'pending_verification', FALSE, TRUE, $5, '{}', $6, $7, $8::text[], NOW(), FALSE)
        ON CONFLICT (user_id) DO UPDATE SET
          store_name = EXCLUDED.store_name,
          slug = EXCLUDED.slug,
          bio = EXCLUDED.bio,
+         pickup_address = EXCLUDED.pickup_address,
+         pan_number = EXCLUDED.pan_number,
+         gst_number = EXCLUDED.gst_number,
+         portfolio_images = EXCLUDED.portfolio_images,
          verification_status = 'pending_verification'`,
-      [user.id, storeName, storeSlug, bio]
+      [user.id, storeName, storeSlug, bio, JSON.stringify(pickupAddress), panNumber, gstNumber, portfolioImages]
     );
 
-    // 4. Initialize shopping cart entry
+    // 4. Apply new capacity & social fields to seller_profiles
     await client.query(
-      `INSERT INTO carts (user_id)
-       VALUES ($1)
-       ON CONFLICT (user_id) DO NOTHING`,
-      [user.id]
-    );
+      `UPDATE seller_profiles SET
+         daily_capacity_min = $2,
+         daily_capacity_max = $3,
+         instagram_handle = $4,
+         instagram_followers = $5,
+         onboarding_completed = FALSE
+       WHERE user_id = $1`,
+      [user.id, dailyCapacityMin, dailyCapacityMax, instagramHandle, instagramFollowers]
+    ).catch(() => {});
 
     await client.query('COMMIT');
 
@@ -339,6 +391,7 @@ async function signupSeller(data) {
     client.release();
   }
 }
+
 
 /**
  * Login with email/phone + password.
@@ -501,8 +554,8 @@ async function adminLogin(data) {
     process.env.NODE_ENV === 'development' &&
     process.env.ALLOW_DEMO_LOGIN === 'true'
   ) {
-    if (loginEmail === 'admin@thetohfa.in' || username === 'admin') {
-      const DEMO_PASSWORDS = ['Password@123', 'admin123', 'demo123', 'admin', 'password'];
+    if (loginEmail === 'admin@thetohfa.in' || loginEmail === 'admin@tohfa.in' || username === 'admin') {
+      const DEMO_PASSWORDS = ['AdminPassword123!', 'Password@123', 'admin123', 'demo123', 'admin', 'password'];
       if (DEMO_PASSWORDS.includes(password)) {
         const demoUser = {
           id: 'd0000000-0000-0000-0000-000000000003',
@@ -633,7 +686,7 @@ async function refreshTokens(rawRefreshToken) {
   );
 
   const { rows: userRows } = await query(
-    'SELECT id, email, role FROM users WHERE id = $1 AND (is_active = true OR is_active = 1)',
+    `SELECT id, email, role FROM users WHERE id = $1 AND (is_active = TRUE OR is_active IS NULL)`,
     [decoded.id]
   );
   if (!userRows.length) {
@@ -697,7 +750,7 @@ async function verifyAndConsumeResetToken(rawToken) {
     `SELECT id, email FROM users 
      WHERE reset_password_token = $1 
        AND reset_password_expires > NOW() 
-       AND (is_active = true OR is_active = 1)`,
+       AND (is_active = TRUE OR is_active IS NULL)`,
     [hashedToken]
   );
   if (!rows.length) return null;
@@ -719,6 +772,7 @@ async function updatePassword(userId, newPassword) {
 
 module.exports = {
   register,
+  signupBuyer: register,
   signupSeller,
   registerSeller: signupSeller,
   login,
@@ -732,4 +786,8 @@ module.exports = {
   buildTokenPayload,
   normalizeEmail,
   sanitizeIndianPhone,
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+  issueTokenPair,
 };

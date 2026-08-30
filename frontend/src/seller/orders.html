@@ -6,6 +6,11 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <script type="module" src="/src/components/ReportWidget.js" defer></script>
 <script type="module" src="/src/components/ProtectedRoute.js"></script>
+<script>
+  if (sessionStorage.getItem('tohfa_admin_switch_context')) {
+    window.location.replace('/seller/catalog.html');
+  }
+</script>
     <meta charset="utf-8"/>
     <title>TOFA Seller Studio | Order Queue</title>
     <!-- Google Fonts -->
@@ -413,7 +418,11 @@
         if (table) table.classList.add('hidden');
         if (kpi) kpi.classList.add('hidden');
 
-        const token = localStorage.getItem('token') || localStorage.getItem('accessToken') || sessionStorage.getItem('tohfa_access_token');
+        const token = (typeof window.authStorage !== 'undefined' && window.authStorage.getToken()) ||
+                      sessionStorage.getItem('tohfa_access_token') ||
+                      localStorage.getItem('tohfa_access_token') ||
+                      sessionStorage.getItem('tohfa_auth_token') ||
+                      localStorage.getItem('tohfa_auth_token');
         const params = new URLSearchParams({
             period: currentPeriod,
             ...(currentStatus && currentStatus !== 'all' ? { status: currentStatus } : {}),
@@ -479,7 +488,13 @@
     }
 
     async function openOrderDetail(internalId) {
-        const token = sessionStorage.getItem('tohfa_access_token');
+        const token = (typeof window.authStorage !== 'undefined' && window.authStorage.getToken()) ||
+                      sessionStorage.getItem('tohfa_access_token') ||
+                      localStorage.getItem('tohfa_access_token') ||
+                      sessionStorage.getItem('tohfa_auth_token') ||
+                      localStorage.getItem('tohfa_auth_token') ||
+                      sessionStorage.getItem('token') ||
+                      localStorage.getItem('token');
         const body  = document.getElementById('order-detail-body');
         body.innerHTML = '<div class="skeleton h-40 rounded-xl"></div>';
         
@@ -489,15 +504,33 @@
             const res  = await fetch(`${API_BASE_URL}/api/seller/orders/${internalId}`, { headers: { 'Authorization': `Bearer ${token}` } });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const resp = await res.json();
-            const o    = resp.data || resp;
+            const o    = (resp.data && resp.data.order) || resp.data || resp;
 
-            document.getElementById('modal-order-ref').textContent = `Order #${escapeHtml(o.order_id || '—')}`;
+            document.getElementById('modal-order-ref').textContent = `Order #${escapeHtml(o.order_id || o.order_ref || (internalId ? 'TOHFA-' + String(internalId).slice(0, 8).toUpperCase() : '—'))}`;
 
-            const events = (o.tracking_events || []).map(ev => `
-                <div class="relative pl-6">
-                    <span class="absolute -left-[9px] top-1 w-3.5 h-3.5 rounded-full bg-sage-soft border-2 border-white"></span>
-                    <p class="text-xs font-bold capitalize text-primary">${escapeHtml(ev.status)}</p>
-                    <p class="text-[10px] text-on-surface-variant">${formatDate(ev.occurred_at)}</p>
+            const buyerAddress = o.buyer_address || (o.shipping_address ? (typeof o.shipping_address === 'string' ? o.shipping_address : [o.shipping_address.line1, o.shipping_address.line2, o.shipping_address.city, o.shipping_address.state, o.shipping_address.pincode].filter(Boolean).join(', ')) : '') || '—';
+
+            const itemsList = (Array.isArray(o.items) && o.items.length > 0) ? o.items : [{
+                product_name: o.item_title || o.item_preview || 'Handcrafted Creation',
+                name: o.item_title || o.item_preview || 'Handcrafted Creation',
+                image_url: o.item_photo_url || o.item_image,
+                product_id: o.product_id_display,
+                variant_name: o.variant_name,
+                quantity: o.quantity || 1,
+                unit_price: o.unit_price || (o.total_amount ? o.total_amount : null),
+                customization_data: o.customization_details
+            }];
+
+            const itemsHtml = itemsList.map(item => `
+                <div class="flex gap-3 items-start border-b border-outline-variant/30 pb-4 last:border-b-0 last:pb-0">
+                    <img src="${item.image_url || item.photo_url || item.proof_image_url || 'https://ui-avatars.com/api/?name=Product&background=f9ecdc&color=3D6B4F&size=56'}" class="w-14 h-14 rounded-xl object-cover border border-sage-soft flex-shrink-0" alt="${escapeHtml(item.product_name || item.name || 'Product')}" loading="lazy" />
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-primary text-sm truncate">${escapeHtml(item.product_name || item.name || '—')}</p>
+                        <p class="text-[10px] mt-0.5" style="font-family:'Space Mono',monospace;color:#14381F;">#${escapeHtml(item.product_id ? String(item.product_id).substring(0, 8).toUpperCase() : (o.product_id_display || '—'))}</p>
+                        ${item.variant_name ? `<p class="text-xs text-on-surface-variant mt-0.5">Variant: ${escapeHtml(item.variant_name)}</p>` : ''}
+                        <p class="text-xs text-on-surface-variant mt-0.5">Qty: ${item.quantity || 1}</p>
+                        <p class="font-bold text-primary mt-1" style="font-family:'Space Mono',monospace">${formatPaise(item.unit_price ? Math.round(parseFloat(item.unit_price) * 100 * (item.quantity || 1)) : o.total_paise)}</p>
+                    </div>
                 </div>
             `).join('');
 
@@ -507,19 +540,12 @@
                     <p class="text-xs uppercase tracking-wider text-on-surface-variant font-label-caps opacity-70">Patron</p>
                     <p class="font-bold text-on-surface text-base">${escapeHtml(o.buyer_name || '—')}</p>
                     ${o.buyer_phone ? `<p class="text-xs text-on-surface-variant" style="font-family:'Space Mono',monospace">${escapeHtml(o.buyer_phone)}</p>` : ''}
-                    <p class="text-sm text-on-surface-variant leading-relaxed mt-1 whitespace-pre-line">${escapeHtml(o.buyer_address || '—')}</p>
+                    <p class="text-sm text-on-surface-variant leading-relaxed mt-1 whitespace-pre-line">${escapeHtml(buyerAddress)}</p>
                 </div>
 
-                <!-- Product Card with Product ID -->
-                <div class="flex gap-3 items-start border-b border-outline-variant/30 pb-4">
-                    <img src="${o.item_photo_url || o.item_image || 'https://ui-avatars.com/api/?name=Product&background=f9ecdc&color=3D6B4F&size=56'}" class="w-14 h-14 rounded-xl object-cover border border-sage-soft flex-shrink-0" alt="${escapeHtml(o.item_title || 'Product')}" loading="lazy" />
-                    <div class="flex-1 min-w-0">
-                        <p class="font-bold text-primary text-sm truncate">${escapeHtml(o.item_title || '—')}</p>
-                        <p class="text-[10px] mt-0.5" style="font-family:'Space Mono',monospace;color:#14381F;">#${escapeHtml(o.product_id_display || '—')}</p>
-                        ${o.variant_name ? `<p class="text-xs text-on-surface-variant mt-0.5">Variant: ${escapeHtml(o.variant_name)}</p>` : ''}
-                        <p class="text-xs text-on-surface-variant mt-0.5">Qty: ${o.quantity || 1}</p>
-                        <p class="font-bold text-primary mt-1" style="font-family:'Space Mono',monospace">${formatPaise(o.total_paise)}</p>
-                    </div>
+                <!-- Product Cards -->
+                <div class="space-y-3">
+                    ${itemsHtml}
                 </div>
 
                 <!-- Pickup & Delivery Date Chips -->
@@ -552,7 +578,7 @@
                         (o.tracking_events || []).forEach(ev => { eventMap[ev.status] = ev.occurred_at; });
                         const currentIdx = STEPS.findIndex(s => s.key === normalizedStatus);
                         return STEPS.map((step, i) => {
-                            const isDone    = eventMap[step.key] != null;
+                            const isDone    = eventMap[step.key] != null || (currentIdx >= 0 && i <= currentIdx);
                             const isCurrent = !isDone && i === currentIdx;
                             let dotStyle, dotContent;
                             if (isDone) {
@@ -584,21 +610,11 @@
                     })()}
                 </div>
 
-                <!-- Chat with Buyer Button -->
-                <div class="border-b border-outline-variant/30 pb-4">
-                    <button id="chat-buyer-btn-${internalId}"
-                        class="w-full flex items-center justify-center gap-2 border border-primary text-primary font-bold py-2.5 rounded-xl text-sm hover:bg-secondary-container/20 transition-all"
-                        data-buyer-id="${o.buyer_id}" data-order-id="${internalId}">
-                        <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' 1">chat</span>
-                        Chat with Buyer
-                    </button>
-                </div>
-
                 <!-- Customization details if present -->
-                ${o.customization_details ? `
+                ${(o.customization_details || (o.items && o.items[0]?.customization_data)) ? `
                 <div class="flex flex-col gap-2 border-b border-outline-variant/30 pb-4 bg-sage-soft/30 p-3 rounded-lg border border-sage-soft">
                     <p class="text-xs uppercase tracking-wider text-secondary font-label-caps font-bold">Customization Details</p>
-                    <p class="text-sm text-on-surface-variant italic leading-relaxed">"${escapeHtml(o.customization_details)}"</p>
+                    <p class="text-sm text-on-surface-variant italic leading-relaxed">"${escapeHtml(o.customization_details || (typeof o.items[0].customization_data === 'string' ? o.items[0].customization_data : JSON.stringify(o.items[0].customization_data)))}"</p>
                 </div>
                 ` : ''}
 
@@ -634,10 +650,10 @@
                         <label class="text-xs font-label-caps text-on-surface-variant opacity-70">Transition Status</label>
                         <div class="flex gap-2">
                             <select id="status-select-${internalId}" class="flex-1 bg-surface-bright border border-sage rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
-                                <option value="processing" ${o.fulfillment_status === 'processing' ? 'selected' : ''}>Processing</option>
-                                <option value="in_production" ${o.fulfillment_status === 'in_production' || o.fulfillment_status === 'crafting' ? 'selected' : ''}>Crafting</option>
+                                <option value="confirmed" ${o.fulfillment_status === 'confirmed' || o.fulfillment_status === 'pending' || o.fulfillment_status === 'processing' ? 'selected' : ''}>Confirmed</option>
+                                <option value="crafting" ${o.fulfillment_status === 'in_production' || o.fulfillment_status === 'crafting' ? 'selected' : ''}>Crafting</option>
                                 <option value="packed" ${o.fulfillment_status === 'packed' ? 'selected' : ''}>Packed</option>
-                                <option value="dispatched" ${o.fulfillment_status === 'dispatched' || o.fulfillment_status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                                <option value="shipped" ${o.fulfillment_status === 'dispatched' || o.fulfillment_status === 'shipped' ? 'selected' : ''}>Shipped</option>
                                 <option value="delivered" ${o.fulfillment_status === 'delivered' ? 'selected' : ''}>Delivered</option>
                                 <option value="cancelled" ${o.fulfillment_status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
                             </select>
@@ -682,29 +698,6 @@
             document.getElementById(`generate-shiprocket-btn-${internalId}`).addEventListener('click', () => {
                 alert('Generate Shiprocket Label placeholder');
             });
-
-            // Chat with Buyer handler
-            const chatBuyerBtn = document.getElementById(`chat-buyer-btn-${internalId}`);
-            if (chatBuyerBtn) {
-                chatBuyerBtn.addEventListener('click', async () => {
-                    chatBuyerBtn.disabled = true;
-                    chatBuyerBtn.innerHTML = '<span class="material-symbols-outlined text-base">hourglass_empty</span> Opening…';
-                    try {
-                        const r = await fetch(`${API_BASE_URL}/api/seller/messages/start`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                            body: JSON.stringify({ order_id: internalId, buyer_id: o.buyer_id })
-                        });
-                        const d = await r.json();
-                        if (!r.ok) throw new Error(d.message || 'Failed to start chat');
-                        window.location.href = `/seller/messages.html?conversationId=${d.data.thread_id}`;
-                    } catch (err) {
-                        showToast(err.message, 'error');
-                        chatBuyerBtn.disabled = false;
-                        chatBuyerBtn.innerHTML = '<span class="material-symbols-outlined text-base" style="font-variation-settings:\'FILL\' 1">chat</span> Chat with Buyer';
-                    }
-                });
-            }
 
             // Quick status action buttons handler
             document.querySelectorAll('.status-action-btn').forEach(btn => {
@@ -859,7 +852,11 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const token = localStorage.getItem('token') || localStorage.getItem('accessToken') || sessionStorage.getItem('tohfa_access_token');
+        const token = (typeof window.authStorage !== 'undefined' && window.authStorage.getToken()) ||
+                      sessionStorage.getItem('tohfa_access_token') ||
+                      localStorage.getItem('tohfa_access_token') ||
+                      sessionStorage.getItem('tohfa_auth_token') ||
+                      localStorage.getItem('tohfa_auth_token');
         if (token) {
             // Auth Role check
             try {
@@ -985,21 +982,28 @@
         const viewStoreBtn = document.getElementById('view-store-btn');
         if (viewStoreBtn) {
             viewStoreBtn.addEventListener('click', () => {
+                const authToken = (typeof window !== 'undefined' && window.authStorage?.getItem('tohfa_access_token')) ||
+                                  sessionStorage.getItem('tohfa_access_token') ||
+                                  sessionStorage.getItem('tohfa_auth_token') ||
+                                  localStorage.getItem('tohfa_access_token') ||
+                                  localStorage.getItem('tohfa_auth_token') ||
+                                  token || '';
                 fetch(`${API_BASE_URL}/api/seller/profile`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
                 })
                 .then(res => res.json())
                 .then(data => {
-                    const profileData = data.data || data;
-                    if (profileData && (profileData.user_id || profileData.seller_id || profileData.id)) {
-                        window.location.href = `/buyer/seller-profile.html?id=${profileData.user_id || profileData.seller_id || profileData.id}`;
+                    const profile = data.data?.profile || data.profile || data.data || data;
+                    const sellerId = profile?.user_id || profile?.seller_id || profile?.id;
+                    if (sellerId) {
+                        window.location.href = `/buyer/seller-profile.html?id=${sellerId}`;
                     } else {
-                        window.location.href = '/';
+                        window.location.href = '/seller/dashboard.html';
                     }
                 })
                 .catch(err => {
                     console.error('Error fetching seller profile:', err);
-                    window.location.href = '/';
+                    window.location.href = '/seller/dashboard.html';
                 });
             });
         }

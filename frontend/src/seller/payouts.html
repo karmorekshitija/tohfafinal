@@ -6,6 +6,11 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
       <script type="module" src="/src/components/ReportWidget.js" defer></script>
     <script type="module" src="/src/components/ProtectedRoute.js"></script>
+    <script>
+      if (sessionStorage.getItem('tohfa_admin_switch_context')) {
+        window.location.replace('/seller/catalog.html');
+      }
+    </script>
     <meta charset="utf-8"/>
     <title>Payments & Settlements | Seller Studio | Tohfa</title>
     <!-- Google Fonts -->
@@ -22,7 +27,7 @@
         body {
             font-family: 'DM Sans', sans-serif;
             background-color: #FFF8E7;
-            color: #1A1A1A;
+            color: #1C1C1A;
         }
         h1, h2, h3, h4, .font-heading {
             font-family: 'Playfair Display', serif;
@@ -60,25 +65,6 @@
 <!-- Mobile Style Overrides -->
 <style>
   @media (max-width: 768px) {
-    /* Stack grid & flex items */
-    .grid, [class*="grid-cols-"], .flex-row, .md\:flex-row {
-      display: flex !important;
-      flex-direction: column !important;
-      width: 100% !important;
-    }
-    /* Let card items span full width */
-    .col-span-1, .col-span-2, .col-span-3, .col-span-4, .col-span-5, .col-span-6,
-    .col-span-7, .col-span-8, .col-span-9, .col-span-10, .col-span-11, .col-span-12,
-    .lg\:col-span-1, .lg\:col-span-2, .lg\:col-span-3, .lg\:col-span-4,
-    .lg\:col-span-5, .lg\:col-span-6, .lg\:col-span-7, .lg\:col-span-8,
-    .lg\:col-span-9, .lg\:col-span-10, .lg\:col-span-11, .lg\:col-span-12 {
-      grid-column: span 12 / span 12 !important;
-      width: 100% !important;
-    }
-    /* Set min spacing */
-    .grid > div, .flex > div, .space-y-lg > div, .space-y-md > div {
-      margin-top: 12px;
-    }
     /* Enforce playfair display for headings */
     h1, h2, h3, h4, h5, h6 {
       font-family: 'Playfair Display', serif !important;
@@ -93,15 +79,6 @@
     [id*="chart"], [class*="chart-wrap"], canvas {
       width: 100% !important;
       height: 220px !important;
-    }
-    .stat-cards-row, .metrics-row, [class*="stats-grid"], .grid-cols-3 {
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 12px !important;
-    }
-    .stat-card, .metric-card, [class*="stat-card"] {
-      width: 100% !important;
-      margin-top: 0 !important;
     }
     .payout-section + .payout-section {
       border-top: 1px solid #FFF8E7 !important;
@@ -397,7 +374,7 @@
     <div>
       <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#14381F;margin-bottom:32px;">For Sellers</h3>
       <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
-        <li><a onclick="handleFooterSellerLink(event)" href="/buyer/become-seller.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Sell on Tohfa</a></li>
+        <li><a onclick="handleFooterSellerLink(event)" href="/auth/signup-seller.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Sell on Tohfa</a></li>
         <li><a href="/seller/dashboard.html" onclick="handleFooterSellerLink(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#14381F'" onmouseout="this.style.color='#FFF8E7'">Seller Studio</a></li>
       </ul>
     </div>
@@ -492,8 +469,18 @@
         return new Date(dt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
     }
 
+    function getAuthToken() {
+        return (typeof window.authStorage !== 'undefined' && window.authStorage.getToken()) ||
+               sessionStorage.getItem('tohfa_access_token') ||
+               localStorage.getItem('tohfa_access_token') ||
+               sessionStorage.getItem('tohfa_auth_token') ||
+               localStorage.getItem('tohfa_auth_token') ||
+               localStorage.getItem('token') ||
+               localStorage.getItem('accessToken');
+    }
+
     function getAuthHeaders() {
-        const token = localStorage.getItem('token') || localStorage.getItem('accessToken') || sessionStorage.getItem('tohfa_access_token');
+        const token = getAuthToken();
         return {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
@@ -555,8 +542,6 @@
             </tr>
         `;
 
-
-
         document.getElementById('invoices-list').innerHTML = `
             <div class="flex items-center justify-between p-3 border border-sage/10 rounded-btn bg-parchment/10">
                 <div class="flex items-center gap-3">
@@ -616,12 +601,20 @@
                 const pResp = await pRes.json();
                 const pData = pResp.data || pResp;
                 if (pData) {
-                    const eligibleBal = pData.eligible_balance != null ? pData.eligible_balance : pData.available_balance || 0;
-                    const holdingBal = pData.holding_balance != null ? pData.holding_balance : pData.pending_balance || 0;
-                    const totalPaid = pData.total_paid_out != null ? pData.total_paid_out : pData.total_earned || 0;
+                    const eligibleBal = pData.eligible_balance != null ? pData.eligible_balance : (pData.available_balance != null ? pData.available_balance * 100 : 0);
+                    const holdingBal = pData.holding_balance != null ? pData.holding_balance : (pData.pending_balance != null ? pData.pending_balance * 100 : 0);
+                    const totalPaid = pData.total_earned != null ? pData.total_earned : (pData.total_paid_out != null ? pData.total_paid_out : 0);
+                    const monthEarned = pData.this_month_earned != null ? pData.this_month_earned : 0;
+                    const weekEarned = pData.this_week_earned != null ? pData.this_week_earned : 0;
 
                     const totalEl = document.getElementById('stat-total-earnings');
                     if (totalEl) totalEl.textContent = formatINR(totalPaid / 100);
+
+                    const monthEl = document.getElementById('stat-month-earnings');
+                    if (monthEl) monthEl.textContent = formatINR(monthEarned / 100);
+
+                    const weekEl = document.getElementById('stat-week-earnings');
+                    if (weekEl) weekEl.textContent = formatINR(weekEarned / 100);
 
                     const pendingEl = document.getElementById('stat-pending-payout');
                     if (pendingEl) pendingEl.textContent = formatINR(eligibleBal / 100);
@@ -655,7 +648,7 @@
             if (weekEl) weekEl.textContent = formatINR((data.this_week_earned || 0) / 100);
 
             const pendingEl = document.getElementById('stat-pending-payout');
-            if (pendingEl) pendingEl.textContent = formatINR((data.total_earned || 0) / 100);
+            if (pendingEl) pendingEl.textContent = formatINR((data.available_balance || data.total_earned || 0) / 100);
 
             const holdContainer = document.getElementById('hold-badge-container');
             const holdText = document.getElementById('hold-badge-text');
@@ -987,7 +980,7 @@
 
     // Init
     document.addEventListener('DOMContentLoaded', () => {
-        const token = sessionStorage.getItem('tohfa_access_token');
+        const token = getAuthToken();
         if (!token) {
             window.location.href = '/auth/login.html';
             return;
@@ -1002,16 +995,13 @@
                 try {
                     const res = await fetch(`${API_BASE}/api/seller/payouts/request`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
+                        headers: getAuthHeaders(),
                         body: JSON.stringify({})
                     });
                     const d = await res.json().catch(() => ({}));
                     if (!res.ok) throw new Error(d.message || 'Failed to request payout withdrawal.');
-                    showToast('Payout request submitted successfully!', 'success');
-                    loadEarnings();
+                    showToast(d.message || 'Payout request submitted successfully!', 'success');
+                    await loadInitialData();
                 } catch (err) {
                     showToast(err.message, 'error');
                 } finally {
@@ -1061,7 +1051,7 @@ async function handleFooterSellerLink(e) {
     console.error("Error checking seller status:", err);
   }
   
-  window.location.href = isMobile ? '/mobile-buyer/become-seller.html' : '/buyer/become-seller.html';
+  window.location.href = '/auth/signup-seller.html';
 }
 
 // Check if we need to auto-redirect back to dashboard/signup after login redirect

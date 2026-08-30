@@ -1,5 +1,5 @@
 import { resolve, join } from 'path';
-import { readdirSync, statSync } from 'fs';
+import { readdirSync, statSync, cpSync, existsSync } from 'fs';
 import { defineConfig } from 'vite';
 
 /**
@@ -55,10 +55,21 @@ const routeRewritePlugin = () => ({
   },
 });
 
+const copyDistSrcPlugin = () => ({
+  name: 'copy-dist-src-plugin',
+  closeBundle() {
+    const distSrc = resolve(__dirname, 'dist', 'src');
+    const dist = resolve(__dirname, 'dist');
+    if (existsSync(distSrc)) {
+      cpSync(distSrc, dist, { recursive: true });
+    }
+  }
+});
+
 export default defineConfig({
   root: __dirname,
   publicDir: resolve(__dirname, 'public'),
-  plugins: [routeRewritePlugin()],
+  plugins: [routeRewritePlugin(), copyDistSrcPlugin()],
 
   build: {
     outDir: resolve(__dirname, 'dist'),

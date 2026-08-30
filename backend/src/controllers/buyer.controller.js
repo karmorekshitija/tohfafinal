@@ -23,6 +23,8 @@ function formatAddress(row) {
   const line1 = row.line1 || row.address_line1 || '';
   const line2 = row.line2 || row.address_line2 || null;
 
+  const addressLine = [line1, line2].filter(Boolean).join(', ') || line1 || '';
+
   return {
     id: row.id,
     user_id: row.user_id,
@@ -37,6 +39,8 @@ function formatAddress(row) {
     address_line1: line1,
     line2: line2,
     address_line2: line2,
+    address_line: addressLine,
+    street: line1,
     landmark: row.landmark || null,
     city: row.city,
     state: row.state,
@@ -47,28 +51,18 @@ function formatAddress(row) {
 }
 
 /**
- * GET /api/buyer/addresses & GET /api/user/addresses
+ * GET /api/buyer/addresses & GET /api/user/addresses & /api/seller/addresses
  */
 async function getAddresses(req, res, next) {
   try {
     const userId = req.user.id;
     const { rows } = await query(
-      `SELECT id, user_id, label, name, phone, line1, line2,
-              landmark, city, state, pincode, address_type, is_default, created_at
-       FROM addresses
-       WHERE user_id = $1
-       ORDER BY is_default DESC, created_at DESC`,
-      [userId]
+      `SELECT * FROM addresses
+       WHERE user_id::text = $1
+       ORDER BY is_default DESC NULLS LAST, created_at DESC`,
+      [String(userId)]
     ).catch(async () => {
-      // Fallback in case landmark/address_type columns don't exist yet on live DB
-      return await query(
-        `SELECT id, user_id, label, name, phone, line1, line2,
-                city, state, pincode, is_default, created_at
-         FROM addresses
-         WHERE user_id = $1
-         ORDER BY is_default DESC, created_at DESC`,
-        [userId]
-      );
+      return { rows: [] };
     });
 
     const addresses = rows.map(formatAddress);
@@ -79,6 +73,8 @@ async function getAddresses(req, res, next) {
         user_addresses: addresses,
         total: addresses.length,
       },
+      addresses,
+      total: addresses.length
     });
   } catch (err) {
     next(err);
@@ -376,57 +372,6 @@ async function submitBulkInquiry(req, res, next) {
 }
 
 /**
- * POST /api/buyer/zip-gift
- * Instant digital gift card voucher generator
- */
-async function createZipGift(req, res, next) {
-  try {
-    const {
-      amount, gift_amount, voucher_amount,
-      recipient_name, recipientName, to_name,
-      recipient_email, recipientEmail,
-      sender_name, senderName, from_name,
-      note, message, notes,
-    } = req.body;
-
-    const voucherAmount = parseFloat(amount || gift_amount || voucher_amount);
-    if (!voucherAmount || voucherAmount <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide a valid gift voucher amount greater than ₹0.',
-      });
-    }
-
-    const rand1 = Math.random().toString(36).substring(2, 6).toUpperCase();
-    const rand2 = Math.random().toString(36).substring(2, 6).toUpperCase();
-    const voucherCode = `TGIFT-${rand1}-${rand2}`;
-
-    const zipGiftData = {
-      voucher_code: voucherCode,
-      code: voucherCode,
-      amount: voucherAmount,
-      currency: 'INR',
-      recipient_name: recipient_name || recipientName || to_name || 'Gift Recipient',
-      recipient_email: recipient_email || recipientEmail || '',
-      sender_name: sender_name || senderName || from_name || req.user?.name || 'Tohfa Giver',
-      note: note || message || notes || 'A special handcrafted gift voucher for you!',
-      created_at: new Date().toISOString(),
-      expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year validity
-      status: 'active',
-      is_redeemed: false,
-    };
-
-    return res.status(201).json({
-      success: true,
-      message: 'ZipGift voucher created successfully! Share this code with the recipient.',
-      data: zipGiftData,
-    });
-  } catch (err) {
-    next(err);
-  }
-}
-
-/**
  * GET /api/buyer/following
  * List of artisans followed by the current user
  */
@@ -437,8 +382,10 @@ async function getFollowingArtisans(req, res, next) {
 
     try {
       const { rows: fetched } = await query(
-        `SELECT sp.user_id AS seller_id, sp.store_name, sp.bio, sp.profile_photo,
-                sp.cover_photo, sp.seller_type, u.name, u.email, u.phone,
+        `SELECT sp.user_id AS seller_id, sp.store_name, sp.bio,
+                COALESCE(sp.logo_url, u.profile_photo_url) AS profile_photo,
+                COALESCE(sp.banner_url, u.cover_photo_url) AS cover_photo,
+                sp.seller_type, u.name, u.email, u.phone,
                 COALESCE(sf.created_at, f.created_at, NOW()) AS followed_at
          FROM users u
          JOIN seller_profiles sp ON sp.user_id = u.id
@@ -482,14 +429,21 @@ async function getOwnProfile(req, res, next) {
               profile_photo_url, profile_photo_url AS profile_photo,
               cover_photo_url, cover_photo_url AS cover_photo,
               role, is_active, created_at
-       FROM users WHERE id = $1 AND (is_active = true OR is_active = 1)`,
+       FROM users WHERE id = $1 AND (is_active = TRUE OR is_active IS NULL)`,
       [userId]
     );
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'User not found.' });
     }
     const userProfile = rows[0];
-    return res.json({ success: true, data: { ...userProfile, profile: userProfile } });
+    const avatarUrl = userProfile.profile_photo_url || '/img/default-avatar.png';
+    const normalized = {
+      ...userProfile,
+      avatar_url: avatarUrl,
+      profile_photo_url: avatarUrl,
+      profile_photo: avatarUrl,
+    };
+    return res.json({ success: true, data: { ...normalized, profile: normalized } });
   } catch (err) {
     next(err);
   }
@@ -542,7 +496,7 @@ async function getPublicProfile(req, res, next) {
               profile_photo_url, profile_photo_url AS profile_photo,
               cover_photo_url, cover_photo_url AS cover_photo,
               created_at
-       FROM users WHERE id = $1 AND is_active = true`,
+       FROM users WHERE id = $1 AND (is_active = TRUE OR is_active IS NULL)`,
       [userId]
     );
     if (!rows.length) {
@@ -565,8 +519,7 @@ module.exports = {
   getOwnProfile,
   updateOwnProfile,
   getPublicProfile,
-  // Bulk Inquiries, ZipGift, Following
+  // Bulk Inquiries, Following
   submitBulkInquiry,
-  createZipGift,
   getFollowingArtisans,
 };

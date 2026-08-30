@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Tohfa v2 — Occasion Controller
  * File: src/controllers/occasion.controller.js
  * Role: HTTP handlers for buyer occasions (gift reminders) — list, create, update, delete.
@@ -25,7 +25,6 @@ function formatOccasion(row) {
     date: occasionDate,
     reminder_days: row.reminder_days !== undefined ? row.reminder_days : 7,
     created_at: row.created_at,
-    updated_at: row.updated_at,
   };
 }
 
@@ -37,7 +36,7 @@ async function getOccasions(req, res, next) {
     const userId = req.user.id;
 
     const { rows } = await query(
-      `SELECT id, user_id, label, person_name, occasion_date, created_at, updated_at
+      `SELECT id, user_id, label, person_name, occasion_date, created_at
        FROM occasions
        WHERE user_id = $1
        ORDER BY occasion_date ASC`,
@@ -116,10 +115,9 @@ async function updateOccasion(req, res, next) {
       `UPDATE occasions
        SET label         = COALESCE($1, label),
            person_name   = COALESCE($2, person_name),
-           occasion_date = COALESCE($3, occasion_date),
-           updated_at    = NOW()
+           occasion_date = COALESCE($3, occasion_date)
        WHERE id = $4 AND user_id = $5
-       RETURNING id, user_id, label, person_name, occasion_date, updated_at`,
+       RETURNING id, user_id, label, person_name, occasion_date, created_at`,
       [finalLabel ? finalLabel.trim() : null, finalPersonName, finalDate, id, userId]
     );
 

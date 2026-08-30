@@ -314,6 +314,16 @@
                 </div>
             </section>
 
+            ${(o.notes || o.delivery_notes) ? `
+                <div class="mb-xl p-4 bg-amber-50/90 border border-amber-200 rounded-2xl flex items-start gap-3 shadow-xs">
+                    <span class="material-symbols-outlined text-amber-800 text-2xl mt-0.5">local_shipping</span>
+                    <div>
+                        <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wider mb-1 font-['DM_Sans']">Crafting & Delivery Update</h4>
+                        <p class="text-xs text-amber-950/90 leading-relaxed font-['DM_Sans']">${o.notes || o.delivery_notes}</p>
+                    </div>
+                </div>
+            ` : ''}
+
             <!-- Main Content Grid -->
             <div class="grid grid-cols-1 md:grid-cols-12 gap-lg items-start">
                 <!-- Left Side: Items & Shipping -->
@@ -449,7 +459,7 @@
             step = 3;
         } else if (['proof_uploaded', 'proof_approved', 'design_proof_approved', 'packed'].includes(s)) {
             step = 2;
-        } else if (['confirmed', 'crafting', 'in_progress', 'processing'].includes(s)) {
+        } else if (['confirmed', 'crafting', 'in_progress', 'processing', 'preparing'].includes(s)) {
             step = 1;
         } else {
             step = 0; // pending, order_placed, awaiting_payment
@@ -634,16 +644,8 @@
                     console.error("Failed to fetch profile avatar:", err);
                 }
                 
-                let avatarHtml = '';
-                if (avatarUrl) {
-                    avatarHtml = `<img src="${avatarUrl}" alt="Profile" class="w-10 h-10 rounded-full border border-[rgba(20,56,31,0.2)] object-cover cursor-pointer" onclick="window.location.href='profile.html'" loading="lazy" />`;
-                } else {
-                    avatarHtml = `
-                        <a href="/buyer/profile.html" class="w-10 h-10 rounded-full bg-[#14381F] flex items-center justify-center text-white font-bold border border-[rgba(20,56,31,0.2)] text-sm overflow-hidden flex-shrink-0 cursor-pointer">
-                            ${initial}
-                        </a>
-                    `;
-                }
+                const finalNavAvatar = avatarUrl || '/img/default-avatar.png';
+                const avatarHtml = `<img src="${finalNavAvatar}" alt="Profile" class="w-10 h-10 rounded-full border border-[rgba(20,56,31,0.2)] object-cover cursor-pointer" onclick="window.location.href='/buyer/profile.html'" loading="lazy" onerror="this.onerror=null; this.src='/img/default-avatar.png';" />`;
 
                 if (authContainer) {
                     authContainer.innerHTML = avatarHtml;

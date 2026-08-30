@@ -24,7 +24,7 @@ async function getCart(req, res, next) {
          ci.variant_id,
          ci.quantity,
          COALESCE(ci.customization_data, ci.customization_payload) AS customization_data,
-         ci.created_at,
+         COALESCE(ci.created_at, ci.added_at) AS created_at,
          p.name AS product_name,
          p.name AS title,
          COALESCE(p.base_price, 0) AS base_price,
@@ -32,6 +32,7 @@ async function getCart(req, res, next) {
          p.seller_id,
          COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
          COALESCE(u.profile_photo_url, sp.logo_url, s.logo_url) AS seller_photo,
+         pv.variant_name AS variant_name,
          pv.color_name AS color,
          pv.size AS size,
          COALESCE(pv.additional_price, 0) AS variant_additional_price,
@@ -39,6 +40,7 @@ async function getCart(req, res, next) {
            (SELECT url FROM product_images pi
             WHERE pi.product_id = p.id
             ORDER BY pi.sort_order ASC LIMIT 1),
+           (p.images)[1],
            NULL
          ) AS product_image
        FROM cart_items ci
@@ -47,11 +49,11 @@ async function getCart(req, res, next) {
        LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
        LEFT JOIN users u ON u.id = p.seller_id
        LEFT JOIN product_variants pv ON pv.id = ci.variant_id
-       WHERE (ci.buyer_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
-       ORDER BY ci.created_at DESC`,
+       WHERE (ci.user_id = $1 OR ci.buyer_id = $1)
+       ORDER BY COALESCE(ci.created_at, ci.added_at) DESC`,
       [buyerId]
     ).catch(async () => {
-      // Fallback query for legacy column variations
+      // Minimal fallback — just the essential columns guaranteed to exist
       return await query(
         `SELECT
            ci.id,
@@ -59,13 +61,15 @@ async function getCart(req, res, next) {
            ci.variant_id,
            ci.quantity,
            ci.customization_data,
-           ci.created_at,
+           COALESCE(ci.created_at, ci.added_at) AS created_at,
            p.name AS product_name,
            p.name AS title,
            COALESCE(p.base_price, 0) AS base_price,
            p.status AS product_status,
            p.seller_id,
            COALESCE(sp.store_name, 'Artisan Studio') AS store_name,
+           (p.images)[1] AS product_image,
+           pv.variant_name AS variant_name,
            pv.color_name AS color,
            pv.size AS size,
            COALESCE(pv.additional_price, 0) AS variant_additional_price
@@ -73,8 +77,8 @@ async function getCart(req, res, next) {
          JOIN products p ON p.id = ci.product_id
          LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
          LEFT JOIN product_variants pv ON pv.id = ci.variant_id
-         WHERE (ci.buyer_id = $1)
-         ORDER BY ci.created_at DESC`,
+         WHERE (ci.user_id = $1 OR ci.buyer_id = $1)
+         ORDER BY COALESCE(ci.created_at, ci.added_at) DESC`,
         [buyerId]
       );
     });
@@ -83,13 +87,6 @@ async function getCart(req, res, next) {
     const grouped = {};
 
     for (const item of rows) {
-      const basePrice = parseFloat(item.base_price || 0);
-      const deltaPrice = parseFloat(item.variant_additional_price || 0);
-      const unitPrice = parseFloat((basePrice + deltaPrice).toFixed(2));
-      const itemPricePaise = Math.round(unitPrice * 100);
-      const isAvailable = item.product_status === 'active';
-      const quantity = Math.max(1, parseInt(item.quantity || 1, 10));
-
       let customizationData = item.customization_data;
       if (typeof customizationData === 'string') {
         try {
@@ -98,6 +95,21 @@ async function getCart(req, res, next) {
           // Keep string as is
         }
       }
+
+      let customFee = 0;
+      if (customizationData && typeof customizationData === 'object') {
+        customFee = parseFloat(customizationData.fee_applied || customizationData.customization_fee || customizationData.extra_fee || 0) || 0;
+        if (customizationData.choice_delta) {
+          customFee += parseFloat(customizationData.choice_delta) || 0;
+        }
+      }
+
+      const basePrice = parseFloat(item.base_price || 0);
+      const deltaPrice = parseFloat(item.variant_additional_price || 0);
+      const unitPrice = parseFloat((basePrice + deltaPrice + customFee).toFixed(2));
+      const itemPricePaise = Math.round(unitPrice * 100);
+      const isAvailable = item.product_status === 'active';
+      const quantity = Math.max(1, parseInt(item.quantity || 1, 10));
 
       const itemObj = {
         id: item.id,
@@ -117,6 +129,7 @@ async function getCart(req, res, next) {
         price_paise: itemPricePaise,
         subtotal: parseFloat((unitPrice * quantity).toFixed(2)),
         subtotal_paise: itemPricePaise * quantity,
+        variant_name: item.variant_name || item.color || null,
         color: item.color,
         size: item.size,
         store_name: item.store_name || 'Artisan Store',

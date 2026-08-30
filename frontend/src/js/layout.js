@@ -405,7 +405,7 @@ export function renderFooter() {
       <!-- Artisans -->
       <div>
         <div class="footer__heading">Artisans</div>
-        <a href="/buyer/become-seller.html"   class="footer__link">Sell on Tohfa</a>
+        <a href="/auth/signup-seller.html"   class="footer__link">Sell on Tohfa</a>
         <a href="/seller/dashboard.html"      class="footer__link">Seller Studio</a>
         <a href="/buyer/zip-gift.html"        class="footer__link">Zip Gift ✨</a>
         <a href="/buyer/customization-form.html" class="footer__link">Request Custom Gift</a>

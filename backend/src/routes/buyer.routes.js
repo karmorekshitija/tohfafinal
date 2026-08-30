@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Tohfa v2 — Buyer Routes
  * File: backend/src/routes/buyer.routes.js
  * Mounts at: /api/buyer
@@ -29,14 +29,5 @@ router.get('/following', authMiddleware, buyerController.getFollowingArtisans);
 
 // Bulk Gifting & Corporate Inquiries (public or auth)
 router.post('/bulk-inquiries', buyerController.submitBulkInquiry);
-
-// ZipGift Instant Digital Gifting (public or auth)
-router.post('/zip-gift', (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    return authMiddleware(req, res, next);
-  }
-  next();
-}, buyerController.createZipGift);
 
 module.exports = router;

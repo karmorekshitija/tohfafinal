@@ -64,7 +64,7 @@ async function getSellerSummary(req, res, next) {
 
     // Seller profile info
     const { rows: spRows } = await query(
-      `SELECT sp.store_name, sp.seller_type, sp.is_approved, u.full_name, u.display_name
+      `SELECT sp.store_name, sp.seller_type, sp.is_approved, u.name
        FROM seller_profiles sp
        JOIN users u ON u.id = sp.user_id
        WHERE sp.user_id = $1`,
@@ -114,7 +114,7 @@ async function getSellerSummary(req, res, next) {
     // Recent orders (latest 5)
     const { rows: recentOrderRows } = await query(
       `SELECT o.id, o.total_amount, o.status, o.created_at,
-              COALESCE(u.full_name, u.display_name, 'Buyer') AS buyer_name,
+              COALESCE(u.name, 'Buyer') AS buyer_name,
               COALESCE(
                 (SELECT p2.name FROM order_items oi2 
                  JOIN products p2 ON p2.id = oi2.product_id 
@@ -122,7 +122,7 @@ async function getSellerSummary(req, res, next) {
                 'Handcrafted Creation'
               ) AS item_title,
               COALESCE(
-                (SELECT pi.image_url FROM order_items oi
+                (SELECT pi.url FROM order_items oi
                  JOIN product_images pi ON pi.product_id = oi.product_id AND pi.sort_order = 0
                  WHERE oi.order_id = o.id LIMIT 1),
                 NULL
@@ -314,6 +314,28 @@ function buildDateRange(period, start, end, baseIdx = 1) {
   };
 }
 
+function generateDateSequence(period, start, end) {
+  const dates = [];
+  if (period === 'custom' && start && end) {
+    let curr = new Date(start);
+    const stop = new Date(end);
+    while (curr <= stop) {
+      dates.push(curr.toISOString().slice(0, 10));
+      curr.setDate(curr.getDate() + 1);
+    }
+    return dates;
+  }
+
+  const days = period === '30d' ? 30 : 7;
+  const today = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(today.getDate() - i);
+    dates.push(d.toISOString().slice(0, 10));
+  }
+  return dates;
+}
+
 /**
  * GET /api/admin/dashboard/revenue-chart
  * Query params: period=7d|30d|custom, start=YYYY-MM-DD, end=YYYY-MM-DD
@@ -336,11 +358,23 @@ async function getRevenueChart(req, res, next) {
       params
     );
 
-    const data = rows.map(r => ({
-      date: r.date instanceof Date
+    const dateSeq = generateDateSequence(period, start, end);
+    const dateMap = {};
+    dateSeq.forEach(d => {
+      dateMap[d] = 0;
+    });
+
+    rows.forEach(r => {
+      const d = r.date instanceof Date
         ? r.date.toISOString().slice(0, 10)
-        : String(r.date).slice(0, 10),
-      revenue: Math.round(parseFloat(r.revenue_rupees) * 100),
+        : String(r.date).slice(0, 10);
+      const val = Math.round(parseFloat(r.revenue_rupees) * 100);
+      dateMap[d] = val;
+    });
+
+    const data = Object.keys(dateMap).sort().map(d => ({
+      date: d,
+      revenue: dateMap[d] || 0
     }));
 
     return res.json({ success: true, data });
@@ -380,11 +414,19 @@ async function getFootfall(req, res, next) {
       params
     );
 
-    // Merge both result sets by date
+    const dateSeq = generateDateSequence(period, start, end);
     const byDate = {};
+    dateSeq.forEach(d => {
+      byDate[d] = { date: d, unique_visitors: 0, new_signups: 0 };
+    });
+
     for (const r of activeRows) {
       const d = r.date instanceof Date ? r.date.toISOString().slice(0, 10) : String(r.date).slice(0, 10);
-      byDate[d] = { date: d, unique_visitors: parseInt(r.unique_visitors, 10), new_signups: 0 };
+      if (byDate[d]) {
+        byDate[d].unique_visitors = parseInt(r.unique_visitors, 10);
+      } else {
+        byDate[d] = { date: d, unique_visitors: parseInt(r.unique_visitors, 10), new_signups: 0 };
+      }
     }
     for (const r of signupRows) {
       const d = r.date instanceof Date ? r.date.toISOString().slice(0, 10) : String(r.date).slice(0, 10);

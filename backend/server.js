@@ -168,13 +168,23 @@ app.get('/api/user/addresses', authMiddleware, buyerController.getAddresses);
 app.post('/api/occasion/new', authMiddleware, occasionController.createOccasion);
 app.post('/api/seller/follow', authMiddleware, sellerController.followSeller);
 app.delete('/api/seller/follow', authMiddleware, sellerController.unfollowSeller);
+app.post('/api/reports', authMiddleware, adminController.createReport);
 app.post('/api/bulk-inquiries', buyerController.submitBulkInquiry);
 app.post('/api/buyer/bulk-inquiries', buyerController.submitBulkInquiry);
 
 app.get('/api/home/feed', productController.forYouFeed);
 app.get('/api/ui-settings/public', adminController.listBanners);
-app.get('/api/capacity/check', (req, res) => res.json({ success: true, data: { available: true, is_available: true, message: 'Maker is accepting orders.' } }));
-app.get('/api/capacity/check-cart', (req, res) => res.json({ success: true, data: { available: true, is_available: true, items: [] } }));
+app.get('/api/sellers/:id', sellerController.getPublicSellerProfile);
+app.get('/api/sellers/:id/products', (req, res, next) => {
+  req.query.seller_id = req.params.id;
+  return productController.listProducts(req, res, next);
+});
+app.get('/api/products/seller/:id', (req, res, next) => {
+  req.query.seller_id = req.params.id;
+  return productController.listProducts(req, res, next);
+});
+app.all('/api/capacity/check', (req, res) => res.json({ success: true, data: { available: true, is_available: true, message: 'Maker is accepting orders.' } }));
+app.all('/api/capacity/check-cart', (req, res) => res.json({ success: true, data: { available: true, is_available: true, items: [] } }));
 // ---------------------------------------------------------------------------
 // MESSAGING — Not Yet Implemented
 // These routes return 501 to signal to the frontend that messaging is not

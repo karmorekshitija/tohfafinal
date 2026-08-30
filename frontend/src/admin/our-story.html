@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="light" lang="en">
 <head>
   <link rel="icon" type="image/png" href="/favicon.png">
@@ -35,7 +35,7 @@
   <div class="watermark-overlay"></div>
 
   <!-- Shared Sidebar Component Injected Dynamically -->
-  <aside></aside>
+  <aside data-sidebar="admin"></aside>
 
   <!-- Top Navigation Header -->
   <header class="fixed top-0 right-0 w-[calc(100%-256px)] h-[60px] bg-[#FFF8E7] border-b border-outline-variant flex justify-between items-center px-8 z-40">
@@ -162,7 +162,10 @@
       grid.innerHTML = '';
       if (activeSpotlights.length > 0) {
         activeSpotlights.forEach(s => {
-          const initial = s.seller_name ? s.seller_name.charAt(0).toUpperCase() : 'S';
+          const sellerTitle = s.seller_name || s.name || 'Seller';
+          const initial = sellerTitle.charAt(0).toUpperCase();
+          const shopTitle = s.shop_name || s.store_name || 'Artisan Studio';
+          const descriptionText = s.story_text || s.blurb || s.bio || 'Crafting timeless Indian keepsakes with passion and care.';
           const card = document.createElement('div');
           card.className = 'bg-[#FFF8E7] rounded-xl border border-outline-variant/30 overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md duration-200 transition-all';
           card.innerHTML = `
@@ -180,18 +183,18 @@
                 <div class="flex items-center gap-3 mb-3">
                   <div class="h-8 w-8 rounded-full bg-secondary-container flex items-center justify-center text-primary font-bold text-xs shrink-0">${initial}</div>
                   <div>
-                    <h4 class="text-sm font-bold text-primary truncate leading-tight">${s.seller_name}</h4>
-                    <p class="text-[10px] text-text-faint font-data-meta mt-0.5 truncate">${s.shop_name || 'Artisan Studio'}</p>
+                    <h4 class="text-sm font-bold text-primary truncate leading-tight">${sellerTitle}</h4>
+                    <p class="text-[10px] text-text-faint font-data-meta mt-0.5 truncate">${shopTitle}</p>
                   </div>
                 </div>
-                <p class="text-xs text-text-muted line-clamp-4 leading-relaxed">${s.story_text}</p>
+                <p class="text-xs text-text-muted line-clamp-4 leading-relaxed">${descriptionText}</p>
               </div>
             </div>
             <div class="p-5 pt-0 border-t border-outline-variant/10 flex items-center justify-end gap-2 mt-4 bg-gray-50/50">
-              <button onclick="editSpotlight(${s.id})" class="px-4 py-1.5 border border-primary text-primary hover:bg-[#FFF8E7] rounded-full text-xs font-bold transition-all">
+              <button onclick="editSpotlight('${s.id}')" class="px-4 py-1.5 border border-primary text-primary hover:bg-[#FFF8E7] rounded-full text-xs font-bold transition-all cursor-pointer">
                 Edit
               </button>
-              <button onclick="deleteSpotlight(${s.id})" class="px-4 py-1.5 border border-error text-error hover:bg-[#FFF8E7] rounded-full text-xs font-bold transition-all">
+              <button onclick="deleteSpotlight('${s.id}')" class="px-4 py-1.5 border border-error text-error hover:bg-[#FFF8E7] rounded-full text-xs font-bold transition-all cursor-pointer">
                 Remove
               </button>
             </div>
@@ -215,11 +218,11 @@
 
       if (id !== null) {
         document.getElementById('modal-title').textContent = 'Edit Seller Spotlight';
-        const s = activeSpotlights.find(item => item.id === id);
+        const s = activeSpotlights.find(item => String(item.id) === String(id));
         if (s) {
-          document.getElementById('selected-seller-name').value = s.seller_name;
+          document.getElementById('selected-seller-name').value = s.seller_name || s.name || '';
           document.getElementById('selected-seller-id').value = s.seller_id;
-          document.getElementById('spotlight-text').value = s.story_text;
+          document.getElementById('spotlight-text').value = s.story_text || s.blurb || s.bio || '';
           document.getElementById('spotlight-active').checked = !!s.is_active;
 
           if (s.image_url) {

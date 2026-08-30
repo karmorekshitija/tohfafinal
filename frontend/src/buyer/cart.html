@@ -234,7 +234,7 @@
         <label class="block text-xs font-semibold text-on-surface-variant uppercase">Address Line 2 (Optional)</label>
         <input type="text" id="addr-line2" class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
       </div>
-      <div class="grid grid-cols-2 gap-sm">
+      <div class="grid grid-cols-2 gap-sm form-row-2col">
         <div class="space-y-xs">
           <label class="block text-xs font-semibold text-on-surface-variant uppercase">City</label>
           <input type="text" id="addr-city" required class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
@@ -244,7 +244,7 @@
           <input type="text" id="addr-state" required class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-sm">
+      <div class="grid grid-cols-2 gap-sm form-row-2col">
         <div class="space-y-xs">
           <label class="block text-xs font-semibold text-on-surface-variant uppercase">Pincode</label>
           <input type="text" id="addr-pincode" required class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
@@ -518,6 +518,26 @@
                     </h3>
                     <p class="text-xs text-on-surface-variant mt-xs hover:underline cursor-pointer" onclick="window.location.href='/buyer/seller-profile.html?id=${ci.seller_id}'">${ci.seller_name}</p>
                     ${ci.variant_name ? `<span class="inline-block mt-xs px-2 py-[2px] text-[11px] font-semibold rounded-full bg-primary/10 text-primary border border-primary/20">${ci.variant_name}</span>` : ''}
+                    ${(() => {
+                        if (!ci.customization_data) return '';
+                        let cData = ci.customization_data;
+                        if (typeof cData === 'string') {
+                            try { cData = JSON.parse(cData); } catch { cData = null; }
+                        }
+                        if (!cData || typeof cData !== 'object') return '';
+                        const summary = cData.summary_text || (cData.selected_options ? Object.entries(cData.selected_options).map(([k, v]) => `${k}: ${v}`).join(', ') : (cData.text || cData.inscription || 'Personalized'));
+                        const craftingTime = cData.crafting_time || (ci.preparation_days ? `${ci.preparation_days} days` : '5-7 days');
+                        return `
+                            <div class="mt-1 flex items-start gap-1 text-[11px] text-[#14381F] bg-[#14381F]/5 border border-[#14381F]/15 rounded-lg px-2 py-1">
+                                <span class="material-symbols-outlined text-xs text-[#14381F] shrink-0 mt-0.5">auto_fix_high</span>
+                                <span class="font-medium truncate max-w-[240px]">${summary}</span>
+                            </div>
+                            <div class="mt-1 flex items-center gap-1 text-[10px] text-amber-900 bg-amber-50/90 border border-amber-200/80 rounded-lg px-2 py-0.5 w-fit">
+                                <span class="material-symbols-outlined text-[13px] text-amber-800 shrink-0">schedule</span>
+                                <span>Est. preparation: <strong>${craftingTime}</strong></span>
+                            </div>
+                        `;
+                    })()}
                     <p class="font-data-price text-[13px] ${isUnavailable ? 'text-gray-400' : 'text-[#14381F]'} mt-xs font-semibold">${formatPaise(ci.price_paise)}</p>
                 </div>
                 <div class="flex flex-col items-end gap-sm">
@@ -950,16 +970,8 @@
                     console.error("Failed to fetch profile avatar:", err);
                 }
                 
-                let avatarHtml = '';
-                if (avatarUrl) {
-                    avatarHtml = `<img src="${avatarUrl}" alt="Profile" class="w-10 h-10 rounded-full border border-[rgba(20,56,31,0.2)] object-cover cursor-pointer" onclick="window.location.href='profile.html'" loading="lazy" />`;
-                } else {
-                    avatarHtml = `
-                        <a href="/buyer/profile.html" class="w-10 h-10 rounded-full bg-[#14381F] flex items-center justify-center text-white font-bold border border-[rgba(20,56,31,0.2)] text-sm overflow-hidden flex-shrink-0 cursor-pointer">
-                            ${initial}
-                        </a>
-                    `;
-                }
+                const finalNavAvatar = avatarUrl || '/img/default-avatar.png';
+                const avatarHtml = `<img src="${finalNavAvatar}" alt="Profile" class="w-10 h-10 rounded-full border border-[rgba(20,56,31,0.2)] object-cover cursor-pointer" onclick="window.location.href='/buyer/profile.html'" loading="lazy" onerror="this.onerror=null; this.src='/img/default-avatar.png';" />`;
 
                 if (authContainer) {
                     authContainer.innerHTML = avatarHtml;
@@ -1043,7 +1055,7 @@ async function handleFooterSellerLink(e) {
     console.error("Error checking seller status:", err);
   }
   
-  window.location.href = isMobile ? '/mobile-buyer/become-seller.html' : '/buyer/become-seller.html';
+  window.location.href = '/auth/signup-seller.html';
 }
 
 // Check if we need to auto-redirect back to dashboard/signup after login redirect

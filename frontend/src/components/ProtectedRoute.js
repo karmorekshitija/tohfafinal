@@ -69,7 +69,7 @@
   // Pages that are publicly accessible without login
   const PUBLIC_BUYER_PAGES = new Set([
     'home', 'categories', 'category', 'product',
-    'our-story', 'seller-profile', 'search', 'zipgift', 'faq', 'bulk', 'become-seller'
+    'our-story', 'seller-profile', 'search', 'zipgift', 'faq', 'bulk'
   ]);
 
   let guardsRun = false;
@@ -86,7 +86,7 @@
     }
 
     // Seller guard
-    if (path.startsWith('/seller/') && !path.endsWith('/seller/become-seller.html') && !path.endsWith('/seller/onboarding.html')) {
+    if (path.startsWith('/seller/') && !path.endsWith('/seller/onboarding.html')) {
       const token = sessionStorage.getItem('tohfa_access_token');
       if (!token) {
         sessionStorage.setItem('tohfa_return_to', path + window.location.search);
@@ -99,12 +99,14 @@
           window.location.replace('/buyer/home.html');
           return;
         }
-        // Unapproved sellers only get become-seller + onboarding + profile-settings
+        // Unapproved sellers only get onboarding + profile-settings + profile
         const isApproved = user.is_approved === 1 || user.is_approved === true || user.is_approved === '1' || user.is_approved === 'true';
         if (user.role === 'seller' && !isApproved) {
-          const allowed = path.endsWith('/become-seller.html') || path.endsWith('/onboarding.html') || path.endsWith('/profile-settings.html');
+          const allowed = path.endsWith('/onboarding.html') || path.endsWith('/onboarding') ||
+                          path.endsWith('/profile-settings.html') || path.endsWith('/profile-settings') ||
+                          path.endsWith('/profile.html') || path.endsWith('/profile');
           if (!allowed) {
-            window.location.replace('/seller/become-seller.html?status=pending');
+            window.location.replace('/seller/onboarding.html');
             return;
           }
         }
@@ -151,17 +153,14 @@
     if (token) {
       let userObj = {};
       try { userObj = JSON.parse(sessionStorage.getItem('tohfa_user') || '{}'); } catch (e) {}
-      const initial = (userObj.full_name || userObj.display_name || userObj.email || 'U').charAt(0).toUpperCase();
-      const avatarUrl = userObj.avatar_url || '';
+      const avatarUrl = userObj.avatar_url || userObj.profile_photo_url || '/img/default-avatar.png';
       const profileHref = path.startsWith('/seller/') ? '/seller/profile.html' : '/buyer/profile.html';
 
-      authContainer.innerHTML = avatarUrl
-        ? `<a href="${profileHref}" class="w-10 h-10 rounded-full border-2 border-pine/30 overflow-hidden flex-shrink-0 block" aria-label="My profile">
-             <img src="${avatarUrl}" alt="Profile" class="w-full h-full object-cover" loading="lazy">
-           </a>`
-        : `<a href="${profileHref}" class="w-10 h-10 rounded-full bg-pine flex items-center justify-center text-latte font-bold text-sm border-2 border-pine/30 flex-shrink-0" aria-label="My profile">
-             ${initial}
-           </a>`;
+      authContainer.innerHTML = `
+        <a href="${profileHref}" class="w-10 h-10 rounded-full border border-[rgba(20,56,31,0.2)] overflow-hidden flex-shrink-0 block" aria-label="My profile">
+          <img src="${avatarUrl}" alt="Profile" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='/img/default-avatar.png';">
+        </a>
+      `;
     } else {
       authContainer.innerHTML = `
         <a href="/auth/login.html" class="text-sm font-semibold text-[#FAF6EE] hover:text-white hover:underline no-underline" style="font-family: 'DM Sans', sans-serif;">Login</a>
@@ -239,7 +238,16 @@
 
   // ── 8. Mobile Bottom Navigation for Buyer pages ──────────────────────────
   function setupBottomNav() {
-    if (!path.startsWith('/buyer/')) return;
+    const isBuyerPage = path.includes('/buyer/') ||
+      (!path.includes('/seller/') && !path.includes('/admin/') && !path.includes('/auth/') && (
+        path.includes('home') || path.includes('categor') || path.includes('zip-gift') ||
+        path.includes('search') || path.includes('product') || path.includes('profile') ||
+        path.includes('cart') || path.includes('wishlist') || path.includes('order') ||
+        path.includes('occasions') || path.includes('our-story') || path.includes('faq') ||
+        path.includes('terms')
+      ));
+
+    if (!isBuyerPage) return;
     if (document.getElementById('tohfa-buyer-bottom-nav')) return;
 
     const mainEl = document.querySelector('main');
@@ -247,29 +255,30 @@
       mainEl.classList.add('pb-[76px]', 'md:pb-0');
     }
 
-    const currentClean = (path.split('/').pop() || 'home').replace('.html', '');
+    const currentClean = (path.split('/').pop() || 'home').replace('.html', '').toLowerCase();
 
     const nav = document.createElement('nav');
     nav.id = 'tohfa-buyer-bottom-nav';
-    nav.className = 'buyer-bottom-nav md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FFF8E7] border-t border-[#14381F]/15 flex items-center justify-around px-2';
+    nav.className = 'buyer-bottom-nav md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FAF6EE] border-t border-[#14381F]/15 flex items-center justify-around px-2 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]';
     nav.style.height = '60px';
 
     const items = [
       { name: 'Home', href: '/buyer/home.html', icon: 'home', key: 'home' },
-      { name: 'Categories', href: '/buyer/categories.html', icon: 'category', key: 'categories' },
-      { name: 'Search', href: '/buyer/search.html?focus=true', icon: 'search', key: 'search' },
-      { name: 'Cart', href: '/buyer/cart.html', icon: 'shopping_bag', key: 'cart' },
+      { name: 'Category', href: '/buyer/categories.html', icon: 'category', key: 'categories' },
+      { name: 'ZipGift', href: '/buyer/zip-gift.html', icon: 'bolt', key: 'zip-gift' },
       { name: 'Profile', href: '/buyer/profile.html', icon: 'person', key: 'profile' }
     ];
 
     nav.innerHTML = items.map(item => {
-      const isActive = currentClean === item.key || (item.key === 'home' && currentClean === '');
+      const isActive = currentClean === item.key ||
+        (item.key === 'home' && (currentClean === '' || currentClean === 'index')) ||
+        (item.key === 'categories' && (currentClean === 'category' || currentClean === 'categories'));
       const activeColor = isActive ? '#14381F' : 'rgba(28, 28, 28, 0.5)';
-      const fontWeight = isActive ? '600' : '400';
+      const fontWeight = isActive ? '700' : '400';
       return `
-        <a href="${item.href}" class="flex flex-col items-center justify-center gap-0.5 py-1 min-w-[52px] tap-target transition-transform active:scale-90" style="color: ${activeColor}; text-decoration: none;">
+        <a href="${item.href}" class="flex flex-col items-center justify-center gap-0.5 py-1 min-w-[60px] tap-target transition-transform active:scale-90" style="color: ${activeColor}; text-decoration: none;">
           <span class="material-symbols-outlined" style="font-size: 22px; font-variation-settings: 'FILL' ${isActive ? 1 : 0};">${item.icon}</span>
-          <span style="font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: ${fontWeight};">${item.name}</span>
+          <span style="font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: ${fontWeight};">${item.name}</span>
         </a>
       `;
     }).join('');
@@ -281,6 +290,7 @@
   window.addEventListener('tohfa-session-sync', function () {
     setupNavUI();
     setupCartBadge();
+    setupBottomNav();
   });
 
   if (document.readyState === 'loading') {

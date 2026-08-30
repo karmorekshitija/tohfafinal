@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customized Studio | Seller Studio | Tohfa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..700;1,400..700&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="../responsive.css">
+  <script src="../components/seller-components.js" type="module"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#14381F',
+            forest: '#14381F',
+            gold: '#B5813A',
+            parchment: '#FFF8E7',
+            sage: '#3D6B4F',
+            'sage-soft': '#E0EAE2',
+            surface: '#FAF6EE'
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-[#FFF8E7] text-on-surface font-['DM_Sans'] min-h-screen overflow-x-hidden">
+
+<seller-layout active-tab="customized">
+  <!-- Top Navigation & Stats Bar -->
+  <div class="bg-parchment/60 border-b border-sage/10 py-6 px-4 md:px-12 z-10 mb-8">
+    <div class="max-w-7xl mx-auto flex justify-between items-center flex-wrap gap-4">
+      <!-- Left side: Stats -->
+      <div class="flex items-center gap-4 flex-wrap">
+        <div class="bg-primary/10 px-4 py-2 rounded-xl border border-sage/20">
+          <span class="text-[10px] font-bold text-forest uppercase tracking-widest block font-mono">Customized Items</span>
+          <span class="font-['Playfair_Display'] text-2xl text-primary font-bold leading-tight" id="stats-total-custom">0</span>
+        </div>
+        <div class="bg-gold/10 px-4 py-2 rounded-xl border border-gold/20">
+          <span class="text-[10px] font-bold text-gold uppercase tracking-widest block font-mono">Custom Orders</span>
+          <span class="font-['Playfair_Display'] text-2xl text-gold font-bold leading-tight" id="stats-custom-orders">0</span>
+        </div>
+        <div class="bg-emerald-900/10 px-4 py-2 rounded-xl border border-emerald-900/20">
+          <span class="text-[10px] font-bold text-[#14381F] uppercase tracking-widest block font-mono">Customizer Type</span>
+          <span class="font-mono text-sm text-[#14381F] font-bold leading-tight">Direct-to-Cart</span>
+        </div>
+      </div>
+      
+      <!-- Right side: Actions & Search -->
+      <div class="flex items-center gap-3 flex-wrap">
+        <a href="/seller/add-product.html" id="create-custom-btn" class="px-5 py-2.5 bg-forest text-white rounded-full text-xs font-bold shadow-md hover:bg-forest/90 transition-all flex items-center gap-1.5 active:scale-95">
+          <span class="material-symbols-outlined text-sm">auto_fix_high</span> New Customized Product
+        </a>
+        <div class="relative flex items-center bg-white border border-sage/20 rounded-full px-4 py-1.5 focus-within:border-primary transition-colors w-64 shadow-xs">
+          <span class="material-symbols-outlined text-on-surface-variant text-base mr-2 text-sage">search</span>
+          <input id="search-input" class="bg-transparent border-none outline-none text-xs w-full focus:ring-0" placeholder="Search customized studio..." type="text"/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="hidden fixed top-20 right-6 z-[300] flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg text-sm font-medium transition-all">
+    <span id="toast-icon" class="material-symbols-outlined text-lg"></span>
+    <span id="toast-msg"></span>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 md:px-12 space-y-6 pb-16">
+    <!-- View Switcher (Customized Products vs Customized Orders) -->
+    <div class="flex items-center justify-between flex-wrap gap-4">
+      <div class="flex items-center gap-2 p-1 bg-white border border-sage/20 rounded-2xl shadow-xs">
+        <button id="tab-btn-products" onclick="switchCustomizedTab('products')" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-[#14381F] text-white shadow-xs flex items-center gap-2 transition-all cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]">auto_fix_high</span>
+          <span>Customized Products</span>
+          <span id="tab-badge-products" class="bg-white/20 text-white px-2 py-0.5 rounded-full text-[10px] font-mono">0</span>
+        </button>
+        <button id="tab-btn-orders" onclick="switchCustomizedTab('orders')" class="px-5 py-2.5 rounded-xl text-xs font-bold text-[#14381F] hover:bg-[#14381F]/5 flex items-center gap-2 transition-all cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]">shopping_bag</span>
+          <span>Customized Orders</span>
+          <span id="tab-badge-orders" class="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-[10px] font-mono">0</span>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <a href="/seller/catalog.html" class="px-4 py-2 text-xs font-bold text-[#14381F] bg-white hover:bg-stone-50 rounded-full border border-sage/20 transition-all flex items-center gap-1.5 shadow-xs">
+          <span class="material-symbols-outlined text-sm">inventory_2</span> Pre-Made Catalog
+        </a>
+      </div>
+    </div>
+
+    <!-- ==================== SECTION 1: CUSTOMIZED PRODUCTS ==================== -->
+    <div id="section-custom-products" class="space-y-6">
+      <!-- Filters Row -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-sage/20 pb-3">
+        <div class="flex items-center gap-4">
+          <span class="text-[11px] font-mono uppercase tracking-wider font-bold text-sage">Status:</span>
+          <select id="status-filter" class="bg-transparent border-none text-xs font-bold text-[#14381F] focus:ring-0 cursor-pointer py-1">
+            <option value="all">All Customized Items</option>
+            <option value="active">Active Only</option>
+            <option value="paused">Paused Only</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <span class="text-[11px] font-mono uppercase tracking-wider font-bold text-sage">Sort:</span>
+          <select id="sort-filter" class="bg-transparent border-none text-xs font-bold text-[#14381F] focus:ring-0 cursor-pointer py-1">
+            <option value="newest">Newest First</option>
+            <option value="price_high">Price: High to Low</option>
+            <option value="price_low">Price: Low to High</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Loading Skeleton -->
+      <div id="loading-state" class="bg-white rounded-2xl border border-sage/20 p-6 space-y-4 shadow-sm">
+        <div class="h-12 bg-sage/10 rounded-xl animate-pulse"></div>
+        <div class="h-12 bg-sage/10 rounded-xl animate-pulse"></div>
+        <div class="h-12 bg-sage/10 rounded-xl animate-pulse"></div>
+      </div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="hidden bg-white rounded-2xl border border-sage/20 p-12 text-center shadow-sm space-y-4">
+        <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mx-auto">
+          <span class="material-symbols-outlined text-3xl">auto_fix_high</span>
+        </div>
+        <h3 class="font-['Playfair_Display'] font-bold text-xl text-primary">No Customized Products Yet</h3>
+        <p class="text-xs text-[#587A5B] max-w-md mx-auto">
+          Offer personalized creations with custom name engravings, finish choices, or reference photo uploads to increase customer delight.
+        </p>
+        <a href="/seller/add-product.html" class="inline-flex items-center gap-2 px-6 py-2.5 bg-forest text-white rounded-full text-xs font-bold shadow-md hover:bg-forest/90 transition-all">
+          <span class="material-symbols-outlined text-sm">add</span> Create First Customized Listing
+        </a>
+      </div>
+
+      <!-- Table of Customized Products -->
+      <div id="custom-table-container" class="hidden bg-white rounded-2xl border border-sage/20 shadow-sm overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[850px]">
+          <thead>
+            <tr class="bg-primary/5 border-b border-sage/20 text-[10px] font-mono uppercase tracking-wider text-sage font-bold">
+              <th class="py-4 px-4">Customized Product</th>
+              <th class="py-4 px-3">Base Price</th>
+              <th class="py-4 px-3">Custom Fee</th>
+              <th class="py-4 px-4">Personalization Options Configured</th>
+              <th class="py-4 px-3">Status</th>
+              <th class="py-4 px-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="custom-table-body" class="divide-y divide-sage/10 text-xs">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ==================== SECTION 2: CUSTOMIZED ORDERS ==================== -->
+    <div id="section-custom-orders" class="space-y-6 hidden">
+      <!-- Orders Filter Row -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-sage/20 pb-3">
+        <div class="flex items-center gap-4">
+          <span class="text-[11px] font-mono uppercase tracking-wider font-bold text-sage">Order Status:</span>
+          <select id="order-status-filter" class="bg-transparent border-none text-xs font-bold text-[#14381F] focus:ring-0 cursor-pointer py-1">
+            <option value="all">All Custom Orders</option>
+            <option value="order_placed">New Placed</option>
+            <option value="in_crafting">In Crafting / Preparation</option>
+            <option value="shipped">Dispatched / Shipped</option>
+            <option value="delivered">Delivered</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Orders Loading State -->
+      <div id="orders-loading-state" class="bg-white rounded-2xl border border-sage/20 p-6 space-y-4 shadow-sm">
+        <div class="h-12 bg-sage/10 rounded-xl animate-pulse"></div>
+        <div class="h-12 bg-sage/10 rounded-xl animate-pulse"></div>
+        <div class="h-12 bg-sage/10 rounded-xl animate-pulse"></div>
+      </div>
+
+      <!-- Orders Empty State -->
+      <div id="orders-empty-state" class="hidden bg-white rounded-2xl border border-sage/20 p-12 text-center shadow-sm space-y-4">
+        <div class="w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center text-gold mx-auto">
+          <span class="material-symbols-outlined text-3xl">mark_email_read</span>
+        </div>
+        <h3 class="font-['Playfair_Display'] font-bold text-xl text-primary">No Customized Orders Yet</h3>
+        <p class="text-xs text-[#587A5B] max-w-md mx-auto">
+          When buyers order your personalized creations with custom inscriptions, finish selections, or reference images, their briefs will appear here.
+        </p>
+      </div>
+
+      <!-- Table of Customized Orders -->
+      <div id="orders-table-container" class="hidden bg-white rounded-2xl border border-sage/20 shadow-sm overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[900px]">
+          <thead>
+            <tr class="bg-primary/5 border-b border-sage/20 text-[10px] font-mono uppercase tracking-wider text-sage font-bold">
+              <th class="py-4 px-4">Order & Buyer</th>
+              <th class="py-4 px-4">Customized Item & Personalisation Brief</th>
+              <th class="py-4 px-3">Est. Prep Time</th>
+              <th class="py-4 px-3">Amount</th>
+              <th class="py-4 px-3">Order Status</th>
+              <th class="py-4 px-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="orders-table-body" class="divide-y divide-sage/10 text-xs">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</seller-layout>
+
+<script>
+  const API_BASE = window.location.origin;
+  let allCustomProducts = [];
+  let allCustomOrders = [];
+  let activeTabName = 'products';
+
+  function showToast(msg, type = 'success') {
+    const toast = document.getElementById('toast');
+    const icon = document.getElementById('toast-icon');
+    const text = document.getElementById('toast-msg');
+    
+    icon.textContent = type === 'success' ? 'check_circle' : 'error';
+    text.textContent = msg;
+    toast.className = 'fixed top-20 right-6 z-[300] flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg text-xs font-bold transition-all ' + (
+      type === 'success' ? 'bg-forest text-white' : 'bg-red-600 text-white'
+    );
+    
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 3500);
+  }
+
+  function switchCustomizedTab(tab) {
+    activeTabName = tab;
+    const btnProducts = document.getElementById('tab-btn-products');
+    const btnOrders = document.getElementById('tab-btn-orders');
+    const badgeProducts = document.getElementById('tab-badge-products');
+    const badgeOrders = document.getElementById('tab-badge-orders');
+    const secProducts = document.getElementById('section-custom-products');
+    const secOrders = document.getElementById('section-custom-orders');
+
+    if (tab === 'products') {
+      btnProducts.className = "px-5 py-2.5 rounded-xl text-xs font-bold bg-[#14381F] text-white shadow-xs flex items-center gap-2 transition-all cursor-pointer";
+      btnOrders.className = "px-5 py-2.5 rounded-xl text-xs font-bold text-[#14381F] hover:bg-[#14381F]/5 flex items-center gap-2 transition-all cursor-pointer";
+      badgeProducts.className = "bg-white/20 text-white px-2 py-0.5 rounded-full text-[10px] font-mono";
+      badgeOrders.className = "bg-primary/10 text-primary px-2 py-0.5 rounded-full text-[10px] font-mono";
+      secProducts.classList.remove('hidden');
+      secOrders.classList.add('hidden');
+    } else {
+      btnOrders.className = "px-5 py-2.5 rounded-xl text-xs font-bold bg-[#14381F] text-white shadow-xs flex items-center gap-2 transition-all cursor-pointer";
+      btnProducts.className = "px-5 py-2.5 rounded-xl text-xs font-bold text-[#14381F] hover:bg-[#14381F]/5 flex items-center gap-2 transition-all cursor-pointer";
+      badgeOrders.className = "bg-white/20 text-white px-2 py-0.5 rounded-full text-[10px] font-mono";
+      badgeProducts.className = "bg-primary/10 text-primary px-2 py-0.5 rounded-full text-[10px] font-mono";
+      secOrders.classList.remove('hidden');
+      secProducts.classList.add('hidden');
+      if (allCustomOrders.length === 0) {
+        loadCustomizedOrders();
+      }
+    }
+  }
+  window.switchCustomizedTab = switchCustomizedTab;
+
+  // ── Load Customized Products ──────────────────────────────────────────
+  async function loadCustomizedProducts() {
+    const token = sessionStorage.getItem('tohfa_access_token');
+    const loadingEl = document.getElementById('loading-state');
+    const emptyEl = document.getElementById('empty-state');
+    const tableContainer = document.getElementById('custom-table-container');
+
+    try {
+      const res = await fetch(`${API_BASE}/api/seller/listings`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!res.ok) throw new Error('Failed to fetch listings');
+
+      const json = await res.json();
+      const listings = json.data?.listings || json.data?.products || (Array.isArray(json.data) ? json.data : []);
+
+      // Filter only customizable products
+      allCustomProducts = listings.filter(p => {
+        return Boolean(p.is_customizable) || (p.customization_mode && p.customization_mode !== 'none') || (p.customization_schema && typeof p.customization_schema === 'object' && Object.keys(p.customization_schema).length > 0);
+      });
+
+      // Update Header & Tab Badges
+      document.getElementById('stats-total-custom').textContent = allCustomProducts.length;
+      document.getElementById('tab-badge-products').textContent = allCustomProducts.length;
+
+      loadingEl.classList.add('hidden');
+
+      if (allCustomProducts.length === 0) {
+        emptyEl.classList.remove('hidden');
+        tableContainer.classList.add('hidden');
+      } else {
+        emptyEl.classList.add('hidden');
+        tableContainer.classList.remove('hidden');
+        renderCustomProducts();
+      }
+
+    } catch (err) {
+      console.error(err);
+      loadingEl.classList.add('hidden');
+      showToast('Error loading customized products', 'error');
+    }
+  }
+
+  function renderCustomProducts() {
+    const tbody = document.getElementById('custom-table-body');
+    const statusVal = document.getElementById('status-filter').value;
+    const sortVal = document.getElementById('sort-filter').value;
+    const searchVal = document.getElementById('search-input').value.trim().toLowerCase();
+
+    let filtered = allCustomProducts.filter(p => {
+      if (statusVal !== 'all' && p.status !== statusVal) return false;
+      if (searchVal) {
+        const title = (p.name || p.title || '').toLowerCase();
+        const desc = (p.description || '').toLowerCase();
+        if (!title.includes(searchVal) && !desc.includes(searchVal)) return false;
+      }
+      return true;
+    });
+
+    if (sortVal === 'price_high') {
+      filtered.sort((a, b) => (b.base_price || b.price || 0) - (a.base_price || a.price || 0));
+    } else if (sortVal === 'price_low') {
+      filtered.sort((a, b) => (a.base_price || a.price || 0) - (b.base_price || b.price || 0));
+    } else {
+      filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    }
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center py-8 text-[#587A5B]">No matching customized products found.</td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(p => {
+      const img = p.product_image || (Array.isArray(p.images) ? p.images[0]?.url || p.images[0] : null) || 'https://ui-avatars.com/api/?name=Artisan&background=f9ecdc&color=3D6B4F&size=64';
+      const basePrice = parseFloat(p.base_price || p.price || 0);
+      
+      let schema = p.customization_schema;
+      if (typeof schema === 'string') {
+        try { schema = JSON.parse(schema); } catch { schema = {}; }
+      }
+      schema = schema || {};
+
+      const fee = parseFloat(schema.customization_fee || p.customization_fee || 0);
+      const fields = Array.isArray(schema.fields) ? schema.fields : [];
+
+      // Extract option chips
+      const optionBadges = [];
+      if (fields.length > 0) {
+        fields.forEach(f => {
+          if (f.type === 'text') {
+            optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-[10px]">Text (${f.max_length || 25} max)</span>`);
+          } else if (f.type === 'select') {
+            const count = Array.isArray(f.choices) ? f.choices.length : 0;
+            optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200 font-mono text-[10px]">Choices (${count} opts)</span>`);
+          } else if (f.type === 'image') {
+            optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-purple-50 text-purple-800 border border-purple-200 font-mono text-[10px]">Photo Upload</span>`);
+          } else if (f.type === 'textarea') {
+            optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 font-mono text-[10px]">Artisan Note</span>`);
+          }
+        });
+      } else {
+        optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-stone-100 text-stone-700 font-mono text-[10px]">Direct Customizer</span>`);
+      }
+
+      const craftingTime = schema.crafting_time || (p.preparation_days ? `${p.preparation_days} days` : '5-7 days');
+      optionBadges.push(`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200 font-mono text-[10px]"><span class="material-symbols-outlined text-[12px]">schedule</span>${craftingTime} prep</span>`);
+
+      const isActive = p.status === 'active';
+
+      return `
+        <tr class="hover:bg-primary/5 transition-colors">
+          <td class="py-3 px-4">
+            <div class="flex items-center gap-3">
+              <img src="${img}" class="w-12 h-12 rounded-xl object-cover border border-sage/20 shrink-0" alt="${p.name || p.title}"/>
+              <div>
+                <h4 class="font-bold text-[#14381F] text-sm">${p.name || p.title}</h4>
+                <span class="text-[10px] text-[#587A5B] font-mono">ID: ${String(p.id).substring(0, 8)}</span>
+              </div>
+            </div>
+          </td>
+          <td class="py-3 px-3 font-bold font-mono text-primary text-sm">
+            ₹${basePrice.toLocaleString('en-IN')}
+          </td>
+          <td class="py-3 px-3 font-mono font-semibold ${fee > 0 ? 'text-forest' : 'text-[#587A5B]'}">
+            ${fee > 0 ? `+₹${fee.toLocaleString('en-IN')}` : 'Free'}
+          </td>
+          <td class="py-3 px-4">
+            <div class="flex flex-wrap gap-1.5 max-w-xs">
+              ${optionBadges.join('')}
+            </div>
+          </td>
+          <td class="py-3 px-3">
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold font-mono ${
+              isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-200 text-stone-700'
+            }">
+              ${isActive ? 'Active' : 'Paused'}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-right">
+            <div class="flex items-center justify-end gap-2">
+              <a href="/buyer/product.html?id=${p.id}" target="_blank" title="View Store Preview" class="p-1.5 text-sage hover:text-primary rounded-lg hover:bg-sage/10 transition-colors">
+                <span class="material-symbols-outlined text-base">visibility</span>
+              </a>
+              <a href="/seller/edit-product.html?id=${p.id}" title="Edit Customizer & Pricing" class="p-1.5 text-sage hover:text-primary rounded-lg hover:bg-sage/10 transition-colors">
+                <span class="material-symbols-outlined text-base">edit</span>
+              </a>
+              <button onclick="toggleProductStatus('${p.id}', '${p.status}')" title="${isActive ? 'Pause' : 'Activate'}" class="p-1.5 text-sage hover:text-primary rounded-lg hover:bg-sage/10 transition-colors">
+                <span class="material-symbols-outlined text-base">${isActive ? 'pause_circle' : 'play_circle'}</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // ── Load Customized Orders ───────────────────────────────────────────
+  async function loadCustomizedOrders() {
+    const token = sessionStorage.getItem('tohfa_access_token');
+    const loadingEl = document.getElementById('orders-loading-state');
+    const emptyEl = document.getElementById('orders-empty-state');
+    const tableContainer = document.getElementById('orders-table-container');
+
+    try {
+      loadingEl.classList.remove('hidden');
+      emptyEl.classList.add('hidden');
+      tableContainer.classList.add('hidden');
+
+      const res = await fetch(`${API_BASE}/api/seller/orders?limit=100`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!res.ok) throw new Error('Failed to fetch orders');
+
+      const json = await res.json();
+      const orders = json.data?.orders || (Array.isArray(json.data) ? json.data : []);
+
+      // Filter only orders with customized items or customization fields
+      allCustomOrders = orders.filter(o => {
+        if (o.order_type === 'custom' || o.order_type === 'customized' || o.customization || o.customization_summary) return true;
+        if (!o.items || !Array.isArray(o.items)) return false;
+        return o.items.some(it => {
+          let cData = it.customization_data;
+          if (typeof cData === 'string') {
+            try { cData = JSON.parse(cData); } catch { cData = null; }
+          }
+          return Boolean(cData && typeof cData === 'object' && Object.keys(cData).length > 0);
+        });
+      });
+
+      // Update Header & Tab Badges
+      document.getElementById('stats-custom-orders').textContent = allCustomOrders.length;
+      document.getElementById('tab-badge-orders').textContent = allCustomOrders.length;
+
+      loadingEl.classList.add('hidden');
+
+      if (allCustomOrders.length === 0) {
+        emptyEl.classList.remove('hidden');
+        tableContainer.classList.add('hidden');
+      } else {
+        emptyEl.classList.add('hidden');
+        tableContainer.classList.remove('hidden');
+        renderCustomOrders();
+      }
+
+    } catch (err) {
+      console.error(err);
+      loadingEl.classList.add('hidden');
+      showToast('Error loading customized orders', 'error');
+    }
+  }
+
+  function renderCustomOrders() {
+    const tbody = document.getElementById('orders-table-body');
+    const statusVal = document.getElementById('order-status-filter')?.value || 'all';
+    const searchVal = document.getElementById('search-input')?.value.trim().toLowerCase() || '';
+
+    let filtered = allCustomOrders.filter(o => {
+      if (statusVal !== 'all' && o.status !== statusVal) return false;
+      if (searchVal) {
+        const id = String(o.id || '').toLowerCase();
+        const buyer = (o.buyer_name || '').toLowerCase();
+        const itemsText = (o.items || []).map(i => i.product_name || i.name || '').join(' ').toLowerCase();
+        if (!id.includes(searchVal) && !buyer.includes(searchVal) && !itemsText.includes(searchVal)) return false;
+      }
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center py-8 text-[#587A5B]">No matching customized orders found.</td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(o => {
+      const customItems = (o.items || []).filter(it => {
+        let cData = it.customization_data;
+        if (typeof cData === 'string') {
+          try { cData = JSON.parse(cData); } catch { cData = null; }
+        }
+        return Boolean(cData && typeof cData === 'object' && Object.keys(cData).length > 0);
+      });
+
+      const primaryItem = customItems[0] || o.items[0] || {};
+      let cData = primaryItem.customization_data;
+      if (typeof cData === 'string') {
+        try { cData = JSON.parse(cData); } catch { cData = {}; }
+      }
+      cData = cData || {};
+
+      if ((!cData || Object.keys(cData).length === 0) && (o.customization_summary || o.customization)) {
+        if (o.customization_summary) {
+          try { cData = typeof o.customization_summary === 'string' ? JSON.parse(o.customization_summary) : o.customization_summary; } catch { cData = { summary_text: o.customization_summary }; }
+        } else if (o.customization) {
+          try { cData = typeof o.customization === 'string' ? JSON.parse(o.customization) : o.customization; } catch { cData = { summary_text: o.customization }; }
+        }
+      }
+      let summaryText = cData.summary_text;
+      if (!summaryText && Array.isArray(cData.questions_and_answers)) {
+        summaryText = cData.questions_and_answers.map(qa => `${qa.question}: ${qa.answer}`).join(', ');
+      } else if (!summaryText && cData.selected_options) {
+        summaryText = Object.entries(cData.selected_options).map(([k, v]) => `${k}: ${v}`).join(', ');
+      }
+      if (!summaryText) summaryText = 'Personalized Item';
+      const craftingTime = cData.crafting_time || '5-7 days';
+      const orderTotal = parseFloat(o.total_amount || 0);
+
+      const statusMap = {
+        'order_placed': { label: 'New Placed', cls: 'bg-amber-100 text-amber-900 border-amber-300' },
+        'confirmed': { label: 'Confirmed', cls: 'bg-blue-100 text-blue-900 border-blue-300' },
+        'in_crafting': { label: 'In Crafting', cls: 'bg-purple-100 text-purple-900 border-purple-300' },
+        'shipped': { label: 'Dispatched', cls: 'bg-indigo-100 text-indigo-900 border-indigo-300' },
+        'delivered': { label: 'Delivered', cls: 'bg-emerald-100 text-emerald-900 border-emerald-300' },
+        'cancelled': { label: 'Cancelled', cls: 'bg-red-100 text-red-900 border-red-300' }
+      };
+      const badge = statusMap[o.status] || { label: o.status, cls: 'bg-stone-100 text-stone-800 border-stone-200' };
+
+      return `
+        <tr class="hover:bg-primary/5 transition-colors">
+          <td class="py-3 px-4">
+            <div class="font-mono font-bold text-primary text-xs">#${String(o.id).substring(0, 8).toUpperCase()}</div>
+            <div class="text-xs font-semibold text-[#14381F] mt-0.5">${o.buyer_name || 'Buyer'}</div>
+            <div class="text-[10px] text-[#587A5B] font-mono">${new Date(o.created_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+          </td>
+          <td class="py-3 px-4">
+            <div class="font-bold text-[#14381F] text-xs">${primaryItem.product_name || primaryItem.name || 'Customized Item'}</div>
+            <div class="mt-1 p-2 rounded-xl bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-950 max-w-md">
+              <div class="font-bold flex items-center gap-1 text-[10px] uppercase font-mono text-amber-900 mb-0.5">
+                <span class="material-symbols-outlined text-[13px]">auto_fix_high</span>
+                <span>Personalisation Brief</span>
+              </div>
+              <p class="line-clamp-2 leading-relaxed">${summaryText}</p>
+            </div>
+          </td>
+          <td class="py-3 px-3 font-mono text-[11px] text-amber-900 font-bold">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200">
+              <span class="material-symbols-outlined text-[13px]">schedule</span>
+              <span>${craftingTime}</span>
+            </span>
+          </td>
+          <td class="py-3 px-3 font-mono font-bold text-primary text-sm">
+            ₹${orderTotal.toLocaleString('en-IN')}
+          </td>
+          <td class="py-3 px-3">
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold font-mono border ${badge.cls}">
+              ${badge.label}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-right">
+            <a href="/seller/order-detail.html?id=${o.id}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-[#14381F] text-white rounded-lg text-xs font-bold shadow-xs hover:bg-[#14381F]/90 transition-all active:scale-95">
+              <span>View Brief</span>
+              <span class="material-symbols-outlined text-xs">arrow_forward</span>
+            </a>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function toggleProductStatus(productId, currentStatus) {
+    const newStatus = currentStatus === 'active' ? 'paused' : 'active';
+    const token = sessionStorage.getItem('tohfa_access_token');
+    try {
+      const res = await fetch(`${API_BASE}/api/seller/listings/${productId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (res.ok) {
+        showToast(`Listing ${newStatus === 'active' ? 'activated' : 'paused'}!`);
+        await loadCustomizedProducts();
+      } else {
+        showToast('Failed to update listing status', 'error');
+      }
+    } catch (e) {
+      showToast('Error updating status', 'error');
+    }
+  }
+
+  window.toggleProductStatus = toggleProductStatus;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadCustomizedProducts();
+    loadCustomizedOrders();
+    document.getElementById('status-filter')?.addEventListener('change', renderCustomProducts);
+    document.getElementById('sort-filter')?.addEventListener('change', renderCustomProducts);
+    document.getElementById('order-status-filter')?.addEventListener('change', renderCustomOrders);
+    document.getElementById('search-input')?.addEventListener('input', () => {
+      if (activeTabName === 'products') renderCustomProducts();
+      else renderCustomOrders();
+    });
+  });
+</script>
+</body>
+</html>

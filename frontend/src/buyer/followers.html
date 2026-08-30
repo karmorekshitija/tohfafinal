@@ -286,16 +286,15 @@
       const authContainer = document.getElementById('auth-buttons-container');
       if (token) {
         const cachedUser = sessionStorage.getItem('tohfa_user');
-        let initial = 'U';
+        let avatarUrl = '/img/default-avatar.png';
         if (cachedUser) {
           try {
             const u = JSON.parse(cachedUser);
-            if (u.name) initial = u.name.charAt(0).toUpperCase();
-            else if (u.full_name) initial = u.full_name.charAt(0).toUpperCase();
+            if (u.avatar_url || u.profile_photo_url) avatarUrl = u.avatar_url || u.profile_photo_url;
           } catch(e) {}
         }
         if (authContainer) {
-          authContainer.innerHTML = `<a href="/buyer/profile.html" class="w-9 h-9 rounded-full bg-[#FAF6EE] text-[#14381F] flex items-center justify-center font-bold text-sm overflow-hidden flex-shrink-0 shadow-sm no-underline hover:bg-white">${initial}</a>`;
+          authContainer.innerHTML = `<a href="/buyer/profile.html" class="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 shadow-sm block hover:opacity-90 transition-opacity"><img src="${avatarUrl}" alt="Profile" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='/img/default-avatar.png';" /></a>`;
         }
       }
     }

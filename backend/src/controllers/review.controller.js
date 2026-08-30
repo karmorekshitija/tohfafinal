@@ -17,6 +17,8 @@ async function ensureReviewColumns() {
   try {
     await query(`
       ALTER TABLE reviews 
+      ADD COLUMN IF NOT EXISTS comment TEXT,
+      ADD COLUMN IF NOT EXISTS review_text TEXT,
       ADD COLUMN IF NOT EXISTS seller_reply TEXT,
       ADD COLUMN IF NOT EXISTS replied_at TIMESTAMPTZ;
     `);
@@ -180,31 +182,78 @@ async function getSellerReviews(req, res, next) {
 
     const { rows } = await query(
       `SELECT r.id, r.order_id, r.rating, r.comment, r.seller_reply, r.replied_at, r.created_at,
-              u.name AS buyer_name, u.profile_photo_url AS buyer_photo
+              u.name AS buyer_name, u.profile_photo_url AS buyer_photo,
+              (SELECT p.name FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE oi.order_id = r.order_id LIMIT 1) AS listing_title
        FROM reviews r
-       JOIN users u ON u.id = r.buyer_id
-       WHERE r.seller_id = $1
+       JOIN users u ON u.id::text = r.buyer_id::text
+       WHERE r.seller_id::text = $1
        ORDER BY r.created_at DESC
        LIMIT $2 OFFSET $3`,
-      [sellerId, limitNum, offset]
+      [String(sellerId), limitNum, offset]
     );
 
     const { rows: statsRows } = await query(
       `SELECT COUNT(*) AS total,
-              ROUND(AVG(rating)::numeric, 2) AS avg_rating
-       FROM reviews WHERE seller_id = $1`,
-      [sellerId]
+              ROUND(AVG(rating)::numeric, 2) AS avg_rating,
+              COUNT(*) FILTER (WHERE seller_reply IS NULL OR seller_reply = '') AS pending_replies,
+              COUNT(*) FILTER (WHERE rating = 5) AS star_5,
+              COUNT(*) FILTER (WHERE rating = 4) AS star_4,
+              COUNT(*) FILTER (WHERE rating = 3) AS star_3,
+              COUNT(*) FILTER (WHERE rating = 2) AS star_2,
+              COUNT(*) FILTER (WHERE rating = 1) AS star_1
+       FROM reviews WHERE seller_id::text = $1`,
+      [String(sellerId)]
     );
+
+    const total = parseInt(statsRows[0]?.total || 0, 10);
+    const avgRating = parseFloat(statsRows[0]?.avg_rating) || 0;
+    const pendingReplies = parseInt(statsRows[0]?.pending_replies || 0, 10);
+    const responseRate = total > 0 ? Math.round(((total - pendingReplies) / total) * 100) : 100;
+
+    const formattedReviews = rows.map(r => ({
+      id: r.id,
+      review_id: r.id,
+      order_id: r.order_id,
+      rating: r.rating,
+      comment: r.comment,
+      body: r.comment,
+      buyer_name: r.buyer_name,
+      reviewer_handle: r.buyer_name || 'Buyer',
+      buyer_photo: r.buyer_photo,
+      listing_title: r.listing_title || 'Handcrafted Gift',
+      seller_reply: r.seller_reply,
+      reply_text: r.seller_reply,
+      replied_at: r.replied_at,
+      reply: r.seller_reply ? { reply_text: r.seller_reply, created_at: r.replied_at } : null,
+      created_at: r.created_at
+    }));
+
+    const summary = {
+      avg_rating: avgRating || 5.0,
+      total_reviews: total,
+      pending_replies: pendingReplies,
+      response_rate_pct: responseRate,
+      rating_distribution: {
+        5: parseInt(statsRows[0]?.star_5 || 0, 10),
+        4: parseInt(statsRows[0]?.star_4 || 0, 10),
+        3: parseInt(statsRows[0]?.star_3 || 0, 10),
+        2: parseInt(statsRows[0]?.star_2 || 0, 10),
+        1: parseInt(statsRows[0]?.star_1 || 0, 10)
+      }
+    };
 
     return res.json({
       success: true,
       data: {
-        reviews: rows,
-        total: parseInt(statsRows[0]?.total || 0, 10),
-        avg_rating: parseFloat(statsRows[0]?.avg_rating) || 0,
+        reviews: formattedReviews,
+        summary,
+        total,
+        avg_rating: avgRating,
         page: pageNum,
         limit: limitNum,
       },
+      reviews: formattedReviews,
+      summary
     });
   } catch (err) {
     next(err);

@@ -15,12 +15,120 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/src/tailwind.css">
       <style>
+        .material-symbols-outlined {
+          font-family: 'Material Symbols Outlined' !important;
+          font-weight: normal;
+          font-style: normal;
+          font-size: 24px;
+          line-height: 1;
+          letter-spacing: normal;
+          text-transform: none;
+          display: inline-block;
+          white-space: nowrap;
+          word-wrap: normal;
+          direction: ltr;
+          -webkit-font-feature-settings: 'liga';
+          -webkit-font-smoothing: antialiased;
+        }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .watercolour-wash { background: linear-gradient(135deg, #FFF8E7 0%, rgba(20,56,31,0.2) 100%); }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         .carousel-dot { width: 8px; height: 8px; border-radius: 50%; transition: all 0.2s ease; cursor: pointer; }
+
+        /* ── Variant Strip (horizontal row below main image) ── */
+        .variant-strip {
+          display: flex;
+          flex-direction: row;
+          gap: 10px;
+          overflow-x: auto;
+          padding: 4px 2px 8px;
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .variant-strip::-webkit-scrollbar { display: none; }
+
+        /* ── Individual Variant Tile ── */
+        .variant-tile {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+          cursor: pointer;
+          flex-shrink: 0;
+          width: 76px;
+        }
+        .variant-tile-img {
+          width: 76px;
+          height: 76px;
+          border-radius: 12px;
+          overflow: hidden;
+          border: 2px solid rgba(20,56,31,0.2);
+          background: #fff;
+          transition: border-color 0.18s, box-shadow 0.18s, transform 0.15s;
+          position: relative;
+        }
+        .variant-tile-img img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.2s;
+        }
+        .variant-tile:hover .variant-tile-img {
+          border-color: rgba(20,56,31,0.55);
+          transform: translateY(-1px);
+        }
+        .variant-tile.active .variant-tile-img {
+          border-color: #14381F;
+          box-shadow: 0 0 0 3px rgba(20,56,31,0.18);
+          transform: scale(1.03);
+        }
+        .variant-tile-label {
+          font-size: 10px;
+          font-weight: 600;
+          color: #14381F;
+          text-align: center;
+          line-height: 1.2;
+          max-width: 76px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-family: 'DM Sans', sans-serif;
+        }
+        .variant-tile.active .variant-tile-label {
+          color: #0D2614;
+          font-weight: 700;
+        }
+
+        /* Color-swatch fallback tile (no image) */
+        .variant-tile-color {
+          width: 76px;
+          height: 76px;
+          border-radius: 12px;
+          border: 2px solid rgba(20,56,31,0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 11px;
+          font-weight: 600;
+          color: #fff;
+          font-family: 'DM Sans', sans-serif;
+          background: #dce6d8;
+          transition: border-color 0.18s, box-shadow 0.18s, transform 0.15s;
+          cursor: pointer;
+          flex-direction: column;
+          gap: 3px;
+        }
+        .variant-tile:hover .variant-tile-color {
+          border-color: rgba(20,56,31,0.55);
+          transform: translateY(-1px);
+        }
+        .variant-tile.active .variant-tile-color {
+          border-color: #14381F;
+          box-shadow: 0 0 0 3px rgba(20,56,31,0.18);
+          transform: scale(1.03);
+        }
     </style>
 </head>
 <body class="bg-[#FFF8E7] text-on-background min-h-screen font-body-md overflow-x-hidden">
@@ -123,86 +231,125 @@
 
     <main class="max-w-[1440px] mx-auto px-margin-desktop py-12">
         <!-- 1. BREADCRUMBS & BACK NAV -->
-        <div class="flex items-center justify-between mb-8">
-            <div class="flex items-center gap-2 text-xs text-outline font-label-caps uppercase tracking-wider">
-                <a href="/buyer/home.html" class="hover:text-primary transition-colors">Home</a>
-                <span class="material-symbols-outlined text-[10px]">chevron_right</span>
-                <a id="breadcrumb-category" href="#" class="hover:text-primary transition-colors">Category</a>
-                <span class="material-symbols-outlined text-[10px]">chevron_right</span>
-                <span id="breadcrumb-product" class="text-primary font-bold">Product</span>
+        <div class="flex items-center justify-between mb-6 md:mb-8">
+            <div class="flex items-center gap-1 md:gap-2 text-[10px] md:text-xs text-outline font-label-caps uppercase tracking-wider min-w-0 flex-1 mr-2">
+                <a href="/buyer/home.html" class="hover:text-primary transition-colors shrink-0">Home</a>
+                <span class="material-symbols-outlined text-[9px] md:text-[10px] shrink-0">chevron_right</span>
+                <a id="breadcrumb-category" href="/buyer/categories.html" class="hover:text-primary transition-colors hidden sm:block truncate max-w-[80px] md:max-w-none shrink-0">Category</a>
+                <span class="material-symbols-outlined text-[9px] md:text-[10px] hidden sm:block shrink-0">chevron_right</span>
+                <span id="breadcrumb-product" class="text-primary font-bold truncate min-w-0 block max-w-[120px] sm:max-w-[200px] md:max-w-none">Details</span>
             </div>
-            <button onclick="window.history.back()" class="flex items-center gap-xs text-secondary hover:text-primary transition-colors text-sm font-semibold group focus:outline-none">
-                <span class="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform">arrow_back</span>
-                <span>Back</span>
+            <button onclick="window.history.back()" class="flex items-center gap-1 md:gap-xs text-secondary hover:text-primary transition-colors text-xs md:text-sm font-semibold group focus:outline-none shrink-0">
+                <span class="material-symbols-outlined text-base md:text-lg group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                <span class="hidden sm:inline">Back</span>
             </button>
         </div>
 
-        <div id="product-details-container" class="grid grid-cols-1 lg:grid-cols-12 gap-xl items-start">
-            <!-- Left: Horizontal Swipeable Product Image Gallery -->
-            <div class="lg:col-span-7 flex flex-col gap-md">
-                <div class="relative bg-[#FFF8E7] border border-outline-variant/60 rounded-2xl overflow-hidden shadow-sm aspect-square">
-                    <!-- Horizontal Swipe Container -->
-                    <div id="product-carousel" class="w-full h-full flex overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide">
-                        <!-- Dynamically populated <img> slides -->
+        <div id="product-details-container" class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+            <!-- Left: Gallery & Style Selector -->
+            <div class="lg:col-span-7 flex flex-col gap-6">
+                
+                <!-- Single Image Gallery Container -->
+                <div class="flex gap-3 sm:gap-4 items-start w-full">
+
+                    <!-- Vertical Thumbnails Strip (desktop: left stacked column; mobile: horizontal row below) -->
+                    <div id="product-vertical-thumbs" class="hidden flex-shrink-0 w-16 sm:w-[72px] md:w-20 flex flex-col gap-2.5 overflow-y-auto max-h-[560px] no-scrollbar py-1">
+                        <!-- Dynamically populated vertical thumbnails -->
                     </div>
-                    <!-- Wishlist toggle -->
-                    <button id="wishlist-toggle-btn" class="absolute top-6 right-6 p-3 bg-[#FFF8E7]/90 backdrop-blur-md rounded-full shadow-md hover:scale-105 active:scale-95 transition-all text-outline hover:text-primary focus:outline-none z-10">
-                        <span id="wishlist-icon" class="material-symbols-outlined text-2xl">favorite</span>
-                    </button>
-                </div>
+
+                    <!-- Right block: Main image stacked on top of variant strip -->
+                    <div class="flex-1 flex flex-col gap-3 min-w-0">
+
+                        <!-- Main Showcase Display Container -->
+                        <div class="relative bg-[#FAF6EE] border border-[#14381F]/15 rounded-2xl overflow-hidden shadow-sm aspect-square flex items-center justify-center group w-full">
+                            <img id="main-product-image" src="/img/categories/artisan_showcase.jpg" alt="Artisan Piece" class="w-full h-full object-contain p-4 transition-all duration-300 group-hover:scale-[1.02] opacity-80" />
+                            
+                            <!-- Image counter badge -->
+                            <div id="image-counter-badge" class="absolute bottom-4 left-4 bg-[#14381F]/80 text-[#FAF6EE] text-[11px] font-mono font-medium px-2.5 py-1 rounded-full backdrop-blur-sm shadow-sm hidden">
+                                1 / 1
+                            </div>
+
+                            <!-- Wishlist toggle button -->
+                            <button id="wishlist-toggle-btn" class="absolute top-4 right-4 p-3 bg-[#FAF6EE]/90 backdrop-blur-md rounded-full shadow-md hover:scale-105 active:scale-95 transition-all text-[#14381F] focus:outline-none z-10 border border-[#14381F]/10">
+                                <span id="wishlist-icon" class="material-symbols-outlined text-2xl">favorite</span>
+                            </button>
+                        </div>
+
+                        <!-- Product Variants / Style Selector — horizontal row directly below the main image -->
+                        <div id="product-variants-container" class="hidden">
+                            <!-- Dynamically populated variant tiles -->
+                        </div>
+
+                    </div><!-- /right block -->
+                </div><!-- /gallery container -->
 
             </div>
 
+
             <!-- Right: Product Information -->
-            <div class="lg:col-span-5 space-y-lg bg-[#FFF8E7] p-lg border border-outline-variant/60 rounded-2xl">
+            <div class="lg:col-span-5 space-y-6 bg-[#FAF6EE]/60 p-6 md:p-8 border border-[#14381F]/15 rounded-2xl shadow-sm">
                 <div class="space-y-sm">
                     <div id="product-tags-container" class="flex flex-wrap gap-2 mb-2"></div>
-                    <h1 id="product-name" class="font-headline-lg text-primary text-3xl leading-tight font-semibold">Product Name</h1>
+                    <h1 id="product-name" class="font-headline-lg text-primary text-3xl leading-tight font-semibold min-h-[36px]" style="font-family: 'Playfair Display', serif;"><span class="inline-block w-3/4 h-8 bg-black/5 rounded animate-pulse"></span></h1>
                     <div id="product-rating-container" class="flex items-center gap-1.5 text-amber-500 text-sm mt-1 hidden"></div>
                     <div class="flex items-center gap-md pt-sm">
-                        <span class="text-2xl font-data-price text-secondary-fixed-variant font-bold" id="product-price">?0.00</span>
+                        <span class="text-2xl font-data-price text-[#14381F] font-bold" id="product-price"><span class="inline-block w-24 h-7 bg-black/5 rounded animate-pulse"></span></span>
                         <span class="text-xs bg-success-container/20 text-success border border-success/20 px-sm py-[2px] rounded font-semibold" id="product-stock-badge">In Stock</span>
                     </div>
                 </div>
 
-                <a id="seller-profile-link" href="#" class="border-t border-b border-outline-variant/20 py-md flex items-center gap-md hover:opacity-85 transition-opacity duration-200">
-                    <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm" id="seller-avatar">S</div>
+                <a id="seller-profile-link" href="#" class="border-t border-b border-[#14381F]/10 py-md flex items-center gap-md hover:opacity-85 transition-opacity duration-200">
+                    <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm overflow-hidden" id="seller-avatar">✨</div>
                     <div>
                         <p class="text-xs text-outline uppercase tracking-wider font-label-caps">Shaped By</p>
-                        <p class="font-title-serif text-primary text-base font-semibold" id="product-seller">Seller Name</p>
+                        <p class="font-title-serif text-primary text-base font-semibold" id="product-seller"><span class="inline-block w-28 h-4 bg-black/5 rounded animate-pulse"></span></p>
                     </div>
                 </a>
 
                 <div class="space-y-sm">
-                    <h4 class="font-label-caps text-outline text-xs tracking-wider uppercase">Description</h4>
-                    <p id="product-description" class="text-secondary text-sm leading-relaxed whitespace-pre-line">Loading details...</p>
+                    <h4 class="font-label-caps text-outline text-xs tracking-wider uppercase font-bold">Description</h4>
+                    <p id="product-description" class="text-secondary text-sm leading-relaxed whitespace-pre-line font-['DM_Sans']"><span class="inline-block w-full h-4 bg-black/5 rounded animate-pulse mb-2"></span><span class="inline-block w-4/5 h-4 bg-black/5 rounded animate-pulse mb-2"></span><span class="inline-block w-1/2 h-4 bg-black/5 rounded animate-pulse"></span></p>
                     <div id="product-subcategories-container" class="flex flex-wrap gap-2 pt-2"></div>
                 </div>
 
                 <!-- Add to Cart Widget -->
-                <div class="space-y-md pt-md border-t border-outline-variant/20">
-                    <div id="qty-selector-container" class="flex items-center justify-between">
-                        <span class="font-label-caps text-outline text-xs tracking-wider uppercase">Quantity</span>
-                        <div class="flex items-center border border-outline-variant rounded-lg bg-[#FFF8E7] overflow-hidden shadow-sm">
-                            <button id="qty-decrease" class="px-md py-sm hover:bg-surface-container transition-colors text-primary font-bold focus:outline-none">-</button>
-                            <input type="number" id="qty-input" value="1" min="1" max="99" class="w-12 text-center border-none focus:ring-0 text-sm font-semibold text-primary p-0">
-                            <button id="qty-increase" class="px-md py-sm hover:bg-surface-container transition-colors text-primary font-bold focus:outline-none">+</button>
+                <div class="space-y-md pt-md border-t border-[#14381F]/10">
+                    <!-- Modular Personalisation Builder (Option 2) -->
+                    <div id="product-customization-container" class="hidden p-5 rounded-2xl bg-[#FAF6EE] border border-[#14381F]/20 space-y-4 shadow-sm mb-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-[#14381F]/10">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[#14381F] text-[20px]">auto_fix_high</span>
+                                <h4 class="font-['Playfair_Display',serif] font-bold text-base text-[#14381F]">Personalise This Item</h4>
+                            </div>
+                            <span id="customization-fee-badge" class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#14381F]/10 text-[#14381F] hidden">+₹0</span>
+                        </div>
+                        <div id="customization-fields-list" class="space-y-3">
+                            <!-- Dynamically Populated Fields -->
                         </div>
                     </div>
-                    <button id="add-to-cart-btn" class="w-full bg-primary hover:bg-[#14381F] text-white py-4 rounded-xl font-semibold uppercase tracking-widest hover:shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-sm">
+
+                    <div id="qty-selector-container" class="flex items-center justify-between">
+                        <span class="font-label-caps text-outline text-xs tracking-wider uppercase font-semibold">Quantity</span>
+                        <div class="flex items-center border border-[#14381F]/20 rounded-lg bg-white overflow-hidden shadow-sm">
+                            <button id="qty-decrease" class="px-md py-sm hover:bg-[#FAF6EE] transition-colors text-primary font-bold focus:outline-none">-</button>
+                            <input type="number" id="qty-input" value="1" min="1" max="99" class="w-12 text-center border-none focus:ring-0 text-sm font-semibold text-primary p-0">
+                            <button id="qty-increase" class="px-md py-sm hover:bg-[#FAF6EE] transition-colors text-primary font-bold focus:outline-none">+</button>
+                        </div>
+                    </div>
+                    <button id="add-to-cart-btn" class="w-full bg-primary hover:bg-[#0D2614] text-white py-4 rounded-xl font-semibold uppercase tracking-widest hover:shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-sm font-['DM_Sans'] text-sm shadow-sm">
                         <span class="material-symbols-outlined">shopping_cart</span>
                         <span>Add to Cart</span>
                     </button>
                     
                     <!-- Delivery Estimator (BUY-08) -->
-                    <div class="mt-4 p-4 rounded-xl border border-outline-variant/60 bg-[#FAF6EE] text-xs">
-                        <div class="font-semibold text-primary mb-2 flex items-center gap-1.5">
+                    <div class="mt-4 p-4 rounded-xl border border-[#14381F]/15 bg-[#FAF6EE] text-xs">
+                        <div class="font-semibold text-primary mb-2 flex items-center gap-1.5 font-['DM_Sans']">
                             <span class="material-symbols-outlined text-[18px]">local_shipping</span>
                             <span>Delivery &amp; Crafting Estimator</span>
                         </div>
                         <div class="flex gap-2">
-                            <input type="text" id="pincode-check-input" placeholder="Enter 6-digit Pincode" maxlength="6" class="w-40 px-3 py-2 rounded-lg border border-outline-variant bg-white text-xs text-on-surface focus:outline-none focus:border-primary">
-                            <button type="button" id="pincode-check-btn" class="px-4 py-2 bg-[#14381F] text-white rounded-lg font-semibold hover:bg-[#0D2614] active:scale-95 transition-all text-xs">Check</button>
+                            <input type="text" id="pincode-check-input" placeholder="Enter 6-digit Pincode" maxlength="6" class="w-40 px-3 py-2 rounded-lg border border-[#14381F]/20 bg-white text-xs text-on-surface focus:outline-none focus:border-primary">
+                            <button type="button" id="pincode-check-btn" class="px-4 py-2 bg-[#14381F] text-white rounded-lg font-semibold hover:bg-[#0D2614] active:scale-95 transition-all text-xs font-['DM_Sans']">Check</button>
                         </div>
                         <div id="pincode-check-result" class="mt-2 text-secondary leading-relaxed"></div>
                     </div>
@@ -216,22 +363,21 @@
                             Today's daily fulfillment limit for this product has been reached. Chat with the seller to arrange your order.
                         </p>
                     </div>
-                    </div>
+                </div>
 
-                    <!-- Phase 4: Contention pending overlay (hidden by default) -->
-                    <div id="contention-overlay" class="hidden mt-4 p-4 border-2 border-purple-200 bg-purple-50 rounded-2xl text-center">
-                        <div class="flex items-center justify-center gap-3 mb-2">
-                            <span id="contention-spinner" style="display:inline-block;width:20px;height:20px;border:2.5px solid #c4b5fd;border-top-color:#7c3aed;border-radius:50%;animation:tohfa-spin 0.7s linear infinite;"></span>
-                            <span class="font-semibold text-purple-800 text-sm">High demand! Confirming your spot�</span>
-                        </div>
-                        <p class="text-xs text-purple-600">Please wait � we're checking availability for you.</p>
+                <!-- Phase 4: Contention pending overlay (hidden by default) -->
+                <div id="contention-overlay" class="hidden mt-4 p-4 border-2 border-purple-200 bg-purple-50 rounded-2xl text-center">
+                    <div class="flex items-center justify-center gap-3 mb-2">
+                        <span id="contention-spinner" style="display:inline-block;width:20px;height:20px;border:2.5px solid #c4b5fd;border-top-color:#7c3aed;border-radius:50%;animation:tohfa-spin 0.7s linear infinite;"></span>
+                        <span class="font-semibold text-purple-800 text-sm">High demand! Confirming your spot...</span>
                     </div>
-                    <div id="contention-lost" class="hidden mt-4 p-4 border-2 border-red-200 bg-red-50 rounded-2xl">
-                        <p class="font-semibold text-red-800 text-sm text-center mb-2">?? Someone else just grabbed the last one.</p>
-                        <button id="remake-request-btn" class="hidden w-full mt-2 border border-primary text-primary py-3 rounded-xl font-semibold text-sm transition-all hover:bg-primary hover:text-white">
-                            Request a Custom Remake
-                        </button>
-                    </div>
+                    <p class="text-xs text-purple-600">Please wait — we're checking availability for you.</p>
+                </div>
+                <div id="contention-lost" class="hidden mt-4 p-4 border-2 border-red-200 bg-red-50 rounded-2xl">
+                    <p class="font-semibold text-red-800 text-sm text-center mb-2">Someone else just grabbed the last one.</p>
+                    <button id="remake-request-btn" class="hidden w-full mt-2 border border-primary text-primary py-3 rounded-xl font-semibold text-sm transition-all hover:bg-primary hover:text-white">
+                        Request a Custom Remake
+                    </button>
                 </div>
 
                 <!-- Phase 2: Paused state container (hidden by default) -->
@@ -239,65 +385,80 @@
             </div>
         </div>
 
-        <!-- 5. REVIEWS SECTION -->
-        <section class="mt-16 border-t border-outline-variant/30 pt-12 max-w-4xl" id="reviews-section">
-            <div class="flex items-center justify-between mb-8">
-                <div>
-                    <h2 class="font-headline-lg text-primary text-2xl">Artisan Reviews</h2>
-                    <p class="text-xs text-outline tracking-wider uppercase mt-1" id="reviews-summary-text">0 reviews</p>
-                </div>
-                <div class="flex items-center gap-xs text-amber-500 font-bold" id="reviews-rating-summary">
-                    <!-- Rating summary -->
-                </div>
-            </div>
-
-            <div id="reviews-list" class="space-y-6">
-                <!-- Reviews injected here -->
-            </div>
-
-            <!-- Write a Review Form -->
-            <div id="write-review-container" class="mt-12 bg-[#FFF8E7] p-lg border border-outline-variant/60 rounded-2xl hidden">
-                <h3 class="font-title-serif text-primary text-xl mb-md">Write a Review</h3>
-                <form id="review-form" class="space-y-md">
-                    <div>
-                        <label class="block text-xs font-label-caps text-outline uppercase tracking-wider mb-sm">Rating</label>
-                        <div class="flex items-center gap-sm text-amber-500" id="star-input-container">
-                            <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="1">
-                                <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
-                            </button>
-                            <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="2">
-                                <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
-                            </button>
-                            <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="3">
-                                <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
-                            </button>
-                            <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="4">
-                                <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
-                            </button>
-                            <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="5">
-                                <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
-                            </button>
+        <!-- 5. LOWER SECTION: Reviews (Left) & More Like This (Right) -->
+        <section class="mt-16 border-t border-[#14381F]/15 pt-12" id="bottom-content-section">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+                
+                <!-- Left: Artisan Reviews Panel (7 cols / ~60%) -->
+                <div class="lg:col-span-7 space-y-8" id="reviews-section">
+                    <div class="flex items-center justify-between border-b border-[#14381F]/10 pb-4">
+                        <div>
+                            <h2 class="font-headline-lg text-primary text-2xl md:text-3xl font-semibold" style="font-family: 'Playfair Display', serif;">Artisan Reviews</h2>
+                            <p class="text-xs text-outline tracking-wider uppercase mt-1 font-['DM_Sans']" id="reviews-summary-text">0 reviews</p>
+                        </div>
+                        <div class="flex items-center gap-xs text-amber-500 font-bold" id="reviews-rating-summary">
+                            <!-- Rating summary -->
                         </div>
                     </div>
-                    <div>
-                        <label for="review-body" class="block text-xs font-label-caps text-outline uppercase tracking-wider mb-sm">Review Comments</label>
-                        <textarea id="review-body" rows="4" class="w-full rounded-xl border border-outline-variant bg-[#FFF8E7] p-4 text-sm focus:border-primary focus:ring-0 focus:outline-none" placeholder="Share your experience with this handmade piece..."></textarea>
-                    </div>
-                    <button type="submit" class="bg-primary hover:bg-[#14381F] text-white px-lg py-md rounded-xl font-semibold uppercase tracking-wider transition-all active:scale-95">
-                        Submit Review
-                    </button>
-                </form>
-            </div>
-            <div id="review-gating-notice" class="mt-12 p-md bg-[#FFF8E7] border border-dashed border-outline-variant/60 rounded-xl text-center text-secondary text-sm">
-                Only verified buyers who received this item can write a review.
-            </div>
-        </section>
 
-        <!-- You May Also Like Section -->
-        <section class="mt-16 border-t border-outline-variant/30 pt-12 hidden" id="recommendations-section">
-            <h2 class="font-headline-lg text-primary text-2xl mb-8" style="font-family: 'Playfair Display', serif;">You May Also Like</h2>
-            <div id="recommendations-grid" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
-                <!-- Dynamically rendered products -->
+                    <div id="reviews-list" class="space-y-4">
+                        <!-- Reviews injected here -->
+                    </div>
+
+                    <!-- Write a Review Form -->
+                    <div id="write-review-container" class="mt-8 bg-[#FAF6EE] p-6 border border-[#14381F]/15 rounded-2xl hidden">
+                        <h3 class="font-title-serif text-primary text-xl mb-4 font-semibold" style="font-family: 'Playfair Display', serif;">Write a Review</h3>
+                        <form id="review-form" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-label-caps text-outline uppercase tracking-wider mb-2 font-bold font-['DM_Sans']">Rating</label>
+                                <div class="flex items-center gap-2 text-amber-500" id="star-input-container">
+                                    <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="1">
+                                        <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
+                                    </button>
+                                    <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="2">
+                                        <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
+                                    </button>
+                                    <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="3">
+                                        <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
+                                    </button>
+                                    <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="4">
+                                        <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
+                                    </button>
+                                    <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="5">
+                                        <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="review-body" class="block text-xs font-label-caps text-outline uppercase tracking-wider mb-2 font-bold font-['DM_Sans']">Review Comments</label>
+                                <textarea id="review-body" rows="4" class="w-full rounded-xl border border-[#14381F]/20 bg-white p-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none" placeholder="Share your experience with this handmade piece..."></textarea>
+                            </div>
+                            <button type="submit" class="bg-primary hover:bg-[#0D2614] text-white px-6 py-3 rounded-xl font-semibold uppercase tracking-wider transition-all active:scale-95 text-xs font-['DM_Sans'] shadow-sm">
+                                Submit Review
+                            </button>
+                        </form>
+                    </div>
+                    <div id="review-gating-notice" class="mt-6 p-4 bg-[#FAF6EE] border border-dashed border-[#14381F]/25 rounded-xl text-center text-secondary text-xs font-['DM_Sans']">
+                        Only verified buyers who received this item can write a review.
+                    </div>
+                </div>
+
+                <!-- Right: "More like this" Panel (5 cols / ~40%) -->
+                <div class="lg:col-span-5 bg-[#FAF6EE]/80 border border-[#14381F]/15 rounded-2xl p-5 sm:p-6 space-y-5" id="recommendations-section">
+                    <div class="flex items-center justify-between border-b border-[#14381F]/10 pb-4">
+                        <div>
+                            <h3 class="font-headline-lg text-primary text-2xl font-semibold" style="font-family: 'Playfair Display', serif;">More like this</h3>
+                            <p class="text-xs text-secondary/80 font-['DM_Sans'] mt-0.5">Handcrafted pieces with similar keywords &amp; artisan</p>
+                        </div>
+                        <span class="material-symbols-outlined text-[#14381F] text-2xl opacity-70">auto_awesome</span>
+                    </div>
+
+                    <!-- Recommended Cards Grid / Column -->
+                    <div id="recommendations-grid" class="space-y-4">
+                        <!-- Dynamically rendered similar product cards -->
+                    </div>
+                </div>
+
             </div>
         </section>
 
@@ -307,109 +468,119 @@
             <h3 class="font-headline-lg text-headline-lg mb-2">Product Not Found</h3>
             <p class="text-secondary max-w-md mx-auto mb-6">The product you're looking for might have been removed, deactivated, or does not exist.</p>
             <button onclick="window.location.href='category.html'" class="bg-primary text-background px-8 py-3 rounded-lg font-semibold uppercase tracking-wider">Back to Browse</button>
-        </div>
     </main>
 
-    <!-- BottomNavBar -->
-    <nav class="hidden md:flex items-center justify-center gap-xl h-full">
-    <!-- Home -->
-    <a href="/buyer/home.html" class="flex items-center gap-xs text-[#414942] hover:text-[#14381F] transition-colors h-full px-1 font-['DM_Sans'] text-[16px] font-normal">
-      <span class="material-symbols-outlined text-[20px]">home</span>
-      <span>Home</span>
-    </a>
-    <!-- Category -->
-    <a href="/buyer/categories.html" class="flex items-center gap-xs text-[#414942] hover:text-[#14381F] transition-colors h-full px-1 font-['DM_Sans'] text-[16px] font-normal">
-      <span class="material-symbols-outlined text-[20px]">category</span>
-      <span>Category</span>
-    </a>
-    <!-- ZipGift -->
-    <a href="/buyer/zip-gift.html" class="flex items-center gap-xs text-[#414942] hover:text-[#14381F] transition-colors h-full px-1 font-['DM_Sans'] text-[16px] font-normal">
-      <span class="material-symbols-outlined text-[20px]">bolt</span>
-      <span>ZipGift</span>
-    </a>
-    <!-- Profile -->
-    <a href="/buyer/profile.html" class="flex items-center gap-xs text-[#414942] hover:text-[#14381F] transition-colors h-full px-1 font-['DM_Sans'] text-[16px] font-normal">
-      <span class="material-symbols-outlined text-[20px]">person</span>
-      <span>Profile</span>
-    </a>
-  </nav>
+    <!-- Compact Footer -->
+  <footer class="relative overflow-hidden mt-10 sm:mt-16 pb-16 md:pb-0" style="background-color: #273328; color: #FAF6EE;">
+    <!-- Desktop Footer Grid (>= 768px) -->
+    <div class="hidden md:block max-w-[1280px] mx-auto px-6 pt-10 pb-8 relative z-10">
+      <div class="grid grid-cols-5 gap-8 mb-10">
+        <!-- Brand column -->
+        <div class="col-span-2">
+          <h2 style="font-family: 'Playfair Display', serif; font-size: 36px; font-style: italic; color: #FAF6EE; margin-bottom: 8px;">
+            Tohfa.
+          </h2>
+          <p style="font-family: 'DM Sans', sans-serif; color: #FAF6EE; margin-bottom: 6px; font-weight: 500; font-size: 14px;">
+            Thoughtful Gifting, Made Effortless.
+          </p>
+          <p style="font-family: 'DM Sans', sans-serif; color: #A8B89A; line-height: 1.5; font-size: 13px; max-width: 280px;">
+            India's first home for handcrafted gifts, celebrating the soul of artisanal craftsmanship.
+          </p>
+        </div>
 
-    <!-- Footer -->
-    <!-- NEW TOHFA FOOTER � footer_stitch v1 -->
-<footer style="position:relative;overflow:hidden;background:#273328;color:#FFF8E7;padding-top:64px;padding-bottom:32px;">
-  <!-- Ghost watermark -->
-  <div style="position:absolute;bottom:-10%;right:-5%;opacity:0.04;pointer-events:none;user-select:none;">
-    <span class="material-symbols-outlined" style="font-size:600px;color:white;">local_florist</span>
-  </div>
-  <!-- Main grid -->
-  <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:repeat(1,1fr);gap:48px;margin-bottom:80px;position:relative;z-index:10;" class="tohfa-footer-grid">
-    <!-- Brand -->
-    <div>
-      <h2 style="font-family:'Playfair Display',serif;font-size:44px;font-style:italic;color:#273328;margin-bottom:16px;">Tohfa.</h2>
-      <p style="font-family:'DM Sans',sans-serif;color:#FFF8E7;margin-bottom:8px;font-weight:500;">Thoughtful Gifting, Made Effortless.</p>
-      <p style="font-family:'DM Sans',sans-serif;color:#A8B89A;margin-bottom:32px;line-height:1.6;">India's first home for handcrafted gifts, celebrating the soul of artisanal craftsmanship.</p>
-      
-    </div>
-    <!-- Company -->
-    <div>
-      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">Company</h3>
-      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
-        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">About Us</a></li>
-        <li><a href="/buyer/our-story.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Our Story</a></li>
-        
-      </ul>
-    </div>
-    <!-- For Sellers -->
-    <div>
-      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">For Sellers</h3>
-      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
-        <li><a onclick="handleFooterSellerLink(event)" href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Sell on Tohfa</a></li>
-        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Seller Dashboard</a></li>
-        
-      </ul>
-    </div>
-    <!-- For Buyers -->
-    <div>
-      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">For Buyers</h3>
-      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
-        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'" onclick="event.preventDefault(); if (window.openTohfaChat) { window.openTohfaChat('Find me a gift'); } else { window.__tohfaChatQueue = window.__tohfaChatQueue || []; window.__tohfaChatQueue.push('Find me a gift'); }">AI Gift Guide</a></li>
-        
-      </ul>
-    </div>
-    <!-- Support -->
-    <div>
-      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">Support</h3>
-      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
-        <li><a href="#" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Contact Us</a></li>
-        <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Refunds &amp; Disputes</a></li>
-        <li><a href="/buyer/terms-conditions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Terms and Conditions</a></li>
-        <li><a href="/buyer/faq.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">FAQs</a></li>
-      </ul>
-    </div>
-  </div>
-  <!-- Divider -->
-  <div style="max-width:1280px;margin:0 auto;padding:0 24px;margin-bottom:32px;">
-    <div style="width:100%;height:1px;background:rgba(255,255,255,0.1);position:relative;">
-      <div style="position:absolute;left:50%;top:-8px;transform:translateX(-50%);display:flex;gap:16px;color:rgba(201,151,44,0.3);">
-        <span class="material-symbols-outlined" style="font-size:16px;">stars</span>
+        <!-- Company links -->
+        <div>
+          <h3 style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(168,191,165,0.7); margin-bottom: 14px;">
+            Company
+          </h3>
+          <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
+            <li><a href="/buyer/our-story.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">About Us</a></li>
+            <li><a href="/buyer/our-story.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Our Story</a></li>
+            <li><a href="/buyer/terms-conditions.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Terms of Service</a></li>
+            <li><a href="/buyer/terms-conditions.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Privacy Policy</a></li>
+          </ul>
+        </div>
+
+        <!-- For Sellers -->
+        <div>
+          <h3 style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(168,191,165,0.7); margin-bottom: 14px;">
+            For Sellers
+          </h3>
+          <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
+            <li><a onclick="handleFooterSellerLink(event)" href="#" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Sell on Tohfa</a></li>
+            <li><a href="/seller/dashboard.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Seller Studio</a></li>
+          </ul>
+        </div>
+
+        <!-- Support -->
+        <div>
+          <h3 style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(168,191,165,0.7); margin-bottom: 14px;">
+            Support
+          </h3>
+          <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
+            <li><a href="javascript:void(0)" onclick="openContactModal(event)" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Contact Us</a></li>
+            <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Refunds &amp; Disputes</a></li>
+            <li><a href="/buyer/faq.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">FAQs</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Desktop Bottom bar -->
+      <div class="border-t border-white/10 pt-4 flex justify-between items-center text-xs text-[#FAF6EE]/60">
+        <span>&copy; 2026 Tohfa Marketplace. All rights reserved.</span>
+        <span>Handcrafted with <span class="text-[#C85A32]">&hearts;</span> in India</span>
       </div>
     </div>
-  </div>
-  <!-- Bottom bar -->
-  <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:flex;flex-direction:column;align-items:center;gap:24px;position:relative;z-index:10;" class="tohfa-footer-bottom">
-    
-    <div style="display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;font-size:14px;color:#FFF8E7;">
-      <span>Made with</span>
-      <span class="material-symbols-outlined" style="color:#273328;font-size:18px;font-variation-settings:'FILL' 1;">favorite</span>
-      <span>in India</span>
-    </div>
-  </div>
-  <style>
-    @media (min-width: 768px) {
-      .tohfa-footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr 1fr !important; }
-      .tohfa-footer-bottom { flex-direction: row !important; justify-content: space-between !important; }
-    }
 
+    <!-- Mobile Compact 2-Column Footer (< 768px) -->
+    <div class="block md:hidden px-4 pt-6 pb-6 relative z-10">
+      <div class="mb-4">
+        <h2 style="font-family: 'Playfair Display', serif; font-size: 24px; font-style: italic; color: #FAF6EE; margin-bottom: 2px;">
+          Tohfa<span style="opacity: 0.6;">.</span>
+        </h2>
+        <p style="font-family: 'DM Sans', sans-serif; color: rgba(255,248,231,0.7); font-size: 12px; line-height: 1.4;">
+          Thoughtful Gifting, Made Effortless.
+        </p>
+      </div>
+
+      <!-- 2-Column Mobile Links -->
+      <div class="grid grid-cols-2 gap-4 border-t border-white/10 pt-4 mb-4">
+        <!-- Column 1: Company -->
+        <div>
+          <h3 style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(168,191,165,0.7); margin-bottom: 8px;">
+            Company
+          </h3>
+          <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
+            <li><a href="/buyer/our-story.html" class="text-[#FAF6EE]/90 no-underline">About Us</a></li>
+            <li><a href="/buyer/our-story.html" class="text-[#FAF6EE]/90 no-underline">Our Story</a></li>
+            <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Terms of Service</a></li>
+            <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Privacy Policy</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 2: Sellers & Support -->
+        <div>
+          <h3 style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(168,191,165,0.7); margin-bottom: 8px;">
+            Sellers &amp; Support
+          </h3>
+          <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
+            <li><a onclick="handleFooterSellerLink(event)" href="#" class="text-[#FAF6EE]/90 no-underline">Sell on Tohfa</a></li>
+            <li><a href="/seller/dashboard.html" class="text-[#FAF6EE]/90 no-underline">Seller Studio</a></li>
+            <li><a href="javascript:void(0)" onclick="openContactModal(event)" class="text-[#FAF6EE]/90 no-underline">Contact Us</a></li>
+            <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" class="text-[#FAF6EE]/90 no-underline">Refunds &amp; Disputes</a></li>
+            <li><a href="/buyer/faq.html" class="text-[#FAF6EE]/90 no-underline">FAQs</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Mobile Bottom bar -->
+      <div class="border-t border-white/10 pt-3 text-center text-[11px] text-[#FAF6EE]/50">
+        &copy; 2026 Tohfa Marketplace. Handcrafted in India.
+      </div>
+    </div>
+  </footer>
+
+  <style>
     /* Recommendations Ribbon Styles */
     .ribbon-wrapper {
         position: absolute;
@@ -596,6 +767,7 @@
         let matchedOrderId = null;
         let selectedRating = 0;
         let currentUser = null;
+        let currentSelectedVariant = null;
 
     async function checkAuthState() {
         const token = sessionStorage.getItem('tohfa_access_token');
@@ -619,16 +791,8 @@
                     console.error("Failed to fetch profile avatar:", err);
                 }
                 
-                let avatarHtml = '';
-                if (avatarUrl) {
-                    avatarHtml = `<img src="${avatarUrl}" alt="Profile" class="w-10 h-10 rounded-full border border-[rgba(20,56,31,0.2)] object-cover cursor-pointer" onclick="window.location.href='profile.html'" loading="lazy" />`;
-                } else {
-                    avatarHtml = `
-                        <a href="/buyer/profile.html" class="w-10 h-10 rounded-full bg-[#14381F] flex items-center justify-center text-white font-bold border border-[rgba(20,56,31,0.2)] text-sm overflow-hidden flex-shrink-0 cursor-pointer">
-                            ${initial}
-                        </a>
-                    `;
-                }
+                const finalNavAvatar = avatarUrl || '/img/default-avatar.png';
+                const avatarHtml = `<img src="${finalNavAvatar}" alt="Profile" class="w-10 h-10 rounded-full border border-[rgba(20,56,31,0.2)] object-cover cursor-pointer" onclick="window.location.href='/buyer/profile.html'" loading="lazy" onerror="this.onerror=null; this.src='/img/default-avatar.png';" />`;
 
                 if (authContainer) {
                     authContainer.innerHTML = avatarHtml;
@@ -673,28 +837,11 @@
                     const subcontainer = document.getElementById('product-subcategories-container');
                     if (subcontainer) {
                         subcontainer.innerHTML = '';
-                        
-                        // Render Category first
-                        if (product.category && product.category.name) {
-                            const catSpan = document.createElement('span');
-                            catSpan.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-primary text-white border border-primary/20 font-body";
-                            catSpan.textContent = `Category: ${product.category.name}`;
-                            subcontainer.appendChild(catSpan);
-                        }
-                        
-                        // Render Subcategories
-                        if (product.subcategories && product.subcategories.length > 0) {
-                            product.subcategories.forEach(sub => {
-                                const span = document.createElement('span');
-                                span.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-[#E8F0E6] text-[#14381F] border border-[#C5D9C2] font-body";
-                                span.textContent = sub.name;
-                                subcontainer.appendChild(span);
-                            });
-                        }
                     }
 
-                    document.getElementById('product-price').innerText = formatPaise(product.price_paise);
-                    document.getElementById('product-seller').innerText = product.seller?.seller_name || 'Artisan';
+                    const basePricePaise = product.price_paise || (product.base_price ? Math.round(product.base_price * 100) : 0);
+                    document.getElementById('product-price').innerText = formatPaise(basePricePaise);
+                    document.getElementById('product-seller').innerText = product.seller?.seller_name || product.store_name || 'Artisan';
                     
                     const ratingContainer = document.getElementById('product-rating-container');
                     if (ratingContainer) {
@@ -727,7 +874,7 @@
                         avatarEl.innerHTML = `<img src="${product.seller.avatar_url}" alt="Seller Avatar" class="w-full h-full object-cover rounded-full" loading="lazy" />`;
                         avatarEl.classList.remove('bg-primary/20', 'text-primary');
                     } else {
-                        avatarEl.innerText = (product.seller?.seller_name || 'A').charAt(0).toUpperCase();
+                        avatarEl.innerText = (product.seller?.seller_name || product.store_name || 'A').charAt(0).toUpperCase();
                     }
 
                     const sellerLink = document.getElementById('seller-profile-link');
@@ -745,6 +892,12 @@
                     if (tagsContainer) {
                         tagsContainer.innerHTML = '';
                         
+                        // Major Category Badge
+                        const catBadge = document.createElement('span');
+                        catBadge.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#14381F] text-[#FAF6EE] border border-[#14381F]/20 font-['DM_Sans']";
+                        catBadge.textContent = product.category_name || product.category?.name || 'Handcrafted';
+                        tagsContainer.appendChild(catBadge);
+
                         // Check Customized
                         if (isCustomized) {
                             const customTag = document.createElement('span');
@@ -768,22 +921,304 @@
                             bestSellerTag.className = 'font-data-price text-xs bg-[#C4622D] text-white px-3 py-[2px] rounded-full inline-block font-semibold';
                             tagsContainer.appendChild(bestSellerTag);
                         }
+
+                        // Descriptive Tag Chips
+                        const pTags = Array.isArray(product.tags) ? product.tags : [];
+                        pTags.forEach(t => {
+                            const tagChip = document.createElement('span');
+                            tagChip.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#14381F]/8 text-[#14381F] border border-[#14381F]/15 font-['DM_Sans']";
+                            tagChip.textContent = `#${t.replace(/-/g, ' ')}`;
+                            tagsContainer.appendChild(tagChip);
+                        });
+                    }
+
+                    // Helper to get image URLs for a variant (or base product fallback)
+                    function getVariantImages(variant) {
+                        if (variant) {
+                            if (Array.isArray(variant.images) && variant.images.length > 0) {
+                                const valid = variant.images.map(img => typeof img === 'string' ? img : (img.url || img.image_url || img)).filter(Boolean);
+                                if (valid.length > 0) return valid;
+                            }
+                            if (variant.image_url) {
+                                return [variant.image_url];
+                            }
+                        }
+                        if (Array.isArray(product.images) && product.images.length > 0) {
+                            const valid = product.images.map(img => typeof img === 'string' ? img : (img.url || img.image_url || img)).filter(Boolean);
+                            if (valid.length > 0) return valid;
+                        }
+                        return [product.image_url || 'https://placehold.co/600x600/f4ede3/516447?text=Handcrafted'];
+                    }
+
+                    // Consolidated Single Image Gallery Updater (Desktop & Mobile)
+                    function updateGallery(imagesList, activeIndex = 0) {
+                        const list = (Array.isArray(imagesList) && imagesList.length > 0)
+                            ? imagesList
+                            : [product.image_url || 'https://placehold.co/600x600/f4ede3/516447?text=Handcrafted'];
+
+                        const verticalThumbs = document.getElementById('product-vertical-thumbs');
+                        const mainImg = document.getElementById('main-product-image');
+                        const counterBadge = document.getElementById('image-counter-badge');
+
+                        if (mainImg) {
+                            mainImg.src = list[activeIndex] || list[0];
+                            mainImg.alt = product.name;
+                        }
+
+                        if (counterBadge) {
+                            counterBadge.textContent = `${activeIndex + 1} / ${list.length}`;
+                            if (list.length > 1) {
+                                counterBadge.classList.remove('hidden');
+                            } else {
+                                counterBadge.classList.add('hidden');
+                            }
+                        }
+
+                        if (verticalThumbs) {
+                            if (list.length <= 1) {
+                                verticalThumbs.innerHTML = '';
+                                verticalThumbs.classList.add('hidden');
+                            } else {
+                                // Show the vertical thumbs strip (use flex, not block)
+                                verticalThumbs.classList.remove('hidden');
+                                verticalThumbs.style.display = 'flex';
+                                verticalThumbs.innerHTML = list.map((url, idx) => `
+                                    <div class="product-vert-thumb group relative aspect-square w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shrink-0 bg-white ${idx === activeIndex ? 'border-[#14381F] ring-2 ring-[#14381F]/30 scale-[1.02] shadow-sm opacity-100' : 'border-[#14381F]/20 opacity-70 hover:opacity-100 hover:border-[#14381F]/60'}" data-index="${idx}" data-img-url="${url}">
+                                        <img src="${url}" alt="${product.name} - Thumbnail ${idx + 1}" class="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
+                                    </div>
+                                `).join('');
+
+                                verticalThumbs.querySelectorAll('.product-vert-thumb').forEach(thumb => {
+                                    thumb.addEventListener('click', () => {
+                                        const url = thumb.getAttribute('data-img-url');
+                                        const idx = parseInt(thumb.getAttribute('data-index'), 10);
+                                        if (mainImg && url) {
+                                            mainImg.src = url;
+                                        }
+                                        if (counterBadge) {
+                                            counterBadge.textContent = `${idx + 1} / ${list.length}`;
+                                        }
+                                        verticalThumbs.querySelectorAll('.product-vert-thumb').forEach(t => {
+                                            t.className = 'product-vert-thumb group relative aspect-square w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shrink-0 bg-white border-[#14381F]/20 opacity-70 hover:opacity-100 hover:border-[#14381F]/60';
+                                        });
+                                        thumb.className = 'product-vert-thumb group relative aspect-square w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shrink-0 bg-white border-[#14381F] ring-2 ring-[#14381F]/30 scale-[1.02] shadow-sm opacity-100';
+                                    });
+                                });
+                            }
+                        }
+                    }
+
+                    // Populate Variant Selector & Initialize Gallery
+                    const variantsContainer = document.getElementById('product-variants-container');
+                    const variants = Array.isArray(product.variants) ? product.variants : [];
+
+                    if (variants.length > 0 && variantsContainer) {
+                        currentSelectedVariant = variants[0];
+                        variantsContainer.classList.remove('hidden');
+
+                        // Build horizontal image-tile strip
+                        variantsContainer.innerHTML = `
+                            <div class="pt-1">
+                                <div class="flex items-center justify-between mb-2 px-0.5">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider text-[#14381F] font-['DM_Sans']">Select Option</span>
+                                    <span id="variant-selected-label" class="text-[11px] font-semibold text-[#14381F]/80 font-['DM_Sans']">${escapeHtml(currentSelectedVariant.variant_name || currentSelectedVariant.color_name || '')}</span>
+                                </div>
+                                <div class="variant-strip" id="variant-tiles-list">
+                                    ${variants.map((v, idx) => {
+                                        const hasHex = Boolean(v.color_hex && /^#[0-9A-F]{6}$/i.test(v.color_hex));
+                                        const isSel = idx === 0;
+                                        const diff = Number(v.additional_price || 0);
+                                        const diffStr = diff !== 0 ? ` +&#8377;${diff}` : '';
+                                        const shortName = (v.variant_name || v.color_name || 'Option ' + (idx + 1));
+                                        const fullLabel = shortName + diffStr;
+
+                                        // Get variant's primary image
+                                        let thumbUrl = '';
+                                        if (Array.isArray(v.images) && v.images.length > 0) {
+                                            const first = v.images[0];
+                                            thumbUrl = typeof first === 'string' ? first : (first.url || first.image_url || '');
+                                        } else if (v.image_url) {
+                                            thumbUrl = v.image_url;
+                                        }
+
+                                        if (thumbUrl) {
+                                            return `
+                                                <div class="variant-tile${isSel ? ' active' : ''}" data-variant-id="${v.id}" title="${escapeHtml(fullLabel)}">
+                                                    <div class="variant-tile-img">
+                                                        <img src="${thumbUrl}" alt="${escapeHtml(fullLabel)}" loading="lazy" />
+                                                        ${hasHex ? `<span style="position:absolute;bottom:4px;right:4px;width:10px;height:10px;border-radius:50%;background:${v.color_hex};border:1.5px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,0.25);"></span>` : ''}
+                                                    </div>
+                                                    <div class="variant-tile-label">${escapeHtml(shortName)}</div>
+                                                </div>
+                                            `;
+                                        } else {
+                                            // Fallback: color tile (if hex) or clean text tile (if non-color variant)
+                                            const bgStyle = hasHex ? `background-color:${v.color_hex};` : 'background:#FAF6EE;border:1px solid rgba(20,56,31,0.2);';
+                                            const textColor = hasHex ? '#fff' : '#14381F';
+                                            return `
+                                                <div class="variant-tile${isSel ? ' active' : ''}" data-variant-id="${v.id}" title="${escapeHtml(fullLabel)}">
+                                                    <div class="variant-tile-color" style="${bgStyle}color:${textColor};display:flex;align-items:center;justify-content:center;padding:4px;text-align:center;">
+                                                        ${hasHex
+                                                            ? `<span style="font-size:9px;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,0.4);">${escapeHtml(shortName)}</span>`
+                                                            : `<span style="font-size:10px;font-weight:600;line-height:1.2;word-break:break-word;">${escapeHtml(shortName)}</span>`
+                                                        }
+                                                    </div>
+                                                    <div class="variant-tile-label">${escapeHtml(shortName)}</div>
+                                                </div>
+                                            `;
+                                        }
+                                    }).join('')}
+                                </div>
+                            </div>
+                        `;
+
+                        // Initialize gallery with first variant's photos
+                        updateGallery(getVariantImages(currentSelectedVariant), 0);
+
+                        // Variant tile click: update active state, gallery (main image + vertical thumbs), price
+                        variantsContainer.querySelectorAll('.variant-tile').forEach(tile => {
+                            tile.addEventListener('click', () => {
+                                const vId = String(tile.getAttribute('data-variant-id'));
+                                currentSelectedVariant = variants.find(v => String(v.id) === vId) || variants[0];
+
+                                // Update active tile styling
+                                variantsContainer.querySelectorAll('.variant-tile').forEach(t => t.classList.remove('active'));
+                                tile.classList.add('active');
+
+                                // Update selected label
+                                const lbl = document.getElementById('variant-selected-label');
+                                if (lbl) lbl.textContent = currentSelectedVariant.variant_name || currentSelectedVariant.color_name || '';
+
+                                // Update price display
+                                const base = Number(product.base_price || (product.price_paise ? product.price_paise / 100 : 0));
+                                const activePrice = base + Number(currentSelectedVariant.additional_price || 0);
+                                document.getElementById('product-price').innerText = formatPaise(Math.round(activePrice * 100));
+
+                                // Refresh gallery: main image + vertical thumbs → this variant's photos
+                                updateGallery(getVariantImages(currentSelectedVariant), 0);
+                            });
+                        });
+                    } else {
+                        if (variantsContainer) variantsContainer.classList.add('hidden');
+                        // Initialize gallery with base product images
+                        updateGallery(getVariantImages(null), 0);
+                    }
+
+                    // Render Modular Customization Box
+                    let custSchema = product.customization_schema;
+                    if (typeof custSchema === 'string') {
+                        try { custSchema = JSON.parse(custSchema); } catch { custSchema = null; }
+                    }
+                    const hasCustomOptions = Boolean(product.is_customizable || (product.customization_mode && product.customization_mode !== 'none') || (custSchema && custSchema.is_enabled));
+
+                    const custContainer = document.getElementById('product-customization-container');
+                    const custFieldsList = document.getElementById('customization-fields-list');
+                    const custFeeBadge = document.getElementById('customization-fee-badge');
+
+                    if (hasCustomOptions && custContainer && custFieldsList) {
+                        custContainer.classList.remove('hidden');
+                        const customFee = parseFloat(custSchema?.customization_fee || product.customization_fee || 0);
+                        if (customFee > 0 && custFeeBadge) {
+                            custFeeBadge.textContent = `+₹${customFee.toLocaleString('en-IN')}`;
+                            custFeeBadge.classList.remove('hidden');
+                        } else if (custFeeBadge) {
+                            custFeeBadge.classList.add('hidden');
+                        }
+
+                        const craftingTime = custSchema?.crafting_time || (product.preparation_days ? `${product.preparation_days} days` : '5-7 days');
+                        const prepNoticeHtml = `
+                            <div class="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-medium mb-3">
+                                <span class="material-symbols-outlined text-[18px] text-amber-800 shrink-0">schedule</span>
+                                <span><strong>Estimated Preparation Time:</strong> Takes <strong>${escapeHtml(craftingTime)}</strong> to handcraft &amp; personalize before dispatch.</span>
+                            </div>
+                        `;
+
+                        const fields = Array.isArray(custSchema?.fields) ? custSchema.fields : [];
+                        if (fields.length > 0) {
+                            custFieldsList.innerHTML = prepNoticeHtml + fields.map((f, idx) => {
+                                const reqMark = f.is_required ? '<span class="text-red-500 font-bold ml-0.5">*</span>' : '';
+                                if (f.type === 'text') {
+                                    const maxLen = f.max_length || 25;
+                                    return `
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between items-center text-xs font-bold text-[#14381F]">
+                                                <label for="cust-field-${idx}">${escapeHtml(f.label || 'Custom Inscription')}${reqMark}</label>
+                                                <span class="text-[10px] font-mono text-sage" id="cust-char-count-${idx}">0/${maxLen}</span>
+                                            </div>
+                                            <input type="text" id="cust-field-${idx}" maxlength="${maxLen}" placeholder="${escapeHtml(f.placeholder || 'Enter text here...')}" data-type="text" data-label="${escapeHtml(f.label || 'Custom Inscription')}" data-required="${Boolean(f.is_required)}" class="w-full px-3.5 py-2.5 rounded-xl border border-[#14381F]/20 bg-white text-xs text-[#14381F] focus:outline-none focus:border-[#14381F] transition-colors shadow-xs" oninput="updateCharCount(this, ${idx})"/>
+                                        </div>
+                                    `;
+                                } else if (f.type === 'select') {
+                                    const choices = Array.isArray(f.choices) ? f.choices : [];
+                                    const optionsHtml = choices.map((c, cIdx) => {
+                                        const cName = typeof c === 'object' ? c.name : c;
+                                        const cDelta = typeof c === 'object' ? (parseFloat(c.price_delta) || 0) : 0;
+                                        const deltaLabel = cDelta > 0 ? ` (+₹${cDelta})` : '';
+                                        return `<option value="${escapeHtml(cName)}" data-delta="${cDelta}">${escapeHtml(cName)}${deltaLabel}</option>`;
+                                    }).join('');
+
+                                    return `
+                                        <div class="space-y-1">
+                                            <label for="cust-field-${idx}" class="block text-xs font-bold text-[#14381F]">${escapeHtml(f.label || 'Select Option')}${reqMark}</label>
+                                            <select id="cust-field-${idx}" data-type="select" data-label="${escapeHtml(f.label || 'Option')}" data-required="${Boolean(f.is_required)}" class="w-full px-3.5 py-2.5 rounded-xl border border-[#14381F]/20 bg-white text-xs text-[#14381F] focus:outline-none focus:border-[#14381F] transition-colors shadow-xs" onchange="recalculatePersonalizedPrice()">
+                                                <option value="">Choose ${escapeHtml(f.label || 'an option')}...</option>
+                                                ${optionsHtml}
+                                            </select>
+                                        </div>
+                                    `;
+                                } else if (f.type === 'image') {
+                                    return `
+                                        <div class="space-y-1">
+                                            <label class="block text-xs font-bold text-[#14381F]">${escapeHtml(f.label || 'Reference Photo / Artwork')}${reqMark}</label>
+                                            ${f.instructions ? `<p class="text-[11px] text-[#587A5B]">${escapeHtml(f.instructions)}</p>` : ''}
+                                            <div class="flex items-center gap-3">
+                                                <input type="file" id="cust-field-${idx}" accept="image/*" data-type="image" data-label="${escapeHtml(f.label || 'Reference Photo')}" data-required="${Boolean(f.is_required)}" class="hidden" onchange="handleReferencePhotoSelect(this, ${idx})"/>
+                                                <button type="button" onclick="document.getElementById('cust-field-${idx}').click()" class="px-4 py-2 rounded-xl border border-dashed border-[#14381F]/40 bg-white text-xs font-semibold text-[#14381F] hover:bg-[#14381F]/5 transition-colors flex items-center gap-1.5 shadow-xs">
+                                                    <span class="material-symbols-outlined text-base">upload</span> Upload Photo
+                                                </button>
+                                                <div id="cust-img-preview-wrap-${idx}" class="hidden flex items-center gap-2">
+                                                    <img id="cust-img-preview-${idx}" class="w-10 h-10 object-cover rounded-lg border border-[#14381F]/20" />
+                                                    <button type="button" onclick="clearReferencePhoto(${idx})" class="text-xs text-red-600 font-bold hover:underline">Remove</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                } else if (f.type === 'textarea') {
+                                    return `
+                                        <div class="space-y-1">
+                                            <label for="cust-field-${idx}" class="block text-xs font-bold text-[#14381F]">${escapeHtml(f.label || 'Special Notes')}${reqMark}</label>
+                                            <textarea id="cust-field-${idx}" rows="2" placeholder="${escapeHtml(f.placeholder || 'Any specific instructions...')}" data-type="textarea" data-label="${escapeHtml(f.label || 'Special Notes')}" data-required="${Boolean(f.is_required)}" class="w-full px-3.5 py-2.5 rounded-xl border border-[#14381F]/20 bg-white text-xs text-[#14381F] focus:outline-none focus:border-[#14381F] transition-colors shadow-xs"></textarea>
+                                        </div>
+                                    `;
+                                }
+                                return '';
+                            }).join('');
+                        } else {
+                            custFieldsList.innerHTML = `
+                                <div class="space-y-1">
+                                    <label class="block text-xs font-bold text-[#14381F]">Personalisation Request</label>
+                                    <textarea id="cust-field-0" rows="2" placeholder="Describe the custom name, colors, or details you would like..." data-type="textarea" data-label="Personalisation Request" data-required="false" class="w-full px-3.5 py-2.5 rounded-xl border border-[#14381F]/20 bg-white text-xs text-[#14381F] focus:outline-none focus:border-[#14381F] transition-colors shadow-xs"></textarea>
+                                </div>
+                            `;
+                        }
+                    } else if (custContainer) {
+                        custContainer.classList.add('hidden');
                     }
 
                     // Show/hide qty selector and modify button
                     const qtySelector = document.getElementById('qty-selector-container');
                     const addToCartBtn = document.getElementById('add-to-cart-btn');
-                    if (isCustomized || isSoldOut) {
+                    if (isSoldOut) {
                         if (qtySelector) qtySelector.style.display = 'none';
                         if (addToCartBtn) {
                             addToCartBtn.querySelector('span.material-symbols-outlined').innerText = 'chat';
-                            addToCartBtn.querySelector('span:last-child').innerText = isSoldOut ? 'Chat with Seller' : 'Request seller';
+                            addToCartBtn.querySelector('span:last-child').innerText = 'Chat with Seller';
                         }
                     } else {
                         if (qtySelector) qtySelector.style.display = 'flex';
                         if (addToCartBtn) {
                             addToCartBtn.querySelector('span.material-symbols-outlined').innerText = 'shopping_cart';
-                            addToCartBtn.querySelector('span:last-child').innerText = 'Add to Cart';
+                            addToCartBtn.querySelector('span:last-child').innerText = hasCustomOptions ? 'Add to Cart (Personalised)' : 'Add to Cart';
                         }
                     }
 
@@ -817,63 +1252,6 @@
                             addToCartBtn.disabled = false;
                             addToCartBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                         }
-                    }
-
-                    // Images
-                    const carousel = document.getElementById('product-carousel');
-                    const dotsContainer = document.getElementById('carousel-dots-container');
-                    
-                    const productImages = product.images || [];
-                    if (productImages.length === 0) {
-                        carousel.innerHTML = `
-                            <div class="w-full h-full flex-shrink-0 snap-center flex items-center justify-center p-6">
-                                <img class="max-w-full max-h-full object-contain" src="https://placehold.co/600x600/f4ede3/516447?text=Handcrafted" alt="Placeholder Image" />
-                            </div>
-                        `;
-                        if (dotsContainer) dotsContainer.innerHTML = '';
-                    } else {
-                        // Render slides
-                        carousel.innerHTML = productImages.map((img, idx) => `
-                            <div class="w-full h-full flex-shrink-0 snap-center flex items-center justify-center p-6">
-                                <img class="max-w-full max-h-full object-contain" src="${img.url}" alt="${product.name} - Image ${idx + 1}" loading="lazy" />
-                            </div>
-                        `).join('');
-
-                        // Render dots
-                        if (dotsContainer) {
-                            dotsContainer.innerHTML = productImages.map((img, idx) => {
-                                const activeClass = idx === 0 ? 'bg-primary' : 'bg-outline-variant/60';
-                                return `<button class="carousel-dot ${activeClass}" data-index="${idx}"></button>`;
-                            }).join('');
-
-                            // Wire dots clicks
-                            dotsContainer.querySelectorAll('.carousel-dot').forEach(dot => {
-                                dot.addEventListener('click', () => {
-                                    const idx = Number(dot.getAttribute('data-index'));
-                                    const slideWidth = carousel.offsetWidth;
-                                    carousel.scrollTo({ left: idx * slideWidth, behavior: 'smooth' });
-                                });
-                            });
-                        }
-
-                        // Sync scroll to update dots
-                        carousel.addEventListener('scroll', () => {
-                            const width = carousel.offsetWidth;
-                            if (width <= 0) return;
-                            const index = Math.round(carousel.scrollLeft / width);
-                            if (dotsContainer) {
-                                const dots = dotsContainer.querySelectorAll('.carousel-dot');
-                                dots.forEach((d, idx) => {
-                                    if (idx === index) {
-                                        d.classList.add('bg-primary');
-                                        d.classList.remove('bg-outline-variant/60');
-                                    } else {
-                                        d.classList.remove('bg-primary');
-                                        d.classList.add('bg-outline-variant/60');
-                                    }
-                                });
-                            }
-                        });
                     }
 
                     // Breadcrumb
@@ -1218,37 +1596,68 @@
             }
         }
 
+        window.updateCharCount = function(input, idx) {
+            const counter = document.getElementById(`cust-char-count-${idx}`);
+            if (counter) {
+                counter.textContent = `${input.value.length}/${input.maxLength}`;
+            }
+        };
+
+        window.referencePhotoDataUrls = {};
+
+        window.handleReferencePhotoSelect = function(input, idx) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                window.referencePhotoDataUrls[idx] = e.target.result;
+                const wrap = document.getElementById(`cust-img-preview-wrap-${idx}`);
+                const img = document.getElementById(`cust-img-preview-${idx}`);
+                if (wrap && img) {
+                    img.src = e.target.result;
+                    wrap.classList.remove('hidden');
+                }
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.clearReferencePhoto = function(idx) {
+            delete window.referencePhotoDataUrls[idx];
+            const input = document.getElementById(`cust-field-${idx}`);
+            if (input) input.value = '';
+            const wrap = document.getElementById(`cust-img-preview-wrap-${idx}`);
+            if (wrap) wrap.classList.add('hidden');
+        };
+
+        window.recalculatePersonalizedPrice = function() {
+            if (!product) return;
+            const base = Number(product.base_price || (product.price_paise ? product.price_paise / 100 : 0));
+            const variantExtra = Number(currentSelectedVariant?.additional_price || 0);
+
+            let custSchema = product.customization_schema;
+            if (typeof custSchema === 'string') {
+                try { custSchema = JSON.parse(custSchema); } catch { custSchema = null; }
+            }
+            const baseCustomFee = parseFloat(custSchema?.customization_fee || product.customization_fee || 0) || 0;
+
+            let selectedChoiceExtra = 0;
+            document.querySelectorAll('#customization-fields-list select').forEach(sel => {
+                const opt = sel.options[sel.selectedIndex];
+                if (opt && opt.dataset.delta) {
+                    selectedChoiceExtra += parseFloat(opt.dataset.delta) || 0;
+                }
+            });
+
+            const activeTotal = base + variantExtra + baseCustomFee + selectedChoiceExtra;
+            document.getElementById('product-price').innerText = formatPaise(Math.round(activeTotal * 100));
+        };
+
         async function handleAddToCart() {
             if (currentUser && product && product.seller && currentUser.id === product.seller.id) {
                 window.Toast?.show("Sellers cannot purchase their own products", "error");
                 return;
             }
             if (product && product.holiday_mode_active) return;
-            if (isCustomized) {
-                if (!requireAuth({ type: 'start_chat', productId: Number(productId) })) {
-                    return;
-                }
-                const btn = document.getElementById('add-to-cart-btn');
-                btn.disabled = true;
-                btn.querySelector('span:last-child').innerText = 'Starting chat...';
-                try {
-                    const isBulk = product.tags?.includes('bulk') || product.category?.slug === 'bulk-orders';
-                    const res = await apiClient.post('/requests', {
-                        listing_id: Number(productId),
-                        request_type: isBulk ? 'bulk' : 'customization',
-                        quantity: qty
-                    });
-                    const convId = res.data.conversation_id;
-                    window.location.href = `/buyer/chat.html?conversationId=${convId}`;
-                } catch (e) {
-                    console.error("Failed to start chat with seller:", e);
-                    window.Toast?.show("Failed to start chat. Please try again.", "error");
-                } finally {
-                    btn.disabled = false;
-                    btn.querySelector('span:last-child').innerText = 'Request seller';
-                }
-                return;
-            }
 
             if (isSoldOut) {
                 if (!requireAuth({ type: 'start_chat', productId: Number(productId) })) {
@@ -1278,6 +1687,73 @@
                 return;
             }
 
+            // Check if product has modular customization
+            let customPayload = null;
+            let custSchema = product.customization_schema;
+            if (typeof custSchema === 'string') {
+                try { custSchema = JSON.parse(custSchema); } catch { custSchema = null; }
+            }
+            const hasCustomOptions = Boolean(product.is_customizable || (product.customization_mode && product.customization_mode !== 'none') || (custSchema && custSchema.is_enabled));
+
+            if (hasCustomOptions) {
+                const selectedOptions = {};
+                let validationFailed = false;
+                let failMessage = '';
+
+                const fieldElements = document.querySelectorAll('#customization-fields-list [id^="cust-field-"]');
+                fieldElements.forEach(el => {
+                    if (validationFailed) return;
+                    const fieldType = el.dataset.type;
+                    const fieldLabel = el.dataset.label || 'Field';
+                    const isRequired = el.dataset.required === 'true';
+
+                    let val = '';
+                    if (fieldType === 'image') {
+                        const idx = el.id.replace('cust-field-', '');
+                        val = window.referencePhotoDataUrls[idx] || '';
+                    } else {
+                        val = el.value?.trim() || '';
+                    }
+
+                    if (isRequired && !val) {
+                        validationFailed = true;
+                        failMessage = `Please complete required customisation: "${fieldLabel}"`;
+                        el.focus();
+                        el.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                        setTimeout(() => el.classList.remove('border-red-500', 'ring-1', 'ring-red-500'), 3000);
+                        return;
+                    }
+
+                    if (val) {
+                        selectedOptions[fieldLabel] = fieldType === 'image' ? '[Photo Attached]' : val;
+                    }
+                });
+
+                if (validationFailed) {
+                    window.Toast?.show(failMessage, "error");
+                    return;
+                }
+
+                const baseCustomFee = parseFloat(custSchema?.customization_fee || product.customization_fee || 0) || 0;
+                let choiceDelta = 0;
+                document.querySelectorAll('#customization-fields-list select').forEach(sel => {
+                    const opt = sel.options[sel.selectedIndex];
+                    if (opt && opt.dataset.delta) {
+                        choiceDelta += parseFloat(opt.dataset.delta) || 0;
+                    }
+                });
+
+                const craftingTime = custSchema?.crafting_time || (product.preparation_days ? `${product.preparation_days} days` : '5-7 days');
+                const summaryParts = Object.entries(selectedOptions).map(([k, v]) => `${k}: ${v}`);
+                customPayload = {
+                    crafting_time: craftingTime,
+                    fee_applied: baseCustomFee,
+                    choice_delta: choiceDelta,
+                    selected_options: selectedOptions,
+                    summary_text: summaryParts.join(' | ')
+                };
+            }
+
             const btn = document.getElementById('add-to-cart-btn');
             btn.disabled = true;
             btn.querySelector('span:last-child').innerText = 'Checking...';
@@ -1291,9 +1767,14 @@
                 }
 
                 btn.querySelector('span:last-child').innerText = 'Adding...';
-                const response = await apiClient.post('/cart/items', { product_id: Number(productId), quantity: qty });
+                const response = await apiClient.post('/cart/items', {
+                    product_id: Number(productId),
+                    variant_id: currentSelectedVariant?.id || null,
+                    quantity: qty,
+                    customization_data: customPayload
+                });
                 if (response.data && response.data.success) {
-                    window.Toast?.show("Added to cart successfully!", "success");
+                    window.Toast?.show("Added to cart successfully! 🛍️", "success");
                     logProductEvent('cart_add');
                 }
             } catch (e) {
@@ -1301,7 +1782,7 @@
                 window.Toast?.show(e.response?.data?.message || "Failed to add to cart.", "error");
             } finally {
                 btn.disabled = false;
-                btn.querySelector('span:last-child').innerText = 'Add to Cart';
+                btn.querySelector('span:last-child').innerText = hasCustomOptions ? 'Add to Cart (Personalised)' : 'Add to Cart';
             }
         }
 
@@ -1541,85 +2022,75 @@
         }
 
         function getRecommendationCardHtml(p) {
-            const imageUrl = p.image_url || 'https://placehold.co/400x400/f4ede3/516447?text=Handcrafted';
-            const price = `?${(p.price_paise / 100).toLocaleString('en-IN')}`;
+            const imageUrl = p.image_url || p.primary_image || (Array.isArray(p.images) && p.images[0]?.url) || 'https://placehold.co/400x400/f4ede3/516447?text=Handcrafted';
+            const pricePaise = p.price_paise || (p.base_price ? Math.round(p.base_price * 100) : (p.price ? Math.round(p.price * 100) : 0));
+            const priceFormatted = formatPaise(pricePaise);
 
             let ribbonHtml = '';
-            if (p.product_tag === 'Sponsored' || p.type === 'sponsored') {
-                ribbonHtml = `
-                    <div class="ribbon-wrapper">
-                        <div class="ribbon-tag ribbon-sponsored">Sponsored</div>
-                    </div>
-                `;
-            } else if (p.is_bestseller && p.listing_type === 'custom') {
-                ribbonHtml = `
-                    <div class="ribbon-wrapper">
-                        <div class="ribbon-tag ribbon-bestseller ribbon-bestseller-double">BEST SELLER</div>
-                        <div class="ribbon-tag ribbon-custom ribbon-custom-double">CUSTOM</div>
-                    </div>
-                `;
-            } else if (p.is_bestseller) {
-                ribbonHtml = `
-                    <div class="ribbon-wrapper">
-                        <div class="ribbon-tag ribbon-bestseller">BEST SELLER</div>
-                    </div>
-                `;
-            } else if (p.listing_type === 'custom') {
-                ribbonHtml = `
-                    <div class="ribbon-wrapper">
-                        <div class="ribbon-tag ribbon-custom">CUSTOM</div>
-                    </div>
-                `;
+            if (p.is_sponsored || p.product_tag === 'Sponsored' || p.type === 'sponsored') {
+                ribbonHtml = `<span class="bg-[#d97706] text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">Sponsored</span>`;
+            } else if (p.is_best_seller || p.is_bestseller) {
+                ribbonHtml = `<span class="bg-[#C4622D] text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">Best Seller</span>`;
+            } else if (p.is_customized || p.listing_type === 'custom') {
+                ribbonHtml = `<span class="bg-[#587A5B] text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">Custom</span>`;
             }
 
             const isOwner = isProductOwned(p.seller_id);
             const wishlistBtnHtml = isOwner
-                ? `<button class="absolute top-2 right-2 sm:top-3 sm:right-3 p-1 sm:p-1.5 md:p-2 bg-transparent opacity-50 cursor-not-allowed flex items-center justify-center z-10" disabled onclick="event.stopPropagation();">
-                       <span class="material-symbols-outlined text-[14px] sm:text-[16px] md:text-[20px] text-secondary" style="font-variation-settings: 'FILL' 0;">favorite</span>
+                ? `<button class="absolute top-2 right-2 p-1.5 bg-white/80 rounded-full opacity-50 cursor-not-allowed flex items-center justify-center z-10" disabled onclick="event.stopPropagation();">
+                       <span class="material-symbols-outlined text-[15px] text-secondary" style="font-variation-settings: 'FILL' 0;">favorite</span>
                    </button>`
-                : `<button class="absolute top-2 right-2 sm:top-3 sm:right-3 p-1 sm:p-1.5 md:p-2 bg-transparent hover:scale-110 active:scale-95 transition-all duration-200 toggle-rec-wishlist-btn flex items-center justify-center cursor-pointer z-10" data-id="${p.id}" data-wishlisted="${p.is_wishlisted}" onclick="event.stopPropagation();">
-                       <span class="material-symbols-outlined text-[14px] sm:text-[16px] md:text-[20px] transition-all ${p.is_wishlisted ? 'fill-icon text-red-500' : 'text-secondary'}" style="font-variation-settings: 'FILL' ${p.is_wishlisted ? 1 : 0};">favorite</span>
+                : `<button class="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:scale-110 active:scale-95 transition-all toggle-rec-wishlist-btn flex items-center justify-center cursor-pointer z-10" data-id="${p.id}" data-wishlisted="${p.is_wishlisted}" onclick="event.stopPropagation();">
+                       <span class="material-symbols-outlined text-[15px] transition-all ${p.is_wishlisted ? 'fill-icon text-red-500' : 'text-secondary'}" style="font-variation-settings: 'FILL' ${p.is_wishlisted ? 1 : 0};">favorite</span>
                    </button>`;
 
-            const isCustomized = p.listing_type === 'custom';
-            const addToCartBtnHtml = isOwner
-                ? `<button class="w-full bg-[#14381F]/20 text-[#605e57] py-2 rounded-lg font-semibold opacity-50 cursor-not-allowed text-sm" disabled onclick="event.stopPropagation();">
+            const isCustom = p.is_customized || p.listing_type === 'custom';
+            const actionBtnHtml = isOwner
+                ? `<button class="w-full bg-[#14381F]/15 text-[#605e57] py-1.5 rounded-lg font-semibold opacity-50 cursor-not-allowed text-xs" disabled onclick="event.stopPropagation();">
                        Own Product
                    </button>`
-                : isCustomized
-                    ? `<button class="w-full bg-[#14381F] text-white py-2 rounded-lg font-semibold hover:opacity-90 active:scale-[0.98] transition-all text-sm talk-to-seller-btn" data-id="${p.id}" onclick="event.stopPropagation();">
+                : isCustom
+                    ? `<button class="w-full bg-[#14381F] text-white py-1.5 rounded-lg font-semibold hover:bg-[#0D2614] active:scale-[0.98] transition-all text-xs talk-to-seller-btn shadow-sm" data-id="${p.id}" onclick="event.stopPropagation();">
                            Talk to Seller
                        </button>`
-                    : `<button class="w-full bg-[#14381F] text-white py-2 rounded-lg font-semibold hover:opacity-90 active:scale-[0.98] transition-all text-sm add-rec-to-cart-btn" data-id="${p.id}" onclick="event.stopPropagation();">
+                    : `<button class="w-full bg-[#14381F] text-white py-1.5 rounded-lg font-semibold hover:bg-[#0D2614] active:scale-[0.98] transition-all text-xs add-rec-to-cart-btn shadow-sm" data-id="${p.id}" onclick="event.stopPropagation();">
                            Add to Cart
                        </button>`;
 
+            const ratingCount = parseInt(p.review_count || 0, 10);
+            const avgRating = parseFloat(p.avg_rating || 5.0);
+
             return `
-                <div class="group bg-[#FFF8E7] border border-[#c3c8c1] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative" onclick="window.location.href='product.html?id=${p.id}'">
-                    <div>
-                        <div class="relative aspect-square overflow-hidden rounded-xl bg-surface-container-lowest mb-4">
-                            ${ribbonHtml}
-                            <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="${imageUrl}" alt="${p.name}" loading="lazy">
-                            ${wishlistBtnHtml}
-                        </div>
-                        <div class="flex flex-col mb-4">
-                            <div class="flex items-center justify-between gap-2 mb-1">
-                                <span class="font-bold text-lg text-[#14381F]">${price}</span>
-                                ${parseInt(p.review_count || 0, 10) > 0
-                                    ? `<div class="flex items-center gap-1 text-xs text-[#605e57]">
-                                           <span class="text-[#14381F] font-bold">?</span>
-                                           <span class="font-semibold text-on-surface">${parseFloat(p.avg_rating || 0).toFixed(1)}</span>
-                                           <span>(${parseInt(p.review_count || 0, 10)})</span>
-                                       </div>`
-                                    : `<span class="bg-[#14381F]/10 text-[#14381F] text-[10px] font-mono font-bold px-2 py-0.5 rounded tracking-wider uppercase">New</span>`
+                <div class="group bg-white border border-[#14381F]/15 rounded-xl p-3.5 shadow-sm hover:shadow-md transition-all duration-300 flex gap-3.5 cursor-pointer relative" onclick="window.location.href='product.html?id=${p.id}'">
+                    <!-- Left: Thumbnail Image -->
+                    <div class="relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 overflow-hidden rounded-xl bg-[#FAF6EE] border border-[#14381F]/10">
+                        <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="${imageUrl}" alt="${p.name}" loading="lazy" />
+                        ${wishlistBtnHtml}
+                    </div>
+
+                    <!-- Right: Content & Quick Actions -->
+                    <div class="flex-grow flex flex-col justify-between min-w-0">
+                        <div>
+                            <div class="flex items-center justify-between gap-1 mb-1">
+                                ${ribbonHtml ? `<div class="flex items-center gap-1">${ribbonHtml}</div>` : '<div></div>'}
+                                <span class="font-bold text-sm text-[#14381F] font-data-price">${priceFormatted}</span>
+                            </div>
+                            <h4 class="font-bold text-sm text-[#1C1C1A] line-clamp-1 group-hover:text-[#14381F] transition-colors" style="font-family: 'Playfair Display', serif;">${p.name}</h4>
+                            <p class="text-[11px] text-[#605e57] hover:underline cursor-pointer truncate mt-0.5" onclick="event.stopPropagation(); window.location.href='/buyer/seller-profile.html?id=${p.seller_id}'">By ${p.seller_name || p.store_name || 'Artisan'}</p>
+                            
+                            <div class="flex items-center gap-1 mt-1 text-[11px] text-[#605e57]">
+                                ${ratingCount > 0
+                                    ? `<span class="text-amber-500 font-bold text-xs">★</span>
+                                       <span class="font-semibold text-[#1C1C1A]">${avgRating.toFixed(1)}</span>
+                                       <span class="text-[10px]">(${ratingCount})</span>`
+                                    : `<span class="bg-[#14381F]/8 text-[#14381F] text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase">New</span>`
                                 }
                             </div>
-                            <h4 class="font-headline-lg font-bold text-on-surface line-clamp-1 mb-1" style="font-family: 'Playfair Display', serif;">${p.name}</h4>
-                            <span class="text-xs text-[#605e57] hover:underline cursor-pointer" onclick="event.stopPropagation(); window.location.href='/buyer/seller-profile.html?id=${p.seller_id}'">By ${p.seller_name || 'Artisan'}</span>
                         </div>
-                    </div>
-                    <div class="w-full font-['DM_Sans']">
-                        ${addToCartBtnHtml}
+
+                        <div class="mt-2 font-['DM_Sans']">
+                            ${actionBtnHtml}
+                        </div>
                     </div>
                 </div>
             `;
@@ -1857,7 +2328,7 @@ async function handleFooterSellerLink(e) {
     console.error("Error checking seller status:", err);
   }
   
-  window.location.href = isMobile ? '/mobile-buyer/become-seller.html' : '/buyer/become-seller.html';
+  window.location.href = '/auth/signup-seller.html';
 }
 
 // Check if we need to auto-redirect back to dashboard/signup after login redirect

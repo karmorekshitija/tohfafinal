@@ -7,19 +7,39 @@
 
 'use strict';
 
-const { Pool, neonConfig } = require('@neondatabase/serverless');
-const ws = require('ws');
-neonConfig.webSocketConstructor = ws; // Use WebSockets to bypass firewalls
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+require('dotenv').config();
+
+const { Pool: PgPool } = require('pg');
+let NeonPool, neonConfig;
+try {
+  const neon = require('@neondatabase/serverless');
+  NeonPool = neon.Pool;
+  neonConfig = neon.neonConfig;
+  const ws = require('ws');
+  neonConfig.webSocketConstructor = ws;
+} catch (e) {
+  // Fallback if @neondatabase/serverless is unavailable
+}
 
 const isLocalDb = (process.env.DATABASE_URL || '').includes('localhost') || (process.env.DATABASE_URL || '').includes('127.0.0.1');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: isLocalDb ? false : { rejectUnauthorized: false }, // Neon requires SSL, localhost does not
-  max: 20,             // max connections in pool
-  idleTimeoutMillis: 30_000,
-  connectionTimeoutMillis: 30_000, // Increased to allow Neon scale-to-zero cold starts
-});
+const pool = isLocalDb || !NeonPool
+  ? new PgPool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: false,
+      max: 20,
+      idleTimeoutMillis: 30_000,
+      connectionTimeoutMillis: 10_000,
+    })
+  : new NeonPool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+      max: 20,
+      idleTimeoutMillis: 30_000,
+      connectionTimeoutMillis: 30_000,
+    });
 
 pool.on('error', (err) => {
   console.error('PostgreSQL pool error:', err.message);

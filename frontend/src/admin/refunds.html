@@ -85,37 +85,37 @@
     </section>
 
     <!-- Metrics Row -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-      <div class="bg-[#FFF8E7] p-5 rounded-2xl border border-outline-variant/30 border-l-4 border-l-amber-500 shadow-sm flex items-center justify-between">
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6 mb-8">
+      <div class="col-span-2 sm:col-span-1 bg-[#FFF8E7] p-4 sm:p-5 rounded-2xl border border-outline-variant/30 border-l-4 border-l-amber-500 shadow-sm flex items-center justify-between">
         <div>
           <span class="text-xs font-bold text-amber-800 uppercase tracking-wider font-mono">Pending Verification</span>
-          <h3 id="metric-pending" class="font-headline-lg text-3xl text-amber-900 mt-1 font-bold">0</h3>
+          <h3 id="metric-pending" class="font-headline-lg text-2xl sm:text-3xl text-amber-900 mt-1 font-bold">0</h3>
           <p class="text-[11px] text-amber-700/80 mt-0.5">Awaiting admin review</p>
         </div>
-        <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-700">
-          <span class="material-symbols-outlined text-2xl pulsing-dot">hourglass_top</span>
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-700">
+          <span class="material-symbols-outlined text-xl sm:text-2xl pulsing-dot">hourglass_top</span>
         </div>
       </div>
 
-      <div class="bg-[#FFF8E7] p-5 rounded-2xl border border-outline-variant/30 border-l-4 border-l-[#14381F] shadow-sm flex items-center justify-between">
+      <div class="bg-[#FFF8E7] p-4 sm:p-5 rounded-2xl border border-outline-variant/30 border-l-4 border-l-[#14381F] shadow-sm flex items-center justify-between">
         <div>
           <span class="text-xs font-bold text-[#14381F] uppercase tracking-wider font-mono">Total Approved</span>
-          <h3 id="metric-approved" class="font-headline-lg text-3xl text-[#14381F] mt-1 font-bold">0</h3>
+          <h3 id="metric-approved" class="font-headline-lg text-2xl sm:text-3xl text-[#14381F] mt-1 font-bold">0</h3>
           <p class="text-[11px] text-[#14381F]/70 mt-0.5">Refunded via Razorpay</p>
         </div>
-        <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-[#14381F]">
-          <span class="material-symbols-outlined text-2xl">check_circle</span>
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-100 flex items-center justify-center text-[#14381F]">
+          <span class="material-symbols-outlined text-xl sm:text-2xl">check_circle</span>
         </div>
       </div>
 
-      <div class="bg-[#FFF8E7] p-5 rounded-2xl border border-outline-variant/30 border-l-4 border-l-red-600 shadow-sm flex items-center justify-between">
+      <div class="bg-[#FFF8E7] p-4 sm:p-5 rounded-2xl border border-outline-variant/30 border-l-4 border-l-red-600 shadow-sm flex items-center justify-between">
         <div>
           <span class="text-xs font-bold text-red-800 uppercase tracking-wider font-mono">Rejected Claims</span>
-          <h3 id="metric-rejected" class="font-headline-lg text-3xl text-red-900 mt-1 font-bold">0</h3>
+          <h3 id="metric-rejected" class="font-headline-lg text-2xl sm:text-3xl text-red-900 mt-1 font-bold">0</h3>
           <p class="text-[11px] text-red-700/80 mt-0.5">Disallowed by admin</p>
         </div>
-        <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-700">
-          <span class="material-symbols-outlined text-2xl">cancel</span>
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-red-100 flex items-center justify-center text-red-700">
+          <span class="material-symbols-outlined text-xl sm:text-2xl">cancel</span>
         </div>
       </div>
     </div>
@@ -322,53 +322,6 @@
       return `<span class="px-2 py-0.5 bg-surface text-text-muted rounded-md text-[9px] font-bold uppercase tracking-wider font-mono border border-outline-variant/30">Pre-made</span>`;
     }
 
-    // Mock Sample Data Fallback (so admin preview works offline or with empty database)
-    const MOCK_REFUNDS = [
-      {
-        id: 'rf-mock-001',
-        order_id: 'ord-101-jaipur',
-        buyer_name: 'Aditi Sharma',
-        buyer_email: 'aditi.sharma@example.com',
-        store_name: 'Jaipur Blue Pottery Studio',
-        product_name: 'Hand-painted Ceramic Royal Vase',
-        customization_mode: 'fixed',
-        amount: 2499.00,
-        reason: 'Unable to fulfill custom color request in time for wedding anniversary',
-        status: 'pending',
-        order_date: new Date(Date.now() - 86400000 * 2).toISOString(),
-        created_at: new Date(Date.now() - 86400000).toISOString()
-      },
-      {
-        id: 'rf-mock-002',
-        order_id: 'ord-102-kashmir',
-        buyer_name: 'Rahul Mehta',
-        buyer_email: 'rahul.m@example.com',
-        store_name: 'Chinar Pashmina Artisans',
-        product_name: 'Pure Cashmere Stole with Monogram',
-        customization_mode: 'open',
-        amount: 5800.00,
-        reason: 'Buyer requested cancellation prior to bespoke weaving start',
-        status: 'pending',
-        order_date: new Date(Date.now() - 86400000 * 3).toISOString(),
-        created_at: new Date(Date.now() - 86400000 * 2).toISOString()
-      },
-      {
-        id: 'rf-mock-003',
-        order_id: 'ord-103-varanasi',
-        buyer_name: 'Priya Iyer',
-        buyer_email: 'priya.iyer@example.com',
-        store_name: 'Kashi Silk Weavers Guild',
-        product_name: 'Brocade Saree Gift Box',
-        customization_mode: 'none',
-        amount: 3200.00,
-        reason: 'Duplicate payment accidental order',
-        status: 'approved',
-        admin_notes: 'Verified duplicate charge on Razorpay',
-        order_date: new Date(Date.now() - 86400000 * 5).toISOString(),
-        created_at: new Date(Date.now() - 86400000 * 4).toISOString()
-      }
-    ];
-
     async function loadRefunds() {
       try {
         const res = await adminApiClient.get('/admin/refunds', {
@@ -376,14 +329,16 @@
         });
 
         if (res.data?.success) {
-          const fetched = res.data.data?.refunds || res.data.data || [];
-          allRefunds = Array.isArray(fetched) && fetched.length > 0 ? fetched : MOCK_REFUNDS;
+          const fetched = res.data.data?.refund_requests || res.data.data?.refunds || [];
+          allRefunds = Array.isArray(fetched) ? fetched : [];
         } else {
-          allRefunds = MOCK_REFUNDS;
+          allRefunds = [];
+          showToast(res.data?.message || 'Failed to load refund requests', 'error');
         }
       } catch (err) {
-        console.warn('Live /api/admin/refunds fetch fallback to preview records:', err.message);
-        allRefunds = MOCK_REFUNDS;
+        console.error('Failed to load refund requests from server:', err);
+        allRefunds = [];
+        showToast('Failed to load refund requests from server.', 'error');
       }
 
       updateMetrics();
@@ -391,9 +346,9 @@
     }
 
     function updateMetrics() {
-      const pendingCount = allRefunds.filter(r => r.status === 'pending').length;
-      const approvedCount = allRefunds.filter(r => r.status === 'approved').length;
-      const rejectedCount = allRefunds.filter(r => r.status === 'rejected').length;
+      const pendingCount = allRefunds.filter(r => (r.status || '').toLowerCase() === 'pending').length;
+      const approvedCount = allRefunds.filter(r => (r.status || '').toLowerCase() === 'approved').length;
+      const rejectedCount = allRefunds.filter(r => (r.status || '').toLowerCase() === 'rejected').length;
 
       document.getElementById('metric-pending').textContent = pendingCount;
       document.getElementById('metric-approved').textContent = approvedCount;
@@ -512,7 +467,7 @@
       document.querySelectorAll('.approve-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const id = btn.dataset.id;
-          const refund = allRefunds.find(r => r.id === id);
+          const refund = allRefunds.find(r => String(r.id) === String(id));
           if (!refund) return;
 
           selectedRefundId = id;
@@ -551,13 +506,10 @@
         showToast('Refund approved & Razorpay reversal executed successfully!', 'success');
         
         // Update local status
-        const item = allRefunds.find(r => r.id === selectedRefundId);
+        const item = allRefunds.find(r => String(r.id) === String(selectedRefundId));
         if (item) item.status = 'approved';
       } catch (err) {
-        // Optimistic local update for mock preview
-        const item = allRefunds.find(r => r.id === selectedRefundId);
-        if (item) item.status = 'approved';
-        showToast('Refund approved successfully!', 'success');
+        showToast(err.response?.data?.message || 'Failed to approve refund', 'error');
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<span class="material-symbols-outlined text-xs">check</span> Confirm &amp; Execute Refund';
@@ -591,18 +543,13 @@
         });
         showToast('Refund request rejected.', 'success');
 
-        const item = allRefunds.find(r => r.id === selectedRefundId);
+        const item = allRefunds.find(r => String(r.id) === String(selectedRefundId));
         if (item) {
           item.status = 'rejected';
           item.admin_notes = notes ? `${finalReason} (${notes})` : finalReason;
         }
       } catch (err) {
-        const item = allRefunds.find(r => r.id === selectedRefundId);
-        if (item) {
-          item.status = 'rejected';
-          item.admin_notes = notes ? `${finalReason} (${notes})` : finalReason;
-        }
-        showToast('Refund request rejected.', 'success');
+        showToast(err.response?.data?.message || 'Failed to reject refund', 'error');
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<span class="material-symbols-outlined text-xs">close</span> Reject Request';

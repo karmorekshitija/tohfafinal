@@ -114,9 +114,15 @@
         </div>
 
         <!-- Customization Details (if present) -->
-        <div id="customization-card" class="hidden bg-sage-soft/30 border border-sage-soft rounded-2xl p-6 shadow-sm space-y-2">
-          <p class="text-xs uppercase tracking-wider text-secondary font-label-caps font-bold">Customization Details</p>
-          <p id="customization-text" class="text-sm text-on-surface italic leading-relaxed"></p>
+        <div id="customization-card" class="hidden bg-white border border-sage/20 rounded-2xl p-6 shadow-sm space-y-3">
+          <div class="flex items-center justify-between border-b border-sage/10 pb-2.5">
+            <h3 class="font-headline-md text-sm text-forest font-bold flex items-center gap-2">
+              <span class="material-symbols-outlined text-forest text-base">auto_fix_high</span>
+              Personalisation Brief
+            </h3>
+            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-forest/10 text-forest">Direct Customization</span>
+          </div>
+          <div id="customization-content" class="text-xs text-[#14381F] space-y-2"></div>
         </div>
 
         <!-- Custom Proof-of-Work Section -->
@@ -135,7 +141,7 @@
           </p>
           
           <div id="proof-preview-container" class="hidden rounded-xl overflow-hidden border border-outline-variant/30 p-3 bg-surface-container/30">
-            <img id="proof-preview-img" src="" alt="Proof Preview" class="w-full max-h-56 object-contain rounded-lg mb-2 bg-white" />
+            <img id="proof-preview-img" src="" alt="Proof Preview" class="w-full max-h-56 object-contain rounded-lg mb-2 bg-[#DCE6D8]/40" />
             <p id="proof-status-text" class="text-xs font-semibold text-primary text-center">
               Proof Uploaded - Waiting for Buyer Approval
             </p>
@@ -161,13 +167,7 @@
 
         <!-- Patron / Shipping Address Card -->
         <div class="bg-[#FFF8E7] border border-outline-variant/30 rounded-2xl p-6 shadow-sm space-y-4">
-          <div class="flex justify-between items-center">
-            <h3 class="font-headline-md text-lg text-primary font-bold">Patron & Shipping</h3>
-            <button id="chat-buyer-btn" class="flex items-center gap-1.5 text-xs font-bold text-primary border border-primary px-3 py-1.5 rounded-lg hover:bg-secondary-container/20 transition-all">
-              <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1">chat</span>
-              Chat with Buyer
-            </button>
-          </div>
+          <h3 class="font-headline-md text-lg text-primary font-bold">Patron & Shipping</h3>
           <div class="border-t border-outline-variant/20 pt-4 space-y-2">
             <p class="font-bold text-on-surface text-base" id="buyer-name-label">—</p>
             <p class="text-xs text-on-surface-variant font-mono" id="buyer-phone-label"></p>
@@ -195,10 +195,10 @@
             <label class="block text-xs font-label-caps text-on-surface-variant font-bold">Update Status</label>
             <div class="flex gap-2">
               <select id="status-select" class="flex-1 bg-surface-bright border border-sage rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
-                <option value="processing">Processing</option>
-                <option value="in_production">Crafting</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="crafting">Crafting</option>
                 <option value="packed">Packed</option>
-                <option value="dispatched">Shipped</option>
+                <option value="shipped">Shipped</option>
                 <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>
               </select>
@@ -306,10 +306,10 @@
 
   function renderOrderDetails(o) {
     const titleEl = document.getElementById('order-title');
-    if (titleEl) titleEl.textContent = `Order #${escapeHtml(o.order_id || o.order_ref || orderId)}`;
+    if (titleEl) titleEl.textContent = `Order #${escapeHtml(o.order_id || o.order_ref || (orderId ? 'TOHFA-' + String(orderId).slice(0, 8).toUpperCase() : '—'))}`;
 
     const refLabel = document.getElementById('order-ref-label');
-    if (refLabel) refLabel.textContent = `Reference #${escapeHtml(o.order_id || o.order_ref || '—')}`;
+    if (refLabel) refLabel.textContent = `Reference #${escapeHtml(o.order_id || o.order_ref || (orderId ? 'TOHFA-' + String(orderId).slice(0, 8).toUpperCase() : '—'))}`;
 
     const dateLabel = document.getElementById('order-date-label');
     if (dateLabel) dateLabel.textContent = `Placed on ${formatDate(o.order_date || o.created_at)}`;
@@ -317,31 +317,69 @@
     const badgeContainer = document.getElementById('status-badge-container');
     if (badgeContainer) badgeContainer.innerHTML = statusBadge(o.fulfillment_status || o.status);
 
-    // Product item card
+    // Product item card(s)
     const prodContainer = document.getElementById('product-card-container');
     if (prodContainer) {
-      prodContainer.innerHTML = `
-        <div class="flex gap-4 items-start">
-          <img src="${o.item_photo_url || o.item_image || 'https://ui-avatars.com/api/?name=Product&background=f9ecdc&color=3D6B4F&size=64'}" class="w-16 h-16 rounded-xl object-cover border border-sage-soft flex-shrink-0" alt="${escapeHtml(o.item_title || 'Product')}" loading="lazy" />
+      const itemsToRender = (Array.isArray(o.items) && o.items.length > 0) ? o.items : [{
+        product_name: o.item_title || o.item_preview || 'Handcrafted Creation',
+        name: o.item_title || o.item_preview || 'Handcrafted Creation',
+        image_url: o.item_photo_url || o.item_image,
+        product_id: o.product_id_display,
+        variant_name: o.variant_name,
+        quantity: o.quantity || 1,
+        unit_price: o.unit_price || (o.total_amount ? o.total_amount : null),
+        customization_data: o.customization_details
+      }];
+
+      prodContainer.innerHTML = itemsToRender.map(item => `
+        <div class="flex gap-4 items-start pb-4 border-b border-outline-variant/20 last:border-b-0 last:pb-0">
+          <img src="${item.image_url || item.photo_url || item.proof_image_url || 'https://ui-avatars.com/api/?name=Product&background=f9ecdc&color=3D6B4F&size=64'}" class="w-16 h-16 rounded-xl object-cover border border-sage-soft flex-shrink-0" alt="${escapeHtml(item.product_name || item.name || 'Product')}" loading="lazy" />
           <div class="flex-1 min-w-0">
-            <h4 class="font-bold text-primary text-base truncate">${escapeHtml(o.item_title || 'Handcrafted Creation')}</h4>
-            ${o.product_id_display ? `<p class="text-xs font-mono text-gold mt-0.5">#${escapeHtml(o.product_id_display)}</p>` : ''}
-            ${o.variant_name ? `<p class="text-xs text-on-surface-variant mt-1">Variant: <span class="font-semibold">${escapeHtml(o.variant_name)}</span></p>` : ''}
+            <h4 class="font-bold text-primary text-base truncate">${escapeHtml(item.product_name || item.name || 'Handcrafted Creation')}</h4>
+            <p class="text-xs font-mono text-gold mt-0.5">#${escapeHtml(item.product_id ? String(item.product_id).substring(0, 8).toUpperCase() : (o.product_id_display || '—'))}</p>
+            ${item.variant_name ? `<p class="text-xs text-on-surface-variant mt-1">Variant: <span class="font-semibold">${escapeHtml(item.variant_name)}</span></p>` : ''}
             <div class="flex justify-between items-center mt-2">
-              <span class="text-xs text-on-surface-variant">Quantity: <span class="font-bold">${o.quantity || 1}</span></span>
-              <span class="font-bold text-primary font-mono text-base">${formatPaise(o.total_paise || (o.total_amount ? o.total_amount * 100 : 0))}</span>
+              <span class="text-xs text-on-surface-variant">Quantity: <span class="font-bold">${item.quantity || 1}</span></span>
+              <span class="font-bold text-primary font-mono text-base">${formatPaise(item.unit_price ? Math.round(parseFloat(item.unit_price) * 100 * (item.quantity || 1)) : (o.total_paise || (o.total_amount ? o.total_amount * 100 : 0)))}</span>
             </div>
           </div>
         </div>
-      `;
+      `).join('');
     }
 
     // Customization details
     const custCard = document.getElementById('customization-card');
-    const custText = document.getElementById('customization-text');
-    if (custCard && custText) {
-      if (o.customization_details) {
-        custText.textContent = `"${o.customization_details}"`;
+    const custContent = document.getElementById('customization-content');
+    if (custCard && custContent) {
+      let rawCustom = o.customization_details || (o.items && o.items[0]?.customization_data);
+      if (typeof rawCustom === 'string') {
+        try { rawCustom = JSON.parse(rawCustom); } catch { }
+      }
+      if (rawCustom) {
+        if (typeof rawCustom === 'object') {
+          const rows = [];
+          if (rawCustom.selected_options) {
+            Object.entries(rawCustom.selected_options).forEach(([k, v]) => {
+              rows.push(`
+                <div class="flex justify-between items-start py-1 border-b border-sage/10 text-xs">
+                  <span class="font-bold text-sage">${escapeHtml(k)}:</span>
+                  <span class="text-forest font-semibold text-right">${escapeHtml(String(v))}</span>
+                </div>
+              `);
+            });
+          }
+          if (rawCustom.fee_applied) {
+            rows.push(`
+              <div class="flex justify-between items-center py-1 font-mono text-[11px] text-forest font-bold">
+                <span>Customisation Surcharge:</span>
+                <span>+₹${rawCustom.fee_applied}</span>
+              </div>
+            `);
+          }
+          custContent.innerHTML = rows.length > 0 ? rows.join('') : `<p class="italic text-sage">${escapeHtml(rawCustom.summary_text || JSON.stringify(rawCustom))}</p>`;
+        } else {
+          custContent.innerHTML = `<p class="italic text-sage">"${escapeHtml(String(rawCustom))}"</p>`;
+        }
         custCard.classList.remove('hidden');
       } else {
         custCard.classList.add('hidden');
@@ -350,11 +388,14 @@
 
     // Patron details
     const buyerName = document.getElementById('buyer-name-label');
-    if (buyerName) buyerName.textContent = o.buyer_name || 'Patron';
+    if (buyerName) buyerName.textContent = o.buyer_name || (o.shipping_address && o.shipping_address.recipient_name) || 'Patron';
     const buyerPhone = document.getElementById('buyer-phone-label');
-    if (buyerPhone) buyerPhone.textContent = o.buyer_phone || '';
+    if (buyerPhone) buyerPhone.textContent = o.buyer_phone || (o.shipping_address && o.shipping_address.phone) || '';
     const buyerAddr = document.getElementById('buyer-address-label');
-    if (buyerAddr) buyerAddr.textContent = o.buyer_address || o.shipping_address || 'No shipping address provided.';
+    if (buyerAddr) {
+      const addrText = o.buyer_address || (o.shipping_address ? (typeof o.shipping_address === 'string' ? o.shipping_address : [o.shipping_address.line1, o.shipping_address.line2, o.shipping_address.city, o.shipping_address.state, o.shipping_address.pincode].filter(Boolean).join(', ')) : '') || 'No shipping address provided.';
+      buyerAddr.textContent = addrText;
+    }
 
     // Fulfillment Timeline
     const timelineContainer = document.getElementById('timeline-container');
@@ -375,7 +416,7 @@
 
       timelineContainer.innerHTML = STEPS.map((step, i) => {
         const isDone = eventMap[step.key] != null || (currentIdx >= 0 && i <= currentIdx);
-        const isCurrent = i === currentIdx;
+        const isCurrent = !isDone && i === currentIdx;
         let dotStyle, dotContent;
         if (isDone) {
           dotStyle = 'background:#14381F;border-color:#14381F;color:#fff;';
@@ -408,8 +449,8 @@
     // Status dropdown select value
     const statusSelect = document.getElementById('status-select');
     if (statusSelect) {
-      const raw = (o.fulfillment_status || o.status || 'processing').toLowerCase();
-      statusSelect.value = (raw === 'crafting' ? 'in_production' : (raw === 'shipped' ? 'dispatched' : raw));
+      const raw = (o.fulfillment_status || o.status || 'confirmed').toLowerCase();
+      statusSelect.value = (raw === 'in_production' ? 'crafting' : (raw === 'dispatched' ? 'shipped' : (raw === 'pending' ? 'confirmed' : raw)));
     }
 
     // Tracking input
@@ -506,39 +547,47 @@
     if (errorState) errorState.classList.add('hidden');
     if (orderContent) orderContent.classList.add('hidden');
 
-    const token = sessionStorage.getItem('tohfa_access_token');
+    const token = (typeof window.authStorage !== 'undefined' && window.authStorage.getToken()) ||
+                  localStorage.getItem('tohfa_auth_token') ||
+                  sessionStorage.getItem('tohfa_auth_token') ||
+                  sessionStorage.getItem('tohfa_access_token') ||
+                  localStorage.getItem('tohfa_access_token') ||
+                  localStorage.getItem('token');
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/seller/orders/${orderId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.status === 401 || res.status === 403) {
-        sessionStorage.clear();
+        if (loadingState) loadingState.classList.add('hidden');
+        if (errorState) errorState.classList.remove('hidden');
         return;
       }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const resp = await res.json();
-      currentOrder = resp.data || resp;
+      currentOrder = (resp.data && resp.data.order) || resp.data || resp;
 
       if (loadingState) loadingState.classList.add('hidden');
       if (orderContent) orderContent.classList.remove('hidden');
+      renderOrderDetails(currentOrder);
       document.getElementById('body-content')?.classList.remove('opacity-0');
 
-      renderOrderDetails(currentOrder);
-
-    } catch (err) {
-      console.error('Failed to load order:', err);
+    } catch (e) {
+      console.warn('Failed to load order from API, checking preview data:', e);
       if (loadingState) loadingState.classList.add('hidden');
-      const errEl = document.getElementById('error-msg');
-      if (errEl) errEl.textContent = err.message || 'Failed to load order details.';
       if (errorState) errorState.classList.remove('hidden');
       document.getElementById('body-content')?.classList.remove('opacity-0');
     }
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
-    const token = sessionStorage.getItem('tohfa_access_token');
+    const token = (typeof window.authStorage !== 'undefined' && window.authStorage.getToken()) ||
+                  localStorage.getItem('tohfa_auth_token') ||
+                  sessionStorage.getItem('tohfa_auth_token') ||
+                  sessionStorage.getItem('tohfa_access_token') ||
+                  localStorage.getItem('tohfa_access_token') ||
+                  localStorage.getItem('token');
     const params = new URLSearchParams(window.location.search);
     orderId = params.get('id');
 
@@ -565,34 +614,11 @@
     const retryBtn = document.getElementById('retry-btn');
     if (retryBtn) retryBtn.addEventListener('click', loadOrder);
 
-    const chatBtn = document.getElementById('chat-buyer-btn');
-    if (chatBtn) {
-      chatBtn.addEventListener('click', async () => {
-        if (!currentOrder) return;
-        chatBtn.disabled = true;
-        chatBtn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> Opening…';
-        try {
-          const r = await fetch(`${API_BASE_URL}/api/seller/messages/start`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ order_id: orderId, buyer_id: currentOrder.buyer_id })
-          });
-          const d = await r.json();
-          if (!r.ok) throw new Error(d.message || 'Failed to start chat');
-          window.location.href = `/seller/messages.html?conversationId=${d.data.thread_id}`;
-        } catch (err) {
-          showToast(err.message, 'error');
-          chatBtn.disabled = false;
-          chatBtn.innerHTML = '<span class="material-symbols-outlined text-sm" style="font-variation-settings:\'FILL\' 1">chat</span> Chat with Buyer';
-        }
-      });
-    }
-
     const updateStatusBtn = document.getElementById('update-status-btn');
     if (updateStatusBtn) {
       updateStatusBtn.addEventListener('click', async () => {
         const statusSelect = document.getElementById('status-select');
-        const newStatus = statusSelect ? statusSelect.value : 'processing';
+        const newStatus = statusSelect ? statusSelect.value : 'confirmed';
         updateStatusBtn.disabled = true;
         updateStatusBtn.textContent = 'Saving…';
         try {

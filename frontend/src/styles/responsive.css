@@ -242,9 +242,18 @@ footer {
   box-sizing: border-box !important;
 }
 @media (max-width: 767px) {
-  footer .grid {
-    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  footer .grid,
+  .footer__grid,
+  .tohfa-footer-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 24px 16px !important;
     text-align: left !important;
+  }
+  footer .grid > div:first-child,
+  .footer__grid > div:first-child,
+  .tohfa-footer-grid > div:first-child {
+    grid-column: 1 / -1 !important;
   }
   footer .flex.gap-md,
   footer .flex.gap-4,
@@ -275,6 +284,20 @@ footer {
     text-align: left !important;
     width: 100% !important;
   }
+
+  /* 2-column and 3-column form rows for paired compact inputs */
+  .form-row-2col {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+  .form-row-3col {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
 }
 
 /* Mobile card-row for tables */
@@ -284,6 +307,19 @@ footer {
     flex-direction: column;
     gap: 6px;
     padding: 16px;
+    background: #FFF8E7;
+    border: 1px solid rgba(20, 56, 31, 0.12);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(20, 56, 31, 0.04);
+  }
+  /* 2-column variant for compact label:value pairs */
+  .mobile-card-row-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px 12px !important;
+    align-items: center !important;
+    padding: 14px 16px !important;
     background: #FFF8E7;
     border: 1px solid rgba(20, 56, 31, 0.12);
     border-radius: 12px;

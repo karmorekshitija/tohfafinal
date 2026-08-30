@@ -16,12 +16,9 @@ router.use(authMiddleware);
 
 // Buyer & shared
 router.post('/', orderController.placeOrder);
-router.post('/overflow', orderController.placeOverflowOrder);
 router.get('/', orderController.getBuyerOrders);
 router.get('/seller', sellerOnly, orderController.getSellerOrders);
 router.get('/admin', adminOnly, orderController.getAdminOrders);
-router.get('/overflow', sellerOnly, orderController.getOverflowOrders);
-router.patch('/overflow/:id', sellerOnly, orderController.handleOverflowOrder);
 router.get('/:id', orderController.getOrderById);
 router.patch('/:id/status', sellerOnly, orderController.updateOrderStatus);
 router.post('/:id/cancel', orderController.cancelOrder);

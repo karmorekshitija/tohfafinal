@@ -40,7 +40,7 @@
 <div class="bg-surface-container-lowest rounded-xl border border-secondary/20 p-8 shadow-[0_8px_32px_rgba(74,63,53,0.04)] overflow-hidden relative">
 
 <h3 class="font-headline-sm text-headline-sm text-secondary mb-8 font-ui-serif italic">Artisan Setup Progress</h3>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-8">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-y-10 md:gap-x-8">
 <!-- Done Steps -->
 <div class="flex items-start gap-4">
 <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary shrink-0">
@@ -476,25 +476,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const viewStoreBtn = document.getElementById('view-store-btn');
   if (viewStoreBtn) {
     viewStoreBtn.addEventListener('click', () => {
-      if (token) {
+      const authToken = (typeof window !== 'undefined' && window.authStorage?.getItem('tohfa_access_token')) ||
+                        sessionStorage.getItem('tohfa_access_token') ||
+                        sessionStorage.getItem('tohfa_auth_token') ||
+                        localStorage.getItem('tohfa_access_token') ||
+                        localStorage.getItem('tohfa_auth_token') ||
+                        token || '';
+      if (authToken) {
         fetch('/api/seller/profile', {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 'Authorization': `Bearer ${authToken}` }
         })
         .then(res => res.json())
         .then(data => {
-          const profileData = data.data || data;
-          if (profileData && (profileData.user_id || profileData.seller_id || profileData.id)) {
-            window.location.href = `/buyer/seller-profile.html?id=${profileData.user_id || profileData.seller_id || profileData.id}`;
+          const profile = data.data?.profile || data.profile || data.data || data;
+          const sellerId = profile?.user_id || profile?.seller_id || profile?.id;
+          if (sellerId) {
+            window.location.href = `/buyer/seller-profile.html?id=${sellerId}`;
           } else {
-            window.location.href = '/';
+            window.location.href = '/seller/dashboard.html';
           }
         })
         .catch(err => {
           console.error(err);
-          window.location.href = '/';
+          window.location.href = '/seller/dashboard.html';
         });
       } else {
-        window.location.href = '/';
+        window.location.href = '/seller/dashboard.html';
       }
     });
   }

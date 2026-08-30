@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html class="light" lang="en"><head>
   <link rel="icon" type="image/png" href="/favicon.png">
@@ -30,51 +30,8 @@
     </style>
 </head>
 <body class="bg-[#FFF8E7] font-body-md text-text-default selection:bg-sage-soft">
-<!-- New Sidebar Navigation per IMAGE_13 -->
-<aside class="flex flex-col h-screen fixed left-0 top-0 py-10 px-6 z-50 w-64 border-r border-outline-variant/30 bg-[#FFF8E7]">
-<div class="mb-14">
-<h1 class="font-headline-lg text-headline-lg italic text-[#14381F] leading-tight">Tohfa</h1>
-<p class="text-accent-caps font-accent-caps text-text-faint tracking-widest text-[10px] mt-1 opacity-70">Admin Console</p>
-</div>
-<nav class="flex-1 space-y-1">
-<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="#">
-<span class="material-symbols-outlined text-[20px]">grid_view</span>
-<span class="font-label-btn text-label-btn">Dashboard</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/sellers.html">
-<span class="material-symbols-outlined text-[20px]">group</span>
-<span class="font-label-btn text-label-btn">Sellers</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/orders.html">
-<span class="material-symbols-outlined text-[20px]">shopping_cart</span>
-<span class="font-label-btn text-label-btn">Orders</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/categories.html">
-<span class="material-symbols-outlined text-[20px]">category</span>
-<span class="font-label-btn text-label-btn">Categories</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="/admin/products.html">
-<span class="material-symbols-outlined text-[20px]">inventory_2</span>
-<span class="font-label-btn text-label-btn">Products</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 bg-[#14381F] text-white rounded-full transition-all" href="/admin/audit-logs.html">
-<span class="material-symbols-outlined text-[20px]">history_edu</span>
-<span class="font-label-btn text-label-btn">Audit Logs</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-all duration-300 rounded-full" href="#">
-<span class="material-symbols-outlined text-[20px]">settings</span>
-<span class="font-label-btn text-label-btn">Settings</span>
-</a>
-</nav>
-<!-- Profile Footer -->
-<div class="mt-auto pt-6 border-t border-outline-variant/20 flex items-center gap-3">
-<div class="h-10 w-10 rounded-full bg-sage-soft flex items-center justify-center text-primary font-bold text-xs shrink-0">TA</div>
-<div class="overflow-hidden">
-<p class="text-[13px] font-bold text-text-default truncate leading-tight">Tohfa Admin</p>
-<p class="text-[11px] text-text-faint font-data-meta truncate">Master Access</p>
-</div>
-</div>
-</aside>
+<!-- Dynamic Sidebar Navigation -->
+<aside data-sidebar="admin"></aside>
 <!-- Main Content Area -->
 <main class="ml-64 min-h-screen relative overflow-hidden flex flex-col">
 <!-- Aesthetic Background Texture -->

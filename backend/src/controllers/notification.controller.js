@@ -22,11 +22,23 @@ const { query } = require('../config/db');
  * @param {object|null} meta - arbitrary JSON metadata
  */
 async function createNotification(userId, type, title, body, meta = null) {
+  const notifTitle = title || 'Notification';
+  const notifBody  = body || '';
+  const notifMeta  = meta ? JSON.stringify(meta) : '{}';
+
   await query(
-    `INSERT INTO notifications (user_id, type, title, body, meta)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [userId, type, title, body, meta ? JSON.stringify(meta) : null]
-  );
+    `INSERT INTO notifications (user_id, type, title, body, is_read, meta)
+     VALUES ($1, $2, $3, $4, FALSE, $5)`,
+    [userId, type, notifTitle, notifBody, notifMeta]
+  ).catch(async () => {
+    // Fallback if table has message column
+    const message = [notifTitle, notifBody].filter(Boolean).join(': ') || notifTitle;
+    await query(
+      `INSERT INTO notifications (user_id, type, message)
+       VALUES ($1, $2, $3)`,
+      [userId, type, message]
+    ).catch(() => {});
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -45,13 +57,27 @@ async function getNotifications(req, res, next) {
     const offset = (page - 1) * limit;
 
     const { rows } = await query(
-      `SELECT id, type, title, body, meta, is_read, created_at
+      `SELECT id, type,
+              COALESCE(title, 'Notification') AS title,
+              COALESCE(body, '') AS body,
+              COALESCE(body, title, '') AS message,
+              is_read, created_at, meta
        FROM notifications
        WHERE user_id = $1
        ORDER BY created_at DESC
        LIMIT $2 OFFSET $3`,
       [userId, limit, offset]
-    );
+    ).catch(async () => {
+      // Fallback
+      return await query(
+        `SELECT id, type, message, message AS title, message AS body, is_read, created_at
+         FROM notifications
+         WHERE user_id = $1
+         ORDER BY created_at DESC
+         LIMIT $2 OFFSET $3`,
+        [userId, limit, offset]
+      );
+    });
 
     const { rows: countRows } = await query(
       'SELECT COUNT(*) AS total FROM notifications WHERE user_id = $1',
@@ -59,16 +85,17 @@ async function getNotifications(req, res, next) {
     );
 
     const { rows: unreadRows } = await query(
-      'SELECT COUNT(*) AS unread FROM notifications WHERE user_id = $1 AND is_read = false',
+      'SELECT COUNT(*) AS unread FROM notifications WHERE user_id = $1 AND (is_read = FALSE OR is_read::text = \'0\' OR is_read IS NULL)',
       [userId]
     );
 
     const mappedRows = rows.map(r => ({
       ...r,
-      message: r.body || r.title,
+      is_read: Boolean(r.is_read && r.is_read !== '0' && r.is_read !== 0),
+      message: r.body || r.title || r.message,
     }));
 
-    const unreadCountNum = parseInt(unreadRows[0].unread, 10);
+    const unreadCountNum = parseInt(unreadRows[0]?.unread || 0, 10);
 
     return res.json({
       success: true,
@@ -76,7 +103,7 @@ async function getNotifications(req, res, next) {
         notifications: mappedRows,
         unread_count: unreadCountNum,
         unreadCount: unreadCountNum,
-        total: parseInt(countRows[0].total, 10),
+        total: parseInt(countRows[0]?.total || 0, 10),
         page,
         limit,
       },
@@ -95,10 +122,16 @@ async function markOneRead(req, res, next) {
     const userId = req.user.id;
 
     const { rowCount } = await query(
-      `UPDATE notifications SET is_read = true
+      `UPDATE notifications SET is_read = TRUE
        WHERE id = $1 AND user_id = $2`,
       [id, userId]
-    );
+    ).catch(async () => {
+      return await query(
+        `UPDATE notifications SET is_read = 1
+         WHERE id = $1 AND user_id = $2`,
+        [id, userId]
+      );
+    });
 
     if (!rowCount) {
       return res.status(404).json({ success: false, message: 'Notification not found.' });
@@ -118,9 +151,14 @@ async function markAllRead(req, res, next) {
     const userId = req.user.id;
 
     await query(
-      'UPDATE notifications SET is_read = true WHERE user_id = $1 AND is_read = false',
+      'UPDATE notifications SET is_read = TRUE WHERE user_id = $1 AND (is_read = FALSE OR is_read IS NULL)',
       [userId]
-    );
+    ).catch(async () => {
+      await query(
+        'UPDATE notifications SET is_read = 1 WHERE user_id = $1 AND (is_read = 0 OR is_read IS NULL)',
+        [userId]
+      );
+    });
 
     return res.json({ success: true, data: { message: 'All notifications marked as read.' } });
   } catch (err) {

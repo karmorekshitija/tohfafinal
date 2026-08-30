@@ -204,25 +204,12 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
     throw err;
   }
 
-  // Check capacity for each seller
+  // Check vacation for each seller
   for (const sellerId of Object.keys(sellerGroups)) {
     const group = sellerGroups[sellerId];
     if (group.vacation_mode) {
-      const err = new Error('Artisan is busy. Submit request without payment?');
-      err.status = 409;
-      err.is_overflow = true;
-      throw err;
-    }
-    const { rows: activeRows } = await query(`
-      SELECT COUNT(*) as active_count
-      FROM seller_orders
-      WHERE seller_id = $1 AND status IN ('order_placed', 'pending', 'confirmed', 'in_crafting')
-    `, [sellerId]);
-    const activeCount = parseInt(activeRows[0].active_count, 10);
-    if (activeCount >= group.capacity_limit) {
-      const err = new Error('Artisan is busy. Submit request without payment?');
-      err.status = 409;
-      err.is_overflow = true;
+      const err = new Error('Artisan is currently on vacation and not accepting new orders.');
+      err.status = 400;
       throw err;
     }
   }
@@ -386,85 +373,6 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
   };
 }
 
-async function createOverflowOrder(buyerId, addressId, cartItemIds) {
-  // 1. Fetch cart items (similar to placeOrders)
-  let cartQuery = `
-    SELECT ci.id, ci.product_id, ci.variant_id, ci.quantity,
-           COALESCE(ci.customization_payload, ci.customization_data, '{}'::jsonb) AS customization_payload,
-           p.base_price, p.stock_quantity, p.seller_id, p.name AS product_name,
-           COALESCE(pv.additional_price, 0) AS variant_additional_price
-    FROM cart_items ci
-    JOIN products p ON p.id = ci.product_id
-    LEFT JOIN product_variants pv ON pv.id = ci.variant_id
-    WHERE (ci.buyer_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
-      AND (p.status = 'active' OR p.is_active = TRUE)
-  `;
-  let cartParams = [buyerId];
+module.exports = { placeOrders };
 
-  if (cartItemIds && cartItemIds.length) {
-    cartQuery += ` AND ci.id = ANY($2::uuid[])`;
-    cartParams.push(cartItemIds);
-  }
-
-  const { rows: rawCartItems } = await query(cartQuery, cartParams);
-  if (!rawCartItems.length) {
-    const err = new Error('No active items found in cart.');
-    err.status = 400;
-    throw err;
-  }
-
-  const cartItems = rawCartItems.map(item => {
-    const qty = Math.max(1, parseInt(item.quantity, 10) || 1);
-    const variantDelta = parseFloat(item.variant_additional_price || 0);
-    const unitPrice = parseFloat((parseFloat(item.base_price) + variantDelta).toFixed(2));
-    return {
-      ...item,
-      quantity: qty,
-      unit_price: unitPrice,
-      subtotal: parseFloat((unitPrice * qty).toFixed(2)),
-    };
-  });
-
-  const cartGrossTotal = cartItems.reduce((sum, item) => sum + item.subtotal, 0);
-  const buyerPlatformFee = parseFloat((cartGrossTotal * 0.05).toFixed(2));
-  const totalAmount = parseFloat((cartGrossTotal + buyerPlatformFee).toFixed(2));
-  
-  const sellerId = cartItems[0].seller_id; // Assume single seller for overflow, or pick first
-
-  const itemsSnapshot = cartItems.map(item => ({
-    id: item.id, // Added for deferred cart clearing
-    product_id: item.product_id,
-    variant_id: item.variant_id,
-    quantity: item.quantity,
-    unit_price: item.unit_price,
-    base_price: item.base_price,
-    customization_data: item.customization_payload,
-    product_name: item.product_name
-  }));
-
-  const { rows: ovRows } = await query(
-    `INSERT INTO overflow_orders (buyer_id, seller_id, address_id, total_amount, status, items_snapshot)
-     VALUES ($1, $2, $3, $4, 'pending', $5)
-     RETURNING *`,
-    [buyerId, sellerId, addressId, totalAmount, JSON.stringify(itemsSnapshot)]
-  );
-
-  const overflowOrder = ovRows[0];
-
-  // Notify seller
-  await createNotification(
-    sellerId,
-    'new_overflow_order',
-    'New Overflow Request',
-    `You have received a new overflow request from a buyer. Review it in your dashboard.`,
-    { overflow_order_id: overflowOrder.id }
-  ).catch(() => {});
-
-  // BUG-03: Cart clearing logic has been removed from here. 
-  // It will now be cleared in order.controller.js when the seller accepts.
-
-  return overflowOrder;
-}
-
-module.exports = { placeOrders, createOverflowOrder };
 

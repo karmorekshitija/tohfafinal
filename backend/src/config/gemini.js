@@ -12,7 +12,7 @@ let geminiModel = null;
 if (apiKey && apiKey !== 'YOUR_GEMINI_API_KEY') {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    geminiModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
   } catch (e) {
     console.warn('[Gemini] Init skipped:', e.message);
   }

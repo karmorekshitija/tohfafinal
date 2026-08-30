@@ -29,11 +29,10 @@ export function renderSellerSidebar(activeTab = 'dashboard') {
 
     <nav class="flex flex-col gap-1" style="flex:1;">
       <a href="./dashboard.html" class="seller-nav-link ${activeTab === 'dashboard' ? 'active' : ''}">📊 Dashboard</a>
+      <a href="./catalog.html" class="seller-nav-link ${activeTab === 'catalog' ? 'active' : ''}">🎨 Pre-Made Catalog</a>
+      <a href="./customized-products.html" class="seller-nav-link ${activeTab === 'customized' ? 'active' : ''}">✨ Customized</a>
       <a href="./orders.html" class="seller-nav-link ${activeTab === 'orders' ? 'active' : ''}">📦 Orders</a>
-      <a href="./overflow.html" class="seller-nav-link ${activeTab === 'overflow' ? 'active' : ''}">⏳ Capacity Queue</a>
-      <a href="./catalog.html" class="seller-nav-link ${activeTab === 'catalog' ? 'active' : ''}">🎨 Product Catalog</a>
       <a href="./add-product.html" class="seller-nav-link ${activeTab === 'add-product' ? 'active' : ''}">+ Add Product</a>
-      <a href="./messages.html" class="seller-nav-link ${activeTab === 'messages' ? 'active' : ''}">💬 Quotes & Inquiries</a>
       <a href="./analytics.html" class="seller-nav-link ${activeTab === 'analytics' ? 'active' : ''}">📈 Analytics</a>
       <a href="./reviews.html" class="seller-nav-link ${activeTab === 'reviews' ? 'active' : ''}">★ Reviews</a>
       <a href="./payouts.html" class="seller-nav-link ${activeTab === 'payouts' ? 'active' : ''}">💳 Payouts</a>
@@ -42,9 +41,8 @@ export function renderSellerSidebar(activeTab = 'dashboard') {
     </nav>
 
     <div style="padding-top:var(--space-4); border-top:1px solid rgba(255,248,231,0.15);">
-      <div class="flex items-center gap-3" style="margin-bottom:var(--space-3);">
-        <div class="avatar avatar-sm" style="background:var(--color-accent); color:var(--color-primary); font-weight:bold;">
-          ${(user?.store_name || user?.name || 'A')[0].toUpperCase()}
+        <div class="avatar avatar-sm" style="background:var(--color-accent); color:var(--color-primary); font-weight:bold; overflow:hidden; border-radius:50%; width:32px; height:32px;">
+          <img src="${user?.avatar_url || user?.profile_photo_url || '/img/default-avatar.png'}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;" onerror="this.onerror=null; this.src='/img/default-avatar.png';" />
         </div>
         <div style="overflow:hidden;">
           <div style="font-size:var(--text-xs); font-weight:var(--weight-semibold); color:var(--color-background); white-space:nowrap; text-overflow:ellipsis;">${user?.store_name || user?.name || 'Artisan'}</div>
@@ -87,11 +85,10 @@ export function renderMobileSellerBar(activeTab = 'dashboard') {
         </div>
         <nav class="flex flex-col gap-2">
           <a href="./dashboard.html" class="seller-nav-link ${activeTab === 'dashboard' ? 'active' : ''}">📊 Dashboard</a>
+          <a href="./catalog.html" class="seller-nav-link ${activeTab === 'catalog' ? 'active' : ''}">🎨 Pre-Made Catalog</a>
+          <a href="./customized-products.html" class="seller-nav-link ${activeTab === 'customized' ? 'active' : ''}">✨ Customized</a>
           <a href="./orders.html" class="seller-nav-link ${activeTab === 'orders' ? 'active' : ''}">📦 Orders</a>
-          <a href="./overflow.html" class="seller-nav-link ${activeTab === 'overflow' ? 'active' : ''}">⏳ Capacity Queue</a>
-          <a href="./catalog.html" class="seller-nav-link ${activeTab === 'catalog' ? 'active' : ''}">🎨 Product Catalog</a>
           <a href="./add-product.html" class="seller-nav-link ${activeTab === 'add-product' ? 'active' : ''}">+ Add Product</a>
-          <a href="./messages.html" class="seller-nav-link ${activeTab === 'messages' ? 'active' : ''}">💬 Quotes & Inquiries</a>
           <a href="./analytics.html" class="seller-nav-link ${activeTab === 'analytics' ? 'active' : ''}">📈 Analytics</a>
           <a href="./reviews.html" class="seller-nav-link ${activeTab === 'reviews' ? 'active' : ''}">★ Reviews</a>
           <a href="./payouts.html" class="seller-nav-link ${activeTab === 'payouts' ? 'active' : ''}">💳 Payouts</a>

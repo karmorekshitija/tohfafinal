@@ -27,7 +27,7 @@ async function getPlatformStats(req, res, next) {
         (SELECT COUNT(*) FROM seller_profiles WHERE is_approved = TRUE OR verification_status = 'verified') AS active_artisans,
         (SELECT COUNT(*) FROM seller_profiles WHERE (is_approved = FALSE AND rejection_reason IS NULL) OR verification_status = 'pending_verification') AS pending_kyc_count,
         (SELECT COUNT(*) FROM orders WHERE payment_status = 'paid' AND status NOT IN ('delivered', 'cancelled')) AS active_orders_in_fulfillment,
-        (SELECT COUNT(*) FROM products WHERE is_tohfa_original = TRUE AND status != 'deleted') AS tohfa_specials_count
+        (SELECT COUNT(*) FROM seller_profiles WHERE is_admin_managed = TRUE) AS tohfa_specials_count
     `);
 
     const row = stats.rows[0] || {};
@@ -54,39 +54,79 @@ async function getPlatformStats(req, res, next) {
 
 async function listSellers(req, res, next) {
   try {
-    const { status = 'all', page = 1, limit = 50 } = req.query;
-    const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+    const { status = 'all', search, page = 1, limit = 50, per_page } = req.query;
+    const pageNum = Math.max(1, parseInt(page, 10));
+    const limitNum = Math.min(100, parseInt(per_page || limit, 10));
+    const offset = (pageNum - 1) * limitNum;
 
-    let sql = `
-      SELECT u.id, u.name, u.email, u.phone, u.profile_photo_url, u.is_active,
-             sp.store_name, sp.store_name AS shop_name, sp.seller_type, sp.is_approved,
-             COALESCE(sp.verification_status, CASE WHEN sp.is_approved THEN 'verified' WHEN sp.rejection_reason IS NOT NULL THEN 'rejected' ELSE 'pending_verification' END) AS verification_status,
-             COALESCE(sp.commission_rate, 10.00) AS commission_rate,
-             sp.applied_at, sp.approved_at, sp.rejection_reason, sp.is_tohfa_original,
-             (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status != 'deleted') AS product_count,
-             (SELECT COALESCE(SUM(o.total_amount), 0) FROM orders o WHERE o.seller_id = u.id AND o.payment_status = 'paid') AS total_revenue,
-             (SELECT MAX(o2.created_at) FROM orders o2 WHERE o2.seller_id = u.id AND o2.payment_status = 'paid') AS last_order_at
+    let baseSql = `
       FROM users u
-      JOIN seller_profiles sp ON sp.user_id = u.id
+      LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+      LEFT JOIN sellers s ON s.user_id = u.id
       WHERE u.role = 'seller'
     `;
     const params = [];
 
     if (status === 'pending') {
-      sql += ` AND (sp.is_approved = FALSE AND sp.rejection_reason IS NULL AND u.is_active = TRUE)`;
-    } else if (status === 'active' || status === 'verified') {
-      sql += ` AND (sp.is_approved = TRUE AND u.is_active = TRUE)`;
+      baseSql += ` AND (COALESCE(sp.is_approved, s.is_approved, FALSE) = FALSE AND sp.rejection_reason IS NULL AND s.rejection_reason IS NULL AND u.is_active = TRUE)`;
+    } else if (status === 'active' || status === 'verified' || status === 'approved') {
+      baseSql += ` AND (COALESCE(sp.is_approved, s.is_approved, FALSE) = TRUE AND u.is_active = TRUE)`;
     } else if (status === 'rejected') {
-      sql += ` AND (sp.is_approved = FALSE AND sp.rejection_reason IS NOT NULL)`;
+      baseSql += ` AND (COALESCE(sp.is_approved, s.is_approved, FALSE) = FALSE AND (sp.rejection_reason IS NOT NULL OR s.rejection_reason IS NOT NULL))`;
     } else if (status === 'banned') {
-      sql += ` AND u.is_active = FALSE`;
+      baseSql += ` AND u.is_active = FALSE`;
     }
 
-    sql += ` ORDER BY sp.applied_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
-    params.push(parseInt(limit, 10), offset);
+    if (search) {
+      params.push(`%${search.trim()}%`);
+      baseSql += ` AND (u.name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR sp.store_name ILIKE $${params.length} OR s.store_name ILIKE $${params.length})`;
+    }
 
-    const { rows } = await query(sql, params);
-    return res.json({ success: true, data: rows });
+    const countRes = await query(`SELECT COUNT(*) AS total ${baseSql}`, params);
+    const total = parseInt(countRes.rows[0]?.total || 0, 10);
+
+    const selectSql = `
+      SELECT u.id, u.name, u.email, u.phone, u.profile_photo_url, u.is_active,
+             COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
+             COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS shop_name,
+             COALESCE(sp.seller_type, 'Artisan') AS seller_type,
+             COALESCE(sp.is_approved, s.is_approved, FALSE) AS is_approved,
+             COALESCE(sp.pickup_address, s.pickup_address, '{}'::jsonb) AS pickup_address,
+             COALESCE(sp.bank_details, s.bank_details, '{}'::jsonb) AS bank_details,
+             COALESCE(sp.onboarding_completed, s.onboarding_completed, FALSE) AS onboarding_completed,
+             COALESCE(sp.daily_capacity_min, s.daily_capacity_min) AS daily_capacity_min,
+             COALESCE(sp.daily_capacity_max, s.daily_capacity_max) AS daily_capacity_max,
+             COALESCE(sp.instagram_handle, s.instagram_handle) AS instagram_handle,
+             COALESCE(sp.instagram_followers, s.instagram_followers) AS instagram_followers,
+             COALESCE(sp.pan_number, s.pan_number) AS pan_number,
+             COALESCE(sp.gst_number, s.gst_number) AS gst_number,
+             COALESCE(sp.portfolio_images, s.portfolio_images, '{}'::text[]) AS portfolio_images,
+             COALESCE(sp.verification_status, s.verification_status, CASE WHEN sp.is_approved OR s.is_approved THEN 'verified' WHEN sp.rejection_reason IS NOT NULL OR s.rejection_reason IS NOT NULL THEN 'rejected' ELSE 'pending_verification' END) AS verification_status,
+             COALESCE(sp.commission_rate, s.commission_rate, 10.00) AS commission_rate,
+             COALESCE(sp.applied_at, s.applied_at, u.created_at) AS applied_at,
+             COALESCE(sp.approved_at, s.approved_at) AS approved_at,
+             COALESCE(sp.rejection_reason, s.rejection_reason) AS rejection_reason,
+             COALESCE(sp.is_admin_managed, s.is_admin_managed, FALSE) AS is_admin_managed,
+             (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status != 'deleted') AS product_count,
+             (SELECT COALESCE(SUM(o.total_amount), 0) FROM orders o WHERE o.seller_id = u.id AND o.payment_status = 'paid') AS total_revenue,
+             (SELECT MAX(o2.created_at) FROM orders o2 WHERE o2.seller_id = u.id AND o2.payment_status = 'paid') AS last_order_at
+      ${baseSql}
+      ORDER BY COALESCE(sp.applied_at, s.applied_at, u.created_at) DESC
+      LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+    `;
+    params.push(limitNum, offset);
+
+    const { rows } = await query(selectSql, params);
+    return res.json({ 
+      success: true, 
+      data: {
+        sellers: rows,
+        total,
+        page: pageNum,
+        per_page: limitNum,
+        total_pages: Math.ceil(total / limitNum) || 1
+      }
+    });
   } catch (err) {
     next(err);
   }
@@ -97,15 +137,35 @@ async function getSellerDetail(req, res, next) {
     const sellerId = req.params.sellerId || req.params.id;
     const { rows } = await query(
       `SELECT u.id, u.name, u.email, u.phone, u.profile_photo_url, u.cover_photo_url, u.is_active,
-              sp.store_name, sp.bio, sp.whatsapp_number, sp.seller_type, sp.capacity_limit,
-              sp.vacation_mode, sp.is_approved, sp.is_tohfa_original,
-              COALESCE(sp.verification_status, CASE WHEN sp.is_approved THEN 'verified' WHEN sp.rejection_reason IS NOT NULL THEN 'rejected' ELSE 'pending_verification' END) AS verification_status,
-              COALESCE(sp.commission_rate, 10.00) AS commission_rate,
-              sp.applied_at, sp.approved_at, sp.rejection_reason
+              COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
+              COALESCE(sp.bio, s.bio, '') AS bio,
+              COALESCE(sp.whatsapp_number, s.whatsapp_number, u.phone) AS whatsapp_number,
+              COALESCE(sp.seller_type, 'Artisan') AS seller_type,
+              COALESCE(sp.is_approved, s.is_approved, FALSE) AS is_approved,
+              COALESCE(sp.is_admin_managed, s.is_admin_managed, FALSE) AS is_admin_managed,
+              COALESCE(sp.pickup_address, s.pickup_address, '{}'::jsonb) AS pickup_address,
+              COALESCE(sp.bank_details, s.bank_details, '{}'::jsonb) AS bank_details,
+              COALESCE(sp.onboarding_completed, s.onboarding_completed, FALSE) AS onboarding_completed,
+              COALESCE(sp.daily_capacity_min, s.daily_capacity_min) AS daily_capacity_min,
+              COALESCE(sp.daily_capacity_max, s.daily_capacity_max) AS daily_capacity_max,
+              COALESCE(sp.instagram_handle, s.instagram_handle) AS instagram_handle,
+              COALESCE(sp.instagram_followers, s.instagram_followers) AS instagram_followers,
+              COALESCE(sp.pan_number, s.pan_number) AS pan_number,
+              COALESCE(sp.gst_number, s.gst_number) AS gst_number,
+              COALESCE(sp.portfolio_images, s.portfolio_images, '{}'::text[]) AS portfolio_images,
+              COALESCE(sp.verification_status, s.verification_status, CASE WHEN sp.is_approved OR s.is_approved THEN 'verified' WHEN sp.rejection_reason IS NOT NULL OR s.rejection_reason IS NOT NULL THEN 'rejected' ELSE 'pending_verification' END) AS verification_status,
+              COALESCE(sp.commission_rate, s.commission_rate, 10.00) AS commission_rate,
+              COALESCE(sp.applied_at, s.applied_at, u.created_at) AS applied_at,
+              COALESCE(sp.approved_at, s.approved_at) AS approved_at,
+              COALESCE(sp.rejection_reason, s.rejection_reason) AS rejection_reason,
+              (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status != 'deleted') AS product_count,
+              (SELECT COALESCE(SUM(o.total_amount), 0) FROM orders o WHERE o.seller_id = u.id AND o.payment_status = 'paid') AS total_revenue,
+              (SELECT MAX(o2.created_at) FROM orders o2 WHERE o2.seller_id = u.id AND o2.payment_status = 'paid') AS last_order_at
        FROM users u
-       JOIN seller_profiles sp ON sp.user_id = u.id
-       WHERE u.id = $1`,
-      [sellerId]
+       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+       LEFT JOIN sellers s ON s.user_id = u.id
+       WHERE u.id::text = $1::text OR sp.id::text = $1::text OR s.id::text = $1::text`,
+      [String(sellerId)]
     );
 
     if (!rows.length) {
@@ -120,7 +180,7 @@ async function getSellerDetail(req, res, next) {
 
 async function verifySellerKYC(req, res, next) {
   try {
-    const sellerId = req.params.sellerId || req.params.id;
+    const rawId = req.params.sellerId || req.params.id;
     let { status, commissionRate, commission_rate, rejectionReason, rejection_reason, reason } = req.body;
 
     const finalCommission = commissionRate !== undefined ? commissionRate : commission_rate;
@@ -132,6 +192,24 @@ async function verifySellerKYC(req, res, next) {
     const isApproved = status === 'verified';
     const rejectReason = status === 'rejected' ? (finalRejectionReason || 'Application criteria not met') : null;
 
+    // Resolve target user_id
+    const userRes = await query(
+      `SELECT u.id, u.email, COALESCE(sp.store_name, s.store_name, 'Artisan Studio') as store_name
+       FROM users u
+       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+       LEFT JOIN sellers s ON s.user_id = u.id
+       WHERE u.id::text = $1::text OR sp.id::text = $1::text OR s.id::text = $1::text`,
+      [String(rawId)]
+    );
+
+    if (userRes.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Seller not found.' });
+    }
+
+    const targetUserId = userRes.rows[0].id;
+    const storeName = userRes.rows[0].store_name;
+    const sellerEmail = userRes.rows[0].email;
+
     const result = await query(`
       UPDATE seller_profiles
       SET is_approved = $1,
@@ -140,29 +218,39 @@ async function verifySellerKYC(req, res, next) {
           rejection_reason = $4,
           approved_at = CASE WHEN $1 = TRUE THEN NOW() ELSE approved_at END,
           updated_at = NOW()
-      WHERE user_id = $5
+      WHERE user_id::text = $5::text
       RETURNING *
-    `, [isApproved, status, finalCommission !== undefined ? Number(finalCommission) : null, rejectReason, sellerId]);
+    `, [isApproved, status, finalCommission !== undefined ? Number(finalCommission) : null, rejectReason, String(targetUserId)]);
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Seller not found.' });
-    }
+    // Also sync master sellers table
+    await query(`
+      UPDATE sellers
+      SET is_approved = $1,
+          verification_status = $2,
+          commission_rate = COALESCE($3, commission_rate),
+          rejection_reason = $4,
+          approved_at = CASE WHEN $1 = TRUE THEN NOW() ELSE approved_at END
+      WHERE user_id::text = $5::text
+    `, [isApproved, status, finalCommission !== undefined ? Number(finalCommission) : null, rejectReason, String(targetUserId)]).catch(() => {});
 
-    const { rows: userRows } = await query('SELECT name, email FROM users WHERE id = $1', [sellerId]);
+    // Ensure user role and status
+    await query(`UPDATE users SET is_active = TRUE, role = 'seller' WHERE id::text = $1::text`, [String(targetUserId)]).catch(() => {});
+
+    const { rows: userRows } = await query('SELECT name, email FROM users WHERE id::text = $1::text', [String(targetUserId)]);
     const sellerUser = userRows[0] || {};
 
     if (isApproved) {
-      await emailService.sendSellerApprovalEmail(sellerUser.email, result.rows[0].store_name).catch(() => {});
+      await emailService.sendSellerApprovalEmail(sellerUser.email || sellerEmail, result.rows[0]?.store_name || storeName).catch(() => {});
       await createNotification(
-        sellerId,
+        targetUserId,
         'seller_approved',
         'Welcome to Tohfa Studio! 🎉',
         'Your artisan KYC application has been verified and approved. You can now publish handcrafted creations.'
       ).catch(() => {});
     } else if (status === 'rejected') {
-      await emailService.sendSellerRejectionEmail(sellerUser.email, result.rows[0].store_name, rejectReason).catch(() => {});
+      await emailService.sendSellerRejectionEmail(sellerUser.email || sellerEmail, result.rows[0]?.store_name || storeName, rejectReason).catch(() => {});
       await createNotification(
-        sellerId,
+        targetUserId,
         'seller_rejected',
         'Seller Application Update',
         `Your seller verification application was not approved. Reason: ${rejectReason}`
@@ -173,7 +261,7 @@ async function verifySellerKYC(req, res, next) {
       adminId: req.user.id,
       actionType: isApproved ? 'SELLER_KYC_APPROVED' : 'SELLER_KYC_REJECTED',
       targetEntity: 'sellers',
-      targetId: sellerId,
+      targetId: targetUserId,
       details: { status, commissionRate: finalCommission, rejectionReason: rejectReason },
       ipAddress: req.ip
     });
@@ -191,11 +279,19 @@ async function verifySellerKYC(req, res, next) {
 async function suspendSeller(req, res, next) {
   try {
     const sellerId = req.params.sellerId || req.params.id;
-    const { reason = 'Administrative suspension' } = req.body;
+    const reason = req.body.reason || req.body.ban_reason || 'Administrative suspension';
 
-    await query('UPDATE users SET is_active = FALSE WHERE id = $1', [sellerId]);
-    await query("UPDATE seller_profiles SET verification_status = 'suspended', is_approved = FALSE, updated_at = NOW() WHERE user_id = $1", [sellerId]).catch(() => {});
-    await query("UPDATE products SET status = 'paused', is_active = FALSE WHERE seller_id = $1", [sellerId]);
+    await query('UPDATE users SET is_active = FALSE WHERE id::text = $1', [String(sellerId)])
+      .catch(() => {});
+
+    await query("UPDATE seller_profiles SET verification_status = 'suspended', is_approved = FALSE, updated_at = NOW() WHERE user_id::text = $1", [String(sellerId)])
+      .catch(() => {});
+
+    await query("UPDATE sellers SET verification_status = 'suspended', is_approved = FALSE WHERE user_id::text = $1", [String(sellerId)])
+      .catch(() => {});
+
+    await query("UPDATE products SET status = 'paused' WHERE seller_id::text = $1", [String(sellerId)])
+      .catch(() => {});
 
     await logAdminAction({
       adminId: req.user.id,
@@ -227,122 +323,6 @@ async function rejectSeller(req, res, next) {
 
 async function banSeller(req, res, next) {
   return suspendSeller(req, res, next);
-}
-
-// ---------------------------------------------------------------------------
-// 3. TOHFA SPECIALS / ORIGINALS CURATION (Product Level)
-// ---------------------------------------------------------------------------
-
-async function toggleTohfaSpecial(req, res, next) {
-  try {
-    const productId = req.params.productId || req.params.id;
-    let {
-      isTohfaOriginal,
-      is_tohfa_original,
-      badgeText,
-      badge_text,
-      tohfa_special_badge,
-      priorityRank,
-      priority_rank,
-      specialPackaging,
-      special_packaging_available,
-      special_packaging
-    } = req.body;
-
-    const originalVal = isTohfaOriginal !== undefined ? Boolean(isTohfaOriginal) : (is_tohfa_original !== undefined ? Boolean(is_tohfa_original) : true);
-    const badge = badgeText || badge_text || tohfa_special_badge || null;
-    const rank = priorityRank !== undefined ? parseInt(priorityRank, 10) : (priority_rank !== undefined ? parseInt(priority_rank, 10) : null);
-    const packaging = specialPackaging !== undefined ? Boolean(specialPackaging) : (special_packaging_available !== undefined ? Boolean(special_packaging_available) : (special_packaging !== undefined ? Boolean(special_packaging) : null));
-
-    const result = await query(`
-      UPDATE products 
-      SET is_tohfa_original = $1,
-          tohfa_special_badge = COALESCE($2, tohfa_special_badge),
-          priority_rank = COALESCE($3, priority_rank),
-          special_packaging_available = COALESCE($4, special_packaging_available),
-          updated_at = NOW()
-      WHERE id = $5
-      RETURNING *
-    `, [originalVal, badge, rank, packaging, productId]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Product not found.' });
-    }
-
-    await logAdminAction({
-      adminId: req.user.id,
-      actionType: originalVal ? 'PRODUCT_MARKED_TOHFA_SPECIAL' : 'PRODUCT_REMOVED_TOHFA_SPECIAL',
-      targetEntity: 'products',
-      targetId: productId,
-      details: { isTohfaOriginal: originalVal, badgeText: badge, priorityRank: rank, specialPackaging: packaging },
-      ipAddress: req.ip
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: 'Tohfa Special status updated successfully.',
-      data: result.rows[0]
-    });
-  } catch (err) {
-    next(err);
-  }
-}
-
-async function listTohfaOriginals(req, res, next) {
-  try {
-    // Return all products that are Tohfa Specials
-    const { rows } = await query(`
-      SELECT p.*, sp.store_name, c.name AS category_name,
-             (SELECT url FROM product_images pi WHERE pi.product_id = p.id ORDER BY sort_order ASC LIMIT 1) AS primary_image
-      FROM products p
-      JOIN seller_profiles sp ON sp.user_id = p.seller_id
-      LEFT JOIN categories c ON c.id = p.category_id
-      WHERE p.is_tohfa_original = TRUE AND p.status != 'deleted'
-      ORDER BY p.priority_rank DESC, p.created_at DESC
-    `);
-    return res.json({ success: true, data: rows });
-  } catch (err) {
-    next(err);
-  }
-}
-
-async function addTohfaOriginal(req, res, next) {
-  const { productId, product_id, sellerId, seller_id } = req.body;
-  const targetProduct = productId || product_id;
-  const targetSeller = sellerId || seller_id;
-
-  if (targetProduct) {
-    req.params.productId = targetProduct;
-    req.body.isTohfaOriginal = true;
-    return toggleTohfaSpecial(req, res, next);
-  }
-  if (targetSeller) {
-    await query('UPDATE seller_profiles SET is_tohfa_original = TRUE WHERE user_id = $1', [targetSeller]);
-    await logAdminAction({
-      adminId: req.user.id,
-      actionType: 'SELLER_MARKED_TOHFA_ORIGINAL',
-      targetEntity: 'sellers',
-      targetId: targetSeller,
-      details: {},
-      ipAddress: req.ip
-    });
-    return res.json({ success: true, message: 'Seller marked as Tohfa Original.' });
-  }
-  return res.status(400).json({ success: false, message: 'productId or sellerId is required.' });
-}
-
-async function removeTohfaOriginal(req, res, next) {
-  const sellerId = req.params.sellerId || req.params.id;
-  await query('UPDATE seller_profiles SET is_tohfa_original = FALSE WHERE user_id = $1', [sellerId]);
-  await logAdminAction({
-    adminId: req.user.id,
-    actionType: 'SELLER_REMOVED_TOHFA_ORIGINAL',
-    targetEntity: 'sellers',
-    targetId: sellerId,
-    details: {},
-    ipAddress: req.ip
-  });
-  return res.json({ success: true, message: 'House brand flag removed.' });
 }
 
 // ---------------------------------------------------------------------------
@@ -449,25 +429,39 @@ async function forceRefundOrder(req, res, next) {
 async function forceUpdateOrderStatus(req, res, next) {
   try {
     const orderId = req.params.orderId || req.params.id;
-    const { status, notes = '' } = req.body;
+    const { status, notes = '', delivery_notes = '', buyer_message = '', reason = '' } = req.body;
 
-    const validStatuses = ['pending', 'confirmed', 'processing', 'packed', 'shipped', 'delivered', 'cancelled', 'cancel_requested'];
-    if (!validStatuses.includes(status)) {
+    const validStatuses = ['pending', 'confirmed', 'processing', 'in_production', 'packed', 'shipped', 'dispatched', 'delivered', 'cancelled', 'cancel_requested', 'awaiting_payment'];
+    if (status && !validStatuses.includes(status.toLowerCase())) {
       return res.status(400).json({ success: false, message: `Invalid status: ${status}. Allowed: ${validStatuses.join(', ')}` });
     }
 
+    const effectiveNote = buyer_message || delivery_notes || notes || reason || '';
+
     const { rows } = await query(`
       UPDATE orders
-      SET status = $1,
-          notes = COALESCE(notes || ' | ', '') || $2,
-          delivered_at = CASE WHEN $1 = 'delivered' THEN NOW() ELSE delivered_at END,
+      SET status = COALESCE($1::text, status),
+          studio_notes = CASE WHEN $2::text != '' THEN $2::text ELSE studio_notes END,
+          delivered_at = CASE WHEN $1::text = 'delivered' THEN NOW()::text ELSE delivered_at END,
           updated_at = NOW()
-      WHERE id = $3
-      RETURNING *
-    `, [status, `Admin Forced Status: ${status} (${notes})`, orderId]);
+      WHERE id::text = $3::text OR order_ref = $3::text
+      RETURNING *, COALESCE(studio_notes, '') AS notes
+    `, [status || null, effectiveNote, String(orderId)]);
 
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'Order not found.' });
+    }
+
+    const updatedOrder = rows[0];
+
+    // Also update seller_orders if any exist for this order
+    if (status) {
+      await query(`
+        UPDATE seller_orders
+        SET status = $1::text,
+            delivered_at = CASE WHEN $1::text = 'delivered' THEN NOW()::text ELSE delivered_at END
+        WHERE order_id = $2::int
+      `, [status, updatedOrder.id]).catch(() => {});
     }
 
     await logAdminAction({
@@ -475,11 +469,11 @@ async function forceUpdateOrderStatus(req, res, next) {
       actionType: 'ADMIN_ORDER_STATUS_FORCE_UPDATED',
       targetEntity: 'orders',
       targetId: orderId,
-      details: { status, notes },
+      details: { status, notes: effectiveNote },
       ipAddress: req.ip
     });
 
-    return res.json({ success: true, message: `Order status forced to ${status}.`, data: rows[0] });
+    return res.json({ success: true, message: `Order status updated to ${status || rows[0].status}.`, data: rows[0] });
   } catch (err) {
     next(err);
   }
@@ -550,12 +544,12 @@ async function disburseSellerPayout(req, res, next) {
 
 async function getAllUsers(req, res, next) {
   try {
-    const { role = 'all', page = 1, limit = 50, search = '' } = req.query;
-    const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+    const { role = 'all', page = 1, limit = 50, per_page, search = '' } = req.query;
+    const pageNum = Math.max(1, parseInt(page, 10));
+    const limitNum = Math.min(100, parseInt(per_page || limit, 10));
+    const offset = (pageNum - 1) * limitNum;
 
-    let sql = `
-      SELECT u.id, u.name, u.email, u.phone, u.role, u.is_active, u.created_at,
-             (SELECT COUNT(*) FROM orders o WHERE o.buyer_id = u.id) AS order_count
+    let baseSql = `
       FROM users u
       WHERE 1=1
     `;
@@ -563,18 +557,36 @@ async function getAllUsers(req, res, next) {
 
     if (role !== 'all') {
       params.push(role);
-      sql += ` AND u.role = $${params.length}`;
+      baseSql += ` AND u.role = $${params.length}`;
     }
     if (search) {
       params.push(`%${search}%`);
-      sql += ` AND (u.name ILIKE $${params.length} OR u.email ILIKE $${params.length})`;
+      baseSql += ` AND (u.name ILIKE $${params.length} OR u.email ILIKE $${params.length})`;
     }
 
-    sql += ` ORDER BY u.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
-    params.push(parseInt(limit, 10), offset);
+    const countRes = await query(`SELECT COUNT(*) AS total ${baseSql}`, params);
+    const total = parseInt(countRes.rows[0]?.total || 0, 10);
 
-    const { rows } = await query(sql, params);
-    return res.json({ success: true, data: rows });
+    const selectSql = `
+      SELECT u.id, u.name, u.email, u.phone, u.role, u.is_active, u.created_at,
+             (SELECT COUNT(*) FROM orders o WHERE o.buyer_id = u.id) AS order_count
+      ${baseSql}
+      ORDER BY u.created_at DESC
+      LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+    `;
+    params.push(limitNum, offset);
+
+    const { rows } = await query(selectSql, params);
+    return res.json({ 
+      success: true, 
+      data: {
+        users: rows,
+        total,
+        page: pageNum,
+        per_page: limitNum,
+        total_pages: Math.ceil(total / limitNum) || 1
+      }
+    });
   } catch (err) {
     next(err);
   }
@@ -726,9 +738,15 @@ async function listAllProducts(req, res, next) {
 
     let sql = `
       SELECT p.*, sp.store_name, c.name AS category_name,
-             (SELECT url FROM product_images pi WHERE pi.product_id = p.id ORDER BY sort_order ASC LIMIT 1) AS primary_image
+             COALESCE(
+               (SELECT url FROM product_images pi WHERE pi.product_id = p.id ORDER BY sort_order ASC LIMIT 1),
+               CASE 
+                 WHEN p.images IS NOT NULL AND array_length(p.images, 1) > 0 THEN p.images[1]
+                 ELSE NULL
+               END
+             ) AS primary_image
       FROM products p
-      JOIN seller_profiles sp ON sp.user_id = p.seller_id
+      LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
       LEFT JOIN categories c ON c.id = p.category_id
       WHERE p.status != 'deleted'
     `;
@@ -755,16 +773,18 @@ async function listAllProducts(req, res, next) {
     const { rows: sponsoredRows } = await query(`SELECT COUNT(*) AS total FROM products WHERE status != 'deleted' AND is_sponsored = TRUE`);
     const sponsoredCount = parseInt(sponsoredRows[0].total, 10);
 
-    sql += ` ORDER BY p.priority_rank DESC NULLS LAST, p.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    sql += ` ORDER BY p.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(limitNum, offset);
 
     const { rows } = await query(sql, params);
     
     const formattedRows = rows.map(r => ({
       ...r,
-      image_url: r.primary_image,
-      seller_name: r.store_name,
-      price_paise: Math.round(Number(r.base_price) * 100)
+      image_url: r.primary_image || '/img/placeholder-product.png',
+      primary_image: r.primary_image || '/img/placeholder-product.png',
+      seller_name: r.store_name || 'Artisan Studio',
+      store_name: r.store_name || 'Artisan Studio',
+      price_paise: Math.round(Number(r.base_price) * 100),
     }));
 
     return res.json({ 
@@ -785,7 +805,7 @@ async function listAllProducts(req, res, next) {
 
 async function createProduct(req, res, next) {
   try {
-    const { name, description, base_price, category_id, seller_id, image_url, is_tohfa_original = true } = req.body;
+    const { name, description, base_price, category_id, seller_id, image_url, images, variants } = req.body;
     
     if (!name || !base_price || !seller_id) {
       return res.status(400).json({ success: false, message: 'Name, price, and seller are required.' });
@@ -796,19 +816,59 @@ async function createProduct(req, res, next) {
     const { rows } = await query(`
       INSERT INTO products (
         seller_id, category_id, name, slug, description, base_price, 
-        is_tohfa_original, status, stock_quantity, preparation_days
+        status, stock_quantity, preparation_days
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, 'active', 50, 1)
+      VALUES ($1, $2, $3, $4, $5, $6, 'active', 50, 1)
       RETURNING *
-    `, [seller_id, category_id || null, name, slug, description || '', base_price, is_tohfa_original]);
+    `, [seller_id, category_id || null, name, slug, description || '', base_price]);
 
     const newProduct = rows[0];
 
-    if (image_url) {
+    if (Array.isArray(images) && images.length > 0) {
+      let sortOrder = 0;
+      for (const img of images) {
+        const url = typeof img === 'string' ? img : (img?.url || '');
+        if (url) {
+          await query(
+            'INSERT INTO product_images (product_id, url, sort_order) VALUES ($1, $2, $3)',
+            [newProduct.id, url, sortOrder++]
+          );
+        }
+      }
+    } else if (image_url) {
       await query(
         'INSERT INTO product_images (product_id, url, sort_order) VALUES ($1, $2, 0)',
         [newProduct.id, image_url]
       );
+    }
+
+    if (Array.isArray(variants) && variants.length > 0) {
+      for (const v of variants) {
+        let vImgs = [];
+        if (Array.isArray(v.images) && v.images.length > 0) {
+          vImgs = v.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || ''))).filter(Boolean);
+        } else if (v.image_url) {
+          vImgs = [v.image_url];
+        }
+        const primaryImg = vImgs[0] || v.image_url || null;
+
+        await query(
+          `INSERT INTO product_variants
+             (product_id, variant_name, color_name, color_hex, size, stock_qty, additional_price, image_url, images)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+          [
+            newProduct.id,
+            v.variant_name || v.name || v.variant_label || null,
+            v.color_name || v.color || null,
+            v.color_hex || null,
+            v.size || null,
+            v.stock_qty ?? v.stock ?? 0,
+            v.additional_price ?? v.price_modifier ?? 0,
+            primaryImg,
+            vImgs
+          ]
+        );
+      }
     }
 
     await logAdminAction({
@@ -816,11 +876,131 @@ async function createProduct(req, res, next) {
       actionType: 'ADMIN_CREATED_PRODUCT',
       targetEntity: 'products',
       targetId: newProduct.id,
-      details: { name, seller_id, is_tohfa_original },
+      details: { name, seller_id },
       ipAddress: req.ip
     });
 
     return res.status(201).json({ success: true, data: newProduct });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function updateProduct(req, res, next) {
+  try {
+    const { id } = req.params;
+    const {
+      name,
+      description,
+      base_price,
+      price,
+      stock_quantity,
+      stock_qty,
+      category_id,
+      status,
+      special_packaging_available,
+      image_url,
+      images,
+      variants,
+    } = req.body;
+
+    const finalPrice = base_price !== undefined ? parseFloat(base_price) : (price !== undefined ? parseFloat(price) : null);
+    const finalStock = stock_quantity !== undefined ? parseInt(stock_quantity, 10) : (stock_qty !== undefined ? parseInt(stock_qty, 10) : null);
+
+    const result = await query(
+      `UPDATE products 
+       SET name = COALESCE($1, name),
+           description = COALESCE($2, description),
+           base_price = COALESCE($3, base_price),
+           stock_quantity = COALESCE($4, stock_quantity),
+           category_id = COALESCE($5, category_id),
+           status = COALESCE($6, status),
+           special_packaging_available = COALESCE($7, special_packaging_available),
+           updated_at = NOW()
+       WHERE id = $8
+       RETURNING *`,
+      [
+        name || null,
+        description !== undefined ? description : null,
+        finalPrice,
+        finalStock,
+        category_id ? parseInt(category_id, 10) : null,
+        status || null,
+        special_packaging_available !== undefined ? Boolean(special_packaging_available) : null,
+        id
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Product not found.' });
+    }
+
+    if (Array.isArray(images)) {
+      await query('DELETE FROM product_images WHERE product_id = $1', [id]);
+      let sortOrder = 0;
+      for (const img of images) {
+        const url = typeof img === 'string' ? img : (img?.url || '');
+        if (url) {
+          await query(
+            `INSERT INTO product_images (product_id, url, sort_order)
+             VALUES ($1, $2, $3)`,
+            [id, url, sortOrder++]
+          );
+        }
+      }
+    } else if (image_url) {
+      await query(
+        `INSERT INTO product_images (product_id, url, sort_order) 
+         VALUES ($1, $2, 0)
+         ON CONFLICT DO NOTHING`,
+        [id, image_url]
+      ).catch(() => {});
+    }
+
+    if (Array.isArray(variants)) {
+      await query('DELETE FROM product_variants WHERE product_id = $1', [id]);
+      for (const v of variants) {
+        let vImgs = [];
+        if (Array.isArray(v.images) && v.images.length > 0) {
+          vImgs = v.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || ''))).filter(Boolean);
+        } else if (v.image_url) {
+          vImgs = [v.image_url];
+        }
+        const primaryImg = vImgs[0] || v.image_url || null;
+
+        await query(
+          `INSERT INTO product_variants
+             (product_id, variant_name, color_name, color_hex, size, stock_qty, additional_price, image_url, images)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+          [
+            id,
+            v.variant_name || v.name || v.variant_label || null,
+            v.color_name || v.color || null,
+            v.color_hex || null,
+            v.size || null,
+            v.stock_qty ?? v.stock ?? 0,
+            v.additional_price ?? v.price_modifier ?? 0,
+            primaryImg,
+            vImgs
+          ]
+        );
+      }
+    }
+
+    await logAdminAction({
+      adminId: req.user?.id || null,
+      actionType: 'ADMIN_UPDATED_PRODUCT',
+      targetEntity: 'products',
+      targetId: id,
+      details: req.body,
+      ipAddress: req.ip
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Product updated successfully.',
+      data: result.rows[0]
+    });
   } catch (err) {
     next(err);
   }
@@ -860,7 +1040,17 @@ async function toggleSponsor(req, res, next) {
       'UPDATE products SET is_sponsored = NOT is_sponsored WHERE id = $1 RETURNING id, is_sponsored',
       [id]
     );
-    return res.json({ success: true, data: rows[0] });
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'Product not found.' });
+    }
+    const { rows: sc } = await query("SELECT COUNT(*) AS total FROM products WHERE is_sponsored = TRUE AND status != 'deleted'");
+    return res.json({ 
+      success: true, 
+      data: {
+        ...rows[0],
+        sponsored_count: parseInt(sc[0]?.total || 0, 10)
+      } 
+    });
   } catch (err) {
     next(err);
   }
@@ -888,7 +1078,9 @@ async function deleteProduct(req, res, next) {
 async function listCategories(req, res, next) {
   try {
     const { rows } = await query(`
-      SELECT c.id, c.name, c.name AS display_name, c.slug, c.parent_id, c.sort_order, c.is_active, c.created_at,
+      SELECT c.id, c.name, COALESCE(c.display_name, c.name) AS display_name,
+             c.slug, c.emoji_icon, c.icon_emoji, c.image_url, c.banner_image_url,
+             c.description, c.parent_id, c.sort_order, c.is_active, c.created_at,
              (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id AND p.status != 'deleted') AS product_count
       FROM categories c
       ORDER BY c.sort_order ASC, c.name ASC
@@ -911,7 +1103,7 @@ async function listCategories(req, res, next) {
 async function createCategory(req, res, next) {
   try {
     const rawName = req.body.display_name || req.body.name;
-    const { parent_id = null, sort_order = 0 } = req.body;
+    const { parent_id = null, sort_order = 0, description = '', emoji_icon, icon_emoji, image_url, banner_image_url, is_active = true } = req.body;
 
     if (!rawName) return res.status(400).json({ success: false, message: 'Category name is required.' });
 
@@ -920,11 +1112,15 @@ async function createCategory(req, res, next) {
       ? req.body.slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
       : name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
+    const emoji = emoji_icon || icon_emoji || '🏺';
+    const uploadedUrl = req.file ? req.file.path : null;
+    const imgUrl = uploadedUrl || image_url || banner_image_url || null;
+
     const { rows } = await query(
-      `INSERT INTO categories (name, slug, parent_id, sort_order)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO categories (name, display_name, slug, description, emoji_icon, icon_emoji, image_url, banner_image_url, parent_id, sort_order, is_active)
+       VALUES ($1, $2, $3, $4, $5, $5, $6, $6, $7, $8, $9)
        RETURNING *`,
-      [name, slug, parent_id || null, parseInt(sort_order, 10) || 0]
+      [name, name, slug, description, emoji, imgUrl, parent_id || null, parseInt(sort_order, 10) || 0, is_active !== false]
     );
 
     await logAdminAction({
@@ -946,27 +1142,37 @@ async function updateCategory(req, res, next) {
   try {
     const { id } = req.params;
     const rawName = req.body.display_name || req.body.name;
-    const { parent_id = null, sort_order, is_active } = req.body;
+    const { parent_id = null, sort_order, is_active, description, emoji_icon, icon_emoji, image_url, banner_image_url } = req.body;
 
     const name = rawName ? rawName.trim() : null;
     const slug = name
       ? (req.body.slug
           ? req.body.slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
           : name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))
-      : null;
+      : (req.body.slug ? req.body.slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : null);
 
     const activeVal = is_active !== undefined ? (is_active === 'true' || is_active === true) : null;
+    const emoji = emoji_icon || icon_emoji || null;
+    const uploadedUrl = req.file ? req.file.path : null;
+    const imgUrl = uploadedUrl || image_url || banner_image_url || null;
 
     const { rows } = await query(
       `UPDATE categories
-       SET name       = COALESCE($1, name),
-           slug       = COALESCE($2, slug),
-           parent_id  = $3,
-           sort_order = COALESCE($4, sort_order),
-           is_active  = COALESCE($5, is_active)
-       WHERE id = $6
+       SET name             = COALESCE($1, name),
+           display_name     = COALESCE($1, display_name, name),
+           slug             = COALESCE($2, slug),
+           parent_id        = $3,
+           sort_order       = COALESCE($4, sort_order),
+           is_active        = COALESCE($5, is_active),
+           description      = COALESCE($6, description),
+           emoji_icon       = COALESCE($7, emoji_icon),
+           icon_emoji       = COALESCE($7, icon_emoji),
+           image_url        = COALESCE($8, image_url),
+           banner_image_url = COALESCE($8, banner_image_url),
+           updated_at       = NOW()
+       WHERE id = $9
        RETURNING *`,
-      [name, slug, parent_id || null, sort_order ? parseInt(sort_order, 10) : null, activeVal, id]
+      [name, slug, parent_id || null, sort_order ? parseInt(sort_order, 10) : null, activeVal, description !== undefined ? description : null, emoji, imgUrl, id]
     );
 
     if (!rows.length) return res.status(404).json({ success: false, message: 'Category not found.' });
@@ -1005,8 +1211,8 @@ async function createSubcategory(req, res, next) {
       : trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
     const { rows } = await query(
-      `INSERT INTO categories (name, slug, parent_id, sort_order)
-       VALUES ($1, $2, $3, 0)
+      `INSERT INTO categories (name, display_name, slug, parent_id, sort_order, is_active)
+       VALUES ($1, $1, $2, $3, 0, TRUE)
        RETURNING *`,
       [trimmedName, slug, category_id]
     );
@@ -1153,10 +1359,23 @@ async function deleteBanner(req, res, next) {
 async function getFeaturedSellers(req, res, next) {
   try {
     const { rows } = await query(`
-      SELECT osf.*, sp.store_name, sp.bio, u.name, u.profile_photo_url, u.cover_photo_url
+      SELECT osf.id, osf.seller_id, osf.blurb, osf.is_active, osf.featured_at,
+             COALESCE(sp.store_name, s.store_name, u.name, 'Artisan Studio') AS store_name,
+             COALESCE(sp.store_name, s.store_name, u.name, 'Artisan Studio') AS shop_name,
+             COALESCE(u.name, sp.store_name, s.store_name, 'Artisan Maker') AS seller_name,
+             COALESCE(u.name, sp.store_name, s.store_name, 'Artisan Maker') AS name,
+             COALESCE(NULLIF(osf.blurb, ''), sp.bio, s.bio, 'Crafting bespoke handmade treasures with immense devotion and care.') AS blurb,
+             COALESCE(NULLIF(osf.blurb, ''), sp.bio, s.bio, 'Crafting bespoke handmade treasures with immense devotion and care.') AS story_text,
+             COALESCE(sp.bio, s.bio, '') AS bio,
+             COALESCE(osf.image_url, u.profile_photo_url, sp.profile_photo, s.photo_url, '/img/default-avatar.png') AS profile_photo_url,
+             COALESCE(osf.image_url, u.cover_photo_url, sp.banner_url, s.banner_url, '/img/categories/artisan_showcase.jpg') AS cover_photo_url,
+             COALESCE(osf.image_url, u.profile_photo_url, sp.profile_photo, s.photo_url, u.cover_photo_url, sp.banner_url, '/img/categories/artisan_showcase.jpg') AS image_url,
+             COALESCE(sp.is_admin_managed, s.is_admin_managed, FALSE) AS is_admin_managed,
+             u.email
       FROM our_story_features osf
-      JOIN seller_profiles sp ON sp.user_id = osf.seller_id
       JOIN users u ON u.id = osf.seller_id
+      LEFT JOIN seller_profiles sp ON sp.user_id = osf.seller_id
+      LEFT JOIN sellers s ON s.user_id = osf.seller_id
       WHERE osf.is_active = TRUE
       ORDER BY osf.featured_at DESC
     `);
@@ -1168,16 +1387,33 @@ async function getFeaturedSellers(req, res, next) {
 
 async function featureSeller(req, res, next) {
   try {
-    const { sellerId } = req.params;
-    const { blurb = '' } = req.body;
+    const sellerId = req.params.sellerId || req.body.seller_id || req.body.sellerId;
+    if (!sellerId) {
+      return res.status(400).json({ success: false, message: 'seller_id is required.' });
+    }
+
+    const blurb = req.body.story_text || req.body.blurb || req.body.bio || '';
+    const isActive = req.body.is_active === undefined ? true : (req.body.is_active === '1' || req.body.is_active === true || req.body.is_active === 'true');
+    const uploadedUrl = req.file ? req.file.path : null;
+    const imageUrl = uploadedUrl || req.body.image_url || null;
 
     const { rows } = await query(
-      `INSERT INTO our_story_features (seller_id, blurb, is_active, featured_at)
-       VALUES ($1, $2, TRUE, NOW())
-       ON CONFLICT (seller_id) DO UPDATE SET blurb = EXCLUDED.blurb, is_active = TRUE, featured_at = NOW()
+      `INSERT INTO our_story_features (seller_id, blurb, image_url, is_active, featured_at)
+       VALUES ($1, $2, $3, $4, NOW())
+       ON CONFLICT (seller_id) DO UPDATE 
+       SET blurb = COALESCE(NULLIF(EXCLUDED.blurb, ''), our_story_features.blurb),
+           image_url = COALESCE(EXCLUDED.image_url, our_story_features.image_url),
+           is_active = EXCLUDED.is_active,
+           featured_at = NOW()
        RETURNING *`,
-      [sellerId, blurb]
+      [sellerId, blurb, imageUrl, isActive]
     );
+
+    // Sync bio to seller profile if provided
+    if (blurb) {
+      await query(`UPDATE seller_profiles SET bio = $1 WHERE user_id = $2 AND (bio IS NULL OR bio = '')`, [blurb, sellerId]).catch(() => {});
+      await query(`UPDATE sellers SET bio = $1 WHERE user_id = $2 AND (bio IS NULL OR bio = '')`, [blurb, sellerId]).catch(() => {});
+    }
 
     await createNotification(
       sellerId,
@@ -1204,7 +1440,7 @@ async function featureSeller(req, res, next) {
 async function unfeatureSeller(req, res, next) {
   try {
     const { sellerId } = req.params;
-    await query('UPDATE our_story_features SET is_active = FALSE WHERE seller_id = $1', [sellerId]);
+    await query('DELETE FROM our_story_features WHERE seller_id::text = $1 OR id::text = $1', [sellerId]);
     return res.json({ success: true, message: 'Seller unfeatured from Our Story.' });
   } catch (err) {
     next(err);
@@ -1215,12 +1451,28 @@ async function listReports(req, res, next) {
   try {
     const { status = 'all' } = req.query;
     let sql = `
-      SELECT r.*, u.name AS reporter_name, u.email AS reporter_email
+      SELECT r.id,
+             r.reporter_id,
+             COALESCE(r.type, 'other') AS type,
+             COALESCE(r.reason, r.description, r.subject, '') AS reason,
+             COALESCE(r.reason, r.description, r.subject, '') AS description,
+             COALESCE(r.subject, INITCAP(REPLACE(COALESCE(r.type, 'User Report'), '_', ' '))) AS subject,
+             COALESCE(r.reporter_type, u.role, 'buyer') AS reporter_type,
+             COALESCE(r.related_to_type, r.type, 'other') AS related_to_type,
+             COALESCE(r.target_id, r.related_to_id) AS target_id,
+             COALESCE(r.target_id, r.related_to_id) AS related_to_id,
+             COALESCE(r.status, 'open') AS status,
+             COALESCE(r.admin_note, r.admin_reply, '') AS admin_reply,
+             COALESCE(r.admin_note, r.admin_reply, '') AS admin_note,
+             r.created_at,
+             r.resolved_at,
+             u.name AS reporter_name,
+             u.email AS reporter_email
       FROM reports r
-      JOIN users u ON u.id = r.reporter_id
+      LEFT JOIN users u ON u.id = r.reporter_id
     `;
     const params = [];
-    if (status !== 'all') {
+    if (status !== 'all' && status !== '') {
       sql += ` WHERE r.status = $1`;
       params.push(status);
     }
@@ -1236,16 +1488,18 @@ async function listReports(req, res, next) {
 async function updateReport(req, res, next) {
   try {
     const { id } = req.params;
-    const { status, admin_note } = req.body;
+    const { status, admin_note, admin_reply } = req.body;
+    const finalNote = admin_note !== undefined ? admin_note : admin_reply;
 
     const { rows } = await query(
       `UPDATE reports
        SET status = COALESCE($1, status),
            admin_note = COALESCE($2, admin_note),
+           admin_reply = COALESCE($2, admin_reply),
            resolved_at = CASE WHEN $1 IN ('resolved', 'dismissed') THEN NOW() ELSE resolved_at END
-       WHERE id = $3
+       WHERE id::text = $3::text
        RETURNING *`,
-      [status, admin_note, id]
+      [status, finalNote, String(id)]
     );
 
     return res.json({ success: true, data: rows[0] });
@@ -1256,17 +1510,298 @@ async function updateReport(req, res, next) {
 
 async function createReport(req, res, next) {
   try {
-    const reporterId = req.user.id;
-    const { type, target_id, reason } = req.body;
+    const reporterId = req.user ? req.user.id : null;
+    const { type, target_id, targetId, reason, description, subject } = req.body;
+    const reportType = type || 'other';
+    const reportReason = reason || description || subject || 'No details provided';
+    const finalTargetId = target_id || targetId || null;
 
     const { rows } = await query(
-      `INSERT INTO reports (reporter_id, type, target_id, reason)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO reports (reporter_id, type, target_id, reason, status, created_at)
+       VALUES ($1, $2, $3, $4, 'open', NOW())
        RETURNING *`,
-      [reporterId, type, target_id || null, reason]
+      [reporterId, reportType, finalTargetId ? String(finalTargetId) : null, reportReason]
     );
 
     return res.status(201).json({ success: true, data: rows[0] });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 11. TOFA SPECIAL ADMIN-OWNED SHOPS MANAGEMENT
+// ---------------------------------------------------------------------------
+
+async function listSpecialShops(req, res, next) {
+  try {
+    const { rows } = await query(`
+      SELECT u.id, u.name, u.email, u.phone, u.profile_photo_url, u.is_active,
+             sp.store_name, sp.slug, sp.bio, sp.pickup_address, sp.is_approved,
+             sp.verification_status, sp.is_admin_managed, sp.created_at, sp.updated_at,
+             (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status != 'deleted') AS product_count,
+             (SELECT COALESCE(SUM(o.total_amount), 0) FROM orders o WHERE o.seller_id = u.id AND o.payment_status = 'paid') AS total_revenue,
+             (SELECT COUNT(*) FROM orders o WHERE o.seller_id = u.id) AS total_orders
+      FROM users u
+      JOIN seller_profiles sp ON sp.user_id = u.id
+      WHERE sp.is_admin_managed = TRUE
+      ORDER BY sp.created_at ASC
+    `);
+    return res.json({ success: true, data: rows });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function createSpecialShop(req, res, next) {
+  const client = await db.getClient();
+  try {
+    const { store_name, slug, email, phone, bio, pickup_address } = req.body;
+    if (!store_name) {
+      return res.status(400).json({ success: false, message: 'Store name is required.' });
+    }
+
+    const cleanSlug = (slug || store_name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    const cleanEmail = (email || `${cleanSlug}@thetohfa.in`).toLowerCase().trim();
+    const cleanPhone = phone ? String(phone).trim() : null;
+
+    const bcrypt = require('bcrypt');
+    const dummyHash = await bcrypt.hash('TofaSpecialAdmin@2026!', 10);
+
+    await client.query('BEGIN');
+
+    const { rows: existingUser } = await client.query('SELECT id FROM users WHERE LOWER(TRIM(email)) = $1', [cleanEmail]);
+    let userId;
+
+    if (existingUser.length > 0) {
+      userId = existingUser[0].id;
+      await client.query('UPDATE users SET role = $1, is_active = TRUE, name = $2 WHERE id = $3', ['seller', store_name, userId]);
+    } else {
+      const { rows: newUser } = await client.query(
+        `INSERT INTO users (name, full_name, display_name, email, phone, password_hash, role, is_active)
+         VALUES ($1, $1, $1, $2, $3, $4, 'seller', TRUE)
+         RETURNING id`,
+        [store_name, cleanEmail, cleanPhone, dummyHash]
+      );
+      userId = newUser[0].id;
+    }
+
+    const pickupAddressJson = typeof pickup_address === 'object' && pickup_address !== null
+      ? JSON.stringify(pickup_address)
+      : (pickup_address || '{}');
+
+    await client.query(
+      `INSERT INTO sellers (user_id, store_name, slug, bio, pickup_address, is_admin_managed, is_approved, verification_status, is_active)
+       VALUES ($1, $2, $3, $4, $5, TRUE, TRUE, 'verified', TRUE)
+       ON CONFLICT (user_id) DO UPDATE SET
+         store_name = EXCLUDED.store_name,
+         slug = EXCLUDED.slug,
+         bio = EXCLUDED.bio,
+         pickup_address = EXCLUDED.pickup_address,
+         is_admin_managed = TRUE,
+         is_approved = TRUE,
+         verification_status = 'verified',
+         is_active = TRUE`,
+      [userId, store_name, cleanSlug, bio || '', pickupAddressJson]
+    );
+
+    const { rows: spRows } = await client.query(
+      `INSERT INTO seller_profiles (user_id, store_name, slug, bio, pickup_address, is_admin_managed, is_approved, verification_status, is_active, seller_type)
+       VALUES ($1, $2, $3, $4, $5, TRUE, TRUE, 'verified', TRUE, 'Artisan')
+       ON CONFLICT (user_id) DO UPDATE SET
+         store_name = EXCLUDED.store_name,
+         slug = EXCLUDED.slug,
+         bio = EXCLUDED.bio,
+         pickup_address = EXCLUDED.pickup_address,
+         is_admin_managed = TRUE,
+         is_approved = TRUE,
+         verification_status = 'verified',
+         is_active = TRUE,
+         seller_type = 'Artisan',
+         updated_at = NOW()
+       RETURNING *`,
+      [userId, store_name, cleanSlug, bio || '', pickupAddressJson]
+    );
+
+    await client.query('COMMIT');
+
+    await logAdminAction({
+      adminId: req.user.id,
+      actionType: 'SPECIAL_SHOP_CREATED',
+      targetEntity: 'sellers',
+      targetId: userId,
+      details: { store_name, slug: cleanSlug, email: cleanEmail },
+      ipAddress: req.ip
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: `Tohfa Special shop "${store_name}" created successfully.`,
+      data: {
+        user_id: userId,
+        ...spRows[0]
+      }
+    });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    next(err);
+  } finally {
+    client.release();
+  }
+}
+
+async function updateSpecialShop(req, res, next) {
+  try {
+    const shopId = req.params.id || req.params.sellerId;
+    const { store_name, bio, pickup_address, is_active } = req.body;
+
+    const { rows } = await query(
+      `UPDATE seller_profiles
+       SET store_name = COALESCE($1, store_name),
+           bio = COALESCE($2, bio),
+           pickup_address = COALESCE($3, pickup_address),
+           is_active = COALESCE($4, is_active),
+           updated_at = NOW()
+       WHERE (user_id::text = $5 OR id::text = $5) AND is_admin_managed = TRUE
+       RETURNING *`,
+      [
+        store_name || null,
+        bio || null,
+        pickup_address ? (typeof pickup_address === 'string' ? pickup_address : JSON.stringify(pickup_address)) : null,
+        is_active !== undefined ? Boolean(is_active) : null,
+        shopId
+      ]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'Tohfa Special shop not found.' });
+    }
+
+    return res.json({ success: true, message: 'Tohfa Special shop updated.', data: rows[0] });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function switchSessionToSpecialShop(req, res, next) {
+  try {
+    const shopId = req.params.id || req.params.sellerId;
+    const authService = require('../services/auth.service');
+
+    const { rows } = await query(
+      `SELECT COALESCE(sp.id, s.id) AS profile_id,
+              COALESCE(sp.store_name, s.store_name, s.shop_name, 'Tohfa Special') AS store_name,
+              COALESCE(sp.slug, s.slug, s.store_slug) AS slug,
+              u.id AS user_id, u.email, u.name
+       FROM users u
+       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+       LEFT JOIN sellers s ON s.user_id = u.id
+       WHERE (u.id::text = $1 OR sp.id::text = $1 OR s.id::text = $1 OR sp.slug = $1 OR s.slug = $1)
+         AND (sp.is_admin_managed = TRUE OR s.is_admin_managed = TRUE)`,
+      [shopId]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({
+        success: false,
+        message: 'Tohfa Special shop not found or is not admin-managed.'
+      });
+    }
+
+    const shop = rows[0];
+
+    const tokenPayload = {
+      id: shop.user_id,
+      email: shop.email,
+      role: 'seller',
+      isSellerApproved: true,
+      isAdminManaged: true,
+      realAdminId: req.user.id,
+      actingAsSpecialShop: true
+    };
+
+    const tokens = await authService.issueTokenPair(tokenPayload);
+
+    await logAdminAction({
+      adminId: req.user.id,
+      actionType: 'ADMIN_SWITCHED_TO_SPECIAL_SHOP',
+      targetEntity: 'sellers',
+      targetId: shop.user_id,
+      details: { store_name: shop.store_name, slug: shop.slug },
+      ipAddress: req.ip
+    });
+
+    return res.json({
+      success: true,
+      message: `Successfully generated session for "${shop.store_name}".`,
+      data: {
+        user: {
+          id: shop.user_id,
+          name: shop.name || shop.store_name,
+          email: shop.email,
+          role: 'seller',
+          store_name: shop.store_name,
+          is_approved: 1,
+          verification_status: 'verified',
+          is_admin_managed: true
+        },
+        seller: shop,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        token: tokens.accessToken,
+        returnUrl: '/admin/sellers.html'
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getRevenueBreakdown(req, res, next) {
+  try {
+    const { rows } = await query(`
+      SELECT 
+        COALESCE(SUM(CASE WHEN sp.is_admin_managed = TRUE THEN o.total_amount ELSE 0 END), 0) AS tofa_special_revenue,
+        COALESCE(SUM(CASE WHEN sp.is_admin_managed = FALSE OR sp.is_admin_managed IS NULL THEN o.total_amount ELSE 0 END), 0) AS marketplace_revenue,
+        COUNT(CASE WHEN sp.is_admin_managed = TRUE THEN 1 END) AS tofa_special_orders,
+        COUNT(CASE WHEN sp.is_admin_managed = FALSE OR sp.is_admin_managed IS NULL THEN 1 END) AS marketplace_orders,
+        COALESCE(SUM(o.total_amount), 0) AS total_gmv
+      FROM orders o
+      LEFT JOIN seller_profiles sp ON sp.user_id = o.seller_id
+      WHERE o.payment_status = 'paid' AND o.status != 'cancelled'
+    `);
+
+    const row = rows[0] || {};
+    return res.json({
+      success: true,
+      data: {
+        tofa_special_revenue: parseFloat(row.tofa_special_revenue || 0),
+        marketplace_revenue: parseFloat(row.marketplace_revenue || 0),
+        tofa_special_orders: parseInt(row.tofa_special_orders || 0, 10),
+        marketplace_orders: parseInt(row.marketplace_orders || 0, 10),
+        total_gmv: parseFloat(row.total_gmv || 0)
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getAuditLogDiff(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { rows } = await query('SELECT details, meta FROM audit_logs WHERE id = $1', [id]);
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'Log not found.' });
+    }
+    const details = rows[0].details || rows[0].meta || {};
+    return res.json({
+      success: true,
+      data: {
+        before_json: details.before ? JSON.stringify(details.before) : null,
+        after_json: details.after ? JSON.stringify(details.after) : JSON.stringify(details)
+      }
+    });
   } catch (err) {
     next(err);
   }
@@ -1283,10 +1818,6 @@ module.exports = {
   rejectSeller,
   suspendSeller,
   banSeller,
-  toggleTohfaSpecial,
-  listTohfaOriginals,
-  addTohfaOriginal,
-  removeTohfaOriginal,
   forceRefundOrder,
   forceUpdateOrderStatus,
   getPendingPayouts,
@@ -1295,9 +1826,11 @@ module.exports = {
   toggleUserStatus,
   listAuditLogs,
   getAuditLogs: listAuditLogs,
+  getAuditLogDiff,
   listAllProducts,
   getAllProducts: listAllProducts,
   createProduct,
+  updateProduct,
   toggleProductStatus,
   toggleSponsor,
   deleteProduct,
@@ -1320,5 +1853,10 @@ module.exports = {
   unfeatureSeller,
   listReports,
   updateReport,
-  createReport
+  createReport,
+  listSpecialShops,
+  createSpecialShop,
+  updateSpecialShop,
+  switchSessionToSpecialShop,
+  getRevenueBreakdown,
 };

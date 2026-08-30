@@ -111,12 +111,14 @@ CREATE TABLE IF NOT EXISTS sellers (
   verification_status VARCHAR(50) DEFAULT 'pending_verification' CHECK (verification_status IN ('pending_verification', 'verified', 'rejected', 'suspended')),
   is_active           BOOLEAN DEFAULT TRUE,
   is_approved         BOOLEAN DEFAULT FALSE,
+  is_admin_managed    BOOLEAN DEFAULT FALSE,
   created_at          TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_sellers_user_id ON sellers(user_id);
 CREATE INDEX IF NOT EXISTS idx_sellers_slug ON sellers(slug);
 CREATE INDEX IF NOT EXISTS idx_sellers_verification_status ON sellers(verification_status);
+CREATE INDEX IF NOT EXISTS idx_sellers_is_admin_managed ON sellers(is_admin_managed);
 
 -- Backward-compatible seller_profiles table
 CREATE TABLE IF NOT EXISTS seller_profiles (
@@ -140,6 +142,7 @@ CREATE TABLE IF NOT EXISTS seller_profiles (
   commission_rate     NUMERIC(5,2) DEFAULT 10.00,
   is_active           BOOLEAN DEFAULT TRUE,
   is_tohfa_original   BOOLEAN NOT NULL DEFAULT FALSE,
+  is_admin_managed    BOOLEAN DEFAULT FALSE,
   rejection_reason    TEXT,
   applied_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   approved_at         TIMESTAMPTZ,
@@ -151,20 +154,26 @@ CREATE INDEX IF NOT EXISTS idx_seller_profiles_user_id             ON seller_pro
 CREATE INDEX IF NOT EXISTS idx_seller_profiles_is_approved         ON seller_profiles(is_approved);
 CREATE INDEX IF NOT EXISTS idx_seller_profiles_verification_status ON seller_profiles(verification_status);
 CREATE INDEX IF NOT EXISTS idx_seller_profiles_seller_type         ON seller_profiles(seller_type);
+CREATE INDEX IF NOT EXISTS idx_seller_profiles_is_admin_managed    ON seller_profiles(is_admin_managed);
 
 -- =============================================================================
 -- 4. CATEGORIES
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS categories (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name        VARCHAR(100) NOT NULL,
-  slug        VARCHAR(100) UNIQUE NOT NULL,
-  image_url   TEXT,
-  is_featured BOOLEAN DEFAULT FALSE,
-  parent_id   UUID REFERENCES categories(id) ON DELETE SET NULL,
-  sort_order  INTEGER NOT NULL DEFAULT 0,
-  is_active   BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name              VARCHAR(100) NOT NULL,
+  display_name      VARCHAR(100),
+  slug              VARCHAR(100) UNIQUE NOT NULL,
+  description       TEXT,
+  emoji_icon        VARCHAR(20),
+  icon_emoji        VARCHAR(20),
+  image_url         TEXT,
+  banner_image_url  TEXT,
+  is_featured       BOOLEAN DEFAULT FALSE,
+  parent_id         UUID REFERENCES categories(id) ON DELETE SET NULL,
+  sort_order        INTEGER NOT NULL DEFAULT 0,
+  is_active         BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at        TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);
@@ -229,13 +238,20 @@ CREATE INDEX IF NOT EXISTS idx_product_images_product_id ON product_images(produ
 CREATE TABLE IF NOT EXISTS product_variants (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id       UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  variant_name     TEXT,
   color_name       TEXT,
   color_hex        CHAR(7),
   size             TEXT,
   additional_price NUMERIC(10,2) NOT NULL DEFAULT 0,
   stock_qty        INTEGER NOT NULL DEFAULT 0,
+  image_url        TEXT,
+  images           TEXT[] DEFAULT '{}',
   created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS variant_name TEXT;
+ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS images TEXT[] DEFAULT '{}';
 
 CREATE INDEX IF NOT EXISTS idx_product_variants_product_id ON product_variants(product_id);
 
@@ -619,6 +635,42 @@ CREATE TABLE IF NOT EXISTS banners (
   sort_order INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- =============================================================================
+-- OUR STORY FEATURES
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS our_story_features (
+  id           SERIAL PRIMARY KEY,
+  seller_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  blurb        TEXT DEFAULT '',
+  image_url    TEXT,
+  is_active    BOOLEAN NOT NULL DEFAULT TRUE,
+  featured_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (seller_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_our_story_features_seller_id ON our_story_features(seller_id);
+CREATE INDEX IF NOT EXISTS idx_our_story_features_is_active ON our_story_features(is_active);
+
+-- =============================================================================
+-- REPORTS TABLE (User Issue & Problem Reports)
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS reports (
+  id           SERIAL PRIMARY KEY,
+  reporter_id  INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  type         VARCHAR(50) NOT NULL DEFAULT 'other',
+  target_id    TEXT,
+  reason       TEXT NOT NULL DEFAULT '',
+  status       VARCHAR(20) NOT NULL DEFAULT 'open',
+  admin_note   TEXT,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  resolved_at  TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_reports_reporter_id ON reports(reporter_id);
+CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status);
+CREATE INDEX IF NOT EXISTS idx_reports_created_at ON reports(created_at DESC);
+
 
 -- =============================================================================
 -- UPDATED_AT TRIGGER FUNCTION

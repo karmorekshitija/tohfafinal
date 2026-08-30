@@ -34,7 +34,7 @@
       <div>
         <h3 style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,248,231,0.6);margin-bottom:24px;">For Sellers</h3>
         <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;font-size:14px;">
-          <li><a href="/buyer/become-seller.html" onclick="handleFooterSellerLink(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Sell on Tohfa</a></li>
+          <li><a href="/auth/signup-seller.html" onclick="handleFooterSellerLink(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Sell on Tohfa</a></li>
           <li><a href="/seller/dashboard.html" onclick="handleFooterSellerLink(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Seller Studio</a></li>
         </ul>
       </div>
@@ -76,58 +76,42 @@
     </div>
   </div>
 
-  <!-- MOBILE ACCORDION FOOTER (max-width: 767px) -->
-  <div class="tohfa-mobile-footer" style="padding:40px 20px 24px 20px;">
+  <!-- MOBILE COMPACT 2-COLUMN FOOTER (max-width: 767px) -->
+  <div class="tohfa-mobile-footer" style="padding:28px 16px 20px 16px;">
     <!-- Brand -->
-    <div style="margin-bottom:24px;">
-      <h2 style="font-family:'Playfair Display',serif;font-size:32px;font-style:italic;color:#FFF8E7;margin-bottom:8px;">Tohfa<span style="opacity:0.6;">.</span></h2>
-      <p style="font-family:'DM Sans',sans-serif;color:rgba(255,248,231,0.7);font-size:13px;line-height:1.5;">India's home for handcrafted gifts.</p>
+    <div style="margin-bottom:18px;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:26px;font-style:italic;color:#FFF8E7;margin-bottom:4px;line-height:1;">Tohfa<span style="opacity:0.6;">.</span></h2>
+      <p style="font-family:'DM Sans',sans-serif;color:rgba(255,248,231,0.7);font-size:12px;line-height:1.4;margin:0;">Thoughtful Gifting, Made Effortless.</p>
     </div>
 
-    <!-- Accordions -->
-    <div style="border-top:1px solid rgba(255,248,231,0.1);margin-bottom:24px;">
-      <!-- Company -->
-      <details class="tohfa-footer-details" style="border-bottom:1px solid rgba(255,248,231,0.1);padding:14px 0;">
-        <summary style="display:flex;justify-content:space-between;align-items:center;list-style:none;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,248,231,0.8);cursor:pointer;">
-          <span>Company</span>
-          <span class="material-symbols-outlined" style="font-size:18px;">expand_more</span>
-        </summary>
-        <ul style="list-style:none;padding:10px 0 0 0;margin:0;display:flex;flex-direction:column;gap:10px;font-size:13px;">
-          <li><a href="/buyer/our-story.html" style="color:#FFF8E7;text-decoration:none;">Our Story</a></li>
-          <li><a href="/buyer/terms-conditions.html" style="color:#FFF8E7;text-decoration:none;">Terms &amp; Conditions</a></li>
-          <li><a href="/buyer/terms-conditions.html" style="color:#FFF8E7;text-decoration:none;">Privacy Policy</a></li>
+    <!-- 2-Column Links Grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding-top:16px;border-top:1px solid rgba(255,248,231,0.1);margin-bottom:20px;">
+      <!-- Left Column: Company -->
+      <div>
+        <h3 style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,248,231,0.6);margin:0 0 10px 0;">Company</h3>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;font-size:12px;">
+          <li><a href="/buyer/our-story.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;opacity:0.9;">About Us</a></li>
+          <li><a href="/buyer/our-story.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;opacity:0.9;">Our Story</a></li>
+          <li><a href="/buyer/terms-conditions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;opacity:0.9;">Terms of Service</a></li>
+          <li><a href="/buyer/terms-conditions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;opacity:0.9;">Privacy Policy</a></li>
         </ul>
-      </details>
+      </div>
 
-      <!-- For Sellers -->
-      <details class="tohfa-footer-details" style="border-bottom:1px solid rgba(255,248,231,0.1);padding:14px 0;">
-        <summary style="display:flex;justify-content:space-between;align-items:center;list-style:none;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,248,231,0.8);cursor:pointer;">
-          <span>For Sellers</span>
-          <span class="material-symbols-outlined" style="font-size:18px;">expand_more</span>
-        </summary>
-        <ul style="list-style:none;padding:10px 0 0 0;margin:0;display:flex;flex-direction:column;gap:10px;font-size:13px;">
-          <li><a href="/buyer/become-seller.html" onclick="handleFooterSellerLink(event)" style="color:#FFF8E7;text-decoration:none;">Sell on Tohfa</a></li>
-          <li><a href="/seller/dashboard.html" onclick="handleFooterSellerLink(event)" style="color:#FFF8E7;text-decoration:none;">Seller Studio</a></li>
+      <!-- Right Column: Sellers & Support -->
+      <div>
+        <h3 style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,248,231,0.6);margin:0 0 10px 0;">Sellers &amp; Support</h3>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;font-size:12px;">
+          <li><a href="/auth/signup-seller.html" onclick="handleFooterSellerLink(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;opacity:0.9;">Sell on Tohfa</a></li>
+          <li><a href="/seller/dashboard.html" onclick="handleFooterSellerLink(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;opacity:0.9;">Seller Studio</a></li>
+          <li><a href="javascript:void(0)" onclick="openContactModal(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;opacity:0.9;">Contact Us</a></li>
+          <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;opacity:0.9;">Refunds &amp; Policy</a></li>
+          <li><a href="/buyer/faq.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;opacity:0.9;">FAQs</a></li>
         </ul>
-      </details>
-
-      <!-- Support -->
-      <details class="tohfa-footer-details" style="border-bottom:1px solid rgba(255,248,231,0.1);padding:14px 0;">
-        <summary style="display:flex;justify-content:space-between;align-items:center;list-style:none;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,248,231,0.8);cursor:pointer;">
-          <span>Support</span>
-          <span class="material-symbols-outlined" style="font-size:18px;">expand_more</span>
-        </summary>
-        <ul style="list-style:none;padding:10px 0 0 0;margin:0;display:flex;flex-direction:column;gap:10px;font-size:13px;">
-          <li><a href="javascript:void(0)" onclick="openContactModal(event)" style="color:#FFF8E7;text-decoration:none;">Contact Us</a></li>
-          <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" style="color:#FFF8E7;text-decoration:none;">Refunds &amp; Policy</a></li>
-          <li><a href="/buyer/faq.html" style="color:#FFF8E7;text-decoration:none;">FAQs</a></li>
-          <li><a href="/buyer/terms-conditions.html" style="color:#FFF8E7;text-decoration:none;">Terms &amp; Policies</a></li>
-        </ul>
-      </details>
+      </div>
     </div>
 
-    <div style="font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(255,248,231,0.6);text-align:center;">
-      &copy; 2026 Tohfa Marketplace. Handcrafted in India.
+    <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:rgba(255,248,231,0.5);text-align:center;border-top:1px solid rgba(255,248,231,0.08);padding-top:14px;">
+      &copy; 2026 Tohfa Marketplace. Handcrafted with &hearts; in India.
     </div>
   </div>
 
@@ -234,7 +218,7 @@ async function handleFooterSellerLink(e) {
     console.error("Error checking seller status:", err);
   }
   
-  window.location.href = '/buyer/become-seller.html';
+  window.location.href = '/auth/signup-seller.html';
 }
 
 window.openContactModal = function(e) {

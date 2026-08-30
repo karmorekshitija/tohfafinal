@@ -58,10 +58,6 @@
         <span class="font-data-price text-data-price text-on-surface-variant tracking-widest uppercase" id="seller-date-label">—</span>
         <p class="font-label-caps text-label-caps text-primary opacity-60" id="seller-day-label">—</p>
       </div>
-      <button id="header-view-store-btn" class="px-lg py-sm bg-primary text-on-primary rounded-full font-body-md shadow-sm hover:opacity-90 transition-all flex items-center gap-xs">
-        <span class="material-symbols-outlined text-[18px]">visibility</span>
-        View Store
-      </button>
     </div>
   </header>
 
@@ -79,7 +75,7 @@
 
   <div id="dashboard-content" class="hidden flex flex-col gap-xl">
     <!-- KPI Row -->
-    <section class="grid grid-cols-4 gap-lg mb-xl">
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-lg mb-xl">
       <!-- KPI 1 -->
       <div class="bg-surface border border-outline-variant/30 rounded-xl p-md shadow-sm relative overflow-hidden group">
         <p class="font-label-caps text-label-caps text-on-surface-variant/70 mb-sm">Total Orders</p>
@@ -179,32 +175,32 @@
     <!-- 4. Quick Actions -->
     <section class="bg-surface border border-outline-variant/30 rounded-xl p-lg shadow-sm relative overflow-hidden">
       <h3 class="font-headline-lg italic text-on-surface text-2xl mb-6">Quick Actions</h3>
-      <div class="grid grid-cols-4 gap-lg">
-        <a href="/seller/add-product.html" class="flex flex-col items-center justify-center p-lg bg-surface border border-outline-variant/30 rounded-xl hover:border-primary hover:bg-secondary-container/10 transition-all group shadow-sm">
-          <div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-            <span class="material-symbols-outlined text-primary">add_circle</span>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-lg">
+        <a href="/seller/add-product.html" class="flex flex-col items-center justify-center p-md sm:p-lg bg-surface border border-outline-variant/30 rounded-xl hover:border-primary hover:bg-secondary-container/10 transition-all group shadow-sm">
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-secondary-container flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform">
+            <span class="material-symbols-outlined text-primary text-xl sm:text-2xl">add_circle</span>
           </div>
-          <span class="font-label-caps text-[10px] font-bold text-on-surface-variant tracking-widest text-center">ADD LISTING</span>
+          <span class="font-label-caps text-[9px] sm:text-[10px] font-bold text-on-surface-variant tracking-widest text-center">ADD LISTING</span>
         </a>
-        <a href="/seller/orders.html" class="flex flex-col items-center justify-center p-lg bg-surface border border-outline-variant/30 rounded-xl hover:border-primary hover:bg-secondary-container/10 transition-all group shadow-sm">
-          <div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-            <span class="material-symbols-outlined text-primary">package_2</span>
+        <a href="/seller/orders.html" class="flex flex-col items-center justify-center p-md sm:p-lg bg-surface border border-outline-variant/30 rounded-xl hover:border-primary hover:bg-secondary-container/10 transition-all group shadow-sm">
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-secondary-container flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform">
+            <span class="material-symbols-outlined text-primary text-xl sm:text-2xl">package_2</span>
           </div>
-          <span class="font-label-caps text-[10px] font-bold text-on-surface-variant tracking-widest text-center">MANAGE ORDERS</span>
+          <span class="font-label-caps text-[9px] sm:text-[10px] font-bold text-on-surface-variant tracking-widest text-center">MANAGE ORDERS</span>
         </a>
         
-        <a href="/seller/analytics.html" class="flex flex-col items-center justify-center p-lg bg-surface border border-outline-variant/30 rounded-xl hover:border-primary hover:bg-secondary-container/10 transition-all group shadow-sm">
-          <div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-            <span class="material-symbols-outlined text-primary">bar_chart</span>
+        <a href="/seller/analytics.html" class="flex flex-col items-center justify-center p-md sm:p-lg bg-surface border border-outline-variant/30 rounded-xl hover:border-primary hover:bg-secondary-container/10 transition-all group shadow-sm">
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-secondary-container flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform">
+            <span class="material-symbols-outlined text-primary text-xl sm:text-2xl">bar_chart</span>
           </div>
-          <span class="font-label-caps text-[10px] font-bold text-on-surface-variant tracking-widest text-center">ANALYTICS</span>
+          <span class="font-label-caps text-[9px] sm:text-[10px] font-bold text-on-surface-variant tracking-widest text-center">ANALYTICS</span>
         </a>
-        <a href="/seller/overflow.html" class="flex flex-col items-center justify-center p-lg bg-surface border border-outline-variant/30 rounded-xl hover:border-primary hover:bg-secondary-container/10 transition-all group shadow-sm relative">
-          <span id="overflow-badge" class="hidden absolute -top-1.5 -right-1.5 bg-[#14381F] text-white font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center border border-white">0</span>
-          <div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-            <span class="material-symbols-outlined text-primary">event_busy</span>
+        <a href="/seller/customized-products.html" class="flex flex-col items-center justify-center p-md sm:p-lg bg-surface border border-outline-variant/30 rounded-xl hover:border-primary hover:bg-secondary-container/10 transition-all group shadow-sm relative">
+          <span id="customized-badge" class="hidden absolute -top-1.5 -right-1.5 bg-[#14381F] text-white font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center border border-white">0</span>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-secondary-container flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform">
+            <span class="material-symbols-outlined text-primary text-xl sm:text-2xl">auto_fix_high</span>
           </div>
-          <span class="font-label-caps text-[10px] font-bold text-on-surface-variant tracking-widest text-center">OVERFLOW REQUESTS</span>
+          <span class="font-label-caps text-[9px] sm:text-[10px] font-bold text-on-surface-variant tracking-widest text-center">CUSTOM PRODUCTS</span>
         </a>
       </div>
     </section>
@@ -236,7 +232,7 @@
 
         <!-- Date Range Selection (revealed when toggle is active) -->
         <div id="holiday-date-range" class="overflow-hidden max-h-0 opacity-0 transition-all duration-500 ease-out">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-lg pt-sm">
+          <div class="grid grid-cols-2 gap-2 sm:gap-lg pt-sm form-row-2col">
             <div class="bg-surface-container-low/40 p-md rounded-xl border border-outline-variant/30">
               <label class="font-label-caps text-[10px] font-bold text-on-surface-variant tracking-widest uppercase block mb-2">Vacation Start Date</label>
               <input type="datetime-local" id="holiday-start-date" class="w-full border border-outline-variant/50 rounded-lg px-sm py-xs text-xs font-mono text-on-surface bg-surface focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"/>
@@ -281,6 +277,124 @@
     </section>
   </div>
 </seller-layout>
+
+<!-- POST-APPROVAL STUDIO SETUP MODAL (Welcome to Seller Studio) -->
+<div id="welcome-onboarding-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+  <div class="bg-[#FFF8E7] border border-[#14381F]/20 rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+    
+    <!-- Header -->
+    <div class="flex items-start justify-between border-b border-[#14381F]/15 pb-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-[#14381F]/10 text-[#14381F] flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-2xl">celebration</span>
+        </div>
+        <div>
+          <h2 class="font-['Playfair_Display'] font-bold text-xl sm:text-2xl text-[#14381F]">Welcome to Seller Studio! 🎉</h2>
+          <p class="text-xs text-[#1C1C1C]/70 mt-0.5">Your artisan KYC is verified. Set up your studio dispatch address and payout bank to start fulfilling orders.</p>
+        </div>
+      </div>
+      <button id="close-onboarding-modal-btn" class="text-[#1C1C1C]/40 hover:text-[#14381F] p-1">
+        <span class="material-symbols-outlined text-xl">close</span>
+      </button>
+    </div>
+
+    <!-- Alert / Error container -->
+    <div id="onboarding-error-alert" class="hidden p-3 bg-red-50 text-red-800 rounded-xl border border-red-200 text-xs">
+      <p id="onboarding-error-text"></p>
+    </div>
+
+    <!-- Setup Form -->
+    <form id="welcome-onboarding-form" class="space-y-6">
+      
+      <!-- 1. Workshop & Courier Pickup Address -->
+      <div class="space-y-3">
+        <div class="flex items-center gap-2 border-b border-[#14381F]/10 pb-2">
+          <span class="material-symbols-outlined text-base text-[#14381F]">local_shipping</span>
+          <h3 class="font-['Playfair_Display'] font-bold text-sm text-[#14381F] uppercase tracking-wide">1. Workshop & Courier Pickup Address</h3>
+        </div>
+        <p class="text-[11px] text-[#1C1C1C]/65">Where our logistics partners will arrive to pick up safely packaged craft parcels.</p>
+
+        <div>
+          <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1" for="onboarding_address1">Address Line 1 *</label>
+          <input class="w-full bg-white border border-[#14381F]/20 rounded-xl px-3.5 py-2.5 text-sm text-[#1C1C1C] outline-none focus:border-[#14381F] focus:ring-1 focus:ring-[#14381F]" id="onboarding_address1" placeholder="Studio/Flat No., Building Name, Street" type="text" required />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1" for="onboarding_address2">Address Line 2 (Optional)</label>
+          <input class="w-full bg-white border border-[#14381F]/20 rounded-xl px-3.5 py-2.5 text-sm text-[#1C1C1C] outline-none focus:border-[#14381F] focus:ring-1 focus:ring-[#14381F]" id="onboarding_address2" placeholder="Landmark, Area / Locality" type="text" />
+        </div>
+
+        <div class="grid grid-cols-3 gap-2.5 form-row-3col">
+          <div>
+            <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1" for="onboarding_city">City *</label>
+            <input class="w-full bg-white border border-[#14381F]/20 rounded-xl px-3 py-2.5 text-sm text-[#1C1C1C] outline-none focus:border-[#14381F] focus:ring-1 focus:ring-[#14381F]" id="onboarding_city" placeholder="Jaipur" type="text" required />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1" for="onboarding_state">State *</label>
+            <input class="w-full bg-white border border-[#14381F]/20 rounded-xl px-3 py-2.5 text-sm text-[#1C1C1C] outline-none focus:border-[#14381F] focus:ring-1 focus:ring-[#14381F]" id="onboarding_state" placeholder="Rajasthan" type="text" required />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1" for="onboarding_pincode">Pincode *</label>
+            <input class="w-full bg-white border border-[#14381F]/20 rounded-xl px-3 py-2.5 text-sm text-[#1C1C1C] outline-none focus:border-[#14381F] focus:ring-1 focus:ring-[#14381F]" id="onboarding_pincode" placeholder="302001" maxLength="6" type="text" required />
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Payout & Bank Account Details -->
+      <div class="space-y-3">
+        <div class="flex items-center gap-2 border-b border-[#14381F]/10 pb-2">
+          <span class="material-symbols-outlined text-base text-[#14381F]">account_balance</span>
+          <h3 class="font-['Playfair_Display'] font-bold text-sm text-[#14381F] uppercase tracking-wide">2. Payout & Bank Account Details</h3>
+        </div>
+        <p class="text-[11px] text-[#1C1C1C]/65">Direct settlements are transferred to this verified account for every fulfilled order.</p>
+
+        <div class="grid grid-cols-2 gap-3 form-row-2col">
+          <div>
+            <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1" for="onboarding_holder">Account Holder Name *</label>
+            <input class="w-full bg-white border border-[#14381F]/20 rounded-xl px-3.5 py-2.5 text-sm text-[#1C1C1C] outline-none focus:border-[#14381F] focus:ring-1 focus:ring-[#14381F]" id="onboarding_holder" placeholder="Name as per bank record" type="text" required />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1" for="onboarding_bank_name">Bank Name *</label>
+            <input class="w-full bg-white border border-[#14381F]/20 rounded-xl px-3.5 py-2.5 text-sm text-[#1C1C1C] outline-none focus:border-[#14381F] focus:ring-1 focus:ring-[#14381F]" id="onboarding_bank_name" placeholder="e.g. State Bank of India, HDFC" type="text" required />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 form-row-2col">
+          <div>
+            <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1" for="onboarding_account">Account Number *</label>
+            <input class="w-full bg-white border border-[#14381F]/20 rounded-xl px-3.5 py-2.5 text-sm text-[#1C1C1C] font-mono outline-none focus:border-[#14381F] focus:ring-1 focus:ring-[#14381F]" id="onboarding_account" placeholder="•••• •••• ••••" type="password" required />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1" for="onboarding_confirm_account">Confirm Account Number *</label>
+            <input class="w-full bg-white border border-[#14381F]/20 rounded-xl px-3.5 py-2.5 text-sm text-[#1C1C1C] font-mono outline-none focus:border-[#14381F] focus:ring-1 focus:ring-[#14381F]" id="onboarding_confirm_account" placeholder="Re-enter Account No." type="text" required />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 form-row-2col">
+          <div>
+            <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1" for="onboarding_ifsc">IFSC Code *</label>
+            <input class="w-full bg-white border border-[#14381F]/20 rounded-xl px-3.5 py-2.5 text-sm text-[#1C1C1C] font-mono uppercase outline-none focus:border-[#14381F] focus:ring-1 focus:ring-[#14381F]" id="onboarding_ifsc" placeholder="SBIN0001234" maxLength="11" type="text" required />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1" for="onboarding_upi">UPI ID <span class="font-normal text-[#1C1C1C]/50">(Optional)</span></label>
+            <input class="w-full bg-white border border-[#14381F]/20 rounded-xl px-3.5 py-2.5 text-sm text-[#1C1C1C] outline-none focus:border-[#14381F] focus:ring-1 focus:ring-[#14381F]" id="onboarding_upi" placeholder="username@upi" type="text" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row items-center justify-end gap-3 pt-3 border-t border-[#14381F]/15">
+        <button id="remind-later-btn" type="button" class="w-full sm:w-auto px-5 py-2.5 border border-[#14381F]/25 text-[#14381F] rounded-xl text-xs font-bold hover:bg-[#14381F]/5 transition-all text-center">
+          Remind Me Later
+        </button>
+        <button id="submit-onboarding-btn" type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-[#14381F] text-[#FFF8E7] rounded-xl text-xs font-bold hover:bg-[#0D2614] transition-all shadow-sm flex items-center justify-center gap-1.5">
+          <span>Complete Studio Setup</span>
+          <span class="material-symbols-outlined text-[16px]">check</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <!-- Scripts -->
 <script>
@@ -435,68 +549,107 @@
         });
     }
 
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
     function renderDashboard(data) {
-        const { seller, date_label, kpis, low_stock_alerts, recent_orders, announcements } = data;
+        if (!data) return;
+        const seller = data.seller || {};
+        const date_label = data.date_label || '';
+        const kpis = data.kpis || {};
+        const low_stock_alerts = data.low_stock_alerts || [];
+        const recent_orders = data.recent_orders || data.recentOrders || [];
 
         // Header info
-        document.getElementById('seller-display-name').textContent = seller.display_name || 'Artisan Studio';
+        const displayNameEl = document.getElementById('seller-display-name');
+        if (displayNameEl) {
+            displayNameEl.textContent = seller.display_name || seller.store_name || seller.name || 'Artisan Studio';
+        }
         
         if (date_label) {
             const dateParts = date_label.split(',');
-            document.getElementById('seller-date-label').textContent = dateParts[0] || '';
-            document.getElementById('seller-day-label').textContent = dateParts[1] || '';
+            const dateEl = document.getElementById('seller-date-label');
+            const dayEl = document.getElementById('seller-day-label');
+            if (dateEl) dateEl.textContent = (dateParts[0] || '').trim();
+            if (dayEl) dayEl.textContent = (dateParts[1] || '').trim();
+        } else {
+            const now = new Date();
+            const dateEl = document.getElementById('seller-date-label');
+            const dayEl = document.getElementById('seller-day-label');
+            if (dateEl) dateEl.textContent = now.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+            if (dayEl) dayEl.textContent = now.toLocaleDateString('en-IN', { weekday: 'long' });
         }
 
         // KPIs
-        document.getElementById('kpi-revenue').textContent = formatPaise(kpis.order_value_paise);
+        const kpiRev = document.getElementById('kpi-revenue');
+        if (kpiRev) kpiRev.textContent = formatPaise(kpis.order_value_paise != null ? kpis.order_value_paise : Math.round(Number(kpis.total_revenue || 0) * 100));
+        
         const revChangeEl = document.getElementById('kpi-revenue-change');
-        revChangeEl.textContent = formatPercentChange(kpis.order_value_change_pct);
-        if (kpis.order_value_change_pct >= 0) {
-            revChangeEl.className = 'text-primary font-data-price text-xs flex items-center bg-secondary-container/30 px-xs rounded';
-        } else {
-            revChangeEl.className = 'text-error font-data-price text-xs flex items-center bg-error-container/30 px-xs rounded';
+        if (revChangeEl) {
+            revChangeEl.textContent = formatPercentChange(kpis.order_value_change_pct);
+            if ((kpis.order_value_change_pct || 0) >= 0) {
+                revChangeEl.className = 'text-primary font-data-price text-xs flex items-center bg-secondary-container/30 px-xs rounded';
+            } else {
+                revChangeEl.className = 'text-error font-data-price text-xs flex items-center bg-error-container/30 px-xs rounded';
+            }
         }
         
-        document.getElementById('kpi-orders').textContent = kpis.total_orders ?? 0;
+        const kpiOrd = document.getElementById('kpi-orders');
+        if (kpiOrd) kpiOrd.textContent = kpis.total_orders ?? 0;
+        
         const ordChangeEl = document.getElementById('kpi-orders-change');
-        ordChangeEl.textContent = kpis.new_orders_since_last_period != null
-            ? `+${kpis.new_orders_since_last_period} new`
-            : '';
+        if (ordChangeEl) {
+            ordChangeEl.textContent = kpis.new_orders_since_last_period != null
+                ? `+${kpis.new_orders_since_last_period} new`
+                : '';
+        }
 
         const pendingOrdersEl = document.getElementById('kpi-pending-orders');
         if (pendingOrdersEl) {
             pendingOrdersEl.textContent = kpis.pending_orders ?? 0;
         }
 
-        const convRate = kpis.conversion_rate;
-        const convPct = convRate != null ? (convRate * 100).toFixed(1) : '0';
-        document.getElementById('kpi-conversion').textContent = `${convPct}%`;
+        const convEl = document.getElementById('kpi-conversion');
+        if (convEl) {
+            const convRate = kpis.conversion_rate != null ? Number(kpis.conversion_rate) : 0;
+            convEl.textContent = `${convRate.toFixed(1)}%`;
+        }
 
         // Low Stock / Pending Actions list
         const lowStockList = document.getElementById('low-stock-list');
         const lowStockEmpty = document.getElementById('low-stock-empty');
         
-        if (low_stock_alerts && low_stock_alerts.length > 0) {
-            lowStockList.classList.remove('hidden');
-            lowStockEmpty.classList.add('hidden');
-            
-            lowStockList.innerHTML = low_stock_alerts.map(item => {
-                const isOut = item.stock_count === 0;
-                const stockMsg = isOut ? 'Out of stock' : `Only ${item.stock_count} left`;
+        if (lowStockList && lowStockEmpty) {
+            if (low_stock_alerts && low_stock_alerts.length > 0) {
+                lowStockList.classList.remove('hidden');
+                lowStockEmpty.classList.add('hidden');
                 
-                return `
-                    <li class="flex items-start gap-md group cursor-pointer" onclick="window.location.href='/seller/catalog.html'">
-                        <span class="text-secondary-container bg-primary p-1 rounded-full text-[12px] flex items-center justify-center shrink-0 mt-1">✦</span>
-                        <div>
-                            <p class="text-body-md font-medium text-on-surface group-hover:text-primary transition-colors">Low stock alert: ${item.title}</p>
-                            <span class="text-xs text-error font-medium">${stockMsg}</span>
-                        </div>
-                    </li>
-                `;
-            }).join('');
-        } else {
-            lowStockList.classList.add('hidden');
-            lowStockEmpty.classList.remove('hidden');
+                lowStockList.innerHTML = low_stock_alerts.map(item => {
+                    const isOut = item.stock_count === 0 || item.stock_quantity === 0;
+                    const stockNum = item.stock_count != null ? item.stock_count : (item.stock_quantity != null ? item.stock_quantity : 0);
+                    const stockMsg = isOut ? 'Out of stock' : `Only ${stockNum} left`;
+                    
+                    return `
+                        <li class="flex items-start gap-md group cursor-pointer" onclick="window.location.href='/seller/catalog.html'">
+                            <span class="text-secondary-container bg-primary p-1 rounded-full text-[12px] flex items-center justify-center shrink-0 mt-1">✦</span>
+                            <div>
+                                <p class="text-body-md font-medium text-on-surface group-hover:text-primary transition-colors">Low stock alert: ${escapeHtml(item.title || item.name || 'Product')}</p>
+                                <span class="text-xs text-error font-medium">${stockMsg}</span>
+                            </div>
+                        </li>
+                    `;
+                }).join('');
+            } else {
+                lowStockList.classList.add('hidden');
+                lowStockEmpty.classList.remove('hidden');
+            }
         }
 
         // Recent Orders list
@@ -505,150 +658,219 @@
         const table = document.getElementById('recent-orders-table');
 
         const ordersList = recent_orders || data.recentOrders || [];
-        if (ordersList && ordersList.length > 0) {
-            table.classList.remove('hidden');
-            ordersEmpty.classList.add('hidden');
-            
-            recentOrdersBody.innerHTML = ordersList.map(order => {
-                const orderId = order.id || order.internal_id || order.seller_order_id;
-                const orderTitle = order.item_title || order.product_name || order.title || 'Handcrafted Item';
-                const buyerName = order.buyer_name || order.user_name || 'Buyer';
-                const city = order.shipping_city || order.city || 'India';
-                const amountPaise = order.amount_paise != null ? order.amount_paise : Math.round(Number(order.subtotal || order.total_amount || 0) * 100);
-                const orderStatus = order.status || order.fulfillment_status || 'pending';
-                const orderImg = order.item_image || order.image_url || 'https://ui-avatars.com/api/?name=Product';
+        if (recentOrdersBody && ordersEmpty && table) {
+            if (ordersList && ordersList.length > 0) {
+                table.classList.remove('hidden');
+                ordersEmpty.classList.add('hidden');
+                
+                recentOrdersBody.innerHTML = ordersList.map(order => {
+                    const orderId = order.id || order.internal_id || order.seller_order_id;
+                    const orderTitle = order.item_title || order.product_name || order.title || 'Handcrafted Item';
+                    const buyerName = order.buyer_name || order.user_name || 'Buyer';
+                    const city = order.shipping_city || order.city || 'India';
+                    const amountPaise = order.amount_paise != null ? order.amount_paise : Math.round(Number(order.subtotal || order.total_amount || 0) * 100);
+                    const orderStatus = order.status || order.fulfillment_status || 'pending';
+                    const orderImg = order.item_image || order.image_url || 'https://ui-avatars.com/api/?name=Product';
 
-                return `
-                <tr class="hover:bg-surface-container-low/50 transition-colors cursor-pointer" onclick="window.location.href='/seller/order-detail.html?id=${orderId}'">
-                    <td class="px-lg py-md">
-                        <div class="flex items-center gap-md">
-                            <div class="w-10 h-10 rounded-lg overflow-hidden border border-outline-variant/30">
-                                <img class="w-full h-full object-cover" src="${orderImg}" alt="${escapeHtml(orderTitle)}" loading="lazy" />
+                    return `
+                    <tr class="hover:bg-surface-container-low/50 transition-colors cursor-pointer" onclick="window.location.href='/seller/order-detail.html?id=${orderId}'">
+                        <td class="px-lg py-md">
+                            <div class="flex items-center gap-md">
+                                <div class="w-10 h-10 rounded-lg overflow-hidden border border-outline-variant/30">
+                                    <img class="w-full h-full object-cover" src="${orderImg}" alt="${escapeHtml(orderTitle)}" loading="lazy" />
+                                </div>
+                                <span class="font-title-serif text-sm">${escapeHtml(orderTitle)}</span>
                             </div>
-                            <span class="font-title-serif text-sm">${escapeHtml(orderTitle)}</span>
-                        </div>
-                    </td>
-                    <td class="px-lg py-md">
-                        <div class="flex flex-col">
-                            <span class="text-body-md font-medium">${escapeHtml(buyerName)}</span>
-                            <span class="text-xs text-on-surface-variant opacity-70">${escapeHtml(city)}</span>
-                        </div>
-                    </td>
-                    <td class="px-lg py-md font-data-price text-on-surface">${formatPaise(amountPaise)}</td>
-                    <td class="px-lg py-md">
-                        ${statusBadge(orderStatus)}
-                    </td>
-                    <td class="px-lg py-md" onclick="event.stopPropagation();">
-                        <a href="/api/seller/orders/${orderId}/label" download class="flex items-center gap-1 bg-[#14381F] text-white hover:bg-[rgba(20,56,31,0.2)] text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider transition-all duration-200 active:scale-95 w-max">
-                            <span class="material-symbols-outlined text-xs">download</span> Label
-                        </a>
-                    </td>
-                </tr>
-            `}).join('');
-        } else {
-            table.classList.add('hidden');
-            ordersEmpty.classList.remove('hidden');
+                        </td>
+                        <td class="px-lg py-md">
+                            <div class="flex flex-col">
+                                <span class="text-body-md font-medium">${escapeHtml(buyerName)}</span>
+                                <span class="text-xs text-on-surface-variant opacity-70">${escapeHtml(city)}</span>
+                            </div>
+                        </td>
+                        <td class="px-lg py-md font-data-price text-on-surface">${formatPaise(amountPaise)}</td>
+                        <td class="px-lg py-md">
+                            ${statusBadge(orderStatus)}
+                        </td>
+                        <td class="px-lg py-md" onclick="event.stopPropagation();">
+                            <button onclick="downloadOrderLabel('${orderId}')" class="flex items-center gap-1 bg-[#14381F] text-white hover:bg-[rgba(20,56,31,0.2)] text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider transition-all duration-200 active:scale-95 w-max">
+                                <span class="material-symbols-outlined text-xs">print</span> Label
+                            </button>
+                        </td>
+                    </tr>
+                `}).join('');
+            } else {
+                table.classList.add('hidden');
+                ordersEmpty.classList.remove('hidden');
+            }
         }
-
     }
+
+    window.downloadOrderLabel = async function(orderId) {
+        const token = sessionStorage.getItem('tohfa_access_token') ||
+                      sessionStorage.getItem('tohfa_auth_token') ||
+                      localStorage.getItem('tohfa_access_token') ||
+                      localStorage.getItem('token') ||
+                      localStorage.getItem('accessToken');
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/seller/orders/${orderId}/label`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const json = await res.json();
+                if (json.data && json.data.label_url) {
+                    window.open(`${json.data.label_url}?format=html`, '_blank');
+                    return;
+                }
+            }
+        } catch (err) {
+            console.warn('Label fetch notice:', err);
+        }
+        window.location.href = `/seller/order-detail.html?id=${orderId}`;
+    };
 
     async function loadDashboard() {
         const loadingOverlay = document.getElementById('loading-overlay');
         const content = document.getElementById('dashboard-content');
         
-        loadingOverlay.classList.remove('hidden');
-        content.classList.add('hidden');
+        if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+        if (content) content.classList.add('hidden');
 
-        const accessToken = localStorage.getItem('token') || localStorage.getItem('accessToken') || sessionStorage.getItem('tohfa_access_token');
-        if (!accessToken) {
-            // Render default dashboard stats in preview mode
-            loadingOverlay.classList.add('hidden');
-            content.classList.remove('hidden');
-            return;
-        }
+        const accessToken = sessionStorage.getItem('tohfa_access_token') ||
+                            sessionStorage.getItem('tohfa_auth_token') ||
+                            localStorage.getItem('tohfa_access_token') ||
+                            localStorage.getItem('tohfa_auth_token') ||
+                            localStorage.getItem('token') ||
+                            localStorage.getItem('accessToken');
 
         try {
             let data = null;
             let chartsData = null;
 
-            // Attempt 1: Fetch from /api/seller/dashboard-metrics
-            try {
-                const metricsRes = await fetch(`${API_BASE_URL}/api/seller/dashboard-metrics`, {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                });
-                if (metricsRes.ok) {
-                    const mResp = await metricsRes.json();
-                    const mData = mResp.data || mResp;
-                    if (mData && (mData.metrics || mData.total_revenue != null)) {
-                        const m = mData.metrics || mData;
-                        data = {
-                            seller: mData.seller || { display_name: 'Artisan Studio' },
-                            date_label: mData.date_label || new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
-                            kpis: {
-                                order_value_paise: m.order_value_paise != null ? m.order_value_paise : Math.round(Number(m.total_revenue || 0) * 100),
-                                order_value_change_pct: m.order_value_change_pct || 0,
-                                total_orders: m.total_orders || 0,
-                                pending_orders: m.pending_orders || 0,
-                                conversion_rate: m.average_rating || m.conversion_rate || 3.8,
-                            },
-                            low_stock_alerts: mData.low_stock_alerts || [],
-                            recent_orders: mData.recentOrders || mData.recent_orders || []
-                        };
-                        if (mData.salesChart) {
-                            chartsData = {
-                                labels: mData.salesChart.labels || [],
-                                revenue: mData.salesChart.data || mData.salesChart.revenue || [],
-                                visits: mData.salesChart.visits || []
+            // Attempt 1: Fetch from /api/seller/dashboard-metrics with selectedPeriod
+            if (accessToken) {
+                try {
+                    const metricsRes = await fetch(`${API_BASE_URL}/api/seller/dashboard-metrics?period=${encodeURIComponent(selectedPeriod)}`, {
+                        headers: { 'Authorization': `Bearer ${accessToken}` }
+                    });
+                    if (metricsRes.ok) {
+                        const mResp = await metricsRes.json();
+                        const mData = mResp.data || mResp;
+                        if (mData) {
+                            const m = mData.metrics || mData.kpis || mData;
+                            data = {
+                                seller: mData.seller || { display_name: 'Artisan Studio' },
+                                date_label: mData.date_label || '',
+                                kpis: {
+                                    order_value_paise: m.order_value_paise != null ? m.order_value_paise : Math.round(Number(m.total_revenue || 0) * 100),
+                                    order_value_change_pct: m.order_value_change_pct || 0,
+                                    total_orders: m.total_orders != null ? m.total_orders : 0,
+                                    pending_orders: m.pending_orders != null ? m.pending_orders : 0,
+                                    conversion_rate: m.conversion_rate != null ? m.conversion_rate : 0,
+                                    new_orders_since_last_period: m.new_orders_since_last_period,
+                                },
+                                low_stock_alerts: mData.low_stock_alerts || [],
+                                recent_orders: mData.recentOrders || mData.recent_orders || []
                             };
+                            if (mData.salesChart) {
+                                chartsData = {
+                                    labels: mData.salesChart.labels || [],
+                                    revenue: mData.salesChart.revenue || mData.salesChart.data || [],
+                                    visits: mData.salesChart.visits || []
+                                };
+                            }
                         }
                     }
-                }
-            } catch (metricsErr) {
-                console.warn('dashboard-metrics endpoint fallback:', metricsErr);
-            }
-
-            // Fallback to /api/seller/dashboard
-            if (!data) {
-                const [response, analyticsRes] = await Promise.all([
-                    fetch(`${API_BASE_URL}/api/seller/dashboard?period=${selectedPeriod}`, {
-                        method: 'GET',
-                        headers: { 'Authorization': `Bearer ${accessToken}` }
-                    }),
-                    fetch(`${API_BASE_URL}/api/seller/analytics/full`, {
-                        method: 'GET',
-                        headers: { 'Authorization': `Bearer ${accessToken}` }
-                    }).catch(err => {
-                        console.error('Failed to fetch full analytics:', err);
-                        return null;
-                    })
-                ]);
-
-                if (response.status === 401 || response.status === 403) {
-                    sessionStorage.clear();
-                    window.location.href = '/auth/login.html';
-                    return;
-                }
-
-                if (response.ok) {
-                    const resp = await response.json();
-                    data = resp.data || resp;
-                }
-
-                if (analyticsRes && analyticsRes.ok) {
-                    try {
-                        const analyticsData = await analyticsRes.json();
-                        const actualData = analyticsData.data || analyticsData;
-                        if (actualData && actualData.charts) {
-                            chartsData = actualData.charts;
-                        }
-                    } catch (e) {
-                        console.error('Error parsing analytics data:', e);
-                    }
+                } catch (metricsErr) {
+                    console.warn('dashboard-metrics endpoint fallback:', metricsErr);
                 }
             }
 
+            // Fallback to /api/seller/dashboard + /api/seller/analytics/full
+            if (!data && accessToken) {
+                try {
+                    const [response, analyticsRes] = await Promise.all([
+                        fetch(`${API_BASE_URL}/api/seller/dashboard?period=${encodeURIComponent(selectedPeriod)}`, {
+                            method: 'GET',
+                            headers: { 'Authorization': `Bearer ${accessToken}` }
+                        }),
+                        fetch(`${API_BASE_URL}/api/seller/analytics/full?period=${encodeURIComponent(selectedPeriod)}`, {
+                            method: 'GET',
+                            headers: { 'Authorization': `Bearer ${accessToken}` }
+                        }).catch(err => {
+                            console.error('Failed to fetch full analytics:', err);
+                            return null;
+                        })
+                    ]);
+
+                    if (response.status === 403) {
+                        const errResp = await response.json().catch(() => ({}));
+                        if (errResp.code === 'SELLER_SUSPENDED' || errResp.message?.includes('suspended')) {
+                            window.location.replace('/seller/onboarding.html?status=suspended');
+                            return;
+                        }
+                        if (errResp.code === 'SELLER_NOT_VERIFIED' || errResp.message?.includes('verification') || errResp.message?.includes('pending')) {
+                            window.location.replace('/seller/onboarding.html');
+                            return;
+                        }
+                    }
+
+                    if (response.status === 401) {
+                        const isAdminSwitched = Boolean(sessionStorage.getItem('tohfa_admin_switch_context'));
+                        if (isAdminSwitched) {
+                            sessionStorage.removeItem('tohfa_admin_switch_context');
+                            window.location.href = '/admin/sellers.html?tab=specials';
+                            return;
+                        }
+                        sessionStorage.clear();
+                        window.location.href = '/auth/login.html';
+                        return;
+                    }
+
+                    if (response.ok) {
+                        const resp = await response.json();
+                        data = resp.data || resp;
+                    }
+
+                    if (analyticsRes && analyticsRes.ok) {
+                        try {
+                            const analyticsData = await analyticsRes.json();
+                            const actualData = analyticsData.data || analyticsData;
+                            if (actualData) {
+                                if (actualData.charts) {
+                                    chartsData = actualData.charts;
+                                } else if (actualData.revenue_chart) {
+                                    chartsData = {
+                                        labels: actualData.revenue_chart.labels || [],
+                                        revenue: actualData.revenue_chart.data || [],
+                                        visits: actualData.orders_chart?.data || []
+                                    };
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Error parsing analytics data:', e);
+                        }
+                    }
+                } catch (fallbackErr) {
+                    console.warn('Dashboard fallback error:', fallbackErr);
+                }
+            }
+
             if (!data) {
-                throw new Error('Could not load dashboard data');
+                // Graceful default if not yet populated
+                data = {
+                    seller: { display_name: 'Artisan Studio' },
+                    date_label: '',
+                    kpis: {
+                        order_value_paise: 0,
+                        order_value_change_pct: 0,
+                        total_orders: 0,
+                        pending_orders: 0,
+                        conversion_rate: 0
+                    },
+                    low_stock_alerts: [],
+                    recent_orders: []
+                };
             }
 
             // Ensure seller and kpis are defined
@@ -657,41 +879,45 @@
                 order_value_paise: Math.round(Number(data.total_revenue || 0) * 100),
                 order_value_change_pct: 0,
                 total_orders: data.total_orders || 0,
-                pending_orders: 0,
-                conversion_rate: 3.8
+                pending_orders: data.pending_orders || 0,
+                conversion_rate: 0
             };
 
-            loadingOverlay.classList.add('hidden');
-            content.classList.remove('hidden');
+            if (loadingOverlay) loadingOverlay.classList.add('hidden');
+            if (content) content.classList.remove('hidden');
             renderDashboard(data);
             renderPerformanceChart(chartsData);
 
-            // Load pending overflow requests count
-            try {
-                const reqRes = await fetch(`${API_BASE_URL}/api/seller/overflow-requests`, {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                });
-                if (reqRes.ok) {
-                    const reqData = await reqRes.json();
-                    const requests = reqData.data || [];
-                    const pendingCount = requests.filter(r => r.status === 'pending').length;
-                    const badge = document.getElementById('overflow-badge');
-                    if (badge) {
-                        if (pendingCount > 0) {
-                            badge.textContent = pendingCount;
-                            badge.classList.remove('hidden');
-                        } else {
-                            badge.classList.add('hidden');
+            // Load customized products count
+            if (accessToken) {
+                try {
+                    const reqRes = await fetch(`${API_BASE_URL}/api/seller/listings`, {
+                        headers: { 'Authorization': `Bearer ${accessToken}` }
+                    });
+                    if (reqRes.ok) {
+                        const reqData = await reqRes.json();
+                        const listings = reqData.data?.listings || reqData.data?.products || (Array.isArray(reqData.data) ? reqData.data : []);
+                        const customCount = Array.isArray(listings) ? listings.filter(p => p.is_customizable || (p.customization_mode && p.customization_mode !== 'none')).length : 0;
+                        const badge = document.getElementById('customized-badge');
+                        if (badge) {
+                            if (customCount > 0) {
+                                badge.textContent = customCount;
+                                badge.classList.remove('hidden');
+                            } else {
+                                badge.classList.add('hidden');
+                            }
                         }
                     }
+                } catch (reqErr) {
+                    console.error("Error loading customized products count for badge:", reqErr);
                 }
-            } catch (reqErr) {
-                console.error("Error loading overflow requests count for badge:", reqErr);
             }
 
         } catch (err) {
             console.error('Error loading dashboard:', err);
-            loadingOverlay.textContent = 'Failed to load studio dashboard records. Please reload the page.';
+            if (loadingOverlay) {
+                loadingOverlay.textContent = 'Failed to load studio dashboard records. Please reload the page.';
+            }
         }
     }
 
@@ -707,30 +933,53 @@
             const profileRes = await fetch(`${API_BASE_URL}/api/profile/me`, {
                 headers: { 'Authorization': `Bearer ${accessToken}` }
             });
-            if (!profileRes.ok) throw new Error('Auth verification failed');
-            const profileData = await profileRes.json();
-            const user = profileData.data || profileData;
-            if (user.role !== 'seller') {
-                window.location.href = '/buyer/profile.html';
+            if (profileRes.status === 401) {
+                const isAdminSwitched = Boolean(sessionStorage.getItem('tohfa_admin_switch_context'));
+                if (isAdminSwitched) {
+                    sessionStorage.removeItem('tohfa_admin_switch_context');
+                    window.location.href = '/admin/sellers.html?tab=specials';
+                    return;
+                }
+                sessionStorage.removeItem('tohfa_access_token');
+                sessionStorage.removeItem('tohfa_auth_token');
+                window.location.href = '/auth/login.html';
                 return;
             }
+            if (profileRes.ok) {
+                const profileData = await profileRes.json();
+                const user = profileData.data || profileData;
+                const isAdminSwitched = Boolean(sessionStorage.getItem('tohfa_admin_switch_context'));
+                if (user.role !== 'seller' && !isAdminSwitched) {
+                    window.location.href = '/buyer/profile.html';
+                    return;
+                }
 
-            // Check if seller is approved
-            const sellerProfileRes = await fetch(`${API_BASE_URL}/api/seller/profile`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` }
-            });
-            if (sellerProfileRes.ok) {
-                const sellerProfileData = await sellerProfileRes.json();
-                const sellerProfile = sellerProfileData.data || sellerProfileData;
-                if (sellerProfile.is_approved !== 1 && sellerProfile.is_approved !== true) {
-                    const banner = document.getElementById('verification-warning-banner');
-                    if (banner) banner.classList.remove('hidden');
+                // Check if seller is approved & onboarding status
+                const sellerProfileRes = await fetch(`${API_BASE_URL}/api/seller/profile`, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+                if (sellerProfileRes.ok) {
+                    const sellerProfileData = await sellerProfileRes.json();
+                    const sellerProfile = sellerProfileData.data?.profile || sellerProfileData.data || sellerProfileData;
+                    
+                    const isApproved = sellerProfile.is_approved === 1 || sellerProfile.is_approved === true || sellerProfile.is_approved === 'true';
+                    const isAdminManaged = sellerProfile.is_admin_managed === true || sellerProfile.is_admin_managed === 1;
+                    const onboardingDone = sellerProfile.onboarding_completed === true || sellerProfile.onboarding_completed === 1;
+
+                    if (!isApproved) {
+                        const banner = document.getElementById('verification-warning-banner');
+                        if (banner) banner.classList.remove('hidden');
+                    } else if (!isAdminManaged && !onboardingDone) {
+                        // Check if deferred in current session
+                        const isDeferred = sessionStorage.getItem('tohfa_onboarding_deferred');
+                        if (!isDeferred) {
+                            openWelcomeOnboardingModal();
+                        }
+                    }
                 }
             }
         } catch (e) {
-            sessionStorage.clear();
-            window.location.href = '/auth/login.html';
-            return;
+            console.warn('Profile verification check warning:', e);
         }
 
         await loadDashboard();
@@ -748,56 +997,35 @@
             });
         });
 
-        // Set Cutoff Date button click listener
-        const cutoffBtn = document.getElementById('set-cutoff-btn');
-        if (cutoffBtn) {
-            cutoffBtn.addEventListener('click', () => {
-                alert('Set Cutoff Date feature is coming soon!');
-            });
-        }
-
-        // View Store buttons
+        // View Store button
         const handleViewStore = () => {
+            const token = (typeof window !== 'undefined' && window.authStorage?.getItem('tohfa_access_token')) ||
+                          sessionStorage.getItem('tohfa_access_token') ||
+                          sessionStorage.getItem('tohfa_auth_token') ||
+                          localStorage.getItem('tohfa_access_token') ||
+                          localStorage.getItem('tohfa_auth_token') ||
+                          accessToken || '';
             fetch(`${API_BASE_URL}/api/seller/profile`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` }
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
             })
             .then(res => res.json())
             .then(data => {
-                const profileData = data.data || data;
-                if (profileData && (profileData.user_id || profileData.seller_id || profileData.id)) {
-                    window.location.href = `/buyer/seller-profile.html?id=${profileData.user_id || profileData.seller_id || profileData.id}`;
+                const profile = data.data?.profile || data.profile || data.data || data;
+                const sellerId = profile?.user_id || profile?.seller_id || profile?.id;
+                if (sellerId) {
+                    window.location.href = `/buyer/seller-profile.html?id=${sellerId}`;
                 } else {
-                    window.location.href = '/';
+                    window.location.href = '/seller/dashboard.html';
                 }
             })
             .catch(err => {
                 console.error(err);
-                window.location.href = '/';
+                window.location.href = '/seller/dashboard.html';
             });
         };
 
-        const viewStoreBtn = document.getElementById('view-store-btn');
-        if (viewStoreBtn) viewStoreBtn.addEventListener('click', handleViewStore);
-
         const headerViewBtn = document.getElementById('header-view-store-btn');
         if (headerViewBtn) headerViewBtn.addEventListener('click', handleViewStore);
-
-        // Logout
-        const logoutBtn = document.getElementById('logout-btn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                const refresh = sessionStorage.getItem('tohfa_refresh_token');
-                if (accessToken && refresh) {
-                    fetch('/api/auth/logout', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-                        body: JSON.stringify({ refresh_token: refresh })
-                    }).catch(() => {});
-                }
-                sessionStorage.clear();
-                window.location.href = '/auth/login.html';
-            });
-        }
 
         // ── Holiday Mode ──
         (function initHolidayMode() {
@@ -880,6 +1108,135 @@
             }
           });
         })();
+
+        // =========================================================================
+        // Welcome Onboarding Setup Modal Handlers
+        // =========================================================================
+        function openWelcomeOnboardingModal() {
+            const modal = document.getElementById('welcome-onboarding-modal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeWelcomeOnboardingModal() {
+            const modal = document.getElementById('welcome-onboarding-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        const closeOnboardingBtn = document.getElementById('close-onboarding-modal-btn');
+        const remindLaterBtn = document.getElementById('remind-later-btn');
+        if (closeOnboardingBtn) {
+            closeOnboardingBtn.onclick = () => {
+                sessionStorage.setItem('tohfa_onboarding_deferred', 'true');
+                closeWelcomeOnboardingModal();
+            };
+        }
+        if (remindLaterBtn) {
+            remindLaterBtn.onclick = () => {
+                sessionStorage.setItem('tohfa_onboarding_deferred', 'true');
+                closeWelcomeOnboardingModal();
+            };
+        }
+
+        const onboardingForm = document.getElementById('welcome-onboarding-form');
+        if (onboardingForm) {
+            onboardingForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const errAlert = document.getElementById('onboarding-error-alert');
+                const errText = document.getElementById('onboarding-error-text');
+                const submitBtn = document.getElementById('submit-onboarding-btn');
+
+                errAlert.classList.add('hidden');
+
+                const addr1 = document.getElementById('onboarding_address1').value.trim();
+                const addr2 = document.getElementById('onboarding_address2').value.trim();
+                const city = document.getElementById('onboarding_city').value.trim();
+                const state = document.getElementById('onboarding_state').value.trim();
+                const pincode = document.getElementById('onboarding_pincode').value.trim();
+
+                const holder = document.getElementById('onboarding_holder').value.trim();
+                const bankName = document.getElementById('onboarding_bank_name').value.trim();
+                const account = document.getElementById('onboarding_account').value.trim();
+                const confirmAccount = document.getElementById('onboarding_confirm_account').value.trim();
+                const ifsc = document.getElementById('onboarding_ifsc').value.trim().toUpperCase();
+                const upi = document.getElementById('onboarding_upi').value.trim();
+
+                if (!addr1 || !city || !state || !pincode) {
+                    errText.textContent = 'Please fill out all required pickup address fields.';
+                    errAlert.classList.remove('hidden');
+                    return;
+                }
+                if (!/^\d{6}$/.test(pincode)) {
+                    errText.textContent = 'Please enter a valid 6-digit Indian pincode.';
+                    errAlert.classList.remove('hidden');
+                    return;
+                }
+                if (!holder || !bankName || !account || !ifsc) {
+                    errText.textContent = 'Please fill out all required bank account fields.';
+                    errAlert.classList.remove('hidden');
+                    return;
+                }
+                if (account !== confirmAccount) {
+                    errText.textContent = 'Bank account numbers do not match. Please re-check.';
+                    errAlert.classList.remove('hidden');
+                    return;
+                }
+                if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)) {
+                    errText.textContent = 'Please enter a valid 11-character Indian IFSC code (e.g. SBIN0001234, HDFC0000456).';
+                    errAlert.classList.remove('hidden');
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `<span class="material-symbols-outlined text-[15px] animate-spin">progress_activity</span><span>Saving Studio Details...</span>`;
+
+                try {
+                    const token = (typeof window !== 'undefined' && window.authStorage?.getItem('tohfa_access_token')) ||
+                                  sessionStorage.getItem('tohfa_access_token') ||
+                                  localStorage.getItem('tohfa_access_token');
+
+                    const res = await fetch(`${API_BASE_URL}/api/seller/complete-onboarding`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            address_line1: addr1,
+                            address_line2: addr2,
+                            city: city,
+                            state: state,
+                            pincode: pincode,
+                            account_holder_name: holder,
+                            bank_name: bankName,
+                            account_number: account,
+                            ifsc_code: ifsc,
+                            upi_id: upi
+                        })
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok || !data.success) {
+                        throw new Error(data.message || 'Failed to complete studio setup.');
+                    }
+
+                    sessionStorage.removeItem('tohfa_onboarding_deferred');
+                    closeWelcomeOnboardingModal();
+
+                    const toast = document.createElement('div');
+                    toast.className = 'fixed bottom-6 right-6 z-50 bg-[#14381F] text-[#FFF8E7] text-sm font-bold px-5 py-3 rounded-2xl shadow-xl transition-all flex items-center gap-2';
+                    toast.innerHTML = `<span class="material-symbols-outlined text-green-400">check_circle</span><span>🎉 Studio setup completed! You are ready to fulfill orders.</span>`;
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 4000);
+                } catch (err) {
+                    console.error('Onboarding submission error:', err);
+                    errText.textContent = err.message || 'An error occurred while saving studio details.';
+                    errAlert.classList.remove('hidden');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = `<span>Complete Studio Setup</span><span class="material-symbols-outlined text-[16px]">check</span>`;
+                }
+            });
+        }
     });
 </script>
 </body>

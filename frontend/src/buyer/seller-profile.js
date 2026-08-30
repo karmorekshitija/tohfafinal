@@ -25,7 +25,7 @@ async function loadSellerProfile() {
 
   try {
     const res = await api.get(`/api/seller/public/${sellerId}`);
-    const seller = res?.data;
+    const seller = res?.data?.profile || res?.data;
 
     if (!seller) {
       heroEl.innerHTML = '<p class="text-body" style="padding:var(--space-6);">Seller not found.</p>';
@@ -49,12 +49,19 @@ function renderHero(s) {
        </a>`
     : '';
 
+  const isLegacyBanner = (url) => !url || url.includes('default-banner.png') || url.includes('artisan_showcase.jpg');
+  const coverUrl = (!isLegacyBanner(s.cover_photo_url))
+    ? s.cover_photo_url
+    : (!isLegacyBanner(s.banner_url))
+      ? s.banner_url
+      : '/img/default-seller-banner.png';
+
   heroEl.innerHTML = `
-    <div class="seller-cover" style="${s.cover_photo_url ? `background-image: url('${s.cover_photo_url}');` : ''}"></div>
+    <div class="seller-cover" style="background-image: url('${coverUrl}');"></div>
     <div class="seller-details">
       <div class="flex items-end gap-4">
         <div class="avatar avatar-xl" style="border:4px solid var(--color-surface); box-shadow:var(--shadow-md);">
-          <img src="${s.profile_photo_url || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80'}" alt="${s.store_name}">
+          <img src="${s.profile_photo_url || s.avatar_url || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80'}" alt="${s.store_name}">
         </div>
         <div>
           <span class="badge badge-accent" style="margin-bottom:var(--space-1);">Verified Artisan Maker</span>
@@ -73,7 +80,8 @@ function renderHero(s) {
 async function loadSellerProducts() {
   try {
     const res = await api.get(`/api/products/seller/${sellerId}`);
-    const products = Array.isArray(res?.data) ? res.data : [];
+    const raw = res?.data;
+    const products = Array.isArray(raw?.products) ? raw.products : (Array.isArray(raw) ? raw : []);
 
     countBadge.textContent = `${products.length} Products`;
 

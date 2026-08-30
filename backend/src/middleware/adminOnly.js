@@ -16,8 +16,17 @@ async function adminOnly(req, res, next) {
       });
     }
 
+    if (
+      process.env.NODE_ENV === 'development' &&
+      process.env.ALLOW_DEMO_LOGIN === 'true' &&
+      req.user.id &&
+      String(req.user.id).startsWith('d0000000-')
+    ) {
+      return next();
+    }
+
     // Verify user is active & not banned
-    const userRes = await db.query('SELECT is_active, is_banned FROM users WHERE id = $1', [req.user.id]);
+    const userRes = await db.query('SELECT is_active, is_banned FROM users WHERE id::text = $1', [String(req.user.id)]);
     if (userRes.rows.length === 0) {
       return res.status(403).json({
         success: false,
