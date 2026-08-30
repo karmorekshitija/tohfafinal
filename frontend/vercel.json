@@ -1,7 +1,14 @@
 {
-  "framework": "vite",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://tohfafinal.onrender.com/api/$1"
+    },
+    {
+      "source": "/health",
+      "destination": "https://tohfafinal.onrender.com/health"
+    }
+  ]
 }
