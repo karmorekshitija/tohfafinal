@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+const API_HOST = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL
+  ? import.meta.env.VITE_API_URL.replace(/\/+$/, '')
+  : '';
+
 const adminApiClient = axios.create({
-  baseURL: '/api',
+  baseURL: `${API_HOST}/api`,
   headers: { 'Content-Type': 'application/json' }
 });
 
@@ -89,7 +93,7 @@ adminApiClient.interceptors.response.use(
                            localStorage.getItem('tohfa_admin_refresh_token');
       if (refreshToken) {
         try {
-          const res = await axios.post('/api/admin/auth/refresh', { refresh_token: refreshToken, refreshToken }, {
+          const res = await axios.post(`${API_HOST}/api/admin/auth/refresh`, { refresh_token: refreshToken, refreshToken }, {
             headers: { 'Content-Type': 'application/json' }
           });
           if (res.data?.success) {

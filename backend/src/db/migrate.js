@@ -27,6 +27,7 @@ const MIGRATION_FILES = [
   path.join(__dirname, 'migrations', '011_cleanup_tohfa_specials_legacy_schema.sql'),
   path.join(__dirname, 'migrations', '012_seller_capacity_social_fields.sql'),
   path.join(__dirname, 'migrations', '013_categories_schema_sync.sql'),
+  path.join(__dirname, 'migrations', '014_our_story_features.sql'),
   path.join(__dirname, 'migrations', '015_reports_schema_sync.sql'),
   path.join(__dirname, 'migrations', '016_order_items_customization_columns.sql'),
   path.join(__dirname, 'migrations', '017_seller_onboarding_split.sql'),

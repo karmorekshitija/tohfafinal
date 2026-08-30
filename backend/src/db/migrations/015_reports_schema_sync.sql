@@ -6,7 +6,7 @@
 
 CREATE TABLE IF NOT EXISTS reports (
   id           SERIAL PRIMARY KEY,
-  reporter_id  INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  reporter_id  UUID REFERENCES users(id) ON DELETE CASCADE,
   type         VARCHAR(50) NOT NULL DEFAULT 'other',
   target_id    TEXT,
   reason       TEXT NOT NULL DEFAULT '',

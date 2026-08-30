@@ -55,6 +55,9 @@ const logisticsController = require('./src/controllers/logistics.controller');
 // ---------------------------------------------------------------------------
 const app = express();
 
+// Trust reverse proxy (Vercel / CloudFront / Heroku) for correct client IP detection
+app.set('trust proxy', 1);
+
 // ---------------------------------------------------------------------------
 // SECURITY HEADERS
 // ---------------------------------------------------------------------------
@@ -64,17 +67,26 @@ app.use(helmet({
 
 // ---------------------------------------------------------------------------
 // CORS
-// Allow only the frontend origin (and localhost in dev)
+// Allow configured frontend origin(s), Vercel deployments, production domain, and local dev
 // ---------------------------------------------------------------------------
+const configuredOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((u) => u.trim().replace(/\/+$/, ''))
+  .filter(Boolean);
+
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:5173',
+  ...configuredOrigins,
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost:4000',
+  'http://127.0.0.1:5173',
   'https://thetohfa.in',
   'https://www.thetohfa.in',
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, Postman in dev, same-origin proxy)
+    // Allow requests with no origin (mobile apps, Postman in dev, same-origin proxy, curl)
     if (!origin) return callback(null, true);
 
     // Allow all local dev origins (localhost / 127.0.0.1 on any port)
@@ -82,13 +94,27 @@ app.use(cors({
       return callback(null, true);
     }
 
-    if (allowedOrigins.includes(origin)) {
+    // Allow all Vercel preview and production deployments (*.vercel.app)
+    if (/^https:\/\/[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)*\.vercel\.app$/.test(origin)) {
+      return callback(null, true);
+    }
+
+    // Allow specific configured domains
+    const normalizedOrigin = origin.replace(/\/+$/, '');
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      return callback(null, true);
+    }
+
+    // Custom domain suffix matching (e.g. *.thetohfa.in)
+    if (/^https:\/\/[a-zA-Z0-9_-]+\.thetohfa\.in$/.test(origin)) {
       return callback(null, true);
     }
 
     callback(new Error(`CORS: Origin ${origin} not allowed`));
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
 }));
 
 // ---------------------------------------------------------------------------
@@ -201,6 +227,25 @@ app.get('/api/messages/:id', _notImplemented);
 app.post('/api/messages/:id', _notImplemented);
 
 // ---------------------------------------------------------------------------
+// CRON TRIGGER ROUTE (Vercel Crons & External Schedulers)
+// ---------------------------------------------------------------------------
+const { startOccasionCron, processOccasionReminders } = require('./src/services/occasion.service');
+
+app.get('/api/cron/reminders', async (req, res) => {
+  const cronSecret = process.env.CRON_SECRET;
+  const authHeader = req.headers['authorization'] || '';
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}` && req.headers['x-vercel-cron'] !== '1') {
+    return res.status(401).json({ success: false, message: 'Unauthorized cron request.' });
+  }
+  try {
+    await processOccasionReminders();
+    res.json({ success: true, message: 'Occasion reminder scan completed.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // 404 HANDLER — for unmatched API routes
 // ---------------------------------------------------------------------------
 app.use('/api/*', (req, res) => {
@@ -214,9 +259,11 @@ app.use(errorHandler);
 
 // ---------------------------------------------------------------------------
 // CRON SCHEDULER — WhatsApp occasion reminders
+// Only initialize persistent node-cron in traditional server environments (not Vercel)
 // ---------------------------------------------------------------------------
-const { startOccasionCron } = require('./src/services/occasion.service');
-startOccasionCron();
+if (!process.env.VERCEL && process.env.ENABLE_CRON !== 'false') {
+  startOccasionCron();
+}
 
 // ---------------------------------------------------------------------------
 // START SERVER

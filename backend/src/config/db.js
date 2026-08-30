@@ -2,7 +2,7 @@
  * Tohfa v2 — Neon PostgreSQL Connection Pool
  * File: backend/src/config/db.js
  * Role: Creates and exports a single pg Pool instance used by all queries.
- *       SSL is required for Neon. All queries must use parameterized syntax.
+ *       SSL is configured for Neon PostgreSQL. All queries must use parameterized syntax.
  */
 
 'use strict';
@@ -11,38 +11,27 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 require('dotenv').config();
 
-const { Pool: PgPool } = require('pg');
-let NeonPool, neonConfig;
-try {
-  const neon = require('@neondatabase/serverless');
-  NeonPool = neon.Pool;
-  neonConfig = neon.neonConfig;
-  const ws = require('ws');
-  neonConfig.webSocketConstructor = ws;
-} catch (e) {
-  // Fallback if @neondatabase/serverless is unavailable
+const { Pool } = require('pg');
+
+const databaseUrl = process.env.DATABASE_URL || '';
+const isLocalDb = databaseUrl.includes('localhost') || databaseUrl.includes('127.0.0.1');
+
+if (!databaseUrl) {
+  console.warn('⚠️ [Database] DATABASE_URL environment variable is missing! Database queries will fail.');
 }
 
-const isLocalDb = (process.env.DATABASE_URL || '').includes('localhost') || (process.env.DATABASE_URL || '').includes('127.0.0.1');
+const poolConfig = {
+  connectionString: databaseUrl || 'postgresql://postgres:postgres@localhost:5432/tohfa',
+  ssl: isLocalDb || !databaseUrl ? false : { rejectUnauthorized: false },
+  max: process.env.DB_POOL_MAX ? parseInt(process.env.DB_POOL_MAX, 10) : (process.env.VERCEL ? 5 : 20),
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+};
 
-const pool = isLocalDb || !NeonPool
-  ? new PgPool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: false,
-      max: 20,
-      idleTimeoutMillis: 30_000,
-      connectionTimeoutMillis: 10_000,
-    })
-  : new NeonPool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false },
-      max: 20,
-      idleTimeoutMillis: 30_000,
-      connectionTimeoutMillis: 30_000,
-    });
+const pool = new Pool(poolConfig);
 
 pool.on('error', (err) => {
-  console.error('PostgreSQL pool error:', err.message);
+  console.error('[Database Pool Error]:', err.message);
 });
 
 /**
@@ -51,11 +40,18 @@ pool.on('error', (err) => {
  */
 async function query(text, params) {
   const start = Date.now();
-  const result = await pool.query(text, params);
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[DB] ${text.substring(0, 80)} — ${Date.now() - start}ms`);
+  try {
+    const result = await pool.query(text, params);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[DB] ${text.substring(0, 80).replace(/\s+/g, ' ')} — ${Date.now() - start}ms`);
+    }
+    return result;
+  } catch (err) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`[DB Error on query: ${text.substring(0, 80)}]`, err.message);
+    }
+    throw err;
   }
-  return result;
 }
 
 /**

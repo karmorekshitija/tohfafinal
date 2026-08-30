@@ -8,7 +8,10 @@ import axios from 'axios';
 import Toast from '../components/Toast.js';
 import { TOKEN_KEY, USER_KEY, authStorage } from './auth.js';
 
-const API_BASE_URL = '/api';
+const API_HOST = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL
+  ? import.meta.env.VITE_API_URL.replace(/\/+$/, '')
+  : '';
+const API_BASE_URL = `${API_HOST}/api`;
 
 export function getAuthToken() {
   return authStorage.getToken();
@@ -113,7 +116,7 @@ export const api = {
 // AXIOS INSTANCE (Maintained for backward compatibility)
 // ---------------------------------------------------------------------------
 const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' }
 });
 

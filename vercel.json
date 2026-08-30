@@ -1,6 +1,17 @@
 {
-  "framework": "vite",
-  "buildCommand": "cd frontend && npm install && npm run build",
+  "version": 2,
+  "buildCommand": "npm --prefix backend install && npm --prefix frontend install && npm --prefix frontend run build",
   "outputDirectory": "frontend/dist",
-  "cleanUrls": false
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/health",
+      "destination": "/api/index.js"
+    }
+  ]
 }

@@ -6,7 +6,7 @@
 
 CREATE TABLE IF NOT EXISTS our_story_features (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  seller_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  seller_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   blurb        TEXT DEFAULT '',
   image_url    TEXT,
   is_active    BOOLEAN NOT NULL DEFAULT TRUE,

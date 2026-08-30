@@ -2,5 +2,6 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "cleanUrls": false
+  "cleanUrls": true,
+  "trailingSlash": false
 }
