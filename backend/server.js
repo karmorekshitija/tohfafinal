@@ -266,9 +266,13 @@ if (!process.env.VERCEL && process.env.ENABLE_CRON !== 'false') {
 }
 
 // ---------------------------------------------------------------------------
-// START SERVER
+// START SERVER & DATABASE AUTO-SYNC
 // ---------------------------------------------------------------------------
 const PORT = process.env.PORT || 4000;
+const { autoSyncDatabase } = require('./src/db/auto_sync');
+
+// Run automatic non-destructive schema synchronization on boot
+autoSyncDatabase();
 
 if (require.main === module) {
   app.listen(PORT, () => {

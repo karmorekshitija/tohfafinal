@@ -1,0 +1,107 @@
+/**
+ * Tohfa v2 — Automated Database Schema Sync on Server Startup
+ * File: backend/src/db/auto_sync.js
+ * Role: Ensures all required columns and tables exist so endpoints never throw 500 errors.
+ */
+'use strict';
+
+const { query } = require('../config/db');
+
+async function autoSyncDatabase() {
+  try {
+    console.log('🔄 Checking database schema synchronization...');
+
+    // Categories columns
+    await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS display_name VARCHAR(100);`);
+    await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS emoji_icon VARCHAR(20);`);
+    await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS icon_emoji VARCHAR(20);`);
+    await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS banner_image_url TEXT;`);
+    await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS description TEXT;`);
+    await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS sort_order INT DEFAULT 0;`);
+    await query(`UPDATE categories SET display_name = name WHERE display_name IS NULL;`);
+
+    // Products columns
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';`);
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS images TEXT[] DEFAULT '{}';`);
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS special_packaging_available BOOLEAN DEFAULT TRUE;`);
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS preparation_days INT DEFAULT 2;`);
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS weight_grams INT DEFAULT 500;`);
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS is_sponsored BOOLEAN DEFAULT FALSE;`);
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS view_count INT DEFAULT 0;`);
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS slug VARCHAR(255);`);
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS customization_mode TEXT DEFAULT 'none';`);
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS is_customizable BOOLEAN DEFAULT FALSE;`);
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS customization_schema JSONB DEFAULT '{}';`);
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS is_tohfa_original BOOLEAN DEFAULT FALSE;`);
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS tohfa_special_badge VARCHAR(100) DEFAULT NULL;`);
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS priority_rank INT DEFAULT 0;`);
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS low_stock_threshold INT DEFAULT 3;`);
+
+    // UI Settings Table
+    await query(`
+      CREATE TABLE IF NOT EXISTS ui_settings (
+        key VARCHAR(100) PRIMARY KEY,
+        value JSONB NOT NULL DEFAULT '{}'::jsonb,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    // Product Occasion Tags Table
+    await query(`
+      CREATE TABLE IF NOT EXISTS product_occasion_tags (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+        occasion_slug VARCHAR(100) NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    // Product Images Table
+    await query(`
+      CREATE TABLE IF NOT EXISTS product_images (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+        url TEXT NOT NULL,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    // Product Variants Table
+    await query(`
+      CREATE TABLE IF NOT EXISTS product_variants (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+        variant_name TEXT,
+        color_name TEXT,
+        color_hex CHAR(7),
+        size TEXT,
+        additional_price NUMERIC(10,2) NOT NULL DEFAULT 0,
+        stock_qty INTEGER NOT NULL DEFAULT 0,
+        image_url TEXT,
+        images TEXT[] DEFAULT '{}',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    // Reports Table
+    await query(`
+      CREATE TABLE IF NOT EXISTS reports (
+        id SERIAL PRIMARY KEY,
+        reporter_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        type VARCHAR(50) NOT NULL DEFAULT 'other',
+        target_id TEXT,
+        reason TEXT NOT NULL DEFAULT '',
+        status VARCHAR(20) NOT NULL DEFAULT 'open',
+        admin_note TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    console.log('✅ Database schema auto-sync complete!');
+  } catch (err) {
+    console.warn('⚠️ [Database Auto-Sync Warning]:', err.message);
+  }
+}
+
+module.exports = { autoSyncDatabase };
