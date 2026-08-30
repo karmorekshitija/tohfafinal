@@ -1314,6 +1314,50 @@
     });
   }
 
+  // --- Category Card Helpers ---
+  function getCategoryDisplayName(cat) {
+    const s = `${cat.slug || ''} ${cat.name || ''}`.toLowerCase();
+    if (s.includes('candle')) return 'Candles & Aromatherapy';
+    if (s.includes('floral') || s.includes('bouquet')) return 'Floral & Bouquets';
+    if (s.includes('decor') || s.includes('living')) return 'Home Decor & Living';
+    if (s.includes('nail')) return 'Nails & Beauty';
+    if (s.includes('hair')) return 'Hair Accessories';
+    if (s.includes('figurine') || s.includes('handcrafted') || s.includes('art')) return 'Handcrafted Figurines & Art';
+    if (s.includes('gift') || s.includes('keepsake')) return 'Gifts & Keepsakes';
+    if (s.includes('jewel') || s.includes('wearable')) return 'Jewellery & Wearables';
+    return cat.display_name || cat.name || 'Artisan Crafts';
+  }
+
+  function getCategoryEmoji(cat) {
+    if (cat.emoji_icon && cat.emoji_icon !== '🏷️' && cat.emoji_icon !== '🎁') return cat.emoji_icon;
+    const s = `${cat.slug || ''} ${cat.display_name || ''} ${cat.name || ''}`.toLowerCase();
+    if (s.includes('candle')) return '🕯️';
+    if (s.includes('floral') || s.includes('bouquet')) return '💐';
+    if (s.includes('decor') || s.includes('ceramic')) return '🏡';
+    if (s.includes('nail') || s.includes('beauty')) return '💅';
+    if (s.includes('hair')) return '🎀';
+    if (s.includes('figurine') || s.includes('handcrafted') || s.includes('art')) return '🎨';
+    if (s.includes('gift') || s.includes('keepsake')) return '🎁';
+    if (s.includes('jewel')) return '💍';
+    return '🎁';
+  }
+
+  function getCategoryCover(cat) {
+    const s = `${cat.slug || ''} ${cat.display_name || ''} ${cat.name || ''}`.toLowerCase();
+    if (cat.image_url && !cat.image_url.includes('candles.jpg') && cat.image_url !== 'null' && !cat.image_url.includes('undefined')) {
+      return cat.image_url;
+    }
+    if (s.includes('candle') || s.includes('aroma') || s.includes('fragrance')) return '/img/categories/candles.jpg';
+    if (s.includes('floral') || s.includes('bouquet') || s.includes('flower') || s.includes('botanical')) return '/img/categories/dried_florals.jpg';
+    if (s.includes('decor') || s.includes('ceramic') || s.includes('pottery') || s.includes('living')) return '/img/categories/ceramics.jpg';
+    if (s.includes('nail') || s.includes('beauty') || s.includes('portrait')) return '/img/categories/custom_portraits.jpg';
+    if (s.includes('hair') || s.includes('clip') || s.includes('journal') || s.includes('stationery')) return '/img/categories/journals.jpg';
+    if (s.includes('figurine') || s.includes('art') || s.includes('painting') || s.includes('handcrafted')) return '/img/categories/art_prints.jpg';
+    if (s.includes('gift') || s.includes('keepsake') || s.includes('hamper') || s.includes('skincare')) return '/img/categories/skincare.jpg';
+    if (s.includes('jewel') || s.includes('wearable') || s.includes('ring') || s.includes('necklace')) return '/img/categories/jewellery.jpg';
+    return '/img/categories/ceramics.jpg';
+  }
+
   // --- Category Rows ---
   async function loadCategoryRows() {
     const container = document.getElementById('category-rows-container');
@@ -1321,18 +1365,25 @@
 
     try {
       const categoriesRes = await apiClient.get('/categories');
-      const categories = (categoriesRes.data && categoriesRes.data.success && categoriesRes.data.data.categories?.length > 0)
+      const rawCategories = (categoriesRes.data && categoriesRes.data.success && categoriesRes.data.data.categories?.length > 0)
         ? categoriesRes.data.data.categories
         : [
-            { id: 66, display_name: "Candles & Aromatherapy", slug: "candles-aromatherapy", emoji_icon: "🕯️", image_url: "/img/categories/candles.jpg", product_count: 18 },
-            { id: 67, display_name: "Floral & Bouquets", slug: "floral-bouquets", emoji_icon: "💐", image_url: "/img/categories/dried_florals.jpg", product_count: 9 },
-            { id: 8, display_name: "Home Decor & Living", slug: "home-decor", emoji_icon: "🏡", image_url: "/img/categories/ceramics.jpg", product_count: 5 },
-            { id: 69, display_name: "Nails & Beauty", slug: "nails-beauty", emoji_icon: "💅", image_url: "/img/categories/custom_portraits.jpg", product_count: 1 },
+            { id: 66, display_name: "Candles & Aromatherapy", slug: "candles-aromatherapy", emoji_icon: "🕯️", image_url: "/img/categories/candles.jpg", product_count: 28 },
+            { id: 67, display_name: "Floral & Bouquets", slug: "floral-bouquets", emoji_icon: "💐", image_url: "/img/categories/dried_florals.jpg", product_count: 12 },
+            { id: 8,  display_name: "Home Decor & Living", slug: "home-decor", emoji_icon: "🏡", image_url: "/img/categories/ceramics.jpg", product_count: 5 },
+            { id: 69, display_name: "Nails & Beauty", slug: "nails-beauty", emoji_icon: "💅", image_url: "/img/categories/custom_portraits.jpg", product_count: 10 },
             { id: 62, display_name: "Hair Accessories", slug: "hair-accessories", emoji_icon: "🎀", image_url: "/img/categories/journals.jpg", product_count: 2 },
-            { id: 71, display_name: "Handcrafted Figurines & Art", slug: "handcrafted-figurines", emoji_icon: "🎨", image_url: "/img/categories/art_prints.jpg", product_count: 4 },
-            { id: 72, display_name: "Gifts & Keepsakes", slug: "gifts-keepsakes", emoji_icon: "🎁", image_url: "/img/categories/skincare.jpg", product_count: 1 },
+            { id: 71, display_name: "Handcrafted Figurines & Art", slug: "handcrafted-figurines", emoji_icon: "🎨", image_url: "/img/categories/art_prints.jpg", product_count: 15 },
+            { id: 72, display_name: "Gifts & Keepsakes", slug: "gifts-keepsakes", emoji_icon: "🎁", image_url: "/img/categories/skincare.jpg", product_count: 6 },
             { id: 73, display_name: "Jewellery & Wearables", slug: "jewellery-wearables", emoji_icon: "💍", image_url: "/img/categories/jewellery.jpg", product_count: 3 }
           ];
+
+      const categories = rawCategories.map(cat => ({
+        ...cat,
+        display_name: getCategoryDisplayName(cat),
+        emoji_icon: getCategoryEmoji(cat),
+        image_url: getCategoryCover(cat)
+      }));
 
       container.innerHTML = '';
 
@@ -1357,11 +1408,11 @@
         <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3.5 sm:gap-5">
           ${categories.slice(0, 8).map(cat => `
             <a href="/buyer/category.html?slug=${cat.slug}" class="group relative rounded-2xl overflow-hidden aspect-[4/3] border border-[#14381F]/15 shadow-sm hover:shadow-lg transition-all duration-300 no-underline bg-[#FAF6EE] flex flex-col justify-end p-4">
-              <img src="${cat.image_url || '/img/categories/' + cat.slug + '.jpg'}" alt="${escapeHtml(cat.display_name || cat.name)}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onerror="this.src='/img/categories/candles.jpg'">
+              <img src="${cat.image_url}" alt="${escapeHtml(cat.display_name)}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
               <div class="absolute inset-0 bg-gradient-to-t from-[#14381F]/90 via-[#14381F]/40 to-transparent"></div>
               <div class="relative z-10">
-                <span class="text-xl mb-1 block">${cat.emoji_icon || '🎁'}</span>
-                <span class="text-[#FAF6EE] font-['Playfair_Display'] font-bold text-base sm:text-lg leading-snug block group-hover:text-[#A8BFA5] transition-colors">${escapeHtml(cat.display_name || cat.name)}</span>
+                <span class="text-xl mb-1 block">${cat.emoji_icon}</span>
+                <span class="text-[#FAF6EE] font-['Playfair_Display'] font-bold text-base sm:text-lg leading-snug block group-hover:text-[#A8BFA5] transition-colors">${escapeHtml(cat.display_name)}</span>
                 <span class="text-[#FAF6EE]/80 text-[11px] font-mono mt-0.5 block">${cat.product_count ? `${cat.product_count} Creations` : 'Browse Collection'}</span>
               </div>
             </a>
@@ -1609,12 +1660,23 @@
     if (skeletons) skeletons.classList.remove('hidden');
 
     try {
-      const response = await apiClient.get('/products/sponsored?limit=8');
-      const products = response.data?.data?.products || response.data?.products || [];
+      let products = [];
+      try {
+        const response = await apiClient.get('/products/sponsored?limit=8');
+        products = response.data?.data?.products || response.data?.products || [];
+      } catch (err) {
+        console.warn('Sponsored endpoint error, falling back to general catalog:', err);
+      }
+
+      if (!products || products.length === 0) {
+        const fallbackRes = await apiClient.get('/products?limit=8');
+        products = fallbackRes.data?.data?.products || fallbackRes.data?.products || [];
+      }
+
       sponsoredGrid.innerHTML = '';
       if (products.length > 0) {
         products.slice(0, 8).forEach(product => {
-          const card = createProductCard(product);
+          const card = createProductCard({ ...product, is_sponsored: true });
           sponsoredGrid.appendChild(card);
         });
       }

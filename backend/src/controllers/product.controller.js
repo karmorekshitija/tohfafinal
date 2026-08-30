@@ -114,19 +114,51 @@ async function listCategories(req, res, next) {
       const rootCategories = [];
       const categoriesMap = {};
 
+      function resolveCategoryImage(slug = '', name = '', currentImg = null) {
+        if (currentImg && !currentImg.includes('undefined') && currentImg !== 'null' && !currentImg.includes('candles.jpg')) {
+          return currentImg;
+        }
+        const s = `${slug} ${name}`.toLowerCase();
+        if (s.includes('candle') || s.includes('aroma') || s.includes('fragrance')) return '/img/categories/candles.jpg';
+        if (s.includes('floral') || s.includes('bouquet') || s.includes('flower') || s.includes('botanical')) return '/img/categories/dried_florals.jpg';
+        if (s.includes('decor') || s.includes('ceramic') || s.includes('pottery') || s.includes('living')) return '/img/categories/ceramics.jpg';
+        if (s.includes('nail') || s.includes('beauty') || s.includes('portrait')) return '/img/categories/custom_portraits.jpg';
+        if (s.includes('hair') || s.includes('clip') || s.includes('journal') || s.includes('stationery')) return '/img/categories/journals.jpg';
+        if (s.includes('figurine') || s.includes('art') || s.includes('painting') || s.includes('handcrafted')) return '/img/categories/art_prints.jpg';
+        if (s.includes('gift') || s.includes('keepsake') || s.includes('hamper') || s.includes('skincare')) return '/img/categories/skincare.jpg';
+        if (s.includes('jewel') || s.includes('wearable') || s.includes('ring') || s.includes('necklace')) return '/img/categories/jewellery.jpg';
+        return '/img/categories/ceramics.jpg';
+      }
+
+      function resolveCategoryEmoji(slug = '', name = '', currentEmoji = null) {
+        if (currentEmoji && currentEmoji !== '🏷️' && currentEmoji !== '🎁') return currentEmoji;
+        const s = `${slug} ${name}`.toLowerCase();
+        if (s.includes('candle')) return '🕯️';
+        if (s.includes('floral') || s.includes('bouquet')) return '💐';
+        if (s.includes('decor') || s.includes('ceramic')) return '🏡';
+        if (s.includes('nail') || s.includes('beauty')) return '💅';
+        if (s.includes('hair')) return '🎀';
+        if (s.includes('figurine') || s.includes('art') || s.includes('handcrafted')) return '🎨';
+        if (s.includes('gift') || s.includes('keepsake')) return '🎁';
+        if (s.includes('jewel')) return '💍';
+        return '🎁';
+      }
+
       rows.forEach(row => {
         if (!row.parent_id) {
+          const img = resolveCategoryImage(row.slug, row.display_name || row.name, row.image_url);
+          const emoji = resolveCategoryEmoji(row.slug, row.display_name || row.name, row.emoji_icon || row.icon_emoji);
           categoriesMap[row.id] = {
             id: row.id,
             name: row.name,
             display_name: row.display_name || row.name,
             slug: row.slug,
-            emoji_icon: row.emoji_icon || row.icon_emoji || '🎁',
-            icon_emoji: row.icon_emoji || row.emoji_icon || '🎁',
+            emoji_icon: emoji,
+            icon_emoji: emoji,
             description: row.description || '',
             product_count: parseInt(row.product_count || 0, 10),
-            image_url: row.image_url || `/img/categories/${row.slug}.jpg`,
-            banner_image_url: row.banner_image_url || row.image_url || `/img/categories/${row.slug}.jpg`,
+            image_url: img,
+            banner_image_url: row.banner_image_url || img,
             subcategories: []
           };
           rootCategories.push(categoriesMap[row.id]);
@@ -317,8 +349,8 @@ async function forYouFeed(req, res, next) {
       // Weighted: viewed categories + purchase history
       const { rows: fetched } = await query(
         `SELECT DISTINCT p.id, p.name, p.description, p.base_price, p.category_id, p.tags,
-                p.customization_mode, p.is_customizable, p.is_best_seller AS is_bestseller, p.is_sponsored,
-                p.avg_rating, p.review_count, p.status, p.view_count, p.seller_id, p.created_at,
+                p.customization_mode, p.is_customizable, p.is_sponsored,
+                p.status, p.view_count, p.seller_id, p.created_at,
                 p.special_packaging_available, p.slug,
                 COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
                 COALESCE(
@@ -356,8 +388,8 @@ async function forYouFeed(req, res, next) {
       // Anonymous: random active products
       const { rows: fetched } = await query(
         `SELECT p.id, p.name, p.description, p.base_price, p.category_id, p.tags,
-                p.customization_mode, p.is_customizable, p.is_best_seller AS is_bestseller, p.is_sponsored,
-                p.avg_rating, p.review_count, p.status, p.view_count, p.seller_id, p.created_at,
+                p.customization_mode, p.is_customizable, p.is_sponsored,
+                p.status, p.view_count, p.seller_id, p.created_at,
                 p.special_packaging_available, p.slug,
                 COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
                 COALESCE(
@@ -400,9 +432,9 @@ async function getSponsoredProducts(req, res, next) {
     // 1. First fetch products explicitly flagged as sponsored
     const { rows: sponsoredRows } = await query(
       `SELECT p.id, p.name, p.description, p.base_price, p.category_id, p.tags,
-              p.customization_mode, p.is_customizable, p.is_best_seller AS is_bestseller,
+              p.customization_mode, p.is_customizable,
               TRUE AS is_sponsored,
-              p.avg_rating, p.review_count, p.status, p.view_count, p.seller_id, p.created_at,
+              p.status, p.view_count, p.seller_id, p.created_at,
               p.special_packaging_available, p.slug,
               COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
               COALESCE(
@@ -437,9 +469,9 @@ async function getSponsoredProducts(req, res, next) {
       
       const { rows: fallbackRows } = await query(
         `SELECT p.id, p.name, p.description, p.base_price, p.category_id, p.tags,
-                p.customization_mode, p.is_customizable, p.is_best_seller AS is_bestseller,
+                p.customization_mode, p.is_customizable,
                 TRUE AS is_sponsored,
-                p.avg_rating, p.review_count, p.status, p.view_count, p.seller_id, p.created_at,
+                p.status, p.view_count, p.seller_id, p.created_at,
                 p.special_packaging_available, p.slug,
                 COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
                 COALESCE(
@@ -451,7 +483,7 @@ async function getSponsoredProducts(req, res, next) {
          LEFT JOIN sellers s ON s.user_id = p.seller_id
          LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
          WHERE (p.status = 'active' OR p.is_active = TRUE)
-           AND p.id != ALL($1::int[])
+           AND NOT (p.id = ANY($1::uuid[]))
            AND (
              sp.verification_status = 'verified'
              OR s.verification_status = 'verified'
@@ -460,9 +492,9 @@ async function getSponsoredProducts(req, res, next) {
              OR (sp.user_id IS NULL AND s.user_id IS NULL)
            )
          GROUP BY p.id, sp.store_name, s.store_name, p.special_packaging_available
-         ORDER BY p.priority_rank DESC, (CASE WHEN COALESCE(p.is_best_seller, 0) > 0 THEN 1 ELSE 0 END) DESC, p.avg_rating DESC, p.created_at DESC
+         ORDER BY p.priority_rank DESC, p.created_at DESC
          LIMIT $2`,
-        [existingIds.length ? existingIds : [-1], needed]
+        [existingIds.length ? existingIds : ['00000000-0000-0000-0000-000000000000'], needed]
       );
 
       finalRows = finalRows.concat(fallbackRows);
@@ -483,8 +515,8 @@ async function getTrendingProducts(req, res, next) {
 
     const { rows } = await query(
       `SELECT p.id, p.name, p.description, p.base_price, p.category_id, p.tags,
-              p.customization_mode, p.is_customizable, p.is_best_seller AS is_bestseller, p.is_sponsored,
-              p.avg_rating, p.review_count, p.status, p.view_count, p.seller_id, p.created_at,
+              p.customization_mode, p.is_customizable, p.is_sponsored,
+              p.status, p.view_count, p.seller_id, p.created_at,
               p.special_packaging_available, p.slug,
               COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
               COALESCE(
@@ -504,9 +536,7 @@ async function getTrendingProducts(req, res, next) {
            OR (sp.user_id IS NULL AND s.user_id IS NULL)
          )
        GROUP BY p.id, sp.store_name, s.store_name, p.special_packaging_available
-       ORDER BY (COALESCE(p.view_count, 0) * 2 + COALESCE(p.review_count, 0) * 5 + (CASE WHEN COALESCE(p.is_best_seller, 0) > 0 THEN 20 ELSE 0 END)) DESC,
-                p.avg_rating DESC,
-                p.created_at DESC
+       ORDER BY COALESCE(p.view_count, 0) DESC, p.created_at DESC
        LIMIT $1`,
       [limit]
     );
@@ -644,7 +674,11 @@ async function getProduct(req, res, next) {
     const { rows } = await query(
       `SELECT p.id, p.name, p.slug, p.description, p.base_price, p.stock_quantity, p.low_stock_threshold, p.category_id,
               p.tags, p.images AS direct_images,
-              p.customization_mode, p.is_customizable, p.customization_schema, p.open_customization_config,
+              p.customization_mode, p.is_customizable, p.customization_schema,
+              COALESCE(
+                (SELECT row_to_json(occ) FROM open_customization_configs occ WHERE occ.product_id = p.id),
+                NULL
+              ) AS open_customization_config,
               p.status, p.view_count, p.seller_id, p.is_sponsored,
               p.special_packaging_available,
               COALESCE(p.preparation_days, 2) AS preparation_days,
