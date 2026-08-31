@@ -1074,13 +1074,13 @@ async function rebuildSpecialProducts(shopUserMap) {
       `INSERT INTO products (
         seller_id, category_id, name, slug, description, base_price,
         stock_quantity, images, status, is_active, preparation_days,
-        weight_grams, customization_mode, is_customizable, avg_rating,
-        review_count, special_packaging_available
+        weight_grams, customization_mode, is_customizable,
+        special_packaging_available
       ) VALUES (
         $1, $2, $3, $4, $5, $6,
         $7, $8, 'active', TRUE, $9,
-        $10, 'none', FALSE, 5.0,
-        12, TRUE
+        $10, 'none', FALSE,
+        TRUE
       ) RETURNING id`,
       [
         sellerId,
@@ -1146,10 +1146,16 @@ async function seedTofaSpecials() {
   console.log('======================================================================\n');
 
   try {
-    // Schema guard: ensure is_admin_managed column exists on both tables before any
-    // INSERT/UPDATE references it. Safe to run multiple times (IF NOT EXISTS).
+    // Schema guard: ensure columns added by auto_sync/migrations exist before the
+    // seed INSERT statements reference them. Safe to run multiple times (IF NOT EXISTS).
     await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS is_admin_managed BOOLEAN NOT NULL DEFAULT FALSE;`).catch(() => {});
     await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS is_admin_managed BOOLEAN NOT NULL DEFAULT FALSE;`).catch(() => {});
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS avg_rating NUMERIC(3,2) DEFAULT 5.0;`).catch(() => {});
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS review_count INT DEFAULT 0;`).catch(() => {});
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';`).catch(() => {});
+    await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS slug VARCHAR(255);`).catch(() => {});
+    // Heal any stale seller_type = 'Artisan' rows from old seed/migration 011
+    await query(`UPDATE seller_profiles SET seller_type = 'special' WHERE seller_type = 'Artisan';`).catch(() => {});
 
     await purgeLegacyFakeSellers();
     const shopUserMap = await ensureThreeSpecialShops();
