@@ -46,16 +46,10 @@ BEGIN
   WHERE (s.user_id = sp.user_id OR s.id = sp.user_id) AND sp.is_admin_managed = TRUE;
 END $$;
 
--- 3. Reset any seller_profiles.seller_type = 'special' to 'Artisan'
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'seller_profiles' AND column_name = 'seller_type'
-  ) THEN
-    UPDATE seller_profiles SET seller_type = 'Artisan' WHERE seller_type = 'special';
-  END IF;
-END $$;
+-- 3. (No-op) seller_type must remain 'regular' or 'special' per CHECK constraint.
+--    A previous version of this migration set seller_type = 'Artisan' here which
+--    is no longer valid. This block is intentionally left as a no-op comment.
+
 
 -- 4. Drop deprecated product-level columns and indexes
 DROP INDEX IF EXISTS idx_products_tohfa_original;

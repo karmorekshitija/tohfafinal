@@ -61,6 +61,10 @@ async function autoSyncDatabase() {
     await query(`CREATE INDEX IF NOT EXISTS idx_sellers_is_admin_managed ON sellers(is_admin_managed);`);
     await query(`CREATE INDEX IF NOT EXISTS idx_seller_profiles_is_admin_managed ON seller_profiles(is_admin_managed);`);
 
+    // 3c. Heal any seller_type = 'Artisan' rows written by the old seed/migration 011.
+    //     The CHECK constraint only allows 'regular' or 'special'; 'Artisan' violates it.
+    await query(`UPDATE seller_profiles SET seller_type = 'special' WHERE seller_type = 'Artisan';`);
+
     // 4. Fixed Customization Options Table
     await query(`
       CREATE TABLE IF NOT EXISTS fixed_customization_options (

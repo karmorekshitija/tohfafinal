@@ -989,7 +989,7 @@ async function ensureThreeSpecialShops() {
     // Sync seller_profiles table
     await query(
       `INSERT INTO seller_profiles (user_id, store_name, slug, bio, pickup_address, banner_url, is_admin_managed, is_approved, verification_status, is_active, seller_type)
-       VALUES ($1, $2, $3, $4, $5, '/img/default-seller-banner.png', TRUE, TRUE, 'verified', TRUE, 'Artisan')
+       VALUES ($1, $2, $3, $4, $5, '/img/default-seller-banner.png', TRUE, TRUE, 'verified', TRUE, 'special')
        ON CONFLICT (user_id) DO UPDATE SET
          store_name = EXCLUDED.store_name,
          slug = EXCLUDED.slug,
@@ -1000,7 +1000,7 @@ async function ensureThreeSpecialShops() {
          is_approved = TRUE,
          verification_status = 'verified',
          is_active = TRUE,
-         seller_type = 'Artisan',
+         seller_type = 'special',
          updated_at = NOW()`,
       [userId, shop.store_name, shop.slug, shop.bio, JSON.stringify(shop.pickup_address)]
     );
