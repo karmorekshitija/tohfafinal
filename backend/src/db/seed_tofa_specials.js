@@ -1066,21 +1066,20 @@ async function rebuildSpecialProducts(shopUserMap) {
     }
 
     // Insert Product
-    const pricePaise = Math.round(item.price * 100);
     const totalStock = item.variants ? item.variants.reduce((sum, v) => sum + (v.stock_qty || 25), 0) : 50;
     const prepDays = item.preparationDays || 2;
     const weightGrams = item.weightGrams || 400;
 
     const { rows: prodRows } = await query(
       `INSERT INTO products (
-        seller_id, category_id, name, slug, description, base_price, price_paise,
-        stock_quantity, stock_qty, images, tags, status, is_active, preparation_days,
-        ships_in_days, weight_grams, customization_mode, is_customizable, avg_rating,
+        seller_id, category_id, name, slug, description, base_price,
+        stock_quantity, images, status, is_active, preparation_days,
+        weight_grams, customization_mode, is_customizable, avg_rating,
         review_count, special_packaging_available
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7,
-        $8, $9, $10, $11, 'active', TRUE, $12,
-        $13, $14, 'none', FALSE, 5.0,
+        $1, $2, $3, $4, $5, $6,
+        $7, $8, 'active', TRUE, $9,
+        $10, 'none', FALSE, 5.0,
         12, TRUE
       ) RETURNING id`,
       [
@@ -1090,12 +1089,8 @@ async function rebuildSpecialProducts(shopUserMap) {
         slug,
         item.description,
         item.price,
-        pricePaise,
-        totalStock,
         totalStock,
         galleryImages,
-        [], // tags
-        prepDays,
         prepDays,
         weightGrams
       ]
@@ -1106,8 +1101,8 @@ async function rebuildSpecialProducts(shopUserMap) {
     // Insert gallery product_images
     for (let i = 0; i < galleryImages.length; i++) {
       await query(
-        'INSERT INTO product_images (product_id, url, is_primary, sort_order) VALUES ($1, $2, $3, $4)',
-        [productId, galleryImages[i], i === 0 ? 1 : 0, i]
+        'INSERT INTO product_images (product_id, url, sort_order) VALUES ($1, $2, $3)',
+        [productId, galleryImages[i], i]
       );
     }
 
@@ -1118,20 +1113,18 @@ async function rebuildSpecialProducts(shopUserMap) {
           ? v.images
           : (v.image_url ? [v.image_url] : galleryImages.slice(0, 1));
         const additionalPrice = Number(v.additional_price || 0);
-        const variantPricePaise = Math.round((item.price + additionalPrice) * 100);
 
         await query(
           `INSERT INTO product_variants (
             product_id, variant_name, color_name, color_hex, additional_price,
-            price_paise, stock_qty, image_url, images
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+            stock_qty, image_url, images
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
           [
             productId,
             v.variant_name || v.color_name || 'Standard',
             v.color_name || null,
             v.color_hex || null,
             additionalPrice,
-            variantPricePaise,
             v.stock_qty || 25,
             variantImages[0] || null,
             variantImages
