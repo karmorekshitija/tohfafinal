@@ -173,7 +173,7 @@
         }
 
         const token = data.token || data.accessToken || data.data?.access_token || data.data?.token;
-        const refreshToken = data.refreshToken || data.refresh_token || data.data?.refresh_token;
+        const refreshToken = data.refreshToken || data.refresh_token || data.data?.refreshToken || data.data?.refresh_token;
         const user = data.user || data.data?.user;
 
         if (token) {

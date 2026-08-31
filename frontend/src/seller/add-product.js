@@ -628,8 +628,10 @@ async function handleSubmit(e) {
     const json = await res.json();
 
     if (json.success && json.data) {
-      const createdProduct = json.data;
+      const createdProduct = json.data.product || json.data;
       const productId = createdProduct.id;
+
+      let photoUploadFailed = false;
 
       // Upload photos if any selected
       if (uploadedPhotos.length > 0) {
@@ -643,7 +645,7 @@ async function handleSubmit(e) {
         });
         if (fileCount > 0) {
           try {
-            await fetch(`/api/products/${productId}/images`, {
+            const imgRes = await fetch(`/api/products/${productId}/images`, {
               method: 'POST',
               headers: {
                 ...(token ? { 'Authorization': `Bearer ${token}` } : {})
@@ -651,15 +653,28 @@ async function handleSubmit(e) {
               },
               body: formData
             });
+            if (!imgRes.ok) {
+              photoUploadFailed = true;
+            } else {
+              const imgJson = await imgRes.json().catch(() => ({}));
+              if (imgJson && imgJson.success === false) {
+                photoUploadFailed = true;
+              }
+            }
           } catch (uploadErr) {
             console.error('Photo upload error:', uploadErr);
+            photoUploadFailed = true;
           }
         }
       }
 
       // Clear draft
       localStorage.removeItem(DRAFT_STORAGE_KEY);
-      alert('Congratulations! Your handcrafted listing has been published to Tohfa.');
+      if (photoUploadFailed) {
+        alert('Product published, but photo upload failed — please add photos from Edit Product.');
+      } else {
+        alert('Congratulations! Your handcrafted listing has been published to Tohfa.');
+      }
       window.location.href = '/seller/catalog.html';
     } else {
       alert(json.message || 'Failed to publish listing.');

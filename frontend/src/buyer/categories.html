@@ -260,8 +260,6 @@
             Company
           </h3>
           <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
-            <li><a href="/buyer/our-story.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">About Us</a></li>
-            <li><a href="/buyer/our-story.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Our Story</a></li>
             <li><a href="/buyer/terms-conditions.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Terms of Service</a></li>
             <li><a href="/buyer/terms-conditions.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Privacy Policy</a></li>
           </ul>
@@ -316,8 +314,6 @@
             Company
           </h3>
           <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
-            <li><a href="/buyer/our-story.html" class="text-[#FAF6EE]/90 no-underline">About Us</a></li>
-            <li><a href="/buyer/our-story.html" class="text-[#FAF6EE]/90 no-underline">Our Story</a></li>
             <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Terms of Service</a></li>
             <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Privacy Policy</a></li>
           </ul>
@@ -391,7 +387,7 @@
     async function loadCategories() {
       const container = document.getElementById('categories-grid-container');
       try {
-        const res = await apiClient.get('/categories');
+        const res = await apiClient.get('/products/categories');
         if (res.data && res.data.success) {
           const categories = res.data.data.categories || (Array.isArray(res.data.data) ? res.data.data : []);
           if (categories.length === 0) {

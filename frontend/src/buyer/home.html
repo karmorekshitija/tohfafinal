@@ -102,18 +102,6 @@
       overflow: hidden;
     }
 
-    /* Hero Slideshow Dot Indicators */
-    #hero-slide-dots button {
-      min-width: 0 !important;
-      min-height: 0 !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      border: none !important;
-      outline: none !important;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-
     @media (min-width: 768px) {
       .tohfa-footer-inner {
         grid-template-columns: 2fr 1fr 1fr 1fr 1fr !important;
@@ -639,27 +627,7 @@
     </div>
   </section>
 
-  <!-- Featured by Tohfa Section (Optional Admin Curation) -->
-  <section id="admin-featured-section" class="mt-8 md:mt-12 px-3 sm:px-6 md:px-8 lg:px-12 max-w-[1440px] mx-auto hidden">
-    <div class="flex justify-between items-end mb-3 sm:mb-5">
-      <div>
-        <h3
-          class="font-semibold flex items-center gap-2 text-[#14381F]"
-          style="font-family: 'Playfair Display', serif; font-size: clamp(17px, 2.5vw, 24px);"
-        >
-          <span class="material-symbols-outlined text-[20px] sm:text-[22px]" style="font-variation-settings: 'FILL' 1; color: #14381F;">workspace_premium</span>
-          <span>Featured by Tohfa</span>
-        </h3>
-        <p class="text-xs sm:text-sm mt-0.5 text-[#7a7a6e]" style="font-family: 'DM Sans', sans-serif;">
-          Handpicked signature items curated by our editors
-        </p>
-      </div>
-    </div>
 
-    <div id="admin-featured-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5 relative">
-      <!-- Dynamic featured products load here -->
-    </div>
-  </section>
 
   <!-- 7. FOR YOU SECTION -->
   <section id="for-you-section" class="mt-8 md:mt-12 px-3 sm:px-6 md:px-8 lg:px-12 max-w-[1440px] mx-auto">
@@ -721,96 +689,6 @@
       <!-- Dynamic category strips will load here -->
     </div>
   </section>
-
-  <!-- 10. HERO SLIDESHOW SECTION -->
-  <section class="mt-8 md:mt-12 mb-6 md:mb-10 px-3 sm:px-6 md:px-8 lg:px-12 max-w-[1440px] mx-auto">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
-      <!-- Slideshow Container -->
-      <div class="lg:col-span-7 relative">
-        <div
-          id="hero-slideshow-container"
-          class="rounded-xl overflow-hidden shadow-xl relative group aspect-[16/10]"
-        >
-          <!-- Dynamic slides wrapper -->
-          <div id="hero-slides-wrapper" class="w-full h-full relative">
-            <div class="absolute inset-0 bg-[#f0eae1] animate-pulse"></div>
-          </div>
-
-          <!-- Left Navigation Arrow -->
-          <button
-            type="button"
-            id="hero-slide-prev"
-            class="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-md flex items-center justify-center"
-            style="background-color: rgba(250,246,238,0.85); color: #14381F;"
-            aria-label="Previous Slide"
-          >
-            <span class="material-symbols-outlined text-[20px]">chevron_left</span>
-          </button>
-
-          <!-- Right Navigation Arrow -->
-          <button
-            type="button"
-            id="hero-slide-next"
-            class="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-md flex items-center justify-center"
-            style="background-color: rgba(250,246,238,0.85); color: #14381F;"
-            aria-label="Next Slide"
-          >
-            <span class="material-symbols-outlined text-[20px]">chevron_right</span>
-          </button>
-
-          <!-- Dot Indicators -->
-          <div id="hero-slide-dots" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10"></div>
-        </div>
-
-        <!-- Floating Quote Card -->
-        <div
-          class="hidden md:block absolute -bottom-8 right-4 lg:-right-8 p-5 rounded-xl shadow-lg max-w-[240px] lg:max-w-xs z-20 border"
-          style="background-color: #FAF6EE; border-color: rgba(20,56,31,0.15);"
-        >
-          <p
-            class="leading-relaxed"
-            style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 13px; color: #605e57;"
-          >
-            "Every piece tells a story of the hands that shaped it."
-          </p>
-        </div>
-      </div>
-
-      <!-- Hero Copy -->
-      <div class="lg:col-span-5 lg:pl-8 pt-2 md:pt-10 lg:pt-0">
-        <h2
-          class="mb-3 md:mb-6 leading-tight text-[#14381F]"
-          style="font-family: 'Playfair Display', serif; font-size: clamp(22px, 3.5vw, 40px); font-weight: 600;"
-        >
-          Artisan crafts for a <span class="italic font-normal">slower, intentional</span> life.
-        </h2>
-        <p
-          class="mb-4 md:mb-8 leading-relaxed text-xs sm:text-sm md:text-[15px]"
-          style="font-family: 'DM Sans', sans-serif; color: #605e57;"
-        >
-          Discover our curated collection of hand-carved ceramics, sustainable textiles, and handcrafted stationery made by local artisans.
-        </p>
-        <div class="flex gap-3">
-          <button
-            type="button"
-            onclick="document.getElementById('for-you-section')?.scrollIntoView({ behavior: 'smooth' })"
-            class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm transition-opacity hover:opacity-90 active:scale-[0.98]"
-            style="background-color: #14381F; color: #FAF6EE; font-family: 'DM Sans', sans-serif;"
-          >
-            Explore Collection
-          </button>
-          <button
-            type="button"
-            onclick="window.location.href='/buyer/our-story.html'"
-            class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm transition-colors hover:bg-[rgba(20,56,31,0.06)] active:scale-[0.98]"
-            style="border: 1px solid rgba(20,56,31,0.3); color: #14381F; font-family: 'DM Sans', sans-serif;"
-          >
-            Our Story
-          </button>
-        </div>
-      </div>
-    </div>
-  </section>
 </main>
 
 <!-- 10. COMPACT MULTI-COLUMN FOOTER -->
@@ -842,8 +720,6 @@
           Company
         </h3>
         <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
-          <li><a href="/buyer/our-story.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">About Us</a></li>
-          <li><a href="/buyer/our-story.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Our Story</a></li>
           <li><a href="/buyer/terms-conditions.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Terms of Service</a></li>
           <li><a href="/buyer/terms-conditions.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Privacy Policy</a></li>
         </ul>
@@ -899,8 +775,6 @@
           Company
         </h3>
         <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
-          <li><a href="/buyer/our-story.html" class="text-[#FAF6EE]/90 no-underline">About Us</a></li>
-          <li><a href="/buyer/our-story.html" class="text-[#FAF6EE]/90 no-underline">Our Story</a></li>
           <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Terms of Service</a></li>
           <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Privacy Policy</a></li>
         </ul>
@@ -1316,37 +1190,7 @@
     }
   }
 
-  async function loadAdminFeaturedProducts() {
-    const section = document.getElementById('admin-featured-section');
-    const grid = document.getElementById('admin-featured-grid');
-    if (!section || !grid) return;
 
-    const settings = await fetchPublicUiSettings();
-    const featuredSlots = [
-      settings.home_featured_product_1,
-      settings.home_featured_product_2,
-      settings.home_featured_product_3,
-      settings.home_featured_product_4,
-      settings.home_featured_product_5,
-      settings.home_featured_product_6
-    ];
-
-    const liveProducts = featuredSlots
-      .filter(slot => slot && slot.resolved_content)
-      .map(slot => slot.resolved_content);
-
-    if (liveProducts.length === 0) {
-      section.classList.add('hidden');
-      return;
-    }
-
-    section.classList.remove('hidden');
-    grid.innerHTML = '';
-    liveProducts.forEach(product => {
-      const card = createProductCard(product);
-      grid.appendChild(card);
-    });
-  }
 
   // --- Category Card Helpers ---
   function getCategoryDisplayName(cat) {
@@ -1398,7 +1242,7 @@
     if (!container) return;
 
     try {
-      const categoriesRes = await apiClient.get('/categories');
+      const categoriesRes = await apiClient.get('/products/categories');
       const rawCategories = (categoriesRes.data && categoriesRes.data.success && categoriesRes.data.data.categories?.length > 0)
         ? categoriesRes.data.data.categories
         : [
@@ -1455,9 +1299,8 @@
       `;
       container.appendChild(catGridSection);
 
-      // 2. Render 2 Curated Featured Category Strips (Candles & Floral)
-      const featuredCats = categories.filter(c => ['candles-aromatherapy', 'floral-bouquets'].includes(c.slug));
-      const stripsToRender = featuredCats.length > 0 ? featuredCats : categories.slice(0, 2);
+      // 2. Render Curated Category Strips for all active categories
+      const stripsToRender = categories;
 
       for (const category of stripsToRender) {
         const rowWrapper = document.createElement('div');
@@ -1554,136 +1397,6 @@
       console.error('Failed to load category rows:', error);
     }
   }
-
-  // --- Hero Slideshow Logic ---
-  let currentSlide = 0;
-  let slides = [];
-  let slideInterval;
-  const SLIDE_DURATION = 4000;
-
-  const wrapper = document.getElementById('hero-slides-wrapper');
-  const dotsContainer = document.getElementById('hero-slide-dots');
-  const prevBtn = document.getElementById('hero-slide-prev');
-  const nextBtn = document.getElementById('hero-slide-next');
-
-  async function loadHeroSlides() {
-    let customSlides = [];
-    try {
-      const settings = await fetchPublicUiSettings();
-      if (settings.home_hero_primary && settings.home_hero_primary.content_url) {
-        customSlides.push({
-          id: 'hero-primary',
-          image_url: settings.home_hero_primary.content_url,
-          alt_text: settings.home_hero_primary.label || 'Primary Hero Feature'
-        });
-      }
-      if (settings.home_hero_secondary && settings.home_hero_secondary.content_url) {
-        customSlides.push({
-          id: 'hero-secondary',
-          image_url: settings.home_hero_secondary.content_url,
-          alt_text: settings.home_hero_secondary.label || 'Secondary Hero Feature'
-        });
-      }
-    } catch (e) {}
-
-    if (customSlides.length > 0) {
-      slides = customSlides;
-    } else {
-      try {
-        const response = await apiClient.get('/hero-slides');
-        if (response.data && response.data.success && response.data.data.slides && response.data.data.slides.length > 0) {
-          slides = response.data.data.slides;
-        } else {
-          slides = [];
-        }
-      } catch (error) {
-        slides = [];
-      }
-    }
-
-    const FALLBACK_SLIDES = [
-      { imageUrl: '/img/categories/artisan_showcase.jpg', altText: 'Handcrafted treasures from Indian artisans' },
-      { imageUrl: '/img/categories/dried_florals.jpg', altText: 'Floral bouquets & botanical gifts' },
-      { imageUrl: '/img/categories/candles.jpg', altText: 'Aromatic candles & home fragrance' },
-      { imageUrl: '/img/categories/jewellery.jpg', altText: 'Handcrafted jewellery & wearables' },
-      { imageUrl: '/img/categories/art_prints.jpg', altText: 'Figurines, art prints & keepsakes' },
-    ];
-
-    if (slides.length === 0) {
-      slides = FALLBACK_SLIDES;
-    }
-
-    renderSlides();
-    startSlideshow();
-  }
-
-  function renderSlides() {
-    wrapper.innerHTML = '';
-    dotsContainer.innerHTML = '';
-
-    slides.forEach((slide, index) => {
-      const img = document.createElement('img');
-      img.src = slide.imageUrl || slide.image_url || slide.image;
-      img.alt = slide.altText || slide.alt_text || 'Artisan Craft';
-      img.className = `absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out cursor-pointer ${index === 0 ? 'opacity-100' : 'opacity-0'}`;
-      img.id = `hero-slide-${index}`;
-      img.onclick = () => {
-        const prodId = slide.productId || slide.product_id || slide.id;
-        if (prodId && typeof prodId === 'number') {
-          window.location.href = `/buyer/product.html?id=${prodId}`;
-        }
-      };
-      wrapper.appendChild(img);
-
-      const dot = document.createElement('button');
-      dot.type = 'button';
-      dot.className = `rounded-full transition-all duration-300 ${index === 0 ? 'w-5 h-1.5 bg-[#FAF6EE]' : 'w-1.5 h-1.5 bg-[#FAF6EE]/50'}`;
-      dot.style.cssText = 'min-width: 0 !important; min-height: 0 !important; padding: 0 !important; border: none !important; cursor: pointer;';
-      dot.setAttribute('aria-label', `Slide ${index + 1}`);
-      dot.onclick = () => goToSlide(index);
-      dotsContainer.appendChild(dot);
-    });
-  }
-
-  function goToSlide(index) {
-    if (slides.length === 0) return;
-
-    document.getElementById(`hero-slide-${currentSlide}`)?.classList.replace('opacity-100', 'opacity-0');
-    if (dotsContainer.children[currentSlide]) {
-      dotsContainer.children[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-[#FAF6EE]/50';
-      dotsContainer.children[currentSlide].style.cssText = 'min-width: 0 !important; min-height: 0 !important; padding: 0 !important; border: none !important; cursor: pointer;';
-    }
-
-    currentSlide = ((index % slides.length) + slides.length) % slides.length;
-
-    document.getElementById(`hero-slide-${currentSlide}`)?.classList.replace('opacity-0', 'opacity-100');
-    if (dotsContainer.children[currentSlide]) {
-      dotsContainer.children[currentSlide].className = 'w-5 h-1.5 rounded-full transition-all duration-300 bg-[#FAF6EE]';
-      dotsContainer.children[currentSlide].style.cssText = 'min-width: 0 !important; min-height: 0 !important; padding: 0 !important; border: none !important; cursor: pointer;';
-    }
-
-    resetSlideshow();
-  }
-
-  function nextSlide() {
-    goToSlide(currentSlide + 1);
-  }
-
-  function prevSlide() {
-    goToSlide(currentSlide - 1);
-  }
-
-  function startSlideshow() {
-    slideInterval = setInterval(nextSlide, SLIDE_DURATION);
-  }
-
-  function resetSlideshow() {
-    clearInterval(slideInterval);
-    startSlideshow();
-  }
-
-  prevBtn.addEventListener('click', prevSlide);
-  nextBtn.addEventListener('click', nextSlide);
 
   // --- Sponsored Products Grid ---
   async function loadSponsoredProducts() {
@@ -1829,10 +1542,8 @@
   }
 
   // --- Initial Invocations ---
-  loadHeroSlides();
   loadSeasonalBanner();
   loadSponsoredProducts();
-  loadAdminFeaturedProducts();
   loadForYouProducts();
   loadCategoryRows();
   initOccasionsScroller();

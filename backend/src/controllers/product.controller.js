@@ -101,9 +101,7 @@ function sanitizeProduct(p) {
 async function listCategories(req, res, next) {
   try {
     const { rows } = await query(
-      `SELECT c.id, c.name, COALESCE(c.display_name, c.name) AS display_name,
-              c.slug, c.emoji_icon, c.icon_emoji, c.image_url, c.banner_image_url,
-              c.description, c.parent_id, c.sort_order,
+      `SELECT c.id, c.name, c.slug, c.image_url, c.parent_id, c.sort_order,
               (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id AND p.status = 'active') AS product_count
        FROM categories c
        WHERE c.is_active = TRUE
@@ -349,6 +347,7 @@ async function forYouFeed(req, res, next) {
       // Weighted: viewed categories + purchase history
       const { rows: fetched } = await query(
         `SELECT DISTINCT p.id, p.name, p.description, p.base_price, p.category_id, p.tags,
+                p.images AS direct_images,
                 p.customization_mode, p.is_customizable, p.is_sponsored,
                 p.status, p.view_count, p.seller_id, p.created_at,
                 p.special_packaging_available, p.slug,
@@ -356,7 +355,7 @@ async function forYouFeed(req, res, next) {
                 COALESCE(
                   json_agg(pi ORDER BY pi.sort_order) FILTER (WHERE pi.id IS NOT NULL),
                   '[]'
-                ) AS images
+                ) AS product_images
          FROM products p
          LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
          LEFT JOIN sellers s ON s.user_id = p.seller_id
@@ -388,6 +387,7 @@ async function forYouFeed(req, res, next) {
       // Anonymous: random active products
       const { rows: fetched } = await query(
         `SELECT p.id, p.name, p.description, p.base_price, p.category_id, p.tags,
+                p.images AS direct_images,
                 p.customization_mode, p.is_customizable, p.is_sponsored,
                 p.status, p.view_count, p.seller_id, p.created_at,
                 p.special_packaging_available, p.slug,
@@ -395,7 +395,7 @@ async function forYouFeed(req, res, next) {
                 COALESCE(
                   json_agg(pi ORDER BY pi.sort_order) FILTER (WHERE pi.id IS NOT NULL),
                   '[]'
-                ) AS images
+                ) AS product_images
          FROM products p
          LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
          LEFT JOIN sellers s ON s.user_id = p.seller_id
@@ -676,7 +676,8 @@ async function getProduct(req, res, next) {
               p.tags, p.images AS direct_images,
               p.customization_mode, p.is_customizable, p.customization_schema,
               COALESCE(
-                (SELECT row_to_json(occ) FROM open_customization_configs occ WHERE occ.product_id = p.id),
+                p.open_customization_config,
+                (SELECT to_jsonb(occ) FROM open_customization_configs occ WHERE occ.product_id = p.id),
                 NULL
               ) AS open_customization_config,
               p.status, p.view_count, p.seller_id, p.is_sponsored,
@@ -722,7 +723,7 @@ async function getProduct(req, res, next) {
        LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
        LEFT JOIN sellers s ON s.user_id = p.seller_id
        LEFT JOIN users u ON u.id = p.seller_id
-       WHERE (p.id::text = $1 OR p.slug = $1) AND p.status IN ('active','paused')`,
+       WHERE (p.id::text = $1 OR p.slug = $1) AND p.status NOT IN ('deleted')`,
       [String(id)]
     );
 

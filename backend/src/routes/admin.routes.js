@@ -24,7 +24,6 @@ router.post('/auth/refresh', authController.refresh);
 // Public read endpoints for platform discovery
 router.get('/categories', adminController.listCategories);
 router.get('/banners', adminController.listBanners);
-router.get('/our-story', adminController.getFeaturedSellers);
 
 // User report creation
 router.post('/reports', authMiddleware, adminController.createReport);
@@ -140,15 +139,6 @@ router.delete('/coupons/:id', adminController.deleteCoupon);
 router.post('/banners', uploadBannerImage, adminController.createBanner);
 router.patch('/banners/:id/toggle', adminController.toggleBanner);
 router.delete('/banners/:id', adminController.deleteBanner);
-
-router.post('/our-story', uploadCategoryImage, (req, res, next) => {
-  const { sellerId, seller_id } = req.body;
-  req.params.sellerId = sellerId || seller_id;
-  return adminController.featureSeller(req, res, next);
-});
-router.post('/our-story/:sellerId', uploadCategoryImage, adminController.featureSeller);
-router.put('/our-story/:sellerId', uploadCategoryImage, adminController.featureSeller);
-router.delete('/our-story/:sellerId', adminController.unfeatureSeller);
 
 // 10. Reports
 router.get('/reports', adminController.listReports);

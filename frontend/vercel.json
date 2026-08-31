@@ -1,14 +1,8 @@
 {
-  "cleanUrls": true,
-  "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://tohfafinal.onrender.com/api/$1"
-    },
-    {
-      "source": "/health",
-      "destination": "https://tohfafinal.onrender.com/health"
+      "source": "/api/:path*",
+      "destination": "https://tohfafinal.onrender.com/api/:path*"
     }
   ]
 }

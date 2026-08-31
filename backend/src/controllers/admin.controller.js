@@ -1356,97 +1356,6 @@ async function deleteBanner(req, res, next) {
   }
 }
 
-async function getFeaturedSellers(req, res, next) {
-  try {
-    const { rows } = await query(`
-      SELECT osf.id, osf.seller_id, osf.blurb, osf.is_active, osf.featured_at,
-             COALESCE(sp.store_name, s.store_name, u.name, 'Artisan Studio') AS store_name,
-             COALESCE(sp.store_name, s.store_name, u.name, 'Artisan Studio') AS shop_name,
-             COALESCE(u.name, sp.store_name, s.store_name, 'Artisan Maker') AS seller_name,
-             COALESCE(u.name, sp.store_name, s.store_name, 'Artisan Maker') AS name,
-             COALESCE(NULLIF(osf.blurb, ''), sp.bio, s.bio, 'Crafting bespoke handmade treasures with immense devotion and care.') AS blurb,
-             COALESCE(NULLIF(osf.blurb, ''), sp.bio, s.bio, 'Crafting bespoke handmade treasures with immense devotion and care.') AS story_text,
-             COALESCE(sp.bio, s.bio, '') AS bio,
-             COALESCE(osf.image_url, u.profile_photo_url, sp.profile_photo, s.photo_url, '/img/default-avatar.png') AS profile_photo_url,
-             COALESCE(osf.image_url, u.cover_photo_url, sp.banner_url, s.banner_url, '/img/categories/artisan_showcase.jpg') AS cover_photo_url,
-             COALESCE(osf.image_url, u.profile_photo_url, sp.profile_photo, s.photo_url, u.cover_photo_url, sp.banner_url, '/img/categories/artisan_showcase.jpg') AS image_url,
-             COALESCE(sp.is_admin_managed, s.is_admin_managed, FALSE) AS is_admin_managed,
-             u.email
-      FROM our_story_features osf
-      JOIN users u ON u.id = osf.seller_id
-      LEFT JOIN seller_profiles sp ON sp.user_id = osf.seller_id
-      LEFT JOIN sellers s ON s.user_id = osf.seller_id
-      WHERE osf.is_active = TRUE
-      ORDER BY osf.featured_at DESC
-    `);
-    return res.json({ success: true, data: rows });
-  } catch (err) {
-    next(err);
-  }
-}
-
-async function featureSeller(req, res, next) {
-  try {
-    const sellerId = req.params.sellerId || req.body.seller_id || req.body.sellerId;
-    if (!sellerId) {
-      return res.status(400).json({ success: false, message: 'seller_id is required.' });
-    }
-
-    const blurb = req.body.story_text || req.body.blurb || req.body.bio || '';
-    const isActive = req.body.is_active === undefined ? true : (req.body.is_active === '1' || req.body.is_active === true || req.body.is_active === 'true');
-    const uploadedUrl = req.file ? req.file.path : null;
-    const imageUrl = uploadedUrl || req.body.image_url || null;
-
-    const { rows } = await query(
-      `INSERT INTO our_story_features (seller_id, blurb, image_url, is_active, featured_at)
-       VALUES ($1, $2, $3, $4, NOW())
-       ON CONFLICT (seller_id) DO UPDATE 
-       SET blurb = COALESCE(NULLIF(EXCLUDED.blurb, ''), our_story_features.blurb),
-           image_url = COALESCE(EXCLUDED.image_url, our_story_features.image_url),
-           is_active = EXCLUDED.is_active,
-           featured_at = NOW()
-       RETURNING *`,
-      [sellerId, blurb, imageUrl, isActive]
-    );
-
-    // Sync bio to seller profile if provided
-    if (blurb) {
-      await query(`UPDATE seller_profiles SET bio = $1 WHERE user_id = $2 AND (bio IS NULL OR bio = '')`, [blurb, sellerId]).catch(() => {});
-      await query(`UPDATE sellers SET bio = $1 WHERE user_id = $2 AND (bio IS NULL OR bio = '')`, [blurb, sellerId]).catch(() => {});
-    }
-
-    await createNotification(
-      sellerId,
-      'featured_in_our_story',
-      'Your Store is Live on "Our Story"! 🌟',
-      'Congratulations! Your artisan journey has been featured on Tohfa\'s Our Story panel.'
-    ).catch(() => {});
-
-    await logAdminAction({
-      adminId: req.user.id,
-      actionType: 'SELLER_FEATURED_OUR_STORY',
-      targetEntity: 'sellers',
-      targetId: sellerId,
-      details: {},
-      ipAddress: req.ip
-    });
-
-    return res.json({ success: true, data: rows[0] });
-  } catch (err) {
-    next(err);
-  }
-}
-
-async function unfeatureSeller(req, res, next) {
-  try {
-    const { sellerId } = req.params;
-    await query('DELETE FROM our_story_features WHERE seller_id::text = $1 OR id::text = $1', [sellerId]);
-    return res.json({ success: true, message: 'Seller unfeatured from Our Story.' });
-  } catch (err) {
-    next(err);
-  }
-}
-
 async function listReports(req, res, next) {
   try {
     const { status = 'all' } = req.query;
@@ -1848,9 +1757,6 @@ module.exports = {
   createBanner,
   toggleBanner,
   deleteBanner,
-  getFeaturedSellers,
-  featureSeller,
-  unfeatureSeller,
   listReports,
   updateReport,
   createReport,

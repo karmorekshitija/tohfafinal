@@ -69,7 +69,7 @@
   // Pages that are publicly accessible without login
   const PUBLIC_BUYER_PAGES = new Set([
     'home', 'categories', 'category', 'product',
-    'our-story', 'seller-profile', 'search', 'zipgift', 'faq', 'bulk'
+    'seller-profile', 'search', 'zip-gift', 'faq', 'bulk'
   ]);
 
   let guardsRun = false;
@@ -243,7 +243,7 @@
         path.includes('home') || path.includes('categor') || path.includes('zip-gift') ||
         path.includes('search') || path.includes('product') || path.includes('profile') ||
         path.includes('cart') || path.includes('wishlist') || path.includes('order') ||
-        path.includes('occasions') || path.includes('our-story') || path.includes('faq') ||
+        path.includes('occasions') || path.includes('faq') ||
         path.includes('terms')
       ));
 

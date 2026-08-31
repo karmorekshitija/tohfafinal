@@ -179,7 +179,10 @@ function prefixRelativeUrls(obj) {
   if (!obj) return obj;
   if (typeof obj === 'string') {
     if (obj.startsWith('/uploads/') || obj.startsWith('/media/')) {
-      const apiHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '' : 'https://api.thetohfa.in';
+      // Use the API_HOST if set, otherwise fall back to the production backend URL
+      const apiHost = API_HOST || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? ''
+        : 'https://tohfafinal.onrender.com');
       return apiHost + obj;
     }
     return obj;

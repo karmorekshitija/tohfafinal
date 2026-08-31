@@ -387,8 +387,6 @@
             Company
           </h3>
           <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
-            <li><a href="/buyer/our-story.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">About Us</a></li>
-            <li><a href="/buyer/our-story.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Our Story</a></li>
             <li><a href="/buyer/terms-conditions.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Terms of Service</a></li>
             <li><a href="/buyer/terms-conditions.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Privacy Policy</a></li>
           </ul>
@@ -444,8 +442,6 @@
             Company
           </h3>
           <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
-            <li><a href="/buyer/our-story.html" class="text-[#FAF6EE]/90 no-underline">About Us</a></li>
-            <li><a href="/buyer/our-story.html" class="text-[#FAF6EE]/90 no-underline">Our Story</a></li>
             <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Terms of Service</a></li>
             <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Privacy Policy</a></li>
           </ul>
@@ -525,7 +521,7 @@
     async function initPage() {
       // 1. Fetch categories
       try {
-        const res = await apiClient.get('/categories');
+        const res = await apiClient.get('/products/categories');
         if (res.data && res.data.success) {
           const categories = res.data.data?.categories || res.data.data || [];
           allCategoriesList = categories;
@@ -806,8 +802,15 @@
         let products = [];
         try {
           const res = await apiClient.get('/products', { params });
-          if (res.data && res.data.success) {
-            products = res.data.data?.products || res.data.data || [];
+          if (!res) {
+            console.warn('[fetchProducts] Null response — possible auth redirect or network error');
+          } else {
+            // Support both axios wrapper shape (res.data.success) and raw shape (res.success)
+            const payload = res.data || res;
+            if (payload?.success || payload?.data?.products || payload?.products) {
+              products = payload.data?.products || payload.data || payload.products || [];
+              if (!Array.isArray(products)) products = [];
+            }
           }
         } catch (apiErr) {
           console.warn("Falling back for products fetch:", apiErr);

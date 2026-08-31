@@ -468,6 +468,7 @@
             <h3 class="font-headline-lg text-headline-lg mb-2">Product Not Found</h3>
             <p class="text-secondary max-w-md mx-auto mb-6">The product you're looking for might have been removed, deactivated, or does not exist.</p>
             <button onclick="window.location.href='category.html'" class="bg-primary text-background px-8 py-3 rounded-lg font-semibold uppercase tracking-wider">Back to Browse</button>
+        </div>
     </main>
 
     <!-- Compact Footer -->
@@ -494,8 +495,6 @@
             Company
           </h3>
           <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
-            <li><a href="/buyer/our-story.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">About Us</a></li>
-            <li><a href="/buyer/our-story.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Our Story</a></li>
             <li><a href="/buyer/terms-conditions.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Terms of Service</a></li>
             <li><a href="/buyer/terms-conditions.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Privacy Policy</a></li>
           </ul>
@@ -551,8 +550,6 @@
             Company
           </h3>
           <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
-            <li><a href="/buyer/our-story.html" class="text-[#FAF6EE]/90 no-underline">About Us</a></li>
-            <li><a href="/buyer/our-story.html" class="text-[#FAF6EE]/90 no-underline">Our Story</a></li>
             <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Terms of Service</a></li>
             <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Privacy Policy</a></li>
           </ul>
@@ -822,12 +819,31 @@
 
             try {
                 const response = await apiClient.get(`/products/${productId}`);
-                if (response.data && response.data.success) {
-                    // Backend returns { success, data: { product: {...} } }
-                    // axios wraps it so response.data = { success, data: { product } }
-                    product = response.data.data?.product || response.data.data;
 
-                    maxStock = product.stock_qty || 0;
+                // Handle null response (e.g. auth redirect happened)
+                if (!response) {
+                    console.warn('[loadProduct] Null response — possible auth redirect');
+                    showErrorState();
+                    return;
+                }
+
+                // Support both axios wrapper shape (response.data.success)
+                // and raw response shape (response.success)
+                const payload = response.data || response;
+                const isSuccess = payload?.success === true || payload?.data?.product || payload?.product;
+
+                if (isSuccess) {
+                    // Unwrap product from nested or flat response
+                    product = payload.data?.product || payload.data || payload.product || payload;
+
+                    // Ensure we actually have a product object with an id
+                    if (!product || (!product.id && !product.slug)) {
+                        console.error('[loadProduct] Invalid product data received:', product);
+                        showErrorState();
+                        return;
+                    }
+
+                    maxStock = product.stock_qty || product.stock_quantity || 0;
                     isWishlisted = !!product.is_wishlisted;
 
                     // Update UI Info
@@ -2253,7 +2269,9 @@
         }
         // -------------------------------------------------------------------------
 
-        window.addEventListener('DOMContentLoaded', async () => {
+        // Use readyState check because this script is at bottom of body —
+        // DOMContentLoaded may have already fired before this listener is registered.
+        async function initPage() {
             await checkAuthState();
             await loadProduct();
             if (product) {
@@ -2292,7 +2310,13 @@
             if (contestAttemptId) {
                 pollContention(parseInt(contestAttemptId));
             }
-        });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initPage);
+        } else {
+            initPage();
+        }
     </script>
 
 

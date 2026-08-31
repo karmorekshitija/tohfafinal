@@ -29,7 +29,6 @@ export function initAdminShell({ activeTab = 'dashboard' } = {}) {
       <a href="./products.html" class="admin-nav-link ${activeTab === 'products' ? 'active' : ''}">🎁 All Products</a>
       <a href="./orders.html" class="admin-nav-link ${activeTab === 'orders' ? 'active' : ''}">📦 Orders & Disputes</a>
       <a href="./categories.html" class="admin-nav-link ${activeTab === 'categories' ? 'active' : ''}">🏷️ Categories</a>
-      <a href="./our-story.html" class="admin-nav-link ${activeTab === 'our-story' ? 'active' : ''}">🌟 Our Story</a>
       <a href="./reports.html" class="admin-nav-link ${activeTab === 'reports' ? 'active' : ''}">🚨 Reports</a>
       <a href="./audit-logs.html" class="admin-nav-link ${activeTab === 'audit-logs' ? 'active' : ''}">🛡️ Audit Logs</a>
     </nav>

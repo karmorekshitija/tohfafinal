@@ -294,6 +294,7 @@
   </footer>
 
   <script type="module">
+    import { authStorage } from '/src/utils/auth.js';
     const pwInput = document.getElementById('password');
     const togglePwBtn = document.getElementById('toggle-pw-btn');
     const pwIcon = document.getElementById('pw-icon');
@@ -430,20 +431,18 @@
 
         // Handle both response shapes the backend can return
         const token = data.accessToken || data.token || data.data?.access_token || data.data?.token;
-        const refreshToken = data.refreshToken || data.refresh_token || data.data?.refresh_token;
+        const refreshToken = data.refreshToken || data.refresh_token || data.data?.refreshToken || data.data?.refresh_token;
         const user = data.user || data.data?.user;
 
         if (token) {
-          sessionStorage.setItem('tohfa_access_token', token);
-          localStorage.setItem('tohfa_access_token', token);
+          authStorage.setToken(token);
         }
         if (refreshToken) {
           localStorage.setItem('tohfa_refresh_token', refreshToken);
           sessionStorage.setItem('tohfa_refresh_token', refreshToken);
         }
         if (user) {
-          sessionStorage.setItem('tohfa_user', JSON.stringify(user));
-          localStorage.setItem('tohfa_user', JSON.stringify(user));
+          authStorage.setUser(user);
         }
 
         window.location.replace('/seller/onboarding.html');

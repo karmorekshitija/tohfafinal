@@ -398,7 +398,6 @@ export function renderFooter() {
         <a href="/buyer/home.html"       class="footer__link">Home</a>
         <a href="/buyer/categories.html" class="footer__link">All Categories</a>
         <a href="/buyer/occasions.html"  class="footer__link">Occasions Calendar</a>
-        <a href="/buyer/our-story.html" id="footerStoryLink" class="footer__link">Our Story</a>
         <a href="javascript:void(0)" id="footerTanyaLink" class="footer__link">AI Gift Guide (Tanya)</a>
       </div>
 
@@ -438,71 +437,10 @@ export function renderFooter() {
     </div>
   `;
 
-  document.getElementById('footerStoryLink')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    openOurStoryModal();
-  });
   document.getElementById('footerTanyaLink')?.addEventListener('click', (e) => {
     e.preventDefault();
     openTanya();
   });
-}
-
-/**
- * Our Story featured artisans modal
- */
-export async function openOurStoryModal() {
-  const modalId = 'ourStoryModal';
-  let modal = document.getElementById(modalId);
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = modalId;
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-      <div class="modal animate-scale-in">
-        <div class="modal__header">
-          <div>
-            <div class="text-eyebrow" style="margin-bottom:var(--space-1);">THE PEOPLE BEHIND THE GIFTS</div>
-            <h2 class="modal__title">Our Story & Featured Artisans</h2>
-          </div>
-          <button id="closeStoryModal" class="modal__close">✕</button>
-        </div>
-        <div id="storyContent" class="flex flex-col gap-4">
-          <div class="skeleton skeleton--card" style="height:120px;"></div>
-          <div class="skeleton skeleton--card" style="height:120px;"></div>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(modal);
-    document.getElementById('closeStoryModal').addEventListener('click', () => modal.remove());
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
-  }
-
-  try {
-    const res     = await api.get('/api/admin/our-story');
-    const stories = res?.data || [];
-    const container = document.getElementById('storyContent');
-    if (!stories.length) {
-      container.innerHTML = `
-        <p class="text-body">Tohfa is dedicated to connecting independent Indian artisan creators with thoughtful gift seekers across the country.</p>
-        <p class="text-small" style="margin-top:var(--space-2);">Every gift on Tohfa is made by hand, with care, and shipped directly from the maker to you.</p>
-      `;
-      return;
-    }
-
-    container.innerHTML = stories.map(s => `
-      <div class="card flex gap-4 items-center" style="padding:var(--space-4);">
-        <img src="${s.profile_photo_url || '/placeholder.png'}" class="avatar avatar-lg avatar--gold" alt="${s.store_name}">
-        <div style="flex:1;">
-          <div class="text-eyebrow" style="margin-bottom:var(--space-1);">${s.craft_category || 'Artisan'}</div>
-          <h3 style="font-family:var(--font-display); font-size:var(--text-lg); color:var(--color-primary); letter-spacing:var(--tracking-tight);">${s.store_name}</h3>
-          <p class="text-small" style="margin-top:4px;">${s.blurb || s.bio || 'Handmade artisan creator on Tohfa.'}</p>
-        </div>
-      </div>
-    `).join('');
-  } catch {
-    document.getElementById('storyContent').innerHTML = '<p class="text-body">Welcome to Tohfa — empowering handcrafted creators across India.</p>';
-  }
 }
 
 /**
