@@ -116,6 +116,17 @@ async function autoSyncDatabase() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
     `);
+    // CREATE TABLE IF NOT EXISTS is a no-op when the table already exists.
+    // These ALTERs ensure columns added by migrations 006/010 are present on
+    // any Render DB that was bootstrapped before those migrations were written.
+    await query(`ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS variant_name TEXT;`);
+    await query(`ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS color_name TEXT;`);
+    await query(`ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS color_hex CHAR(7);`);
+    await query(`ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS size TEXT;`);
+    await query(`ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS additional_price NUMERIC(10,2) NOT NULL DEFAULT 0;`);
+    await query(`ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS image_url TEXT;`);
+    await query(`ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS images TEXT[] DEFAULT '{}';`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_product_variants_product_id ON product_variants(product_id);`);
 
     // 8. Reports Table
     await query(`

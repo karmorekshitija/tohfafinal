@@ -1154,6 +1154,17 @@ async function seedTofaSpecials() {
     await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS review_count INT DEFAULT 0;`).catch(() => {});
     await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';`).catch(() => {});
     await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS slug VARCHAR(255);`).catch(() => {});
+    // Schema guard: ensure product_variants columns exist before INSERT references them.
+    // CREATE TABLE IF NOT EXISTS is a no-op on existing tables — these ALTERs are the only
+    // way to guarantee the columns are present on a Render DB that was created before
+    // migrations 006 / 010 added variant_name and images.
+    await query(`ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS variant_name TEXT;`).catch(() => {});
+    await query(`ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS color_name TEXT;`).catch(() => {});
+    await query(`ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS color_hex CHAR(7);`).catch(() => {});
+    await query(`ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS size TEXT;`).catch(() => {});
+    await query(`ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS additional_price NUMERIC(10,2) NOT NULL DEFAULT 0;`).catch(() => {});
+    await query(`ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS image_url TEXT;`).catch(() => {});
+    await query(`ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS images TEXT[] DEFAULT '{}';`).catch(() => {});
     // Heal any stale seller_type = 'Artisan' rows from old seed/migration 011
     await query(`UPDATE seller_profiles SET seller_type = 'special' WHERE seller_type = 'Artisan';`).catch(() => {});
 
