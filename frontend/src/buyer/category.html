@@ -208,31 +208,34 @@
     </section>
 
     <!-- 3. SORT + SUBCATEGORY FILTER ROW (STICKY) -->
-    <section class="bg-[#FAF6EE]/95 backdrop-blur-md py-3 md:py-4 sticky top-16 md:top-20 z-40 border-b border-[#14381F]/15">
-      <div class="flex items-center gap-3 px-4 md:px-8 lg:px-12 max-w-[1440px] mx-auto">
-        <!-- Filter Drawer Trigger Button -->
-        <div class="flex-shrink-0 pr-3 border-r border-[#14381F]/15">
-          <button id="filter-btn" class="px-3.5 py-1.5 bg-white/80 border border-[#14381F]/20 rounded-full text-[#14381F] flex items-center gap-1.5 hover:bg-white hover:border-[#14381F]/50 shadow-xs transition-all cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">tune</span>
-            <span id="filter-btn-text" class="text-xs sm:text-sm font-medium">Filter</span>
-          </button>
+    <section class="bg-[#FAF6EE]/95 backdrop-blur-md py-2.5 sm:py-3 md:py-4 sticky top-16 md:top-20 z-40 border-b border-[#14381F]/15">
+      <div class="flex flex-col md:flex-row md:items-center gap-2.5 md:gap-3 px-4 md:px-8 lg:px-12 max-w-[1440px] mx-auto">
+        <!-- Row 1 on mobile: Filter button + Sort dropdown side by side -->
+        <div class="flex items-center justify-between w-full md:contents">
+          <!-- Filter Drawer Trigger Button -->
+          <div class="flex-shrink-0 md:order-1 md:pr-3 md:border-r md:border-[#14381F]/15">
+            <button id="filter-btn" class="px-3.5 py-1.5 bg-white/80 border border-[#14381F]/20 rounded-full text-[#14381F] flex items-center gap-1.5 hover:bg-white hover:border-[#14381F]/50 shadow-xs transition-all cursor-pointer">
+              <span class="material-symbols-outlined text-[18px]">tune</span>
+              <span id="filter-btn-text" class="text-xs sm:text-sm font-medium">Filter</span>
+            </button>
+          </div>
+
+          <!-- Sort Select Dropdown -->
+          <div class="flex items-center gap-2 md:order-3 md:border-l md:border-[#14381F]/15 md:pl-3">
+            <span class="text-xs text-[#587A5B] font-semibold uppercase tracking-wider hidden sm:inline">Sort:</span>
+            <select id="sort-select" class="flex-shrink-0 px-3 py-1.5 rounded-full bg-white/80 text-[#14381F] font-medium text-xs sm:text-sm border border-[#14381F]/20 focus:outline-none focus:border-[#14381F] cursor-pointer shadow-xs transition-all">
+              <option value="newest">Newest</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="most_popular">Most Popular</option>
+              <option value="top_rated">Best Rated</option>
+            </select>
+          </div>
         </div>
 
-        <!-- Horizontal Subcategory Pills -->
-        <div id="subcategory-filters-container" class="flex flex-nowrap items-center gap-2 overflow-x-auto no-scrollbar flex-grow py-0.5">
+        <!-- Row 2 on mobile: Horizontal Subcategory Pills (Middle on desktop) -->
+        <div id="subcategory-filters-container" class="flex flex-nowrap items-center gap-2 overflow-x-auto no-scrollbar w-full md:w-auto md:flex-grow md:order-2 py-0.5">
           <!-- Dynamic subcategory pills injected here -->
-        </div>
-
-        <!-- Sort Select Dropdown -->
-        <div class="flex items-center gap-2 border-l border-[#14381F]/15 pl-3">
-          <span class="text-xs text-[#587A5B] font-semibold uppercase tracking-wider hidden sm:inline">Sort:</span>
-          <select id="sort-select" class="flex-shrink-0 px-3 py-1.5 rounded-full bg-white/80 text-[#14381F] font-medium text-xs sm:text-sm border border-[#14381F]/20 focus:outline-none focus:border-[#14381F] cursor-pointer shadow-xs transition-all">
-            <option value="newest">Newest</option>
-            <option value="price_asc">Price: Low to High</option>
-            <option value="price_desc">Price: High to Low</option>
-            <option value="most_popular">Most Popular</option>
-            <option value="top_rated">Best Rated</option>
-          </select>
         </div>
       </div>
     </section>

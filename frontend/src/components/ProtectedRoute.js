@@ -69,7 +69,8 @@
   // Pages that are publicly accessible without login
   const PUBLIC_BUYER_PAGES = new Set([
     'home', 'categories', 'category', 'product',
-    'seller-profile', 'search', 'zip-gift', 'faq', 'bulk'
+    'seller-profile', 'search', 'zip-gift', 'faq', 'bulk',
+    'terms-conditions', 'occasions'
   ]);
 
   let guardsRun = false;

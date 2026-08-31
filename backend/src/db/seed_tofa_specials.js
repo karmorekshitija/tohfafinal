@@ -889,12 +889,13 @@ const PRODUCTS_CATALOG = [
 async function purgeLegacyFakeSellers() {
   console.log('🧹 [Step 1] Purging legacy single-store fake sellers & stale catalogs...');
 
-  // Identify users to purge: Tohfa Official Store (user 94 or tohfa_official@tohfa.com), Tohfa Official Curated, etc.
+  // Identify users to purge: Tohfa Official Store (tohfa_official@tohfa.com), Tohfa Official Curated, etc.
   const { rows: legacyUsers } = await query(`
     SELECT id, email, name FROM users 
     WHERE email ILIKE 'tohfa_official@%' 
        OR email ILIKE 'special_shop_%' 
-       OR id IN (94, 129)
+       OR email ILIKE '%official%tohfa%'
+       OR email ILIKE '%curated%tohfa%'
   `);
 
   for (const u of legacyUsers) {
@@ -921,7 +922,7 @@ async function purgeLegacyFakeSellers() {
     // Safely uncouple orders before deleting seller profiles
     await query('UPDATE orders SET seller_id = NULL WHERE seller_id = $1', [u.id]).catch(() => {});
     await query('DELETE FROM seller_profiles WHERE user_id = $1', [u.id]).catch(() => {});
-    await query('DELETE FROM sellers WHERE user_id = $1 OR id = $1', [u.id]).catch(() => {});
+    await query('DELETE FROM sellers WHERE user_id = $1', [u.id]).catch(() => {});
     await query('DELETE FROM users WHERE id = $1', [u.id]).catch(() => {});
   }
 

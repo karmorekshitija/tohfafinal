@@ -86,10 +86,12 @@
       100% { background-position: 200% 0; }
     }
 
-    .scrollbar-none::-webkit-scrollbar {
+    .scrollbar-none::-webkit-scrollbar,
+    .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
-    .scrollbar-none {
+    .scrollbar-none,
+    .no-scrollbar {
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
@@ -554,69 +556,30 @@
         </div>
       </div>
 
-      <style>
-        #sponsored-product-grid {
-          display: flex !important;
-          flex-wrap: nowrap !important;
-          overflow-x: auto !important;
-          -webkit-overflow-scrolling: touch;
-          scroll-snap-type: x mandatory;
-        }
-        @media (max-width: 767px) {
-          #sponsored-product-grid > * {
-            width: calc(50% - 6px) !important;
-            min-width: calc(50% - 6px) !important;
-            max-width: calc(50% - 6px) !important;
-            flex: 0 0 calc(50% - 6px) !important;
-            scroll-snap-align: start !important;
-          }
-          #sponsored-skeletons > * {
-            width: calc(50% - 6px) !important;
-            min-width: calc(50% - 6px) !important;
-            flex: 0 0 calc(50% - 6px) !important;
-          }
-        }
-        @media (min-width: 768px) {
-          #sponsored-product-grid {
-            display: grid !important;
-            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-            overflow-x: visible !important;
-          }
-          #sponsored-product-grid > :nth-child(n+5) {
-            display: none !important;
-          }
-        }
-      </style>
-
-      <!-- Sponsored Product Single-Row: 2 cards scrollable on mobile, 4 cards grid on desktop -->
-      <div id="sponsored-product-grid" class="flex flex-nowrap md:grid md:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 overflow-x-auto md:overflow-visible snap-x snap-mandatory scrollbar-none pb-2 relative">
-        <!-- Dynamic sponsored product cards load here -->
-      </div>
-
-      <!-- Sponsored Skeletons (Single-Row: 2 mobile, 4 desktop) -->
-      <div id="sponsored-skeletons" class="flex flex-nowrap md:grid md:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mt-2 overflow-x-hidden" style="display: none !important;">
-        <div class="rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-2.5 sm:p-3 md:p-4 flex flex-col justify-between min-h-[260px] sm:min-h-[300px]">
+      <!-- Sponsored Product Carousel -->
+      <div id="sponsored-product-grid" class="flex gap-2.5 sm:gap-4 lg:gap-5 overflow-x-auto no-scrollbar pb-2 relative snap-x snap-mandatory">
+        <div class="w-[230px] sm:w-[260px] shrink-0 rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-2.5 sm:p-3 md:p-4 flex flex-col justify-between min-h-[260px] sm:min-h-[300px]">
           <div class="aspect-square rounded-lg shimmer mb-2 sm:mb-3 w-full"></div>
           <div class="h-3.5 w-1/3 shimmer mb-1.5 rounded"></div>
           <div class="h-4 w-3/4 shimmer mb-1 rounded"></div>
           <div class="h-3.5 w-1/2 shimmer mb-2 rounded"></div>
           <div class="h-7 sm:h-8 w-full shimmer rounded-lg"></div>
         </div>
-        <div class="rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-2.5 sm:p-3 md:p-4 flex flex-col justify-between min-h-[260px] sm:min-h-[300px]">
+        <div class="w-[230px] sm:w-[260px] shrink-0 rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-2.5 sm:p-3 md:p-4 flex flex-col justify-between min-h-[260px] sm:min-h-[300px]">
           <div class="aspect-square rounded-lg shimmer mb-2 sm:mb-3 w-full"></div>
           <div class="h-3.5 w-1/3 shimmer mb-1.5 rounded"></div>
           <div class="h-4 w-3/4 shimmer mb-1 rounded"></div>
           <div class="h-3.5 w-1/2 shimmer mb-2 rounded"></div>
           <div class="h-7 sm:h-8 w-full shimmer rounded-lg"></div>
         </div>
-        <div class="w-full shrink-0 rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-2.5 sm:p-3 md:p-4 flex flex-col justify-between min-h-[260px] sm:min-h-[300px] hidden md:flex">
+        <div class="w-[230px] sm:w-[260px] shrink-0 rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-2.5 sm:p-3 md:p-4 flex flex-col justify-between min-h-[260px] sm:min-h-[300px]">
           <div class="aspect-square rounded-lg shimmer mb-2 sm:mb-3 w-full"></div>
           <div class="h-3.5 w-1/3 shimmer mb-1.5 rounded"></div>
           <div class="h-4 w-3/4 shimmer mb-1 rounded"></div>
           <div class="h-3.5 w-1/2 shimmer mb-2 rounded"></div>
           <div class="h-7 sm:h-8 w-full shimmer rounded-lg"></div>
         </div>
-        <div class="w-full shrink-0 rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-2.5 sm:p-3 md:p-4 flex flex-col justify-between min-h-[260px] sm:min-h-[300px] hidden md:flex">
+        <div class="w-[230px] sm:w-[260px] shrink-0 rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-2.5 sm:p-3 md:p-4 flex flex-col justify-between min-h-[260px] sm:min-h-[300px]">
           <div class="aspect-square rounded-lg shimmer mb-2 sm:mb-3 w-full"></div>
           <div class="h-3.5 w-1/3 shimmer mb-1.5 rounded"></div>
           <div class="h-4 w-3/4 shimmer mb-1 rounded"></div>
@@ -1398,42 +1361,38 @@
     }
   }
 
-  // --- Sponsored Products Grid ---
+  // --- Sponsored Products Carousel ---
   async function loadSponsoredProducts() {
     const sponsoredGrid = document.getElementById('sponsored-product-grid');
-    const skeletons = document.getElementById('sponsored-skeletons');
     if (!sponsoredGrid) return;
-
-    if (skeletons) skeletons.style.setProperty('display', window.innerWidth >= 768 ? 'grid' : 'flex', 'important');
 
     try {
       let products = [];
       try {
-        const response = await apiClient.get('/products/sponsored?limit=8');
+        const response = await apiClient.get('/products/sponsored');
         products = response.data?.data?.products || response.data?.products || [];
       } catch (err) {
         console.warn('Sponsored endpoint error, falling back to general catalog:', err);
       }
 
       if (!products || products.length === 0) {
-        const fallbackRes = await apiClient.get('/products?limit=8');
+        const fallbackRes = await apiClient.get('/products?limit=12');
         products = fallbackRes.data?.data?.products || fallbackRes.data?.products || [];
       }
 
       sponsoredGrid.innerHTML = '';
       if (products.length > 0) {
-        products.slice(0, 8).forEach(product => {
+        products.forEach(product => {
           const card = createProductCard(
             { ...product, is_sponsored: true },
-            'w-[calc(50%-5px)] sm:w-[calc(50%-8px)] min-w-[calc(50%-5px)] sm:min-w-[calc(50%-8px)] md:w-full md:min-w-0 shrink-0 snap-start [&:nth-child(n+5)]:md:hidden'
+            'w-[230px] sm:w-[260px] shrink-0 snap-start'
           );
           sponsoredGrid.appendChild(card);
         });
       }
     } catch (error) {
       console.error('Failed to load sponsored products:', error);
-    } finally {
-      if (skeletons) skeletons.style.setProperty('display', 'none', 'important');
+      sponsoredGrid.innerHTML = '';
     }
   }
 
