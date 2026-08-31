@@ -55,6 +55,12 @@ async function autoSyncDatabase() {
     await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS photo_url TEXT;`);
     await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS photo_url TEXT;`);
 
+    // 3b. Admin-managed seller flag (migration 009 — idempotent guard)
+    await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS is_admin_managed BOOLEAN NOT NULL DEFAULT FALSE;`);
+    await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS is_admin_managed BOOLEAN NOT NULL DEFAULT FALSE;`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_sellers_is_admin_managed ON sellers(is_admin_managed);`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_seller_profiles_is_admin_managed ON seller_profiles(is_admin_managed);`);
+
     // 4. Fixed Customization Options Table
     await query(`
       CREATE TABLE IF NOT EXISTS fixed_customization_options (

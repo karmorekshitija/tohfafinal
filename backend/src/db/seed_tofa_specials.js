@@ -1153,6 +1153,11 @@ async function seedTofaSpecials() {
   console.log('======================================================================\n');
 
   try {
+    // Schema guard: ensure is_admin_managed column exists on both tables before any
+    // INSERT/UPDATE references it. Safe to run multiple times (IF NOT EXISTS).
+    await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS is_admin_managed BOOLEAN NOT NULL DEFAULT FALSE;`).catch(() => {});
+    await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS is_admin_managed BOOLEAN NOT NULL DEFAULT FALSE;`).catch(() => {});
+
     await purgeLegacyFakeSellers();
     const shopUserMap = await ensureThreeSpecialShops();
     await rebuildSpecialProducts(shopUserMap);
