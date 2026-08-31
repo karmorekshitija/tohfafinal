@@ -594,7 +594,7 @@
       </div>
 
       <!-- Sponsored Skeletons (Single-Row: 2 mobile, 4 desktop) -->
-      <div id="sponsored-skeletons" class="flex flex-nowrap md:grid md:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mt-2 overflow-x-hidden hidden">
+      <div id="sponsored-skeletons" class="flex flex-nowrap md:grid md:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mt-2 overflow-x-hidden" style="display: none !important;">
         <div class="rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-2.5 sm:p-3 md:p-4 flex flex-col justify-between min-h-[260px] sm:min-h-[300px]">
           <div class="aspect-square rounded-lg shimmer mb-2 sm:mb-3 w-full"></div>
           <div class="h-3.5 w-1/3 shimmer mb-1.5 rounded"></div>
@@ -651,7 +651,7 @@
     </div>
 
     <!-- Skeleton Loaders -->
-    <div id="feed-skeletons" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5 mt-4 hidden">
+    <div id="feed-skeletons" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5 mt-4" style="display: none !important;">
       <div class="rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-2.5 sm:p-3 md:p-4 flex flex-col justify-between min-h-[260px] sm:min-h-[300px]">
         <div class="aspect-square rounded-lg shimmer mb-2 sm:mb-3 w-full"></div>
         <div class="h-3.5 w-1/3 shimmer mb-1.5 rounded"></div>
@@ -1126,7 +1126,7 @@
   const FALLBACK_FEED = [];
 
   async function loadForYouProducts() {
-    skeletons.classList.remove('hidden');
+    if (skeletons) skeletons.style.setProperty('display', 'grid', 'important');
     try {
       const response = await apiClient.get('/products/feed?page=1&limit=30');
       const products = response.data?.data?.products || response.data?.products || [];
@@ -1153,7 +1153,7 @@
         grid.appendChild(card);
       });
     } finally {
-      skeletons.classList.add('hidden');
+      if (skeletons) skeletons.style.setProperty('display', 'none', 'important');
     }
   }
 
@@ -1404,7 +1404,7 @@
     const skeletons = document.getElementById('sponsored-skeletons');
     if (!sponsoredGrid) return;
 
-    if (skeletons) skeletons.classList.remove('hidden');
+    if (skeletons) skeletons.style.setProperty('display', window.innerWidth >= 768 ? 'grid' : 'flex', 'important');
 
     try {
       let products = [];
@@ -1433,7 +1433,7 @@
     } catch (error) {
       console.error('Failed to load sponsored products:', error);
     } finally {
-      if (skeletons) skeletons.classList.add('hidden');
+      if (skeletons) skeletons.style.setProperty('display', 'none', 'important');
     }
   }
 
