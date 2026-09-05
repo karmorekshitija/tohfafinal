@@ -1,0 +1,164 @@
+[
+  {
+    "id": "065abfdc-1248-4891-8520-70dc1072a6e4",
+    "name": "Scarlet Rose Bow Press-On Nails",
+    "slug": "scarlet-rose-bow-press-on-nails",
+    "base_price": "349.00",
+    "variants": [
+      {
+        "variant_name": "Extra Small",
+        "size": "XS",
+        "additional_price": 0,
+        "stock_qty": 15
+      },
+      {
+        "variant_name": "Small",
+        "size": "S",
+        "additional_price": 0,
+        "stock_qty": 15
+      },
+      {
+        "variant_name": "Medium",
+        "size": "M",
+        "additional_price": 0,
+        "stock_qty": 10
+      },
+      {
+        "variant_name": "Large",
+        "size": "L",
+        "additional_price": 0,
+        "stock_qty": 10
+      }
+    ],
+    "skipped": false
+  },
+  {
+    "id": "d248065d-a94f-4ed1-bb9f-88f511731aaa",
+    "name": "Pearl Aurora Press-On Nails",
+    "slug": "pearl-aurora-press-on-nails",
+    "base_price": "299.00",
+    "variants": [
+      {
+        "variant_name": "Extra Small",
+        "size": "XS",
+        "additional_price": 0,
+        "stock_qty": 20
+      },
+      {
+        "variant_name": "Small",
+        "size": "S",
+        "additional_price": 0,
+        "stock_qty": 15
+      },
+      {
+        "variant_name": "Medium",
+        "size": "M",
+        "additional_price": 0,
+        "stock_qty": 15
+      },
+      {
+        "variant_name": "Large",
+        "size": "L",
+        "additional_price": 0,
+        "stock_qty": 10
+      }
+    ],
+    "skipped": false
+  },
+  {
+    "id": "8555a014-fe2a-4ec6-8889-57a70389c66b",
+    "name": "Mauve French Tip Press-On Nails",
+    "slug": "mauve-french-tip-press-on-nails",
+    "base_price": "329.00",
+    "variants": [
+      {
+        "variant_name": "Extra Small",
+        "size": "XS",
+        "additional_price": 0,
+        "stock_qty": 15
+      },
+      {
+        "variant_name": "Small",
+        "size": "S",
+        "additional_price": 0,
+        "stock_qty": 15
+      },
+      {
+        "variant_name": "Medium",
+        "size": "M",
+        "additional_price": 0,
+        "stock_qty": 10
+      },
+      {
+        "variant_name": "Large",
+        "size": "L",
+        "additional_price": 0,
+        "stock_qty": 5
+      }
+    ],
+    "skipped": false
+  },
+  {
+    "id": "2aafc398-7c7e-4445-a9f0-c9ce291fd726",
+    "name": "Cherry Blossom Bow Press-On Nails",
+    "slug": "cherry-blossom-bow-press-on-nails",
+    "base_price": "379.00",
+    "variants": [
+      {
+        "variant_name": "Extra Small",
+        "size": "XS",
+        "additional_price": 0,
+        "stock_qty": 10
+      },
+      {
+        "variant_name": "Small",
+        "size": "S",
+        "additional_price": 0,
+        "stock_qty": 15
+      },
+      {
+        "variant_name": "Medium",
+        "size": "M",
+        "additional_price": 0,
+        "stock_qty": 10
+      },
+      {
+        "variant_name": "Large",
+        "size": "L",
+        "additional_price": 0,
+        "stock_qty": 5
+      }
+    ],
+    "skipped": false
+  },
+  {
+    "id": "1edf1948-e8e1-447d-a4a4-9ae2268ded77",
+    "name": "Handmade Crochet Flower Hair Clips",
+    "slug": "handmade-crochet-flower-hair-clips",
+    "base_price": "249.00",
+    "variants": [
+      {
+        "variant_name": "White Daisy",
+        "color_name": "White + Yellow",
+        "size": "Set of 2",
+        "additional_price": 0,
+        "stock_qty": 30
+      },
+      {
+        "variant_name": "Green Leaf",
+        "color_name": "Olive Green",
+        "size": "Set of 2",
+        "additional_price": 0,
+        "stock_qty": 25
+      },
+      {
+        "variant_name": "Sunflower",
+        "color_name": "Yellow + Brown",
+        "size": "Set of 2",
+        "additional_price": 0,
+        "stock_qty": 25
+      }
+    ],
+    "skipped": false
+  }
+]

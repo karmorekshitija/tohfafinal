@@ -163,81 +163,11 @@
   </section>
 </main>
 
-<!-- Footer -->
-<!-- NEW TOHFA FOOTER � footer_stitch v1 -->
-<footer style="position:relative;overflow:hidden;background:#273328;color:#FFF8E7;padding-top:64px;padding-bottom:32px;">
-  <!-- Ghost watermark -->
-  <div style="position:absolute;bottom:-10%;right:-5%;opacity:0.04;pointer-events:none;user-select:none;">
-    <span class="material-symbols-outlined" style="font-size:600px;color:white;">local_florist</span>
-  </div>
-  <!-- Main grid -->
-  <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:repeat(1,1fr);gap:48px;margin-bottom:80px;position:relative;z-index:10;" class="tohfa-footer-grid">
-    <!-- Brand -->
-    <div>
-      <h2 style="font-family:'Playfair Display',serif;font-size:44px;font-style:italic;color:#273328;margin-bottom:16px;">Tohfa.</h2>
-      <p style="font-family:'DM Sans',sans-serif;color:#FFF8E7;margin-bottom:8px;font-weight:500;">Thoughtful Gifting, Made Effortless.</p>
-      <p style="font-family:'DM Sans',sans-serif;color:#A8B89A;margin-bottom:32px;line-height:1.6;">India's first home for handcrafted gifts, celebrating the soul of artisanal craftsmanship.</p>
-      
-    </div>
-    <!-- Company -->
-    <div>
-      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">Company</h3>
-      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
-        <li><a href="/buyer/terms-conditions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Terms &amp; Conditions</a></li>
-      </ul>
-    </div>
-    <!-- For Sellers -->
-    <div>
-      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">For Sellers</h3>
-      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
-        <li><a onclick="handleFooterSellerLink(event)" href="/auth/signup-seller.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Sell on Tohfa</a></li>
-        <li><a href="/seller/dashboard.html" onclick="handleFooterSellerLink(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Seller Studio</a></li>
-      </ul>
-    </div>
-    <!-- For Buyers -->
-    <div>
-      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">For Buyers</h3>
-      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
-        <li><a href="javascript:void(0)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'" onclick="event.preventDefault(); if (window.openTohfaChat) { window.openTohfaChat('Find me a gift'); } else if (window.openTanya) { window.openTanya(); } else { window.__tohfaChatQueue = window.__tohfaChatQueue || []; window.__tohfaChatQueue.push('Find me a gift'); }">AI Gift Guide</a></li>
-        <li><a href="/buyer/occasions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Occasions</a></li>
-        <li><a href="/buyer/zip-gift.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Zip Gift ✨</a></li>
-      </ul>
-    </div>
-    <!-- Support -->
-    <div>
-      <h3 style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#273328;margin-bottom:32px;">Support</h3>
-      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">
-        <li><a href="javascript:void(0)" onclick="openContactModal(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Contact Us</a></li>
-        <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Refunds &amp; Disputes</a></li>
-        <li><a href="/buyer/terms-conditions.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">Terms and Conditions</a></li>
-        <li><a href="/buyer/faq.html" style="font-family:'DM Sans',sans-serif;color:#FFF8E7;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#273328'" onmouseout="this.style.color='#FFF8E7'">FAQs</a></li>
-      </ul>
-    </div>
-  </div>
-  <!-- Divider -->
-  <div style="max-width:1280px;margin:0 auto;padding:0 24px;margin-bottom:32px;">
-    <div style="width:100%;height:1px;background:rgba(255,255,255,0.1);position:relative;">
-      <div style="position:absolute;left:50%;top:-8px;transform:translateX(-50%);display:flex;gap:16px;color:rgba(201,151,44,0.3);">
-        <span class="material-symbols-outlined" style="font-size:16px;">stars</span>
-      </div>
-    </div>
-  </div>
-  <!-- Bottom bar -->
-  <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:flex;flex-direction:column;align-items:center;gap:24px;position:relative;z-index:10;" class="tohfa-footer-bottom">
-    
-    <div style="display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;font-size:14px;color:#FFF8E7;">
-      <span>Made with</span>
-      <span class="material-symbols-outlined" style="color:#273328;font-size:18px;font-variation-settings:'FILL' 1;">favorite</span>
-      <span>in India</span>
-    </div>
-  </div>
-  <style>
-    @media (min-width: 768px) {
-      .tohfa-footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr 1fr !important; }
-      .tohfa-footer-bottom { flex-direction: row !important; justify-content: space-between !important; }
-    }
-  </style>
-</footer>
+
+<!-- Shared Footer -->
+<div id="tohfa-footer"></div>
+<script type="module" src="/src/components/tohfa-include.js"></script>
+
 
 <script type="module">
     import apiClient from '/src/utils/apiClient.js';
