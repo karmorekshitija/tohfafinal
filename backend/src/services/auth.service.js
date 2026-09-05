@@ -337,20 +337,39 @@ async function signupSeller(data) {
     ).catch(() => {});
 
     // 3. Initialize seller_profiles row
-    await client.query(
-      `INSERT INTO seller_profiles (user_id, store_name, slug, bio, seller_type, verification_status, is_approved, is_active, pickup_address, bank_details, pan_number, gst_number, portfolio_images, applied_at, onboarding_completed)
-       VALUES ($1, $2, $3, $4, 'regular', 'pending_verification', FALSE, TRUE, $5, '{}', $6, $7, $8::text[], NOW(), FALSE)
-       ON CONFLICT (user_id) DO UPDATE SET
-         store_name = EXCLUDED.store_name,
-         slug = EXCLUDED.slug,
-         bio = EXCLUDED.bio,
-         pickup_address = EXCLUDED.pickup_address,
-         pan_number = EXCLUDED.pan_number,
-         gst_number = EXCLUDED.gst_number,
-         portfolio_images = EXCLUDED.portfolio_images,
-         verification_status = 'pending_verification'`,
-      [user.id, storeName, storeSlug, bio, JSON.stringify(pickupAddress), panNumber, gstNumber, portfolioImages]
-    );
+    try {
+      await client.query(
+        `INSERT INTO seller_profiles (user_id, store_name, slug, bio, seller_type, verification_status, is_approved, is_active, pickup_address, bank_details, pan_number, gst_number, portfolio_images, applied_at, onboarding_completed)
+         VALUES ($1, $2, $3, $4, 'regular', 'pending_verification', FALSE, TRUE, $5, '{}', $6, $7, $8::text[], NOW(), FALSE)
+         ON CONFLICT (user_id) DO UPDATE SET
+           store_name = EXCLUDED.store_name,
+           slug = EXCLUDED.slug,
+           bio = EXCLUDED.bio,
+           pickup_address = EXCLUDED.pickup_address,
+           pan_number = EXCLUDED.pan_number,
+           gst_number = EXCLUDED.gst_number,
+           portfolio_images = EXCLUDED.portfolio_images,
+           verification_status = 'pending_verification'`,
+        [user.id, storeName, storeSlug, bio, JSON.stringify(pickupAddress), panNumber, gstNumber, portfolioImages]
+      );
+    } catch (insertErr) {
+      if (insertErr.code === '42703') { // undefined_column — schema hasn't been migrated yet
+        console.error('[signupSeller] seller_profiles missing expected columns — falling back to minimal insert. Run db:migrate against production.', insertErr.message);
+        await client.query(
+          `INSERT INTO seller_profiles (user_id, store_name, slug, bio, seller_type, verification_status, is_approved, is_active, pickup_address, bank_details)
+           VALUES ($1, $2, $3, $4, 'regular', 'pending_verification', FALSE, TRUE, $5, '{}')
+           ON CONFLICT (user_id) DO UPDATE SET
+             store_name = EXCLUDED.store_name,
+             slug = EXCLUDED.slug,
+             bio = EXCLUDED.bio,
+             pickup_address = EXCLUDED.pickup_address,
+             verification_status = 'pending_verification'`,
+          [user.id, storeName, storeSlug, bio, JSON.stringify(pickupAddress)]
+        );
+      } else {
+        throw insertErr;
+      }
+    }
 
     // 4. Apply new capacity & social fields to seller_profiles
     await client.query(
