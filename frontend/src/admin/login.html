@@ -163,10 +163,16 @@
       }
 
       try {
+        const typedValue = username; // the raw value from the identifier input, already trimmed above
+        const looksLikeEmail = typedValue.includes('@');
         let response = await fetch('/api/auth/admin-login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: username, username, password })
+          body: JSON.stringify(
+            looksLikeEmail
+              ? { email: typedValue, password }
+              : { identifier: typedValue, password }
+          )
         });
 
         if (response.status === 404) {
@@ -174,7 +180,11 @@
           response = await fetch('/api/admin/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, email: username, password })
+            body: JSON.stringify(
+              looksLikeEmail
+                ? { email: typedValue, password }
+                : { identifier: typedValue, password }
+            )
           });
         }
 

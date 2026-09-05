@@ -587,7 +587,10 @@ async function adminLogin(data) {
     }
   }
 
-  const loginEmail = normalizeEmail(email || identifier || (username && username.includes('@') ? username : (username ? `${username}@thetohfa.in` : '')));
+  const rawInput = (email || identifier || username || '').toString().trim();
+  const loginEmail = normalizeEmail(
+    rawInput.includes('@') ? rawInput : (rawInput ? `${rawInput}@thetohfa.in` : '')
+  );
   const loginPhone = detectedPhone;
 
   if ((!loginEmail && !loginPhone) || !password) {
