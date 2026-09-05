@@ -86,6 +86,19 @@
           </p>
         </div>
 
+        <!-- Mobile Number (Optional) -->
+        <div>
+          <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1.5" for="phone">Mobile Number (Optional)</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#1C1C1C]/40 text-[20px]">call</span>
+            <input class="w-full pl-10 pr-4 py-3 bg-[#FFF8E7] border border-[#14381F]/20 rounded-xl text-base text-[#1C1C1C] outline-none focus:border-[#14381F] focus:ring-2 focus:ring-[#14381F]/10 transition-all" id="phone" name="phone" placeholder="9876543210" type="tel" maxlength="10" />
+          </div>
+          <p id="phone-error" class="hidden text-[#C0392B] text-[12px] mt-1 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">error</span>
+            <span id="phone-error-text">Please enter a valid 10-digit mobile number.</span>
+          </p>
+        </div>
+
         <!-- Password -->
         <div>
           <label class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1.5" for="password">Password *</label>
@@ -149,6 +162,7 @@
     const submitBtn = document.getElementById('submit-btn');
     const nameInput = document.getElementById('full_name');
     const emailInput = document.getElementById('email');
+    const phoneInput = document.getElementById('phone');
     const passwordInput = document.getElementById('password');
     const togglePwBtn = document.getElementById('toggle-pw-btn');
     const toggleIcon = document.getElementById('password-toggle-icon');
@@ -157,6 +171,8 @@
     const nameErrorText = document.getElementById('name-error-text');
     const emailError = document.getElementById('email-error');
     const emailErrorText = document.getElementById('email-error-text');
+    const phoneError = document.getElementById('phone-error');
+    const phoneErrorText = document.getElementById('phone-error-text');
     const passwordError = document.getElementById('password-error');
     const passwordErrorText = document.getElementById('password-error-text');
     const generalError = document.getElementById('general-error');
@@ -192,6 +208,7 @@
       generalError.classList.add('hidden');
       nameError.classList.add('hidden');
       emailError.classList.add('hidden');
+      if (phoneError) phoneError.classList.add('hidden');
       passwordError.classList.add('hidden');
     }
 
@@ -214,6 +231,13 @@
         hasErrors = true;
       }
 
+      const phoneVal = phoneInput ? phoneInput.value.trim() : '';
+      if (phoneVal && !/^[6-9]\d{9}$/.test(phoneVal)) {
+        phoneErrorText.textContent = "Please enter a valid 10-digit mobile number.";
+        phoneError.classList.remove('hidden');
+        hasErrors = true;
+      }
+
       if (passwordInput.value.length < 8) {
         passwordErrorText.textContent = "Password must be at least 8 characters.";
         passwordError.classList.remove('hidden');
@@ -230,6 +254,7 @@
           name: nameInput.value.trim(),
           full_name: nameInput.value.trim(),
           email: emailInput.value.trim(),
+          phone: (phoneInput && phoneInput.value.trim()) || undefined,
           password: passwordInput.value,
           role: 'buyer'
         };

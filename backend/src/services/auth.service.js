@@ -206,9 +206,9 @@ async function register(data) {
     const userName = name || data.full_name || '';
     const { rows: userRows } = await client.query(
       `INSERT INTO users (full_name, name, display_name, email, password_hash, phone, role, is_active)
-       VALUES ($1, $1, $1, $2, $3, $4, 'buyer', TRUE)
+       VALUES ($1, $2, $3, $4, $5, $6, 'buyer', TRUE)
        RETURNING id, full_name, name, email, role, phone, created_at`,
-      [userName, email, passwordHash, phone]
+      [userName, userName, userName, email, passwordHash, phone]
     );
     const user = userRows[0];
 
@@ -305,9 +305,9 @@ async function signupSeller(data) {
     const sellerUserName = name || data.full_name || '';
     const userRes = await client.query(
       `INSERT INTO users (full_name, name, display_name, email, phone, password_hash, role, is_active)
-       VALUES ($1, $1, $1, $2, $3, $4, 'seller', TRUE)
+       VALUES ($1, $2, $3, $4, $5, $6, 'seller', TRUE)
        RETURNING id, full_name, name, email, role, phone, created_at`,
-      [sellerUserName, email, phone, passwordHash]
+      [sellerUserName, sellerUserName, sellerUserName, email, phone, passwordHash]
     );
     const user = userRes.rows[0];
 
