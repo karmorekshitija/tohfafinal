@@ -18,16 +18,31 @@ const rateLimiter = rateLimit({
   skip: (req) => process.env.NODE_ENV === 'test',
 });
 
+// Temporary diagnostic logging for Task 1 Step 1a
+const authRateLimitDebug = (req, res, next) => {
+  console.log('[RATE-LIMIT-DEBUG]', {
+    resolvedIp: req.ip,
+    xForwardedFor: req.headers['x-forwarded-for'],
+    remoteAddress: req.socket?.remoteAddress,
+  });
+  res.setHeader('X-Debug-Resolved-Ip', String(req.ip || ''));
+  res.setHeader('X-Debug-X-Forwarded-For', String(req.headers['x-forwarded-for'] || ''));
+  next();
+};
+
 // Strict auth limiter — 10 attempts per 15 minutes per IP
 // Apply to: POST /api/auth/login, POST /api/auth/register, POST /api/auth/forgot-password
-const authRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,  // 15 minutes
-  max: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: 'Too many attempts. Try again in 15 minutes.' },
-  skip: (req) => process.env.NODE_ENV === 'test',
-});
+const authRateLimiter = [
+  authRateLimitDebug,
+  rateLimit({
+    windowMs: 15 * 60 * 1000,  // 15 minutes
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many attempts. Try again in 15 minutes.' },
+    skip: (req) => process.env.NODE_ENV === 'test',
+  }),
+];
 
 // Tanya AI limiter — 30 messages per minute per IP (prevent abuse)
 const tanyaRateLimiter = rateLimit({
