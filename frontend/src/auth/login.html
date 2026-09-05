@@ -54,16 +54,17 @@
       <form id="loginForm" class="space-y-4" novalidate>
         <div>
           <label id="identifier-label" for="email" class="block text-xs font-bold text-[#1C1C1C]/70 uppercase tracking-wider mb-1.5">
-            Email Address
+            Email Address or Mobile Number
           </label>
           <div class="relative">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#1C1C1C]/40 text-[20px]">mail</span>
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#1C1C1C]/40 text-[20px]">account_circle</span>
             <input 
-              type="email" 
+              type="text" 
               id="email" 
               name="email" 
               required 
-              placeholder="name@example.com" 
+              autocomplete="username"
+              placeholder="name@example.com or 10-digit mobile" 
               class="w-full pl-10 pr-4 py-3 bg-[#FFF8E7] border border-[#14381F]/20 rounded-xl text-base outline-none focus:border-[#14381F] focus:ring-2 focus:ring-[#14381F]/10 transition-all"
             />
           </div>
@@ -133,6 +134,19 @@
       }
     });
 
+    // Forward redirect URL to signup links if present
+    const searchParams = new URLSearchParams(window.location.search);
+    const redirectParam = searchParams.get('redirect') || searchParams.get('returnTo');
+    if (redirectParam) {
+      document.querySelectorAll('a[href*="/auth/signup-"]').forEach(a => {
+        try {
+          const url = new URL(a.href, window.location.origin);
+          url.searchParams.set('redirect', redirectParam);
+          a.href = url.pathname + url.search;
+        } catch (e) {}
+      });
+    }
+
     const form = document.getElementById('loginForm');
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -172,21 +186,33 @@
           throw new Error(data.message || data.error || 'Invalid email or password');
         }
 
-        const token = data.token || data.accessToken || data.data?.access_token || data.data?.token;
-        const refreshToken = data.refreshToken || data.refresh_token || data.data?.refreshToken || data.data?.refresh_token;
-        const user = data.user || data.data?.user;
+        const token = data.data?.accessToken || data.data?.token || data.accessToken || data.token;
+        const refreshToken = data.data?.refreshToken || data.data?.refresh_token || data.refreshToken || data.refresh_token;
+        const user = data.data?.user || data.user;
 
         if (token) {
           authStorage.setToken(token);
+          if (user?.role === 'admin' || user?.role === 'master_admin') {
+            localStorage.setItem('tohfa_admin_token', token);
+            sessionStorage.setItem('tohfa_admin_token', token);
+          }
         }
 
         if (refreshToken) {
           localStorage.setItem('tohfa_refresh_token', refreshToken);
           sessionStorage.setItem('tohfa_refresh_token', refreshToken);
+          if (user?.role === 'admin' || user?.role === 'master_admin') {
+            localStorage.setItem('tohfa_admin_refresh_token', refreshToken);
+            sessionStorage.setItem('tohfa_admin_refresh_token', refreshToken);
+          }
         }
 
         if (user) {
           authStorage.setUser(user);
+          if (user?.role === 'admin' || user?.role === 'master_admin') {
+            localStorage.setItem('tohfa_admin', JSON.stringify(user));
+            sessionStorage.setItem('tohfa_admin', JSON.stringify(user));
+          }
         }
 
         const pendingActionStr = sessionStorage.getItem('tohfa_pending_action');

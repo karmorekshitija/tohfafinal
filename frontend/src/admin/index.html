@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tohfa Admin | Redirecting...</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <script>
+    (function() {
+      try {
+        var token = sessionStorage.getItem('tohfa_admin_token') || localStorage.getItem('tohfa_admin_token');
+        if (token) {
+          if (!sessionStorage.getItem('tohfa_admin_token')) {
+            sessionStorage.setItem('tohfa_admin_token', token);
+          }
+          window.location.replace('/admin/dashboard.html');
+        } else {
+          window.location.replace('/admin/login.html');
+        }
+      } catch (e) {
+        window.location.replace('/admin/login.html');
+      }
+    })();
+  </script>
+</head>
+<body style="background:#FFF8E7; font-family:'DM Sans', sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh;">
+  <p style="color:#14381F; font-size:14px;">Loading Tohfa Admin...</p>
+</body>
+</html>

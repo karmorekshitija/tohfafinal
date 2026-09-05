@@ -143,7 +143,7 @@
 
   <script type="module">
     import apiClient from '/src/utils/apiClient.js';
-    import { authStorage } from '/src/utils/auth.js';
+    import { authStorage, getSafeRedirectUrl } from '/src/utils/auth.js';
 
     const signupForm = document.getElementById('signup-form');
     const submitBtn = document.getElementById('submit-btn');
@@ -238,10 +238,10 @@
         const data = response.data;
 
         if (data.success) {
-          const resultData = data.data || {};
-          const token = resultData.accessToken || resultData.token || resultData.access_token;
-          const refreshToken = resultData.refreshToken || resultData.refresh_token;
-          const user = resultData.user;
+          const resultData = data.data || data || {};
+          const token = resultData.accessToken || resultData.token || resultData.access_token || data.token || data.accessToken;
+          const refreshToken = resultData.refreshToken || resultData.refresh_token || data.refreshToken || data.refresh_token;
+          const user = resultData.user || data.user;
 
           if (token) {
             authStorage.setToken(token);
@@ -254,9 +254,13 @@
             authStorage.setUser(user);
           }
           
-          const returnTo = sessionStorage.getItem('tohfa_return_to');
+          const params = new URLSearchParams(window.location.search);
+          const rawTarget = params.get('redirect') ||
+                            params.get('returnTo') ||
+                            sessionStorage.getItem('tohfa_return_to');
           sessionStorage.removeItem('tohfa_return_to');
-          window.location.href = returnTo || '/buyer/home.html';
+          const safeReturnTo = getSafeRedirectUrl(rawTarget, '/buyer/home.html');
+          window.location.href = safeReturnTo;
         } else {
           generalErrorText.textContent = data.message || "An unexpected error occurred. Please try again.";
           generalError.classList.remove('hidden');

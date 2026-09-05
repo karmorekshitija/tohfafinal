@@ -401,8 +401,21 @@ async function signupSeller(data) {
  */
 async function login(data) {
   const { email, username, identifier, password, phone } = data;
+  const rawIdentifier = (email || identifier || username || phone || '').toString().trim();
+
+  // Detect if rawIdentifier or phone looks like a phone number
+  let detectedPhone = null;
+  if (phone) {
+    detectedPhone = String(phone).replace(/[\s\-\+\(\)]/g, '').slice(-10);
+  } else if (rawIdentifier) {
+    const cleaned = rawIdentifier.replace(/[\s\-\+\(\)]/g, '');
+    if (/^\d{10,13}$/.test(cleaned) && !rawIdentifier.includes('@')) {
+      detectedPhone = cleaned.slice(-10);
+    }
+  }
+
   const loginEmail = normalizeEmail(email || identifier || (username && username.includes('@') ? username : (username ? `${username}@thetohfa.in` : '')));
-  const loginPhone = phone ? String(phone).replace(/[\s\-\+\(\)]/g, '').slice(-10) : null;
+  const loginPhone = detectedPhone;
 
   // ---------------------------------------------------------------------------
   // Demo-login backdoor — STRICTLY gated.
@@ -441,7 +454,9 @@ async function login(data) {
       },
     };
     const DEMO_PASSWORDS = ['Password@123', 'admin123', 'demo123', 'admin', 'password'];
-    const demoUser = DEMO_USERS[loginEmail] || (username === 'admin' ? DEMO_USERS['admin@thetohfa.in'] : null);
+    const demoUser = DEMO_USERS[loginEmail] ||
+                     (loginPhone ? Object.values(DEMO_USERS).find(u => u.phone === loginPhone) : null) ||
+                     (username === 'admin' ? DEMO_USERS['admin@thetohfa.in'] : null);
     if (demoUser && DEMO_PASSWORDS.includes(password)) {
       const accessToken = signAccessToken({ id: demoUser.id, email: demoUser.email, role: demoUser.role, isSellerApproved: true });
       const refreshToken = signRefreshToken({ id: demoUser.id, email: demoUser.email, role: demoUser.role, isSellerApproved: true });
@@ -540,10 +555,23 @@ async function login(data) {
  * @returns {{ user: object, admin: object, accessToken: string, refreshToken: string, token: string }}
  */
 async function adminLogin(data) {
-  const { email, username, identifier, password } = data;
-  const loginEmail = normalizeEmail(email || identifier || (username && username.includes('@') ? username : (username ? `${username}@thetohfa.in` : '')));
+  const { email, username, identifier, password, phone } = data;
+  const rawIdentifier = (email || identifier || username || phone || '').toString().trim();
 
-  if (!loginEmail || !password) {
+  let detectedPhone = null;
+  if (phone) {
+    detectedPhone = String(phone).replace(/[\s\-\+\(\)]/g, '').slice(-10);
+  } else if (rawIdentifier) {
+    const cleaned = rawIdentifier.replace(/[\s\-\+\(\)]/g, '');
+    if (/^\d{10,13}$/.test(cleaned) && !rawIdentifier.includes('@')) {
+      detectedPhone = cleaned.slice(-10);
+    }
+  }
+
+  const loginEmail = normalizeEmail(email || identifier || (username && username.includes('@') ? username : (username ? `${username}@thetohfa.in` : '')));
+  const loginPhone = detectedPhone;
+
+  if ((!loginEmail && !loginPhone) || !password) {
     const err = new Error('Email/username and password are required.');
     err.status = 400;
     throw err;
@@ -554,7 +582,7 @@ async function adminLogin(data) {
     process.env.NODE_ENV === 'development' &&
     process.env.ALLOW_DEMO_LOGIN === 'true'
   ) {
-    if (loginEmail === 'admin@thetohfa.in' || loginEmail === 'admin@tohfa.in' || username === 'admin') {
+    if (loginEmail === 'admin@thetohfa.in' || loginEmail === 'admin@tohfa.in' || username === 'admin' || loginPhone === '9876543212') {
       const DEMO_PASSWORDS = ['AdminPassword123!', 'Password@123', 'admin123', 'demo123', 'admin', 'password'];
       if (DEMO_PASSWORDS.includes(password)) {
         const demoUser = {
@@ -593,8 +621,8 @@ async function adminLogin(data) {
   try {
     const res = await query(
       `SELECT id, name, email, password_hash, role, is_active, phone
-       FROM users WHERE LOWER(TRIM(email)) = $1 OR phone = $1`,
-      [loginEmail]
+       FROM users WHERE LOWER(TRIM(email)) = $1 OR phone = $1 OR ($2::text IS NOT NULL AND phone = $2)`,
+      [loginEmail, loginPhone]
     );
     rows = res.rows;
   } catch (dbErr) {

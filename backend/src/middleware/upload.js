@@ -16,7 +16,9 @@ function createUploader(folder, maxCount = 10) {
     params: {
       folder: `tohfa/${folder}`,
       allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-      transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+      transformation: [
+        { width: 1920, height: 1920, crop: 'limit', quality: 'auto:good', fetch_format: 'auto' }
+      ],
     },
   });
 
@@ -44,7 +46,9 @@ const uploadProfilePhoto = multer({
     params: {
       folder: 'tohfa/profiles',
       allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-      transformation: [{ width: 400, height: 400, crop: 'fill', quality: 'auto' }],
+      transformation: [
+        { width: 400, height: 400, crop: 'fill', quality: 'auto:good', fetch_format: 'auto' }
+      ],
     },
   }),
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -57,7 +61,9 @@ const uploadCoverPhoto = multer({
     params: {
       folder: 'tohfa/covers',
       allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-      transformation: [{ width: 1200, height: 400, crop: 'fill', quality: 'auto' }],
+      transformation: [
+        { width: 1200, height: 400, crop: 'fill', quality: 'auto:good', fetch_format: 'auto' }
+      ],
     },
   }),
   limits: { fileSize: 8 * 1024 * 1024 },
@@ -73,7 +79,9 @@ const uploadBannerImage = multer({
     params: {
       folder: 'tohfa/banners',
       allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-      transformation: [{ width: 1400, height: 560, crop: 'fill', quality: 'auto' }],
+      transformation: [
+        { width: 1400, height: 560, crop: 'fill', quality: 'auto:good', fetch_format: 'auto' }
+      ],
     },
   }),
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -86,7 +94,9 @@ const uploadProofImage = multer({
     params: {
       folder: 'tohfa/customization-proofs',
       allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-      transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+      transformation: [
+        { width: 1920, height: 1920, crop: 'limit', quality: 'auto:good', fetch_format: 'auto' }
+      ],
     },
   }),
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -99,11 +109,48 @@ const uploadCategoryImage = multer({
     params: {
       folder: 'tohfa/categories',
       allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-      transformation: [{ width: 800, height: 800, crop: 'fill', quality: 'auto' }],
+      transformation: [
+        { width: 800, height: 800, crop: 'fill', quality: 'auto:good', fetch_format: 'auto' }
+      ],
     },
   }),
   limits: { fileSize: 10 * 1024 * 1024 },
 }).single('image');
+
+// Generic single media uploader (used by /api/upload)
+const uploadSingleMedia = multer({
+  storage: new CloudinaryStorage({
+    cloudinary,
+    params: async (req, file) => {
+      const folder = (req.body && req.body.folder) ? req.body.folder : 'general';
+      return {
+        folder: `tohfa/${folder}`,
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+        transformation: [
+          { width: 1920, height: 1920, crop: 'limit', quality: 'auto:good', fetch_format: 'auto' }
+        ],
+      };
+    },
+  }),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPEG, PNG, and WebP images are allowed.'));
+    }
+  },
+}).single('file');
+
+/**
+ * Ensures a Cloudinary URL has f_auto,q_auto transformations applied for optimal delivery
+ */
+function optimizeCloudinaryUrl(url) {
+  if (!url || typeof url !== 'string' || !url.includes('res.cloudinary.com')) return url;
+  if (url.includes('/f_auto') || url.includes('q_auto')) return url;
+  return url.replace('/image/upload/', '/image/upload/f_auto,q_auto/');
+}
 
 /**
  * Wrap multer middleware to propagate errors to Express error handler
@@ -130,5 +177,7 @@ module.exports = {
   uploadBannerImage:   handleUpload(uploadBannerImage),
   uploadCategoryImage:  handleUpload(uploadCategoryImage),
   uploadProofImage:    handleUpload(uploadProofImage),
+  uploadSingleMedia:   handleUpload(uploadSingleMedia),
+  optimizeCloudinaryUrl,
 };
 

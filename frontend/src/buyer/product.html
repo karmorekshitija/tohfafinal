@@ -262,10 +262,10 @@
 
                         <!-- Main Showcase Display Container -->
                         <div class="relative bg-[#FAF6EE] border border-[#14381F]/15 rounded-2xl overflow-hidden shadow-sm aspect-square flex items-center justify-center group w-full">
-                            <img id="main-product-image" src="/img/categories/artisan_showcase.jpg" alt="Artisan Piece" class="w-full h-full object-contain p-4 transition-all duration-300 group-hover:scale-[1.02] opacity-80" />
+                            <img id="main-product-image" src="/img/categories/artisan_showcase.jpg" alt="Artisan Piece" class="w-full h-full object-contain transition-all duration-300 group-hover:scale-[1.02] opacity-100" />
                             
                             <!-- Image counter badge -->
-                            <div id="image-counter-badge" class="absolute bottom-4 left-4 bg-[#14381F]/80 text-[#FAF6EE] text-[11px] font-mono font-medium px-2.5 py-1 rounded-full backdrop-blur-sm shadow-sm hidden">
+                            <div id="image-counter-badge" class="absolute bottom-4 left-4 bg-[#14381F]/80 text-[#FAF6EE] text-[11px] font-mono font-medium px-2.5 py-1 rounded-full backdrop-blur-sm shadow-sm hidden z-10">
                                 1 / 1
                             </div>
 
@@ -979,6 +979,8 @@
                         if (mainImg) {
                             mainImg.src = list[activeIndex] || list[0];
                             mainImg.alt = product.name;
+                            mainImg.classList.remove('opacity-80');
+                            mainImg.classList.add('opacity-100');
                         }
 
                         if (counterBadge) {
@@ -1010,6 +1012,8 @@
                                         const idx = parseInt(thumb.getAttribute('data-index'), 10);
                                         if (mainImg && url) {
                                             mainImg.src = url;
+                                            mainImg.classList.remove('opacity-80');
+                                            mainImg.classList.add('opacity-100');
                                         }
                                         if (counterBadge) {
                                             counterBadge.textContent = `${idx + 1} / ${list.length}`;
@@ -2053,10 +2057,10 @@
 
             const isOwner = isProductOwned(p.seller_id);
             const wishlistBtnHtml = isOwner
-                ? `<button class="absolute top-2 right-2 p-1.5 bg-white/80 rounded-full opacity-50 cursor-not-allowed flex items-center justify-center z-10" disabled onclick="event.stopPropagation();">
+                ? `<button class="absolute top-1.5 right-1.5 w-6 h-6 sm:w-[26px] sm:h-[26px] min-w-0 min-h-0 bg-white/80 rounded-full opacity-50 cursor-not-allowed flex items-center justify-center z-10 p-0 toggle-wishlist-btn" disabled onclick="event.stopPropagation();">
                        <span class="material-symbols-outlined text-[15px] text-secondary" style="font-variation-settings: 'FILL' 0;">favorite</span>
                    </button>`
-                : `<button class="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:scale-110 active:scale-95 transition-all toggle-rec-wishlist-btn flex items-center justify-center cursor-pointer z-10" data-id="${p.id}" data-wishlisted="${p.is_wishlisted}" onclick="event.stopPropagation();">
+                : `<button class="absolute top-1.5 right-1.5 w-6 h-6 sm:w-[26px] sm:h-[26px] min-w-0 min-h-0 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:scale-110 active:scale-95 transition-all toggle-rec-wishlist-btn toggle-wishlist-btn flex items-center justify-center cursor-pointer z-10 p-0" data-id="${p.id}" data-wishlisted="${p.is_wishlisted}" onclick="event.stopPropagation();">
                        <span class="material-symbols-outlined text-[15px] transition-all ${p.is_wishlisted ? 'fill-icon text-red-500' : 'text-secondary'}" style="font-variation-settings: 'FILL' ${p.is_wishlisted ? 1 : 0};">favorite</span>
                    </button>`;
 

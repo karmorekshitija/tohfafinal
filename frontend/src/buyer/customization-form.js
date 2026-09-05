@@ -8,6 +8,7 @@ import { api } from '../js/api.js';
 import { initBuyerShell } from '../js/layout.js';
 import { requireAuth } from '../js/auth.js';
 import { showToast } from '../js/utils.js';
+import { compressImage } from '../utils/imageCompressor.js';
 
 if (requireAuth()) {
   initBuyerShell();
@@ -345,8 +346,9 @@ window.handleAddToCartWithCustomization = handleAddToCartWithCustomization;
 
 export async function uploadMedia(file, folder = 'tohfa_customization') {
   const token = sessionStorage.getItem('tohfa_access_token') || localStorage.getItem('tohfa_access_token') || localStorage.getItem('auth_token');
+  const compressed = await compressImage(file);
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('file', compressed);
   formData.append('folder', folder);
 
   const res = await fetch('/api/upload', {

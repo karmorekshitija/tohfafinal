@@ -81,7 +81,8 @@ const CATEGORY_DEFINITIONS = {
   'candles': { name: 'Candles & Aromatherapy', slug: 'candles-aromatherapy', emoji: '🕯️' },
   'floral': { name: 'Floral & Bouquets', slug: 'floral-bouquets', emoji: '🌸' },
   'hair': { name: 'Hair Accessories', slug: 'hair-accessories', emoji: '🎀' },
-  'keepsakes': { name: 'Gifts & Keepsakes', slug: 'gifts-keepsakes', emoji: '🎁' }
+  'keepsakes': { name: 'Gifts & Keepsakes', slug: 'gifts-keepsakes', emoji: '🎁' },
+  'figurines': { name: 'Handcrafted Figurines & Art', slug: 'handcrafted-figurines', emoji: '🎨' }
 };
 
 const categoryIdCache = {};
@@ -252,7 +253,7 @@ const PRODUCTS_CATALOG = [
   {
     shop: 'The Candle Story',
     name: 'Stacked Puppies Candle',
-    catKey: 'candles',
+    catKey: 'figurines',
     price: 499,
     preparationDays: 2,
     weightGrams: 400,
@@ -262,7 +263,7 @@ const PRODUCTS_CATALOG = [
   {
     shop: 'The Candle Story',
     name: 'Golden Retriever Round Candle',
-    catKey: 'candles',
+    catKey: 'figurines',
     price: 449,
     preparationDays: 2,
     weightGrams: 350,
@@ -272,7 +273,7 @@ const PRODUCTS_CATALOG = [
   {
     shop: 'The Candle Story',
     name: 'Chess Knight Horse Candle',
-    catKey: 'candles',
+    catKey: 'figurines',
     price: 549,
     preparationDays: 2,
     weightGrams: 450,
@@ -282,7 +283,7 @@ const PRODUCTS_CATALOG = [
   {
     shop: 'The Candle Story',
     name: 'Stacked Owls Candle',
-    catKey: 'candles',
+    catKey: 'figurines',
     price: 479,
     preparationDays: 2,
     weightGrams: 380,
@@ -292,7 +293,7 @@ const PRODUCTS_CATALOG = [
   {
     shop: 'The Candle Story',
     name: 'Swan Relief Pillar Candle',
-    catKey: 'candles',
+    catKey: 'figurines',
     price: 649,
     preparationDays: 2,
     weightGrams: 500,
@@ -428,7 +429,7 @@ const PRODUCTS_CATALOG = [
   {
     shop: 'The Candle Story',
     name: 'Mother & Child Relief Candle',
-    catKey: 'candles',
+    catKey: 'figurines',
     price: 799,
     preparationDays: 3,
     weightGrams: 550,
@@ -438,7 +439,7 @@ const PRODUCTS_CATALOG = [
   {
     shop: 'The Candle Story',
     name: 'Madonna Bust Candle',
-    catKey: 'candles',
+    catKey: 'figurines',
     price: 799,
     preparationDays: 3,
     weightGrams: 550,
@@ -448,7 +449,7 @@ const PRODUCTS_CATALOG = [
   {
     shop: 'The Candle Story',
     name: 'Enchanted Cottage Candle',
-    catKey: 'candles',
+    catKey: 'figurines',
     price: 699,
     preparationDays: 2,
     weightGrams: 450,
@@ -458,7 +459,7 @@ const PRODUCTS_CATALOG = [
   {
     shop: 'The Candle Story',
     name: 'Embracing Couple Candle',
-    catKey: 'candles',
+    catKey: 'figurines',
     price: 699,
     preparationDays: 2,
     weightGrams: 500,

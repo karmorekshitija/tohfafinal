@@ -6,6 +6,7 @@
 <script type="module" src="/src/components/AdminSidebar.js"></script>
 <script type="module" src="/src/components/ReportWidget.js" defer></script>
 <script type="module" src="/src/components/ProtectedRoute.js"></script>
+<script type="module" src="/src/utils/imageCompressor.js"></script>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Categories Manager | Tohfa Admin</title>
@@ -640,7 +641,8 @@ formEl.addEventListener('submit', async (e) => {
   formData.append('is_active', activeStatus.checked);
   
   if (imageInput.files[0]) {
-    formData.append('image', imageInput.files[0]);
+    const compressed = window.compressImage ? await window.compressImage(imageInput.files[0], { maxWidth: 1200, maxHeight: 1200 }) : imageInput.files[0];
+    formData.append('image', compressed);
   } else if (imageUrlInput.value.trim()) {
     formData.append('image_url', imageUrlInput.value.trim());
     formData.append('banner_image_url', imageUrlInput.value.trim());

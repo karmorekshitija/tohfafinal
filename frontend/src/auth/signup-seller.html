@@ -430,9 +430,9 @@
         }
 
         // Handle both response shapes the backend can return
-        const token = data.accessToken || data.token || data.data?.access_token || data.data?.token;
-        const refreshToken = data.refreshToken || data.refresh_token || data.data?.refreshToken || data.data?.refresh_token;
-        const user = data.user || data.data?.user;
+        const token = data.data?.accessToken || data.data?.token || data.accessToken || data.token;
+        const refreshToken = data.data?.refreshToken || data.data?.refresh_token || data.refreshToken || data.refresh_token;
+        const user = data.data?.user || data.user;
 
         if (token) {
           authStorage.setToken(token);

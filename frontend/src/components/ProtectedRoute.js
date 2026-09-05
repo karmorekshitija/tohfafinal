@@ -58,6 +58,36 @@
     }
   });
 
+  // ── 2b. LocalStorage hydration fallback ──────────────────────────────────
+  // If sessionStorage is empty (e.g. new tab, browser restart), hydrate from localStorage
+  function hydrateSessionFromLocalStorage() {
+    try {
+      const at = localStorage.getItem('tohfa_access_token') || localStorage.getItem('tohfa_auth_token') || localStorage.getItem('auth_token');
+      if (at && !sessionStorage.getItem('tohfa_access_token')) {
+        sessionStorage.setItem('tohfa_access_token', at);
+      }
+      const rt = localStorage.getItem('tohfa_refresh_token');
+      if (rt && !sessionStorage.getItem('tohfa_refresh_token')) {
+        sessionStorage.setItem('tohfa_refresh_token', rt);
+      }
+      const user = localStorage.getItem('tohfa_user') || localStorage.getItem('tohfa_user_data');
+      if (user && !sessionStorage.getItem('tohfa_user')) {
+        sessionStorage.setItem('tohfa_user', user);
+      }
+      const adminToken = localStorage.getItem('tohfa_admin_token');
+      if (adminToken && !sessionStorage.getItem('tohfa_admin_token')) {
+        sessionStorage.setItem('tohfa_admin_token', adminToken);
+      }
+      const adminRt = localStorage.getItem('tohfa_admin_refresh_token');
+      if (adminRt && !sessionStorage.getItem('tohfa_admin_refresh_token')) {
+        sessionStorage.setItem('tohfa_admin_refresh_token', adminRt);
+      }
+    } catch (e) {}
+  }
+
+  // Hydrate immediately if possible
+  hydrateSessionFromLocalStorage();
+
   // Request session data from other open tabs
   if (!sessionStorage.getItem('tohfa_access_token') && !sessionStorage.getItem('tohfa_admin_token')) {
     try {
@@ -78,11 +108,18 @@
     if (guardsRun) return;
     guardsRun = true;
 
+    // Final hydration check before evaluating guards
+    hydrateSessionFromLocalStorage();
+
     // Admin guard
-    if (path.startsWith('/admin/') && !path.endsWith('/admin/login.html')) {
-      if (!sessionStorage.getItem('tohfa_admin_token')) {
+    if (path.startsWith('/admin/') && !path.endsWith('/admin/login.html') && !path.endsWith('/admin/login') && !path.endsWith('/admin/index.html') && path !== '/admin' && path !== '/admin/') {
+      const adminToken = sessionStorage.getItem('tohfa_admin_token') || localStorage.getItem('tohfa_admin_token');
+      if (!adminToken) {
         window.location.replace('/admin/login.html');
         return;
+      }
+      if (!sessionStorage.getItem('tohfa_admin_token') && adminToken) {
+        sessionStorage.setItem('tohfa_admin_token', adminToken);
       }
     }
 
@@ -137,7 +174,7 @@
   }
 
   // Run guards after potential session sync
-  if (sessionStorage.getItem('tohfa_access_token') || sessionStorage.getItem('tohfa_admin_token')) {
+  if (sessionStorage.getItem('tohfa_access_token') || sessionStorage.getItem('tohfa_admin_token') || localStorage.getItem('tohfa_admin_token')) {
     runGuards();
   } else {
     window.addEventListener('tohfa-session-sync', runGuards, { once: true });

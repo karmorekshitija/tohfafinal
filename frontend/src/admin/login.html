@@ -184,8 +184,8 @@
           throw new Error(data.message || data.error || 'Authentication failed. Please check your credentials.');
         }
 
-        const token = data.token || data.accessToken || data.data?.access_token || data.data?.token;
-        const refreshToken = data.refreshToken || data.refresh_token || data.data?.refresh_token;
+        const token = data.data?.accessToken || data.data?.token || data.token || data.accessToken;
+        const refreshToken = data.data?.refreshToken || data.data?.refresh_token || data.refreshToken || data.refresh_token;
         const admin = data.admin || data.user || data.data?.admin || data.data?.user || { role: 'admin' };
         if (!admin.role) admin.role = 'admin';
 

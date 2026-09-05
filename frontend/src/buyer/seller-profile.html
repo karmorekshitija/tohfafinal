@@ -1223,10 +1223,10 @@
                 const isOwner = currentUser && sellerProfile && Number(currentUser.id) === Number(sellerProfile.id);
 
                 const wishlistBtnHtml = isOwner
-                    ? `<button class="absolute top-1.5 right-1.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[rgba(250,246,238,0.85)] opacity-50 cursor-not-allowed flex items-center justify-center z-10" disabled onclick="event.stopPropagation();">
+                    ? `<button class="absolute top-1.5 right-1.5 w-6 h-6 sm:w-[26px] sm:h-[26px] min-w-0 min-h-0 rounded-full bg-[rgba(250,246,238,0.85)] opacity-50 cursor-not-allowed flex items-center justify-center z-10 p-0 toggle-wishlist-btn" disabled onclick="event.stopPropagation();">
                            <span class="material-symbols-outlined text-[15px] sm:text-[17px] text-[#14381F]" style="font-variation-settings: 'FILL' 0;">favorite</span>
                        </button>`
-                    : `<button onclick="toggleWishlist(event, ${p.id})" class="absolute top-1.5 right-1.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[rgba(250,246,238,0.9)] hover:scale-110 active:scale-95 transition-all shadow-xs toggle-wishlist-btn flex items-center justify-center cursor-pointer z-10">
+                    : `<button onclick="toggleWishlist(event, ${p.id})" class="absolute top-1.5 right-1.5 w-6 h-6 sm:w-[26px] sm:h-[26px] min-w-0 min-h-0 rounded-full bg-[rgba(250,246,238,0.9)] hover:scale-110 active:scale-95 transition-all shadow-xs toggle-wishlist-btn flex items-center justify-center cursor-pointer z-10 p-0">
                            <span class="material-symbols-outlined text-[15px] sm:text-[17px] transition-all ${isWishlisted ? 'fill-icon text-red-500' : 'text-[#14381F]'}" id="wishlist-icon-${p.id}" style="font-variation-settings: 'FILL' ${isWishlisted ? 1 : 0};">favorite</span>
                        </button>`;
 

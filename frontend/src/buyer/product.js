@@ -8,6 +8,7 @@ import { api } from '../js/api.js';
 import { initBuyerShell } from '../js/layout.js';
 import { formatPrice, showToast, flyToCart } from '../js/utils.js';
 import { isLoggedIn } from '../js/auth.js';
+import { optimizeImageUrl } from '../utils/imageHelper.js';
 
 initBuyerShell();
 
@@ -95,11 +96,15 @@ function renderProductUI(p) {
 
   // Gallery markup
   const thumbsMarkup = activeImages.length > 1
-    ? activeImages.map((img, i) => `
-        <div class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="switchImage('${img.url || img}', this)">
-          <img src="${img.url || img}" alt="Thumbnail" onerror="this.src='https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&q=80'">
+    ? activeImages.map((img, i) => {
+        const rawUrl = img.url || img;
+        const thumbUrl = optimizeImageUrl(rawUrl, { width: 160 });
+        return `
+        <div class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="switchImage('${rawUrl}', this)">
+          <img src="${thumbUrl}" alt="Thumbnail" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&q=80'">
         </div>
-      `).join('')
+      `;
+      }).join('')
     : '';
 
   // Variants markup
@@ -117,7 +122,8 @@ function renderProductUI(p) {
         <div class="flex flex-wrap gap-2.5" id="variantSwatches">
           ${variants.map((v, i) => {
             const hasHex = Boolean(v.color_hex && /^#[0-9A-F]{6}$/i.test(v.color_hex));
-            const thumbImg = (Array.isArray(v.images) && v.images.length > 0) ? (v.images[0]?.url || v.images[0]) : v.image_url;
+            const rawThumb = (Array.isArray(v.images) && v.images.length > 0) ? (v.images[0]?.url || v.images[0]) : v.image_url;
+            const thumbImg = rawThumb ? optimizeImageUrl(rawThumb, { width: 64 }) : null;
             const isActive = (selectedVariant && selectedVariant.id === v.id) || (!selectedVariant && i === 0);
             return `
               <button
@@ -126,7 +132,7 @@ function renderProductUI(p) {
                 style="display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 9999px; border: 1.5px solid ${isActive ? 'var(--color-primary)' : 'rgba(20,56,31,0.2)'}; background: ${isActive ? 'rgba(20,56,31,0.08)' : 'white'}; cursor: pointer; transition: all 0.2s ease;"
                 onclick="selectVariant(${v.id}, this)"
               >
-                ${thumbImg ? `<img src="${thumbImg}" alt="${v.variant_name || v.color_name || 'Variant'}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(0,0,0,0.15);" onerror="this.style.display='none'">` : (hasHex ? `<span style="width: 14px; height: 14px; border-radius: 50%; background-color: ${v.color_hex}; border: 1px solid rgba(0,0,0,0.2); display: inline-block;"></span>` : '')}
+                ${thumbImg ? `<img src="${thumbImg}" alt="${v.variant_name || v.color_name || 'Variant'}" loading="lazy" decoding="async" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(0,0,0,0.15);" onerror="this.style.display='none'">` : (hasHex ? `<span style="width: 14px; height: 14px; border-radius: 50%; background-color: ${v.color_hex}; border: 1px solid rgba(0,0,0,0.2); display: inline-block;"></span>` : '')}
                 <span style="font-size: 13px; font-weight: 600; color: var(--color-primary);">${v.variant_name || v.color_name || 'Option'}</span>
                 ${Number(v.additional_price) !== 0 ? `<span style="font-size: 11px; opacity: 0.7;">(${Number(v.additional_price) > 0 ? '+' : ''}${formatPrice(v.additional_price)})</span>` : ''}
               </button>
@@ -187,7 +193,7 @@ function renderProductUI(p) {
     <!-- Left: Gallery & Style Selector -->
     <div>
       <div class="gallery-main">
-        <img id="mainImage" src="${activeImages[0]?.url || ''}" alt="${p.name}">
+        <img id="mainImage" src="${optimizeImageUrl(activeImages[0]?.url || '', { width: 1000 })}" alt="${p.name}" decoding="async">
       </div>
       <div id="galleryThumbsContainer" class="gallery-thumbs">
         ${thumbsMarkup}
@@ -274,7 +280,7 @@ function escapeHtml(str) {
 
 // Window actions
 window.switchImage = (url, thumbEl) => {
-  document.getElementById('mainImage').src = url;
+  document.getElementById('mainImage').src = optimizeImageUrl(url, { width: 1000 });
   document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
   thumbEl.classList.add('active');
 };
@@ -306,17 +312,21 @@ window.selectVariant = (variantId, el) => {
     const variantImages = getImagesForVariant(selectedVariant, currentProduct);
     const mainImg = document.getElementById('mainImage');
     if (mainImg && variantImages.length > 0) {
-      mainImg.src = variantImages[0].url;
+      mainImg.src = optimizeImageUrl(variantImages[0].url, { width: 1000 });
     }
 
     const thumbsContainer = document.getElementById('galleryThumbsContainer');
     if (thumbsContainer) {
       if (variantImages.length > 1) {
-        thumbsContainer.innerHTML = variantImages.map((img, i) => `
-          <div class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="switchImage('${img.url || img}', this)">
-            <img src="${img.url || img}" alt="Thumbnail" onerror="this.src='https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&q=80'">
+        thumbsContainer.innerHTML = variantImages.map((img, i) => {
+          const raw = img.url || img;
+          const thumbUrl = optimizeImageUrl(raw, { width: 160 });
+          return `
+          <div class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="switchImage('${raw}', this)">
+            <img src="${thumbUrl}" alt="Thumbnail" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&q=80'">
           </div>
-        `).join('');
+        `;
+        }).join('');
       } else {
         thumbsContainer.innerHTML = '';
       }

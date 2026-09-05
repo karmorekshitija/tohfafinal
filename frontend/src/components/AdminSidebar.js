@@ -31,8 +31,11 @@
     const currentPath = window.location.pathname;
 
     const navHtml = NAV_ITEMS.map(item => {
+      const cleanPath = currentPath.replace(/\.html$/, '').replace(/\/$/, '');
+      const cleanItemHref = item.href.replace(/\.html$/, '');
       const isActive = currentPath === item.href ||
-        (item.href === '/admin/dashboard.html' && (currentPath === '/admin/' || currentPath === '/admin/index.html'));
+        cleanPath === cleanItemHref ||
+        (cleanItemHref === '/admin/dashboard' && (cleanPath === '/admin' || cleanPath === '/admin/index' || cleanPath === ''));
 
       return `
         <a href="${item.href}"

@@ -47,6 +47,63 @@ export function unwrapResponse(res) {
 }
 
 // ---------------------------------------------------------------------------
+// TOKEN REFRESH LOGIC & QUEUE
+// ---------------------------------------------------------------------------
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+function onTokenRefreshed(newToken) {
+  refreshSubscribers.forEach(cb => cb(newToken));
+  refreshSubscribers = [];
+}
+
+function addRefreshSubscriber(cb) {
+  refreshSubscribers.push(cb);
+}
+
+async function refreshAccessToken() {
+  const refreshToken = sessionStorage.getItem('tohfa_refresh_token') ||
+                       localStorage.getItem('tohfa_refresh_token') ||
+                       sessionStorage.getItem('tohfa_admin_refresh_token') ||
+                       localStorage.getItem('tohfa_admin_refresh_token');
+  if (!refreshToken) return null;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken, refresh_token: refreshToken })
+    });
+
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    const tokenData = data.data || data;
+    const newAccessToken = tokenData.accessToken || tokenData.access_token || tokenData.token;
+    const newRefreshToken = tokenData.refreshToken || tokenData.refresh_token;
+
+    if (newAccessToken) {
+      authStorage.setToken(newAccessToken);
+      if (sessionStorage.getItem('tohfa_admin_token') || localStorage.getItem('tohfa_admin_token')) {
+        sessionStorage.setItem('tohfa_admin_token', newAccessToken);
+        localStorage.setItem('tohfa_admin_token', newAccessToken);
+      }
+    }
+    if (newRefreshToken) {
+      sessionStorage.setItem('tohfa_refresh_token', newRefreshToken);
+      localStorage.setItem('tohfa_refresh_token', newRefreshToken);
+      if (sessionStorage.getItem('tohfa_admin_refresh_token') || localStorage.getItem('tohfa_admin_refresh_token')) {
+        sessionStorage.setItem('tohfa_admin_refresh_token', newRefreshToken);
+        localStorage.setItem('tohfa_admin_refresh_token', newRefreshToken);
+      }
+    }
+    return newAccessToken;
+  } catch (err) {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // UNIFIED FETCH-BASED apiRequest (Section 6 Specification)
 // ---------------------------------------------------------------------------
 export async function apiRequest(endpoint, options = {}) {
@@ -78,7 +135,48 @@ export async function apiRequest(endpoint, options = {}) {
   try {
     const response = await fetch(targetUrl, { ...options, headers });
 
-    if (response.status === 401) {
+    if (response.status === 401 && !options._retry) {
+      if (!isRefreshing) {
+        isRefreshing = true;
+        const newToken = await refreshAccessToken();
+        isRefreshing = false;
+        onTokenRefreshed(newToken);
+        if (newToken) {
+          return apiRequest(endpoint, {
+            ...options,
+            _retry: true,
+            headers: {
+              ...options.headers,
+              'Authorization': `Bearer ${newToken}`
+            }
+          });
+        }
+      } else {
+        const retryPromise = new Promise((resolve, reject) => {
+          addRefreshSubscriber(async (newToken) => {
+            if (newToken) {
+              try {
+                const retryRes = await apiRequest(endpoint, {
+                  ...options,
+                  _retry: true,
+                  headers: {
+                    ...options.headers,
+                    'Authorization': `Bearer ${newToken}`
+                  }
+                });
+                resolve(retryRes);
+              } catch (e) {
+                reject(e);
+              }
+            } else {
+              resolve(null);
+            }
+          });
+        });
+        const retryResult = await retryPromise;
+        if (retryResult !== null) return retryResult;
+      }
+
       authStorage.clear();
       const currentPath = window.location.pathname + window.location.search;
       if (!currentPath.includes('/auth/')) {
@@ -218,7 +316,33 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (error.response?.status === 401) {
+    const originalRequest = error.config;
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          addRefreshSubscriber((newToken) => {
+            if (newToken) {
+              originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+              resolve(apiClient(originalRequest));
+            } else {
+              reject(error);
+            }
+          });
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      const newToken = await refreshAccessToken();
+      isRefreshing = false;
+      onTokenRefreshed(newToken);
+
+      if (newToken) {
+        originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+        return apiClient(originalRequest);
+      }
+
       clearAllTokens();
       requireAuth();
       return Promise.reject(error);

@@ -4,6 +4,8 @@
  */
 'use strict';
 
+import { compressImage } from '../utils/imageCompressor.js';
+
 const DRAFT_STORAGE_KEY = 'tohfa_artisan_product_draft';
 let categoriesCatalog = [];
 let uploadedPhotos = []; // array of { file, dataUrl }
@@ -633,16 +635,17 @@ async function handleSubmit(e) {
 
       let photoUploadFailed = false;
 
-      // Upload photos if any selected
+      // Upload photos if any selected (with client-side lossless compression)
       if (uploadedPhotos.length > 0) {
         const formData = new FormData();
         let fileCount = 0;
-        uploadedPhotos.forEach(p => {
+        for (const p of uploadedPhotos) {
           if (p.file) {
-            formData.append('images', p.file);
+            const compressed = await compressImage(p.file);
+            formData.append('images', compressed);
             fileCount++;
           }
-        });
+        }
         if (fileCount > 0) {
           try {
             const imgRes = await fetch(`/api/products/${productId}/images`, {
@@ -691,8 +694,9 @@ async function handleSubmit(e) {
 
 export async function uploadMedia(file, folder = 'tohfa_products') {
   const token = sessionStorage.getItem('tohfa_access_token') || localStorage.getItem('tohfa_access_token') || localStorage.getItem('auth_token');
+  const compressed = await compressImage(file);
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('file', compressed);
   formData.append('folder', folder);
 
   const res = await fetch('/api/upload', {

@@ -410,11 +410,11 @@
                     const pricePaise = item.price_paise !== undefined ? item.price_paise : (item.base_price ? item.base_price * 100 : 0);
                     
                     const wishlistBtnHtml = isOwner
-                        ? `<button class="absolute top-sm right-sm w-10 h-10 flex items-center justify-center bg-[#FFF8E7]/80 backdrop-blur-sm rounded-full text-primary opacity-50 cursor-not-allowed" disabled onclick="event.stopPropagation();">
-                               <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">favorite</span>
+                        ? `<button class="absolute top-1.5 right-1.5 w-6 h-6 sm:w-[26px] sm:h-[26px] min-w-0 min-h-0 flex items-center justify-center bg-[#FFF8E7]/80 backdrop-blur-sm rounded-full text-primary opacity-50 cursor-not-allowed p-0 z-10 remove-wishlist-btn" disabled onclick="event.stopPropagation();">
+                               <span class="material-symbols-outlined text-[15px] sm:text-[17px] text-primary" style="font-variation-settings: 'FILL' 1;">favorite</span>
                            </button>`
-                        : `<button class="absolute top-sm right-sm w-10 h-10 flex items-center justify-center bg-[#FFF8E7]/80 backdrop-blur-sm rounded-full text-primary hover:scale-110 transition-transform remove-wishlist-btn" data-id="${item.product_id}">
-                               <span class="material-symbols-outlined active-heart text-primary" style="font-variation-settings: 'FILL' 1;">favorite</span>
+                        : `<button class="absolute top-1.5 right-1.5 w-6 h-6 sm:w-[26px] sm:h-[26px] min-w-0 min-h-0 flex items-center justify-center bg-[#FFF8E7]/80 backdrop-blur-sm rounded-full text-primary hover:scale-110 transition-transform remove-wishlist-btn p-0 z-10" data-id="${item.product_id}">
+                               <span class="material-symbols-outlined active-heart text-[15px] sm:text-[17px] text-primary" style="font-variation-settings: 'FILL' 1;">favorite</span>
                            </button>`;
 
                     const isCustomized = item.listing_type === 'custom';

@@ -125,6 +125,91 @@ export function redirectUserByRole(user) {
   window.location.href = safeReturnTo;
 }
 
+export function getUser() {
+  return authStorage.getUser();
+}
+
+export function getRole() {
+  const user = getUser();
+  return user ? user.role : null;
+}
+
+export function isLoggedIn() {
+  return !!authStorage.getToken();
+}
+
+export function saveAuth({ accessToken, refreshToken, user, access_token, refresh_token, token }) {
+  const at = token || accessToken || access_token;
+  const rt = refreshToken || refresh_token;
+
+  if (at) {
+    authStorage.setToken(at);
+    if (user?.role === 'admin' || user?.role === 'master_admin') {
+      localStorage.setItem('tohfa_admin_token', at);
+      sessionStorage.setItem('tohfa_admin_token', at);
+    }
+  }
+
+  if (rt) {
+    localStorage.setItem('tohfa_refresh_token', rt);
+    sessionStorage.setItem('tohfa_refresh_token', rt);
+    if (user?.role === 'admin' || user?.role === 'master_admin') {
+      localStorage.setItem('tohfa_admin_refresh_token', rt);
+      sessionStorage.setItem('tohfa_admin_refresh_token', rt);
+    }
+  }
+
+  if (user) {
+    authStorage.setUser(user);
+  }
+}
+
+export function clearAuth() {
+  authStorage.clear();
+}
+
+export function updateCachedUser(updates) {
+  const user = getUser();
+  if (user) {
+    authStorage.setUser({ ...user, ...updates });
+  }
+}
+
+export function requireAuth(redirectTo = '/auth/login.html') {
+  if (!isLoggedIn()) {
+    const currentPath = window.location.pathname + window.location.search;
+    sessionStorage.setItem('tohfa_return_to', currentPath);
+    window.location.href = redirectTo.includes('?') ? redirectTo : `${redirectTo}?redirect=${encodeURIComponent(currentPath)}`;
+    return false;
+  }
+  return true;
+}
+
+export function requireRole(roles, redirectTo = '/buyer/home.html') {
+  const role = getRole();
+  const allowed = Array.isArray(roles) ? roles : [roles];
+  if (!allowed.includes(role)) {
+    window.location.href = redirectTo;
+    return false;
+  }
+  return true;
+}
+
+export function redirectIfLoggedIn() {
+  if (!isLoggedIn()) return;
+  redirectUserByRole();
+}
+
+export function requireApprovedSeller() {
+  const user = getUser();
+  const isApproved = user && (user.is_onboarded || user.is_approved === 1 || user.is_approved === true || user.isSellerApproved === true || user.verification_status === 'verified');
+  if (!isApproved) {
+    window.location.href = '/seller/onboarding.html';
+    return false;
+  }
+  return true;
+}
+
 export function logout() {
   const refreshToken = sessionStorage.getItem('tohfa_refresh_token') ||
                        localStorage.getItem('tohfa_refresh_token');
@@ -148,6 +233,11 @@ if (typeof window !== 'undefined') {
   window.authStorage = authStorage;
   window.redirectUserByRole = redirectUserByRole;
   window.getSafeRedirectUrl = getSafeRedirectUrl;
+  window.getUser = getUser;
+  window.getRole = getRole;
+  window.isLoggedIn = isLoggedIn;
+  window.requireAuth = requireAuth;
+  window.clearAuth = clearAuth;
 }
 
 export default {
@@ -156,5 +246,15 @@ export default {
   authStorage,
   getSafeRedirectUrl,
   redirectUserByRole,
+  getUser,
+  getRole,
+  isLoggedIn,
+  saveAuth,
+  clearAuth,
+  updateCachedUser,
+  requireAuth,
+  requireRole,
+  redirectIfLoggedIn,
+  requireApprovedSeller,
   logout
 };

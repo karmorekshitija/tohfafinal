@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="/src/tailwind.css">
   
   <script type="module" src="/components/seller-components.js"></script>
+  <script type="module" src="/src/utils/imageCompressor.js"></script>
   <script src="/seller/js/seller-utils.js"></script>
     
   <style>
@@ -729,8 +730,9 @@
 
         try {
           if (file) {
+            const compressedFile = window.compressImage ? await window.compressImage(file) : file;
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('file', compressedFile);
             formData.append('folder', 'custom_proofs');
             const upRes = await fetch('/api/upload', {
               method: 'POST',

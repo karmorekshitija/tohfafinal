@@ -24,6 +24,7 @@ router.post('/admin-login', authRateLimiter, validate(schemas.adminLogin), authC
 
 // Session token management
 router.post('/refresh', authController.refresh);
+router.post('/refresh-token', authController.refresh);
 router.post('/logout', authController.logout);
 
 // Password recovery

@@ -33,6 +33,7 @@ const analyticsRoutes      = require('./src/routes/analytics.routes');
 const tanyaRoutes          = require('./src/routes/tanya.routes');
 const logisticsRoutes      = require('./src/routes/logistics.routes');
 const webhookRoutes        = require('./src/routes/webhook.routes');
+const uploadRoutes         = require('./src/routes/upload.routes');
 
 // Middleware imports
 const { rateLimiter, tanyaRateLimiter }   = require('./src/middleware/rateLimiter');
@@ -170,6 +171,7 @@ app.use('/api/analytics',     analyticsRoutes);
 app.use('/api/tanya',         tanyaRateLimiter, tanyaRoutes); // Added rate limiter for Tanya AI
 app.use('/api/chatbot',       tanyaRateLimiter, tanyaRoutes);   // Alias for Tanya AI Chatbot
 app.use('/api/logistics',     logisticsRoutes);
+app.use('/api/upload',        uploadRoutes);
 
 
 // ---------------------------------------------------------------------------

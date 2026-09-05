@@ -345,11 +345,40 @@ footer {
 }
 
 /* Touch targets and accessibility */
-button,
+button:not(.toggle-wishlist-btn):not(.remove-wishlist-btn):not(.toggle-rec-wishlist-btn),
 a.btn,
 .tap-target {
   min-height: 44px;
   min-width: 44px;
+}
+
+/* Wishlist button on product cards — compact circle slightly larger than heart icon */
+.toggle-wishlist-btn,
+.remove-wishlist-btn,
+.toggle-rec-wishlist-btn,
+button.toggle-wishlist-btn {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+  max-width: 24px !important;
+  max-height: 24px !important;
+  padding: 0 !important;
+}
+
+@media (min-width: 640px) {
+  .toggle-wishlist-btn,
+  .remove-wishlist-btn,
+  .toggle-rec-wishlist-btn,
+  button.toggle-wishlist-btn {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    min-height: 26px !important;
+    max-width: 26px !important;
+    max-height: 26px !important;
+    padding: 0 !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
