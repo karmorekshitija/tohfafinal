@@ -56,8 +56,8 @@ const logisticsController = require('./src/controllers/logistics.controller');
 // ---------------------------------------------------------------------------
 const app = express();
 
-// Trust reverse proxy (Vercel / CloudFront / Heroku) for correct client IP detection
-app.set('trust proxy', 1);
+// Trust reverse proxy (Vercel edge -> Render proxy -> Express = 2 hops)
+app.set('trust proxy', 2);
 
 // ---------------------------------------------------------------------------
 // SECURITY HEADERS
