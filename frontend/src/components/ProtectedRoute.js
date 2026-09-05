@@ -124,7 +124,7 @@
     }
 
     // Seller guard
-    if (path.startsWith('/seller/') && !path.endsWith('/seller/onboarding.html')) {
+    if (path.startsWith('/seller/') && !path.endsWith('/seller/onboarding.html') && !path.endsWith('/seller/onboarding')) {
       const token = sessionStorage.getItem('tohfa_access_token');
       if (!token) {
         sessionStorage.setItem('tohfa_return_to', path + window.location.search);
