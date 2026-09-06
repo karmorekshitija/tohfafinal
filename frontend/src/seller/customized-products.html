@@ -221,6 +221,17 @@
   let allCustomOrders = [];
   let activeTabName = 'products';
 
+  function getAuthToken() {
+    return (typeof window !== 'undefined' && window.authStorage?.getToken?.()) ||
+           sessionStorage.getItem('tohfa_access_token') ||
+           localStorage.getItem('tohfa_access_token') ||
+           sessionStorage.getItem('tohfa_auth_token') ||
+           localStorage.getItem('tohfa_auth_token') ||
+           sessionStorage.getItem('auth_token') ||
+           localStorage.getItem('auth_token') ||
+           null;
+  }
+
   function showToast(msg, type = 'success') {
     const toast = document.getElementById('toast');
     const icon = document.getElementById('toast-icon');
@@ -268,10 +279,16 @@
 
   // ── Load Customized Products ──────────────────────────────────────────
   async function loadCustomizedProducts() {
-    const token = sessionStorage.getItem('tohfa_access_token');
+    const token = getAuthToken();
     const loadingEl = document.getElementById('loading-state');
     const emptyEl = document.getElementById('empty-state');
     const tableContainer = document.getElementById('custom-table-container');
+
+    if (!token) {
+      loadingEl.classList.add('hidden');
+      emptyEl.classList.remove('hidden');
+      return;
+    }
 
     try {
       const res = await fetch(`${API_BASE}/api/seller/listings`, {
@@ -285,7 +302,15 @@
 
       // Filter only customizable products
       allCustomProducts = listings.filter(p => {
-        return Boolean(p.is_customizable) || (p.customization_mode && p.customization_mode !== 'none') || (p.customization_schema && typeof p.customization_schema === 'object' && Object.keys(p.customization_schema).length > 0);
+        let schema = p.customization_schema;
+        if (typeof schema === 'string') {
+          try { schema = JSON.parse(schema); } catch { schema = null; }
+        }
+        const hasSchemaFields = schema && typeof schema === 'object' && (
+          (Array.isArray(schema.fields) && schema.fields.length > 0) ||
+          Object.keys(schema).length > 0
+        );
+        return Boolean(p.is_customizable) || (p.customization_mode && p.customization_mode !== 'none') || hasSchemaFields;
       });
 
       // Update Header & Tab Badges
@@ -429,10 +454,16 @@
 
   // ── Load Customized Orders ───────────────────────────────────────────
   async function loadCustomizedOrders() {
-    const token = sessionStorage.getItem('tohfa_access_token');
+    const token = getAuthToken();
     const loadingEl = document.getElementById('orders-loading-state');
     const emptyEl = document.getElementById('orders-empty-state');
     const tableContainer = document.getElementById('orders-table-container');
+
+    if (!token) {
+      loadingEl.classList.add('hidden');
+      emptyEl.classList.remove('hidden');
+      return;
+    }
 
     try {
       loadingEl.classList.remove('hidden');
@@ -595,15 +626,15 @@
 
   async function toggleProductStatus(productId, currentStatus) {
     const newStatus = currentStatus === 'active' ? 'paused' : 'active';
-    const token = sessionStorage.getItem('tohfa_access_token');
+    const endpoint = currentStatus === 'active' ? 'pause' : 'resume';
+    const token = getAuthToken();
     try {
-      const res = await fetch(`${API_BASE}/api/seller/listings/${productId}`, {
-        method: 'PATCH',
+      const res = await fetch(`${API_BASE}/api/seller/listings/${productId}/${endpoint}`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: newStatus })
+        }
       });
 
       if (res.ok) {

@@ -369,6 +369,19 @@
     const API_BASE = window.location.origin;
     let productId = null;
     let prebookEnabled = false;
+    let categoriesList = [];
+    let selectedSubcategoryIds = [];
+
+    function getAuthToken() {
+        return (typeof window !== 'undefined' && window.authStorage?.getToken?.()) ||
+               sessionStorage.getItem('tohfa_access_token') ||
+               localStorage.getItem('tohfa_access_token') ||
+               sessionStorage.getItem('tohfa_auth_token') ||
+               localStorage.getItem('tohfa_auth_token') ||
+               sessionStorage.getItem('auth_token') ||
+               localStorage.getItem('auth_token') ||
+               null;
+    }
 
     // Photos state (up to 8 slots)
     let photoFiles = [null, null, null, null, null, null, null, null];
@@ -495,15 +508,27 @@
 
     // Load Listing Data
     async function loadListingData() {
-        const token = sessionStorage.getItem('tohfa_access_token');
+        const token = getAuthToken();
+        if (!token) {
+            sessionStorage.setItem('tohfa_return_to', window.location.pathname + window.location.search);
+            showToast('Please log in to edit listings.', 'error');
+            setTimeout(() => {
+                window.location.href = `/auth/login.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+            }, 1000);
+            return;
+        }
+
         try {
             const res = await fetch(`${API_BASE}/api/seller/listings/${productId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!res.ok) {
                 if (res.status === 401 || res.status === 403) {
-                    sessionStorage.clear();
-                    // login check bypassed
+                    sessionStorage.setItem('tohfa_return_to', window.location.pathname + window.location.search);
+                    showToast('Session expired or unauthorized. Redirecting to login...', 'error');
+                    setTimeout(() => {
+                        window.location.href = `/auth/login.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+                    }, 1200);
                     return;
                 }
                 throw new Error(`HTTP ${res.status}`);
@@ -521,6 +546,10 @@
             const detailsFieldsContainer = document.getElementById('details-fields-container');
             
             selectedSubcategoryIds = (data.subcategories || []).map(sc => sc.id || sc);
+
+            const catName = typeof data.category === 'string'
+                ? data.category
+                : (data.category?.name || data.category_name || '');
 
             if (listingStatus === 'draft') {
                 // Draft status: customizable name and category
@@ -551,11 +580,14 @@
                         </select>
                     </div>
                 `;
-                document.getElementById('edit-product-name').value = data.title || '';
+                document.getElementById('edit-product-name').value = data.title || data.name || '';
                 
                 let matchedCatId = data.category_id;
-                if (!matchedCatId && data.category) {
-                    const catObj = categoriesList.find(c => (c.display_name || c.name).toLowerCase() === data.category.toLowerCase());
+                if (!matchedCatId && catName) {
+                    const catObj = categoriesList.find(c => {
+                        const name = c.display_name || c.name || '';
+                        return name.toLowerCase() === catName.toLowerCase();
+                    });
                     if (catObj) matchedCatId = catObj.id;
                 }
                 document.getElementById('edit-product-category').value = matchedCatId || '';
@@ -565,6 +597,11 @@
                 document.getElementById('edit-product-category').addEventListener('change', (e) => {
                     renderSubcategories(e.target.value);
                 });
+
+                if (Array.isArray(data.occasions)) {
+                    selectedOccasions = new Set(data.occasions);
+                }
+                renderOccasionChips();
             } else {
                 // Non-draft status: locked name and category
                 warningBanner.className = "mb-8 p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-850 rounded-r-xl shadow-sm flex items-start gap-3";
@@ -598,8 +635,8 @@
                         </div>
                     </div>
                 `;
-                document.getElementById('locked-product-name').textContent = data.title || '';
-                document.getElementById('locked-product-category').textContent = (data.category?.name || data.category) || '';
+                document.getElementById('locked-product-name').textContent = data.title || data.name || '';
+                document.getElementById('locked-product-category').textContent = catName || '';
 
                 let matchedCatId = data.parent_category_id || data.category_id;
                 if (data.parent_category_id && data.category_id) {
@@ -607,8 +644,11 @@
                         selectedSubcategoryIds.push(data.category_id);
                     }
                 }
-                if (!matchedCatId && data.category) {
-                    const catObj = categoriesList.find(c => (c.display_name || c.name).toLowerCase() === (data.category.name || data.category).toLowerCase());
+                if (!matchedCatId && catName) {
+                    const catObj = categoriesList.find(c => {
+                        const name = c.display_name || c.name || '';
+                        return name.toLowerCase() === catName.toLowerCase();
+                    });
                     if (catObj) matchedCatId = catObj.id;
                 }
                 renderSubcategories(matchedCatId || '');
@@ -673,7 +713,7 @@
               customPanel?.classList.toggle('hidden', !isCustom);
             }
 
-            if (customSchema) {
+            if (customSchema && typeof customSchema === 'object') {
               if (customSchema.crafting_time) {
                 document.getElementById('edit-custom-crafting-time').value = customSchema.crafting_time;
               } else if (data.preparation_days) {
@@ -683,8 +723,10 @@
                 document.getElementById('edit-custom-fee').value = customSchema.customization_fee;
               }
 
+              const fields = Array.isArray(customSchema.fields) ? customSchema.fields : [];
+
               // 1. Text Field
-              const textField = customSchema.fields.find(f => f.type === 'text');
+              const textField = fields.find(f => f.type === 'text');
               if (textField) {
                 document.getElementById('edit-custom-opt-text').checked = true;
                 document.getElementById('edit-custom-text-label').value = textField.label || 'Name / Monogram to Engrave';
@@ -695,7 +737,7 @@
               }
 
               // 2. Choices Field
-              const choicesField = customSchema.fields.find(f => f.type === 'select');
+              const choicesField = fields.find(f => f.type === 'select');
               if (choicesField) {
                 document.getElementById('edit-custom-opt-choices').checked = true;
                 document.getElementById('edit-custom-choices-settings')?.classList.remove('hidden');
@@ -710,7 +752,7 @@
               }
 
               // 3. Image Field
-              const imgField = customSchema.fields.find(f => f.type === 'image');
+              const imgField = fields.find(f => f.type === 'image');
               if (imgField) {
                 document.getElementById('edit-custom-opt-image').checked = true;
                 document.getElementById('edit-custom-image-settings')?.classList.remove('hidden');
@@ -722,7 +764,7 @@
               }
 
               // 4. Note Field
-              const noteField = customSchema.fields.find(f => f.type === 'textarea');
+              const noteField = fields.find(f => f.type === 'textarea');
               if (noteField) {
                 document.getElementById('edit-custom-opt-note').checked = true;
                 document.getElementById('edit-custom-note-settings')?.classList.remove('hidden');
@@ -832,7 +874,7 @@
         const dimensions_weight = parseFloat(document.getElementById('dim-weight').value) || null;
         const bio = document.getElementById('product-bio').value.trim() || null;
 
-        const token = sessionStorage.getItem('tohfa_access_token');
+        const token = getAuthToken();
 
         // Video upload first if selected
         if (selectedVideoFile) {
@@ -1014,7 +1056,7 @@
         patchBody.customization_mode = isCustomizable ? 'fixed' : 'none';
         patchBody.customization_schema = finalCustomSchema;
 
-        const token = sessionStorage.getItem('tohfa_access_token');
+        const token = getAuthToken();
         try {
             const res = await fetch(`${API_BASE}/api/seller/listings/${productId}`, {
                 method: 'PATCH',
@@ -1039,9 +1081,6 @@
             showToast('Studio backend server connection error.', 'error');
         }
     }
-
-    let categoriesList = [];
-    let selectedSubcategoryIds = [];
 
     const FALLBACK_CATEGORIES = [
         {
