@@ -87,7 +87,7 @@ async function getOwnSellerProfile(req, res, next) {
 
     const { rows } = await query(
       `SELECT sp.id, sp.user_id,
-              COALESCE(sp.store_name, sp.shop_name, sp.display_name, u.name) AS store_name,
+              COALESCE(sp.store_name, sp.shop_name, u.display_name, u.name) AS store_name,
               COALESCE(sp.bio, sp.shop_bio) AS bio,
               sp.whatsapp_number,
               COALESCE(sp.profile_photo, sp.avatar_url, u.profile_photo_url) AS profile_photo,
@@ -692,8 +692,8 @@ async function getDashboardMetrics(req, res, next) {
                 (SELECT json_agg(json_build_object(
                   'id', oi.id,
                   'product_id', oi.product_id,
-                  'product_name', COALESCE(oi.product_name, p.name),
-                  'name', COALESCE(oi.product_name, p.name),
+                  'product_name', p.name,
+                  'name', p.name,
                   'quantity', oi.quantity,
                   'unit_price', COALESCE(oi.unit_price, (oi.unit_price_paise::numeric / 100.0), 0),
                   'customization_data', oi.customization_data,
@@ -1112,7 +1112,7 @@ async function getSellerOrders(req, res, next) {
     const offsetIdx = params.length;
 
     const { rows } = await query(
-      `SELECT o.id, o.buyer_id, o.seller_id, o.listing_id, o.product_name, o.total_amount, o.total_paise,
+      `SELECT o.id, o.buyer_id, o.seller_id, o.total_amount, o.total_paise,
               o.order_ref, o.order_type, o.customization, o.customization_summary,
               o.status, o.payment_status, o.payout_status,
               o.tracking_id, o.tracking_url, o.delivered_at, o.created_at, o.updated_at,
@@ -1123,8 +1123,8 @@ async function getSellerOrders(req, res, next) {
                 (SELECT json_agg(json_build_object(
                   'id', oi.id,
                   'product_id', oi.product_id,
-                  'product_name', COALESCE(oi.product_name, p.name),
-                  'name', COALESCE(oi.product_name, p.name),
+                  'product_name', p.name,
+                  'name', p.name,
                   'quantity', oi.quantity,
                   'unit_price', COALESCE(oi.unit_price, (oi.unit_price_paise::numeric / 100.0), 0),
                   'customization_data', oi.customization_data,
@@ -1156,7 +1156,7 @@ async function getSellerOrders(req, res, next) {
 
     const formattedOrders = rows.map(o => {
       let items = Array.isArray(o.items) && o.items.length > 0 ? o.items : [];
-      if (items.length === 0 && (o.product_name || o.listing_id || o.customization_summary || o.customization)) {
+      if (items.length === 0 && (o.customization_summary || o.customization)) {
         let parsedCustom = null;
         if (o.customization_summary) {
           try { parsedCustom = typeof o.customization_summary === 'string' ? JSON.parse(o.customization_summary) : o.customization_summary; } catch { parsedCustom = { summary_text: o.customization_summary }; }
@@ -1230,8 +1230,8 @@ async function getSellerOrderDetail(req, res, next) {
                 (SELECT json_agg(json_build_object(
                   'id', oi.id,
                   'product_id', oi.product_id,
-                  'product_name', COALESCE(oi.product_name, p.name),
-                  'name', COALESCE(oi.product_name, p.name),
+                  'product_name', p.name,
+                  'name', p.name,
                   'quantity', oi.quantity,
                   'unit_price', COALESCE(oi.unit_price, (oi.unit_price_paise::numeric / 100.0), 0),
                   'customization_data', oi.customization_data,
@@ -1258,7 +1258,7 @@ async function getSellerOrderDetail(req, res, next) {
 
     const order = rows[0];
     let items = Array.isArray(order.items) && order.items.length > 0 ? order.items : [];
-    if (items.length === 0 && (order.product_name || order.listing_id || order.customization_summary || order.customization)) {
+    if (items.length === 0 && (order.customization_summary || order.customization)) {
       let parsedCustom = null;
       if (order.customization_summary) {
         try { parsedCustom = typeof order.customization_summary === 'string' ? JSON.parse(order.customization_summary) : order.customization_summary; } catch { parsedCustom = { summary_text: order.customization_summary }; }
@@ -2521,8 +2521,8 @@ async function bulkDiscountAllListings(req, res, next) {
     const { rows } = await query(
       `UPDATE products
        SET discount_active = $1,
-           discount_percentage = $2,
-           sale_price = CASE WHEN $1 = TRUE THEN ROUND((base_price * (1 - ($2::numeric / 100)))::numeric, 2) ELSE NULL END,
+           discount_percentage = ($2)::integer,
+           sale_price = CASE WHEN $1 = TRUE AND ($2)::numeric IS NOT NULL THEN ROUND((base_price * (1 - (($2)::numeric / 100.0)))::numeric, 2) ELSE NULL END,
            updated_at = NOW()
        WHERE (seller_id = $3 OR $4 = 'admin' OR $4 = 'master_admin')
        RETURNING id, base_price, discount_active, discount_percentage, sale_price`,

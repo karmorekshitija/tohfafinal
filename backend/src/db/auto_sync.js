@@ -218,6 +218,28 @@ async function autoSyncDatabase() {
       )
     `);
 
+    // 13. Ensure Initial Admin Exists
+    try {
+      const { rows: adminRows } = await query(
+        "SELECT id FROM users WHERE role IN ('admin', 'master_admin') LIMIT 1"
+      );
+      if (adminRows.length === 0) {
+        const bcrypt = require('bcrypt');
+        const adminEmail = (process.env.ADMIN_EMAIL || 'admin@thetohfa.in').toLowerCase().trim();
+        const adminPassword = process.env.ADMIN_PASSWORD || 'AdminPassword123!';
+        const hash = await bcrypt.hash(adminPassword, 10);
+        await query(
+          `INSERT INTO users (name, full_name, display_name, email, password_hash, role, is_active)
+           VALUES ('Tohfa Admin', 'Tohfa Admin', 'Tohfa Admin', $1, $2, 'admin', TRUE)
+           ON CONFLICT (email) DO UPDATE SET role = 'admin', is_active = TRUE, password_hash = $2`,
+          [adminEmail, hash]
+        );
+        console.log(`🛡️ Default Admin user ensured: ${adminEmail}`);
+      }
+    } catch (adminErr) {
+      console.warn('⚠️ [Admin Ensure Notice]:', adminErr.message);
+    }
+
     console.log('✅ Database schema and catalog auto-sync complete!');
   } catch (err) {
     console.warn('⚠️ [Database Auto-Sync Warning]:', err.message);

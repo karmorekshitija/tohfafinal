@@ -335,7 +335,7 @@ async function getShippingLabel(orderId, sellerId) {
             a.line1 AS delivery_line1, a.line2 AS delivery_line2, a.city AS delivery_city,
             a.state AS delivery_state, a.pincode AS delivery_pincode,
             COALESCE(sp.store_name, sel.store_name, s.name) AS store_name, 
-            COALESCE(sp.whatsapp_number, sel.whatsapp_number, s.phone) AS store_phone, 
+            COALESCE(sp.whatsapp_number, s.phone) AS store_phone, 
             COALESCE(sp.pickup_address, sel.pickup_address) AS pickup_address,
             COALESCE(
               (SELECT json_agg(json_build_object(
