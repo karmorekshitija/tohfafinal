@@ -1161,7 +1161,7 @@ async function updateCategory(req, res, next) {
        SET name             = COALESCE($1, name),
            display_name     = COALESCE($1, display_name, name),
            slug             = COALESCE($2, slug),
-           parent_id        = $3,
+           parent_id        = CASE WHEN $3::boolean THEN $10 ELSE parent_id END,
            sort_order       = COALESCE($4, sort_order),
            is_active        = COALESCE($5, is_active),
            description      = COALESCE($6, description),
@@ -1172,7 +1172,7 @@ async function updateCategory(req, res, next) {
            updated_at       = NOW()
        WHERE id = $9
        RETURNING *`,
-      [name, slug, parent_id || null, sort_order ? parseInt(sort_order, 10) : null, activeVal, description !== undefined ? description : null, emoji, imgUrl, id]
+      [name, slug, req.body.parent_id !== undefined, sort_order ? parseInt(sort_order, 10) : null, activeVal, description !== undefined ? description : null, emoji, imgUrl, id, parent_id || null]
     );
 
     if (!rows.length) return res.status(404).json({ success: false, message: 'Category not found.' });
