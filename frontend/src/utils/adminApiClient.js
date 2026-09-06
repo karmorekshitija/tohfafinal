@@ -22,7 +22,11 @@ adminApiClient.interceptors.request.use((config) => {
     }
   }
   const token = sessionStorage.getItem('tohfa_admin_token') ||
-                localStorage.getItem('tohfa_admin_token');
+                localStorage.getItem('tohfa_admin_token') ||
+                sessionStorage.getItem('tohfa_access_token') ||
+                localStorage.getItem('tohfa_access_token') ||
+                sessionStorage.getItem('auth_token') ||
+                localStorage.getItem('auth_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -90,24 +94,39 @@ adminApiClient.interceptors.response.use(
       isRefreshing = true;
 
       const refreshToken = sessionStorage.getItem('tohfa_admin_refresh_token') ||
-                           localStorage.getItem('tohfa_admin_refresh_token');
+                           localStorage.getItem('tohfa_admin_refresh_token') ||
+                           sessionStorage.getItem('tohfa_refresh_token') ||
+                           localStorage.getItem('tohfa_refresh_token');
       if (refreshToken) {
         try {
-          const res = await axios.post(`${API_HOST}/api/admin/auth/refresh`, { refresh_token: refreshToken, refreshToken }, {
-            headers: { 'Content-Type': 'application/json' }
-          });
+          let res;
+          try {
+            res = await axios.post(`${API_HOST}/api/admin/auth/refresh`, { refresh_token: refreshToken, refreshToken }, {
+              headers: { 'Content-Type': 'application/json' }
+            });
+          } catch (e1) {
+            // Fallback to unified auth refresh
+            res = await axios.post(`${API_HOST}/api/auth/refresh`, { refresh_token: refreshToken, refreshToken }, {
+              headers: { 'Content-Type': 'application/json' }
+            });
+          }
+
           if (res.data?.success) {
-            const { access_token, refresh_token, token } = res.data.data;
-            const newAccess = token || access_token;
-            const newRefresh = refresh_token;
+            const dataObj = res.data.data || res.data;
+            const newAccess = dataObj.token || dataObj.accessToken || dataObj.access_token;
+            const newRefresh = dataObj.refreshToken || dataObj.refresh_token;
 
             if (newAccess) {
               sessionStorage.setItem('tohfa_admin_token', newAccess);
               localStorage.setItem('tohfa_admin_token', newAccess);
+              sessionStorage.setItem('tohfa_access_token', newAccess);
+              localStorage.setItem('tohfa_access_token', newAccess);
             }
             if (newRefresh) {
               sessionStorage.setItem('tohfa_admin_refresh_token', newRefresh);
               localStorage.setItem('tohfa_admin_refresh_token', newRefresh);
+              sessionStorage.setItem('tohfa_refresh_token', newRefresh);
+              localStorage.setItem('tohfa_refresh_token', newRefresh);
             }
             
             // Sync session across tabs

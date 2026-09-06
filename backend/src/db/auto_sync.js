@@ -221,6 +221,25 @@ async function autoSyncDatabase() {
       );
     `);
 
+    // 9b. Refund Requests Table
+    await query(`
+      CREATE TABLE IF NOT EXISTS refund_requests (
+        id SERIAL PRIMARY KEY,
+        order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL,
+        buyer_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        seller_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        amount NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+        reason TEXT,
+        status VARCHAR(50) NOT NULL DEFAULT 'pending',
+        admin_notes TEXT,
+        razorpay_refund_id TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        resolved_at TIMESTAMPTZ
+      );
+    `);
+    await query(`CREATE INDEX IF NOT EXISTS idx_refund_requests_order_id ON refund_requests(order_id);`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_refund_requests_status ON refund_requests(status);`);
+
     // 10. Curate Categories Data (Clean display names, unique icons, and specific artisan images)
     const categoryCurations = [
       { name: 'Candles & Aromatherapy', slug: 'candles-aromatherapy', emoji: '🕯️', img: '/img/categories/candles.jpg', order: 1 },

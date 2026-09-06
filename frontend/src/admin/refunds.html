@@ -339,7 +339,19 @@
       } catch (err) {
         console.error('Failed to load refund requests from server:', err);
         allRefunds = [];
-        showToast('Failed to load refund requests from server.', 'error');
+        
+        if (err.response?.status === 401) {
+          showToast('Session expired. Redirecting to login...', 'error');
+          setTimeout(() => {
+            window.location.replace('/admin/login.html?redirect=' + encodeURIComponent(window.location.pathname));
+          }, 1500);
+        } else if (err.response?.status === 403) {
+          showToast('Access denied. Administrator privileges required.', 'error');
+        } else if (!err.response) {
+          showToast('Unable to connect to backend server. Check connection.', 'error');
+        } else {
+          showToast(err.response?.data?.message || 'Failed to load refund requests from server.', 'error');
+        }
       }
 
       updateMetrics();

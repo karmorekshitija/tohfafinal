@@ -647,10 +647,12 @@ async function listAuditLogs(req, res, next) {
     const conditions = [];
     const params = [];
 
-    const eventQuery = event_type || action;
+    const eventQuery = (event_type || action || '').trim();
     if (eventQuery) {
+      const sanitized = eventQuery.replace(/^admin\./i, '').replace(/[\.\-_ ]+/g, '%');
       params.push(`%${eventQuery}%`);
-      conditions.push(`(al.action_type ILIKE $${params.length} OR al.action ILIKE $${params.length})`);
+      params.push(`%${sanitized}%`);
+      conditions.push(`(al.action_type ILIKE $${params.length - 1} OR al.action_type ILIKE $${params.length} OR al.action ILIKE $${params.length - 1} OR al.action ILIKE $${params.length})`);
     }
     if (actor) {
       params.push(`%${actor}%`);
@@ -1812,16 +1814,18 @@ async function getRevenueBreakdown(req, res, next) {
 async function getAuditLogDiff(req, res, next) {
   try {
     const { id } = req.params;
-    const { rows } = await query('SELECT details, meta FROM audit_logs WHERE id = $1', [id]);
+    const { rows } = await query('SELECT details, meta, before_json, after_json FROM audit_logs WHERE id = $1', [id]);
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'Log not found.' });
     }
     const details = rows[0].details || rows[0].meta || {};
+    const beforeJson = rows[0].before_json || (details.before ? JSON.stringify(details.before) : null);
+    const afterJson = rows[0].after_json || (details.after ? JSON.stringify(details.after) : JSON.stringify(details));
     return res.json({
       success: true,
       data: {
-        before_json: details.before ? JSON.stringify(details.before) : null,
-        after_json: details.after ? JSON.stringify(details.after) : JSON.stringify(details)
+        before_json: beforeJson,
+        after_json: afterJson
       }
     });
   } catch (err) {
