@@ -965,6 +965,7 @@ async function updateProduct(req, res, next) {
     const sellerId = req.seller?.id || req.user.id;
     const {
       name,
+      photos,
       description,
       category_id,
       subcategory_id,
@@ -981,6 +982,8 @@ async function updateProduct(req, res, next) {
       occasions,
       occasion_tags,
     } = req.body;
+
+    const resolvedName = req.body.name !== undefined ? req.body.name : req.body.title;
 
     const { rows: existing } = await query(
       'SELECT id FROM products WHERE id = $1 AND (seller_id = $2 OR $3 = TRUE)',
@@ -1032,7 +1035,7 @@ async function updateProduct(req, res, next) {
        RETURNING id, name, description, category_id, base_price, stock_quantity, low_stock_threshold,
                  preparation_days, weight_grams, customization_mode, is_customizable, customization_schema, status, updated_at`,
       [
-        name || null,
+        resolvedName || null,
         description || null,
         finalUpdateCatId || null,
         updatedPrice,
@@ -1065,17 +1068,19 @@ async function updateProduct(req, res, next) {
       }
     }
 
-    // If images array is provided, replace images
-    if (Array.isArray(images)) {
+    // If photos or images array is provided, replace images
+    const photoList = Array.isArray(photos) ? photos : (Array.isArray(images) ? images : null);
+    if (Array.isArray(photoList)) {
       await query('DELETE FROM product_images WHERE product_id = $1', [id]);
       let sortOrder = 0;
-      for (const img of images) {
+      for (const img of photoList) {
         const url = typeof img === 'string' ? img : (img?.url || '');
         if (url) {
+          const order = (img && typeof img === 'object' && img.sort_order !== undefined) ? img.sort_order : sortOrder++;
           await query(
             `INSERT INTO product_images (product_id, url, sort_order)
              VALUES ($1, $2, $3)`,
-            [id, url, sortOrder++]
+            [id, url, order]
           );
         }
       }

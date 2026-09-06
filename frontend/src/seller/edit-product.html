@@ -223,7 +223,7 @@
       </section>
 
       <!-- SECTION: MODULAR CUSTOMISATION BUILDER (Option 2) -->
-      <section class="space-y-6 pt-4 border-t border-sage/15">
+      <section id="customisation-builder-section" class="space-y-6 pt-4 border-t border-sage/15">
           <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                   <span class="material-symbols-outlined text-forest text-xl">auto_fix_high</span>
@@ -510,7 +510,7 @@
             }
 
             const resp = await res.json();
-            const data = resp.data || resp;
+            const data = resp.data?.product || resp.data || resp;
             
             // Let's store listing status
             const listingStatus = data.status || 'draft';
@@ -599,7 +599,7 @@
                     </div>
                 `;
                 document.getElementById('locked-product-name').textContent = data.title || '';
-                document.getElementById('locked-product-category').textContent = data.category || '';
+                document.getElementById('locked-product-category').textContent = (data.category?.name || data.category) || '';
 
                 let matchedCatId = data.parent_category_id || data.category_id;
                 if (data.parent_category_id && data.category_id) {
@@ -665,6 +665,11 @@
               try { customSchema = JSON.parse(customSchema); } catch { customSchema = null; }
             }
             const isCustom = Boolean(data.is_customizable || (data.customization_mode && data.customization_mode !== 'none') || (customSchema && customSchema.is_enabled));
+
+            const customBuilderSection = document.getElementById('customisation-builder-section');
+            if (customBuilderSection) {
+              customBuilderSection.classList.toggle('hidden', !isCustom);
+            }
 
             const customEnabledCheckbox = document.getElementById('edit-custom-enabled');
             const customPanel = document.getElementById('edit-custom-panel');
@@ -837,7 +842,7 @@
         // Video upload first if selected
         if (selectedVideoFile) {
             const formData = new FormData();
-            formData.append('file', selectedVideoFile);
+            formData.append('images', selectedVideoFile);
             formData.append('is_video', 'true');
             formData.append('sort_order', '0');
             
@@ -849,8 +854,8 @@
                 });
                 if (uploadRes.ok) {
                     const resp = await uploadRes.json();
-                    const videoData = resp.data || resp;
-                    videoUrl = videoData.url;
+                    const videoData = resp.data?.images?.[0] || resp.data || resp;
+                    videoUrl = videoData?.url || videoData;
                     selectedVideoFile = null;
                 }
             } catch (err) {
