@@ -62,11 +62,15 @@
 <div class="flex gap-10 items-start">
 <!-- LEFT: Categories Table (60%) -->
 <section class="w-3/5">
-<div class="flex items-baseline justify-between mb-6">
+<div class="flex items-center justify-between mb-6">
 <div class="flex items-baseline gap-3">
 <h3 class="font-accent-caps text-highlight-gold text-[12px] tracking-widest">ALL CATEGORIES</h3>
-<span class="font-data-meta text-text-faint text-[10px]">INCLUDING HIDDEN</span>
+<span id="categoriesFilterMeta" class="font-data-meta text-text-faint text-[10px]">INCLUDING HIDDEN</span>
 </div>
+<label class="inline-flex items-center gap-2 cursor-pointer text-xs font-body-md text-text-muted select-none">
+<input type="checkbox" id="showHiddenToggle" checked class="rounded border-sage-soft text-primary focus:ring-primary accent-[#14381F] cursor-pointer" />
+<span>Show hidden categories</span>
+</label>
 </div>
 <div class="bg-[#FFF8E7] border border-outline-variant rounded-xl overflow-x-auto shadow-sm">
 <table class="w-full text-left border-collapse">
@@ -225,6 +229,17 @@ const sortOrderInput = document.getElementById('sortOrderInput');
 const activeStatus = document.getElementById('activeStatus');
 const cancelBtn = document.getElementById('cancelBtn');
 const closeFormBtn = document.getElementById('closeFormBtn');
+const showHiddenToggle = document.getElementById('showHiddenToggle');
+const categoriesFilterMeta = document.getElementById('categoriesFilterMeta');
+
+if (showHiddenToggle) {
+  showHiddenToggle.addEventListener('change', () => {
+    if (categoriesFilterMeta) {
+      categoriesFilterMeta.textContent = showHiddenToggle.checked ? 'INCLUDING HIDDEN' : 'ACTIVE ONLY';
+    }
+    renderCategories();
+  });
+}
 
 // Subcategory Modal DOM Elements
 const subcatModal = document.getElementById('subcatModal');
@@ -260,7 +275,10 @@ imageInput.addEventListener('change', (e) => {
 
 function renderCategories() {
   listEl.innerHTML = '';
-  if (categories.length === 0) {
+  const showHidden = showHiddenToggle ? showHiddenToggle.checked : true;
+  const listToRender = showHidden ? categories : categories.filter(cat => cat.is_active);
+
+  if (listToRender.length === 0) {
     listEl.innerHTML = `
       <tr>
         <td colspan="8" class="p-4 text-center text-text-muted text-sm font-serif-ui-sm">
@@ -271,7 +289,7 @@ function renderCategories() {
     return;
   }
 
-  categories.forEach((cat) => {
+  listToRender.forEach((cat) => {
     const tr = document.createElement('tr');
     tr.className = "row-alt group transition-colors border-b border-outline-variant/30";
     
@@ -296,9 +314,17 @@ function renderCategories() {
       ? `<button class="delete-btn p-1.5 rounded-full hover:bg-danger-terracotta/10 text-danger-terracotta transition-all" data-id="${cat.id}">
            <span class="material-symbols-outlined text-[18px]">delete</span>
          </button>`
-      : `<button class="p-1.5 rounded-full text-text-faint cursor-not-allowed opacity-40" title="Has products or subcategories — cannot delete">
-           <span class="material-symbols-outlined text-[18px]">delete</span>
-         </button>`;
+      : `<span class="inline-flex items-center gap-1 text-text-faint opacity-60" title="Has products or subcategories — cannot delete">
+           <span class="material-symbols-outlined text-[18px] cursor-not-allowed">delete</span>
+           <span class="text-[10px]">Has items</span>
+         </span>`;
+
+    const restoreBtn = isBannedOrHidden
+      ? `<button class="restore-btn px-2 py-1 rounded text-[11px] font-label-btn bg-sage-soft/30 hover:bg-sage-soft/50 text-primary transition-all flex items-center gap-1" data-id="${cat.id}" title="Restore category">
+           <span class="material-symbols-outlined text-[14px]">restore</span>
+           <span>Restore</span>
+         </button>`
+      : '';
 
     let imgUrl = cat.image_url || '/img/ceramic_bowls.jpg';
     if (imgUrl.includes('unsplash.com')) imgUrl = '/img/ceramic_bowls.jpg';
@@ -330,6 +356,7 @@ function renderCategories() {
       </td>
       <td class="p-4 text-right">
         <div class="flex items-center justify-end gap-2">
+          ${restoreBtn}
           <button class="edit-btn p-1.5 rounded-full hover:bg-sage-soft/20 text-secondary transition-all" data-id="${cat.id}">
             <span class="material-symbols-outlined text-[18px]">edit</span>
           </button>
@@ -470,13 +497,29 @@ function renderCategories() {
     });
   });
 
+  // Restore Category click
+  listEl.querySelectorAll('.restore-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const target = e.currentTarget;
+      const id = target.getAttribute('data-id');
+      try {
+        const formData = new FormData();
+        formData.append('is_active', 'true');
+        await adminApiClient.patch(`/admin/categories/${id}`, formData);
+        fetchCategories();
+      } catch (error) {
+        alert(error.response?.data?.message || 'Failed to restore category');
+      }
+    });
+  });
+
   // Delete Category click
   listEl.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const target = e.currentTarget;
       const id = target.getAttribute('data-id');
       const cat = categories.find(c => String(c.id) === String(id));
-      if (confirm(`Are you sure you want to delete the category "${cat?.display_name || ''}"?`)) {
+      if (confirm(`This will hide "${cat?.display_name || ''}" from customers (it won't be permanently deleted, and can be restored later). Continue?`)) {
         try {
           await adminApiClient.delete(`/admin/categories/${id}`);
           fetchCategories();
