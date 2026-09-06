@@ -22,6 +22,19 @@ async function autoSyncDatabase() {
     await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS description TEXT;`);
     await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS sort_order INT DEFAULT 0;`);
     await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;`);
+    await query(`
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'categories' AND column_name = 'is_active' AND data_type != 'boolean'
+        ) THEN
+          ALTER TABLE categories ALTER COLUMN is_active DROP DEFAULT;
+          ALTER TABLE categories ALTER COLUMN is_active TYPE BOOLEAN USING (CASE WHEN is_active IS NULL THEN TRUE WHEN is_active::text = '0' THEN FALSE ELSE TRUE END);
+          ALTER TABLE categories ALTER COLUMN is_active SET DEFAULT TRUE;
+        END IF;
+      END $$;
+    `);
     await query(`UPDATE categories SET display_name = name WHERE display_name IS NULL;`);
 
     // 2. Products columns
@@ -81,6 +94,46 @@ async function autoSyncDatabase() {
     `);
     await query(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id   ON refresh_tokens(user_id);`);
     await query(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token_hash ON refresh_tokens(token_hash);`);
+
+    // 3e. Wallets Table & Foreign Key constraint (Bug Audit Phase 1)
+    await query(`
+      CREATE TABLE IF NOT EXISTS wallets (
+        id SERIAL PRIMARY KEY,
+        seller_id INTEGER NOT NULL UNIQUE,
+        user_id INTEGER,
+        balance NUMERIC(12,2) DEFAULT 0.00,
+        holding_balance NUMERIC(12,2) DEFAULT 0.00,
+        currency VARCHAR(10) DEFAULT 'INR',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+    await query(`CREATE INDEX IF NOT EXISTS idx_wallets_seller_id ON wallets(seller_id);`);
+
+    // Backfill wallets for existing sellers
+    await query(`
+      INSERT INTO wallets (seller_id, user_id)
+      SELECT id, user_id FROM sellers
+      ON CONFLICT (seller_id) DO NOTHING;
+    `);
+
+    // Enforce fk_seller_wallet constraint
+    const { rows: existingWalletFk } = await query(`
+      SELECT conname FROM pg_constraint WHERE conname = 'fk_seller_wallet';
+    `);
+    if (existingWalletFk.length === 0) {
+      try {
+        await query(`
+          ALTER TABLE sellers 
+          ADD CONSTRAINT fk_seller_wallet 
+          FOREIGN KEY (id) REFERENCES wallets(seller_id) 
+          ON DELETE CASCADE 
+          DEFERRABLE INITIALLY DEFERRED;
+        `);
+      } catch (fkErr) {
+        console.warn('⚠️ [Wallet Constraint Notice]:', fkErr.message);
+      }
+    }
 
     // 4. Fixed Customization Options Table
     await query(`
@@ -183,7 +236,7 @@ async function autoSyncDatabase() {
     for (const cat of categoryCurations) {
       await query(`
         UPDATE categories 
-        SET display_name = $1, emoji_icon = $2, icon_emoji = $2, image_url = $3, sort_order = $4, is_active = TRUE
+        SET display_name = $1, emoji_icon = $2, icon_emoji = $2, image_url = $3, sort_order = $4, is_active = 1
         WHERE slug = $5
       `, [cat.name, cat.emoji, cat.img, cat.order, cat.slug]);
     }

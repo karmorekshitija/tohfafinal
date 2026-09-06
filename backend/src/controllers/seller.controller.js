@@ -475,6 +475,15 @@ async function applyAsSeller(req, res, next) {
       [userId, finalStoreName, storeSlug, finalBio, JSON.stringify(parsedPickup), JSON.stringify(parsedBank)]
     );
 
+    const newSellerId = sellerRows[0]?.id;
+    if (newSellerId) {
+      await client.query(`
+        INSERT INTO wallets (seller_id, user_id, balance, holding_balance, currency)
+        VALUES ($1, $2, 0.00, 0.00, 'INR')
+        ON CONFLICT (seller_id) DO NOTHING
+      `, [newSellerId, userId]).catch(() => {});
+    }
+
     await client.query(
       `UPDATE sellers SET
          pan_number = $2,
@@ -1218,6 +1227,19 @@ async function getSellerOrderDetail(req, res, next) {
     const sellerId = req.user.id;
     const isAdmin = req.user.role === 'admin' || req.user.role === 'master_admin';
 
+    // IDOR Check: Ensure order exists and belongs to this seller
+    const { rows: orderCheck } = await query('SELECT id, seller_id FROM orders WHERE id::text = $1 OR order_ref = $1', [String(id)]);
+    if (!orderCheck.length) {
+      return res.status(404).json({ success: false, message: 'Order not found.' });
+    }
+    if (!isAdmin) {
+      const { rows: sRows } = await query('SELECT id FROM sellers WHERE user_id = $1', [sellerId]);
+      const validIds = [Number(sellerId), String(sellerId), ...sRows.map(s => s.id), ...sRows.map(s => String(s.id))];
+      if (!validIds.includes(orderCheck[0].seller_id) && !validIds.includes(Number(orderCheck[0].seller_id)) && !validIds.includes(String(orderCheck[0].seller_id))) {
+        return res.status(403).json({ success: false, message: 'Forbidden: You do not have ownership of this order.' });
+      }
+    }
+
     const { rows } = await query(
       `SELECT o.id, o.buyer_id, o.seller_id, o.address_id, o.total_amount, o.status, o.payment_status,
               o.payout_status, o.tracking_id, o.tracking_url, o.notes, o.delivered_at, o.created_at, o.updated_at,
@@ -1248,12 +1270,12 @@ async function getSellerOrderDetail(req, res, next) {
        LEFT JOIN users u ON u.id = o.buyer_id
        LEFT JOIN seller_profiles sp ON sp.user_id = o.seller_id
        LEFT JOIN addresses a ON a.id = o.address_id
-       WHERE o.id = $1 AND (o.seller_id = $2 OR $3 = true)`,
-      [id, sellerId, isAdmin]
+       WHERE (o.id::text = $1 OR o.order_ref = $1)`,
+      [String(id)]
     );
 
     if (!rows.length) {
-      return res.status(404).json({ success: false, message: 'Order not found or access denied.' });
+      return res.status(404).json({ success: false, message: 'Order not found.' });
     }
 
     const order = rows[0];
@@ -1425,17 +1447,21 @@ async function updateSellerOrderStatus(req, res, next) {
       cancel_requested: ['cancelled', 'confirmed'],
     };
 
-    // Fetch existing order
-    const { rows: existingRows } = await query(
-      `SELECT * FROM orders WHERE id = $1 AND (seller_id = $2 OR $3 = 'admin' OR $3 = 'master_admin')`,
-      [id, sellerId, role]
-    );
-
-    if (!existingRows.length) {
-      return res.status(404).json({ success: false, message: 'Order not found or unauthorized.' });
+    // Fetch existing order & check IDOR
+    const { rows: orderCheck } = await query('SELECT * FROM orders WHERE id::text = $1 OR order_ref = $1', [String(id)]);
+    if (!orderCheck.length) {
+      return res.status(404).json({ success: false, message: 'Order not found.' });
+    }
+    const isAdmin = role === 'admin' || role === 'master_admin';
+    if (!isAdmin) {
+      const { rows: sRows } = await query('SELECT id FROM sellers WHERE user_id = $1', [sellerId]);
+      const validIds = [Number(sellerId), String(sellerId), ...sRows.map(s => s.id), ...sRows.map(s => String(s.id))];
+      if (!validIds.includes(orderCheck[0].seller_id) && !validIds.includes(Number(orderCheck[0].seller_id)) && !validIds.includes(String(orderCheck[0].seller_id))) {
+        return res.status(403).json({ success: false, message: 'Forbidden: You do not have ownership of this order.' });
+      }
     }
 
-    const currentOrder = existingRows[0];
+    const currentOrder = orderCheck[0];
 
     // Validate state transition if not admin
     if (role !== 'admin' && role !== 'master_admin') {
@@ -1622,6 +1648,94 @@ async function uploadCustomProof(req, res, next) {
         proof_image_url: proofUrl,
         items: updatedItemRows,
       },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/seller/wallet — read wallet balance & reconcile with wallets table (Bug Audit Phase 2)
+// ---------------------------------------------------------------------------
+async function getSellerWallet(req, res, next) {
+  try {
+    const userId = req.user.id;
+
+    // Find seller ID
+    const { rows: sellerRows } = await query(
+      'SELECT id, user_id FROM sellers WHERE user_id = $1 UNION SELECT id, user_id FROM seller_profiles WHERE user_id = $1',
+      [userId]
+    );
+
+    const sellerId = sellerRows[0]?.id || userId;
+
+    // Query or auto-initialize wallet
+    let { rows } = await query(
+      'SELECT * FROM wallets WHERE seller_id = $1 OR user_id = $2',
+      [sellerId, userId]
+    );
+
+    if (!rows.length) {
+      const initRes = await query(
+        `INSERT INTO wallets (seller_id, user_id, balance, holding_balance, currency)
+         VALUES ($1, $2, 0.00, 0.00, 'INR')
+         ON CONFLICT (seller_id) DO UPDATE SET updated_at = NOW()
+         RETURNING *`,
+        [sellerId, userId]
+      );
+      rows = initRes.rows;
+    }
+
+    const wallet = rows[0];
+
+    // Compute live holding & available balances to keep wallet in sync
+    const { rows: liveAvail } = await query(
+      `SELECT
+         COALESCE(SUM(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0), 0) AS available_balance
+       FROM orders o
+       WHERE (o.seller_id = $1::integer OR o.seller_id::text = $1::text)
+         AND LOWER(COALESCE(o.status, '')) = 'delivered'
+         AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
+         AND o.created_at <= NOW() - INTERVAL '7 days'`,
+      [sellerId]
+    ).catch(() => ({ rows: [{ available_balance: 0 }] }));
+
+    const { rows: liveHold } = await query(
+      `SELECT
+         COALESCE(SUM(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0), 0) AS holding_balance
+       FROM orders o
+       WHERE (o.seller_id = $1::integer OR o.seller_id::text = $1::text)
+         AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
+         AND (
+           LOWER(COALESCE(o.status, '')) IN ('pending', 'confirmed', 'processing', 'crafting', 'packed', 'shipped', 'in_production')
+           OR (LOWER(COALESCE(o.status, '')) = 'delivered' AND o.created_at > NOW() - INTERVAL '7 days')
+         )`,
+      [sellerId]
+    ).catch(() => ({ rows: [{ holding_balance: 0 }] }));
+
+    const availableBal = parseFloat(liveAvail[0]?.available_balance || wallet.balance || 0);
+    const holdingBal = parseFloat(liveHold[0]?.holding_balance || wallet.holding_balance || 0);
+
+    // Sync back to wallets table
+    await query(
+      'UPDATE wallets SET balance = $1, holding_balance = $2, updated_at = NOW() WHERE id = $3',
+      [availableBal, holdingBal, wallet.id]
+    ).catch(() => {});
+
+    return res.json({
+      success: true,
+      data: {
+        wallet: {
+          ...wallet,
+          balance: availableBal,
+          holding_balance: holdingBal
+        },
+        balance: availableBal,
+        holding_balance: holdingBal,
+        currency: wallet.currency || 'INR',
+        seller_id: wallet.seller_id,
+        updated_at: wallet.updated_at,
+      }
     });
   } catch (err) {
     next(err);
@@ -2684,6 +2798,8 @@ module.exports = {
   uploadCustomProof,
   getPayoutOverview,
   getSellerPayouts: getPayoutOverview,
+  getSellerWallet,
+  getWallet: getSellerWallet,
   getSellerEarnings,
   getSellerEarningsGraph,
   getReceivingDetails,

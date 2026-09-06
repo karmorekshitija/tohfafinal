@@ -95,6 +95,44 @@ function sanitizeProduct(p) {
   };
 }
 
+// Helper to safely resolve category from ID, slug, or name (Bug Audit Phase 1 & 2)
+async function resolveCategoryId(rawCategory) {
+  if (rawCategory === undefined || rawCategory === null || rawCategory === '') {
+    return null;
+  }
+
+  const numId = parseInt(rawCategory, 10);
+  if (!isNaN(numId) && String(numId) === String(rawCategory).trim()) {
+    const { rows } = await query('SELECT id FROM categories WHERE id = $1', [numId]);
+    if (rows.length > 0) return rows[0].id;
+  }
+
+  const cleanStr = String(rawCategory).trim();
+  const slugified = cleanStr.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+  const { rows: slugRows } = await query(
+    'SELECT id FROM categories WHERE slug = $1 OR slug = $2 LIMIT 1',
+    [cleanStr, slugified]
+  );
+  if (slugRows.length > 0) return slugRows[0].id;
+
+  const { rows: nameRows } = await query(
+    'SELECT id FROM categories WHERE name ILIKE $1 OR display_name ILIKE $1 LIMIT 1',
+    [cleanStr]
+  );
+  if (nameRows.length > 0) return nameRows[0].id;
+
+  const { rows: partialRows } = await query(
+    `SELECT id FROM categories 
+     WHERE slug ILIKE $1 OR name ILIKE $1 OR display_name ILIKE $1 
+     ORDER BY sort_order ASC, id ASC LIMIT 1`,
+    [`%${cleanStr.slice(0, 8)}%`]
+  );
+  if (partialRows.length > 0) return partialRows[0].id;
+
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // GET /api/products/categories & /api/categories  (PUBLIC — used by buyer home/search/categories)
 // ---------------------------------------------------------------------------
@@ -218,6 +256,18 @@ async function listProducts(req, res, next) {
              OR parent_id IN (SELECT id FROM categories WHERE slug = $${params.length})
         )
       )`);
+    }
+
+    const subcategoryParam = req.query.subcategory_ids || req.query.subcategory_id || req.query.subcategories;
+    if (subcategoryParam) {
+      const subIds = String(subcategoryParam).split(',').map(s => s.trim()).filter(Boolean);
+      if (subIds.length > 0) {
+        params.push(subIds);
+        conditions.push(`(
+          p.category_id::text = ANY($${params.length})
+          OR p.category_id::text IN (SELECT id::text FROM categories WHERE slug = ANY($${params.length}))
+        )`);
+      }
     }
     if (min_price !== undefined) {
       params.push(parseFloat(min_price));
@@ -852,14 +902,25 @@ async function createProduct(req, res, next) {
       is_customizable === true || is_customizable === 'true' || is_customizable === 1 || (finalMode && finalMode !== 'none')
     );
 
-    const schemaJson = typeof customization_schema === 'object' && customization_schema !== null
-      ? JSON.stringify(customization_schema)
-      : (customization_schema || '{}');
+    let schemaJson = '{}';
+    if (customization_schema) {
+      if (typeof customization_schema === 'object') {
+        schemaJson = JSON.stringify(customization_schema);
+      } else if (typeof customization_schema === 'string') {
+        try {
+          JSON.parse(customization_schema);
+          schemaJson = customization_schema;
+        } catch {
+          schemaJson = JSON.stringify({ custom_field: customization_schema });
+        }
+      }
+    }
 
     const priceVal = Number(base_price);
     const pricePaise = Math.round(priceVal * 100);
 
-    const finalCategoryId = req.body.subcategory_id || req.body.category_id || null;
+    const rawCat = req.body.subcategory_id || req.body.category_id || req.body.category;
+    const finalCategoryId = await resolveCategoryId(rawCat);
 
     const { rows } = await query(
       `INSERT INTO products
@@ -904,11 +965,18 @@ async function createProduct(req, res, next) {
       }
     }
 
-    // Handle images if provided in body
-    if (Array.isArray(images) && images.length > 0) {
+    // Handle images if provided in body (support images, photos, img_url, imagePath)
+    const rawImagesList = (Array.isArray(images) && images.length > 0) ? images : (
+      (Array.isArray(req.body.photos) && req.body.photos.length > 0) ? req.body.photos : (
+        (req.body.img_url || req.body.imagePath || req.body.imageUrl || req.body.image_url)
+          ? [req.body.img_url || req.body.imagePath || req.body.imageUrl || req.body.image_url]
+          : []
+      )
+    );
+    if (rawImagesList.length > 0) {
       let sortOrder = 0;
-      for (const img of images) {
-        const url = typeof img === 'string' ? img : (img?.url || '');
+      for (const img of rawImagesList) {
+        const url = typeof img === 'string' ? img : (img?.url || img?.imagePath || img?.img_url || '');
         if (url) {
           await query(
             `INSERT INTO product_images (product_id, url, sort_order)
@@ -1001,9 +1069,21 @@ async function updateProduct(req, res, next) {
       ? Boolean(is_customizable === true || is_customizable === 'true' || is_customizable === 1 || (finalMode && finalMode !== 'none'))
       : (finalMode ? finalMode !== 'none' : null);
 
-    const schemaJson = customization_schema !== undefined
-      ? (typeof customization_schema === 'object' && customization_schema !== null ? JSON.stringify(customization_schema) : customization_schema)
-      : null;
+    let schemaJson = null;
+    if (customization_schema !== undefined) {
+      if (typeof customization_schema === 'object' && customization_schema !== null) {
+        schemaJson = JSON.stringify(customization_schema);
+      } else if (typeof customization_schema === 'string') {
+        try {
+          JSON.parse(customization_schema);
+          schemaJson = customization_schema;
+        } catch {
+          schemaJson = JSON.stringify({ custom_field: customization_schema });
+        }
+      } else {
+        schemaJson = '{}';
+      }
+    }
 
     const rawStock = stock_quantity !== undefined
       ? stock_quantity
@@ -1014,7 +1094,12 @@ async function updateProduct(req, res, next) {
 
     const updatedPrice = base_price !== undefined ? Number(base_price) : (req.body.price !== undefined ? Number(req.body.price) : null);
     const updatedPaise = updatedPrice !== null ? Math.round(updatedPrice * 100) : (req.body.price_paise ? Number(req.body.price_paise) : null);
-    const finalUpdateCatId = subcategory_id !== undefined ? subcategory_id : category_id;
+    
+    const rawCat = subcategory_id !== undefined ? subcategory_id : (category_id !== undefined ? category_id : req.body.category);
+    let resolvedCatId = null;
+    if (rawCat !== undefined && rawCat !== null && String(rawCat).trim() !== '') {
+      resolvedCatId = await resolveCategoryId(rawCat);
+    }
 
     const { rows } = await query(
       `UPDATE products
@@ -1037,7 +1122,7 @@ async function updateProduct(req, res, next) {
       [
         resolvedName || null,
         description || null,
-        finalUpdateCatId || null,
+        resolvedCatId || null,
         updatedPrice,
         updatedPaise,
         resolvedStock !== null && !isNaN(resolvedStock) ? resolvedStock : null,
@@ -1068,13 +1153,17 @@ async function updateProduct(req, res, next) {
       }
     }
 
-    // If photos or images array is provided, replace images
-    const photoList = Array.isArray(photos) ? photos : (Array.isArray(images) ? images : null);
+    // If photos or images array is provided, replace images (supports img_url, imagePath, etc.)
+    const photoList = Array.isArray(photos) ? photos : (Array.isArray(images) ? images : (
+      (req.body.img_url || req.body.imagePath || req.body.imageUrl || req.body.image_url)
+        ? [req.body.img_url || req.body.imagePath || req.body.imageUrl || req.body.image_url]
+        : null
+    ));
     if (Array.isArray(photoList)) {
       await query('DELETE FROM product_images WHERE product_id = $1', [id]);
       let sortOrder = 0;
       for (const img of photoList) {
-        const url = typeof img === 'string' ? img : (img?.url || '');
+        const url = typeof img === 'string' ? img : (img?.url || img?.imagePath || img?.img_url || '');
         if (url) {
           const order = (img && typeof img === 'object' && img.sort_order !== undefined) ? img.sort_order : sortOrder++;
           await query(
@@ -1092,11 +1181,11 @@ async function updateProduct(req, res, next) {
       for (const v of variants) {
         let vImgs = [];
         if (Array.isArray(v.images) && v.images.length > 0) {
-          vImgs = v.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || ''))).filter(Boolean);
-        } else if (v.image_url) {
-          vImgs = [v.image_url];
+          vImgs = v.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || img.imagePath || ''))).filter(Boolean);
+        } else if (v.image_url || v.imagePath) {
+          vImgs = [v.image_url || v.imagePath];
         }
-        const primaryImg = vImgs[0] || v.image_url || null;
+        const primaryImg = vImgs[0] || v.image_url || v.imagePath || null;
 
         await query(
           `INSERT INTO product_variants
@@ -1118,6 +1207,43 @@ async function updateProduct(req, res, next) {
     }
 
     return res.json({ success: true, data: { product: sanitizeProduct(rows[0]) } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// DELETE /api/products/:id  (seller only, own products or admin)
+// ---------------------------------------------------------------------------
+async function deleteProduct(req, res, next) {
+  try {
+    const { id } = req.params;
+    const sellerId = req.user.id;
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'master_admin';
+
+    const { rows: existing } = await query(
+      'SELECT id, seller_id FROM products WHERE id = $1',
+      [id]
+    );
+
+    if (!existing.length) {
+      return res.status(404).json({ success: false, message: 'Product not found.' });
+    }
+
+    if (!isAdmin && Number(existing[0].seller_id) !== Number(sellerId)) {
+      const { rows: sRows } = await query('SELECT id FROM sellers WHERE user_id = $1', [sellerId]);
+      const validIds = [Number(sellerId), ...sRows.map(s => Number(s.id))];
+      if (!validIds.includes(Number(existing[0].seller_id))) {
+        return res.status(403).json({ success: false, message: 'Forbidden: You do not have ownership of this product listing.' });
+      }
+    }
+
+    await query(
+      `UPDATE products SET status = 'deleted', is_active = FALSE, updated_at = NOW() WHERE id = $1`,
+      [id]
+    );
+
+    return res.json({ success: true, message: 'Product deleted successfully.', id });
   } catch (err) {
     next(err);
   }
@@ -1465,6 +1591,8 @@ module.exports = {
   createProduct,
   updateProduct,
   updateProductStatus,
+  deleteProduct,
+  resolveCategoryId,
   uploadImages,
   upsertVariants,
   saveFixedOptions,

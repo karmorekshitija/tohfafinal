@@ -912,10 +912,19 @@
     const formattedPrice = `₹${rawPrice.toLocaleString('en-IN')}`;
     const isWishlisted = !!product.is_wishlisted;
 
-    const rawImageUrl = product.image_url ||
+    let rawImageUrl = product.image_url ||
       (Array.isArray(product.images) && product.images.length && product.images[0]?.url ? product.images[0].url : null) ||
+      (Array.isArray(product.images) && product.images.length && typeof product.images[0] === 'string' ? product.images[0] : null) ||
       product.primary_image ||
+      product.imagePath ||
+      product.img_url ||
       '/img/incense_holder.jpg';
+
+    if (typeof rawImageUrl === 'string' && (rawImageUrl.startsWith('/uploads/') || rawImageUrl.startsWith('/media/'))) {
+      const cdnPrefix = window.TOHFA_CDN_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '' : 'https://thetohfa.in');
+      rawImageUrl = cdnPrefix + rawImageUrl;
+    }
+
     const imageUrl = (typeof window.optimizeImageUrl === 'function')
       ? window.optimizeImageUrl(rawImageUrl, { width: 500 })
       : rawImageUrl;

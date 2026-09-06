@@ -21,21 +21,23 @@ async function getPlatformStats(req, res, next) {
   try {
     const stats = await query(`
       SELECT 
-        (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE payment_status = 'paid') AS total_gmv,
-        (SELECT COALESCE(SUM(total_amount * 0.10), 0) FROM orders WHERE status = 'delivered') AS net_platform_revenue,
+        COALESCE(SUM(COALESCE(o.total_paise / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0)), 0) AS total_gmv,
+        COALESCE(SUM(CASE WHEN LOWER(o.status) = 'delivered' THEN COALESCE(o.total_paise / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0) * 0.10 ELSE 0 END), 0) AS net_platform_revenue,
         (SELECT COUNT(*) FROM users WHERE role = 'buyer') AS total_buyers,
-        (SELECT COUNT(*) FROM seller_profiles WHERE is_approved = TRUE OR verification_status = 'verified') AS active_artisans,
-        (SELECT COUNT(*) FROM seller_profiles WHERE (is_approved = FALSE AND rejection_reason IS NULL) OR verification_status = 'pending_verification') AS pending_kyc_count,
-        (SELECT COUNT(*) FROM orders WHERE payment_status = 'paid' AND status NOT IN ('delivered', 'cancelled')) AS active_orders_in_fulfillment,
-        (SELECT COUNT(*) FROM seller_profiles WHERE is_admin_managed = TRUE) AS tohfa_specials_count
+        (SELECT COUNT(*) FROM seller_profiles WHERE is_approved = TRUE OR is_approved = 1 OR verification_status = 'verified') AS active_artisans,
+        (SELECT COUNT(*) FROM seller_profiles WHERE (is_approved = FALSE OR is_approved = 0 OR is_approved IS NULL) AND rejection_reason IS NULL) AS pending_kyc_count,
+        (SELECT COUNT(*) FROM orders WHERE LOWER(COALESCE(payment_status, '')) = 'paid' AND LOWER(COALESCE(status, '')) NOT IN ('delivered', 'cancelled', 'refunded')) AS active_orders_in_fulfillment,
+        (SELECT COUNT(*) FROM seller_profiles WHERE is_admin_managed = TRUE OR is_admin_managed = 1) AS tohfa_specials_count
+      FROM orders o
+      WHERE LOWER(COALESCE(o.payment_status, '')) = 'paid'
     `);
 
     const row = stats.rows[0] || {};
     return res.status(200).json({
       success: true,
       data: {
-        total_gmv: parseFloat(row.total_gmv || 0),
-        net_platform_revenue: parseFloat(row.net_platform_revenue || 0),
+        total_gmv: parseFloat(parseFloat(row.total_gmv || 0).toFixed(2)),
+        net_platform_revenue: parseFloat(parseFloat(row.net_platform_revenue || 0).toFixed(2)),
         total_buyers: parseInt(row.total_buyers || 0, 10),
         active_artisans: parseInt(row.active_artisans || 0, 10),
         pending_kyc_count: parseInt(row.pending_kyc_count || 0, 10),
@@ -1114,7 +1116,7 @@ async function createCategory(req, res, next) {
 
     const emoji = emoji_icon || icon_emoji || '🏺';
     const uploadedUrl = req.file ? req.file.path : null;
-    const imgUrl = uploadedUrl || image_url || banner_image_url || null;
+    const imgUrl = uploadedUrl || req.body.fallback_image_url || image_url || banner_image_url || null;
 
     const { rows } = await query(
       `INSERT INTO categories (name, display_name, slug, description, emoji_icon, icon_emoji, image_url, banner_image_url, parent_id, sort_order, is_active)
@@ -1151,10 +1153,13 @@ async function updateCategory(req, res, next) {
           : name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))
       : (req.body.slug ? req.body.slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : null);
 
-    const activeVal = is_active !== undefined ? (is_active === 'true' || is_active === true) : null;
+    let activeVal = null;
+    if (is_active !== undefined && is_active !== null && is_active !== '') {
+      activeVal = (is_active === 'true' || is_active === true || is_active === 1 || is_active === '1');
+    }
     const emoji = emoji_icon || icon_emoji || null;
     const uploadedUrl = req.file ? req.file.path : null;
-    const imgUrl = uploadedUrl || image_url || banner_image_url || null;
+    const imgUrl = uploadedUrl || req.body.fallback_image_url || image_url || banner_image_url || null;
 
     const { rows } = await query(
       `UPDATE categories
@@ -1178,6 +1183,40 @@ async function updateCategory(req, res, next) {
     if (!rows.length) return res.status(404).json({ success: false, message: 'Category not found.' });
 
     return res.json({ success: true, data: { ...rows[0], display_name: rows[0].name } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function toggleCategoryStatus(req, res, next) {
+  try {
+    const { id } = req.params;
+    let { is_active } = req.body;
+    let newStatus;
+    if (is_active !== undefined && is_active !== null && is_active !== '') {
+      newStatus = (is_active === true || is_active === 'true' || is_active === 1 || is_active === '1');
+    } else {
+      const { rows: current } = await query('SELECT is_active FROM categories WHERE id = $1', [id]);
+      if (!current.length) return res.status(404).json({ success: false, message: 'Category not found.' });
+      newStatus = !current[0].is_active;
+    }
+
+    const { rows } = await query(
+      `UPDATE categories SET is_active = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
+      [newStatus, id]
+    );
+    if (!rows.length) return res.status(404).json({ success: false, message: 'Category not found.' });
+
+    await logAdminAction({
+      adminId: req.user.id,
+      actionType: 'CATEGORY_STATUS_TOGGLED',
+      targetEntity: 'categories',
+      targetId: id,
+      details: { is_active: newStatus },
+      ipAddress: req.ip
+    });
+
+    return res.json({ success: true, message: `Category ${newStatus ? 'activated' : 'hidden'}.`, data: rows[0] });
   } catch (err) {
     next(err);
   }
@@ -1445,16 +1484,26 @@ async function createReport(req, res, next) {
 async function listSpecialShops(req, res, next) {
   try {
     const { rows } = await query(`
-      SELECT u.id, u.name, u.email, u.phone, u.profile_photo_url, u.is_active,
-             sp.store_name, sp.slug, sp.bio, sp.pickup_address, sp.is_approved,
-             sp.verification_status, sp.is_admin_managed, sp.created_at, sp.updated_at,
-             (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status != 'deleted') AS product_count,
-             (SELECT COALESCE(SUM(o.total_amount), 0) FROM orders o WHERE o.seller_id = u.id AND o.payment_status = 'paid') AS total_revenue,
-             (SELECT COUNT(*) FROM orders o WHERE o.seller_id = u.id) AS total_orders
+      SELECT u.id AS user_id, u.id, u.name, u.email, u.phone, u.profile_photo_url, u.is_active,
+             COALESCE(s.id, sp.id) AS seller_id,
+             COALESCE(s.commission_rate, 0) AS commission_rate,
+             COALESCE(sp.store_name, s.store_name) AS store_name,
+             COALESCE(sp.slug, s.slug) AS slug,
+             COALESCE(sp.bio, s.bio) AS bio,
+             COALESCE(sp.pickup_address, s.pickup_address) AS pickup_address,
+             COALESCE(sp.is_approved, s.is_approved) AS is_approved,
+             COALESCE(sp.verification_status, s.verification_status) AS verification_status,
+             TRUE AS is_admin_managed,
+             COALESCE(sp.created_at, s.created_at) AS created_at,
+             COALESCE(sp.updated_at, s.updated_at) AS updated_at,
+             (SELECT COUNT(*) FROM products p WHERE (p.seller_id = u.id OR (s.id IS NOT NULL AND p.seller_id = s.id)) AND p.status != 'deleted') AS product_count,
+             (SELECT COALESCE(SUM(COALESCE(o.total_paise/100.0, o.total_amount, 0)), 0) FROM orders o WHERE (o.seller_id = u.id OR (s.id IS NOT NULL AND o.seller_id = s.id)) AND o.payment_status = 'paid') AS total_revenue,
+             (SELECT COUNT(*) FROM orders o WHERE (o.seller_id = u.id OR (s.id IS NOT NULL AND o.seller_id = s.id))) AS total_orders
       FROM users u
-      JOIN seller_profiles sp ON sp.user_id = u.id
-      WHERE sp.is_admin_managed = TRUE
-      ORDER BY sp.created_at ASC
+      LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+      LEFT JOIN sellers s ON s.user_id = u.id
+      WHERE sp.is_admin_managed = TRUE OR s.is_admin_managed = TRUE
+      ORDER BY u.id ASC
     `);
     return res.json({ success: true, data: rows });
   } catch (err) {
@@ -1562,31 +1611,95 @@ async function createSpecialShop(req, res, next) {
 async function updateSpecialShop(req, res, next) {
   try {
     const shopId = req.params.id || req.params.sellerId;
-    const { store_name, bio, pickup_address, is_active } = req.body;
+    const { store_name, bio, pickup_address, is_active, commission_rate } = req.body;
 
-    const { rows } = await query(
+    const parsedCommRate = (commission_rate !== undefined && commission_rate !== null && commission_rate !== '')
+      ? parseFloat(commission_rate)
+      : null;
+
+    const formattedAddress = pickup_address 
+      ? (typeof pickup_address === 'string' ? pickup_address : JSON.stringify(pickup_address))
+      : null;
+
+    // Find the user/seller associated with this shop
+    const { rows: matchRows } = await query(
+      `SELECT u.id AS user_id, s.id AS seller_id, sp.id AS profile_id
+       FROM users u
+       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+       LEFT JOIN sellers s ON s.user_id = u.id
+       WHERE (u.id::text = $1 OR sp.id::text = $1 OR s.id::text = $1 OR sp.slug = $1 OR s.slug = $1)
+         AND (sp.is_admin_managed = TRUE OR s.is_admin_managed = TRUE)
+       LIMIT 1`,
+      [shopId]
+    );
+
+    if (!matchRows.length) {
+      return res.status(404).json({ success: false, message: 'Tohfa Special shop not found.' });
+    }
+
+    const { user_id, seller_id } = matchRows[0];
+
+    // Update seller_profiles
+    const { rows: spRows } = await query(
       `UPDATE seller_profiles
        SET store_name = COALESCE($1, store_name),
            bio = COALESCE($2, bio),
            pickup_address = COALESCE($3, pickup_address),
            is_active = COALESCE($4, is_active),
            updated_at = NOW()
-       WHERE (user_id::text = $5 OR id::text = $5) AND is_admin_managed = TRUE
+       WHERE user_id = $5
        RETURNING *`,
       [
         store_name || null,
         bio || null,
-        pickup_address ? (typeof pickup_address === 'string' ? pickup_address : JSON.stringify(pickup_address)) : null,
+        formattedAddress,
         is_active !== undefined ? Boolean(is_active) : null,
-        shopId
+        user_id
       ]
     );
 
-    if (!rows.length) {
-      return res.status(404).json({ success: false, message: 'Tohfa Special shop not found.' });
-    }
+    // Update sellers (including commission_rate)
+    const { rows: sRows } = await query(
+      `UPDATE sellers
+       SET store_name = COALESCE($1, store_name),
+           bio = COALESCE($2, bio),
+           pickup_address = COALESCE($3, pickup_address),
+           is_active = COALESCE($4, is_active),
+           commission_rate = COALESCE($5, commission_rate)
+       WHERE user_id = $6
+       RETURNING *`,
+      [
+        store_name || null,
+        bio || null,
+        formattedAddress,
+        is_active !== undefined ? Boolean(is_active) : null,
+        parsedCommRate,
+        user_id
+      ]
+    );
 
-    return res.json({ success: true, message: 'Tohfa Special shop updated.', data: rows[0] });
+    const merged = {
+      ...(spRows[0] || {}),
+      ...(sRows[0] || {}),
+      user_id,
+      seller_id: seller_id || sRows[0]?.id || spRows[0]?.id,
+      commission_rate: sRows[0]?.commission_rate !== undefined ? parseFloat(sRows[0].commission_rate) : (parsedCommRate || 0),
+      store_name: sRows[0]?.store_name || spRows[0]?.store_name || store_name,
+      bio: sRows[0]?.bio || spRows[0]?.bio || bio,
+      pickup_address: sRows[0]?.pickup_address || spRows[0]?.pickup_address || formattedAddress,
+      is_active: sRows[0]?.is_active ?? spRows[0]?.is_active ?? true,
+    };
+
+    await logAdminAction({
+      adminId: req.user.id,
+      actionType: 'SPECIAL_SHOP_UPDATED',
+      targetEntity: 'sellers',
+      targetId: user_id,
+      details: { store_name: merged.store_name, commission_rate: merged.commission_rate, is_active: merged.is_active },
+      ipAddress: req.ip
+    });
+
+    return res.json({ success: true, message: 'Tohfa Special shop updated.', data: merged });
   } catch (err) {
     next(err);
   }
@@ -1746,6 +1859,7 @@ module.exports = {
   listCategories,
   createCategory,
   updateCategory,
+  toggleCategoryStatus,
   deleteCategory,
   createSubcategory,
   updateSubcategory,

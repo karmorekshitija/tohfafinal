@@ -56,9 +56,15 @@
 </div>
 <div class="px-gutter-md py-12 max-w-[1400px] mx-auto">
 <!-- Page Header -->
-<header class="mb-10">
-<h2 class="font-headline-lg text-primary text-[32px] leading-tight">Categories</h2>
-<p class="font-cormorant-italic italic text-text-muted text-[18px]">Manage marketplace product categories</p>
+<header class="mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <div>
+    <h2 class="font-headline-lg text-primary text-[32px] leading-tight">Categories</h2>
+    <p class="font-cormorant-italic italic text-text-muted text-[18px]">Manage marketplace product categories</p>
+  </div>
+  <button id="openNewCategoryBtn" type="button" class="inline-flex items-center gap-2 bg-[#14381F] text-white px-5 py-2.5 rounded-full font-label-btn hover:bg-[#285C3A] transition-all shadow-sm active:scale-[0.98] cursor-pointer self-start sm:self-auto">
+    <span class="material-symbols-outlined text-[20px]">add</span>
+    <span>New Category</span>
+  </button>
 </header>
 <div class="flex gap-10 items-start">
 <!-- LEFT: Categories Table (60%) -->
@@ -68,10 +74,16 @@
 <h3 class="font-accent-caps text-highlight-gold text-[12px] tracking-widest">ALL CATEGORIES</h3>
 <span id="categoriesFilterMeta" class="font-data-meta text-text-faint text-[10px]">INCLUDING HIDDEN</span>
 </div>
+<div class="flex items-center gap-4">
 <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-body-md text-text-muted select-none">
 <input type="checkbox" id="showHiddenToggle" checked class="rounded border-sage-soft text-primary focus:ring-primary accent-[#14381F] cursor-pointer" />
 <span>Show hidden categories</span>
 </label>
+<button id="openNewCategoryBtn2" type="button" class="inline-flex items-center gap-1 bg-[#14381F] text-white px-3.5 py-1.5 rounded-full text-xs font-label-btn hover:bg-[#285C3A] transition-all shadow-xs cursor-pointer">
+<span class="material-symbols-outlined text-[16px]">add</span>
+<span>Add Category</span>
+</button>
+</div>
 </div>
 <div class="bg-[#FFF8E7] border border-outline-variant rounded-xl overflow-x-auto shadow-sm">
 <table class="w-full text-left border-collapse">
@@ -149,16 +161,16 @@ URL: <span class="text-accent-violet">/category/<span id="slugPreview">ceramics-
 <input id="sortOrderInput" class="w-[80px] px-4 py-3 bg-[#FFF8E7] border border-sage-soft rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all font-data-meta" type="number" value="1"/>
 </div>
 <div class="flex items-center gap-3 mb-3">
-<div class="relative inline-block w-10 h-5 align-middle select-none">
-<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-[#FFF8E7] border-4 border-sage-soft appearance-none cursor-pointer transition-transform duration-200 ease-in z-10 checked:translate-x-full" id="activeStatus" name="toggle" type="checkbox"/>
-<label class="toggle-label block overflow-hidden h-5 rounded-full bg-surface-container-high cursor-pointer transition-colors duration-200" for="activeStatus"></label>
-</div>
-<span class="font-body-md font-bold text-text-muted text-[14px]">Active</span>
+  <label class="relative inline-flex items-center cursor-pointer select-none">
+    <input type="checkbox" id="activeStatus" class="sr-only peer" checked>
+    <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:bg-[#14381F] transition-colors duration-200 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#FFF8E7] after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5 shadow-xs"></div>
+    <span id="activeStatusLabel" class="ml-3 font-body-md font-bold text-text-muted text-[14px]">Active</span>
+  </label>
 </div>
 </div>
 <!-- Action Buttons -->
 <div class="pt-4 flex flex-col gap-4">
-<button class="w-full bg-primary text-white py-3.5 rounded-full font-label-btn hover:bg-primary-deep transition-all shadow-sm active:scale-[0.98]" type="submit">
+<button id="saveCategoryBtn" class="w-full bg-primary text-white py-3.5 rounded-full font-label-btn hover:bg-primary-deep transition-all shadow-sm active:scale-[0.98]" type="submit">
 Save Category
 </button>
 <button id="cancelBtn" class="w-full text-text-muted font-label-btn hover:text-primary transition-colors py-1" type="button">
@@ -231,7 +243,20 @@ const activeStatus = document.getElementById('activeStatus');
 const cancelBtn = document.getElementById('cancelBtn');
 const closeFormBtn = document.getElementById('closeFormBtn');
 const showHiddenToggle = document.getElementById('showHiddenToggle');
-const categoriesFilterMeta = document.getElementById('categoriesFilterMeta');
+const openNewCategoryBtn = document.getElementById('openNewCategoryBtn');
+const openNewCategoryBtn2 = document.getElementById('openNewCategoryBtn2');
+
+function openNewCategoryForm() {
+  resetForm();
+  displayNameInput.focus();
+  const formPanel = document.querySelector('section.w-2\\/5') || document.getElementById('categoryForm');
+  if (formPanel) {
+    formPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+if (openNewCategoryBtn) openNewCategoryBtn.addEventListener('click', openNewCategoryForm);
+if (openNewCategoryBtn2) openNewCategoryBtn2.addEventListener('click', openNewCategoryForm);
 
 if (showHiddenToggle) {
   showHiddenToggle.addEventListener('change', () => {
@@ -305,8 +330,14 @@ function renderCategories() {
 
     const isBannedOrHidden = !cat.is_active;
     const statusBadge = isBannedOrHidden
-      ? `<span class="px-2.5 py-0.5 rounded-full bg-surface-ivory text-text-muted text-[11px] border border-outline-variant/40">Hidden</span>`
-      : `<span class="px-2.5 py-0.5 rounded-full bg-sage-soft/30 text-primary text-[11px] font-bold">Active</span>`;
+      ? `<button class="toggle-status-btn px-2.5 py-1 rounded-full bg-surface-ivory text-text-muted hover:bg-gray-200 text-[11px] border border-outline-variant/40 flex items-center gap-1.5 cursor-pointer transition-all shadow-xs" data-id="${cat.id}" data-active="false" title="Click to activate">
+           <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+           <span>Hidden</span>
+         </button>`
+      : `<button class="toggle-status-btn px-2.5 py-1 rounded-full bg-sage-soft/30 text-primary hover:bg-sage-soft/50 text-[11px] font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs" data-id="${cat.id}" data-active="true" title="Click to hide">
+           <span class="w-2 h-2 rounded-full bg-[#14381F]"></span>
+           <span>Active</span>
+         </button>`;
 
     const productCount = cat.product_count || 0;
     const isDeletable = productCount === 0 && (!cat.subcategories || cat.subcategories.length === 0);
@@ -498,15 +529,39 @@ function renderCategories() {
     });
   });
 
+  // Toggle Category Status (Active <-> Hidden) click
+  listEl.querySelectorAll('.toggle-status-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute('data-id');
+      const isCurrentlyActive = btn.getAttribute('data-active') === 'true';
+      const newStatus = !isCurrentlyActive;
+      try {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        await adminApiClient.patch(`/admin/categories/${id}/status`, { is_active: newStatus });
+        await fetchCategories();
+        if (editingCategoryId === id) {
+          activeStatus.checked = newStatus;
+          const label = document.getElementById('activeStatusLabel');
+          if (label) label.textContent = newStatus ? 'Active' : 'Hidden';
+        }
+      } catch (error) {
+        alert(error.response?.data?.message || 'Failed to toggle category status');
+      } finally {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
+    });
+  });
+
   // Restore Category click
   listEl.querySelectorAll('.restore-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const target = e.currentTarget;
       const id = target.getAttribute('data-id');
       try {
-        const formData = new FormData();
-        formData.append('is_active', 'true');
-        await adminApiClient.patch(`/admin/categories/${id}`, formData);
+        await adminApiClient.patch(`/admin/categories/${id}/status`, { is_active: true });
         fetchCategories();
       } catch (error) {
         alert(error.response?.data?.message || 'Failed to restore category');
@@ -618,6 +673,10 @@ function startEditing(cat) {
   descriptionInput.value = cat.description || '';
   sortOrderInput.value = cat.sort_order;
   activeStatus.checked = !!cat.is_active;
+  const statusLabel = document.getElementById('activeStatusLabel');
+  if (statusLabel) {
+    statusLabel.textContent = activeStatus.checked ? 'Active' : 'Hidden';
+  }
   imageUrlInput.value = cat.image_url || '';
   imagePreview.src = cat.image_url || '/img/ceramic_bowls.jpg';
   imageInput.value = '';
@@ -632,9 +691,22 @@ function resetForm() {
   slugPreview.textContent = '[slug]';
   sortOrderInput.value = 1;
   activeStatus.checked = true;
+  const statusLabel = document.getElementById('activeStatusLabel');
+  if (statusLabel) {
+    statusLabel.textContent = 'Active';
+  }
   imageUrlInput.value = '';
   imagePreview.src = '/img/ceramic_bowls.jpg';
   imageInput.value = '';
+}
+
+if (activeStatus) {
+  activeStatus.addEventListener('change', () => {
+    const statusLabel = document.getElementById('activeStatusLabel');
+    if (statusLabel) {
+      statusLabel.textContent = activeStatus.checked ? 'Active' : 'Hidden';
+    }
+  });
 }
 
 imageUrlInput.addEventListener('input', (e) => {
@@ -676,6 +748,13 @@ emojiBtn.addEventListener('click', () => {
 formEl.addEventListener('submit', async (e) => {
   e.preventDefault();
 
+  const saveBtn = document.getElementById('saveCategoryBtn') || formEl.querySelector('button[type="submit"]');
+  const origBtnContent = saveBtn ? saveBtn.innerHTML : 'Save Category';
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="inline-flex items-center justify-center gap-2"><svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Saving Category...</span>';
+  }
+
   const formData = new FormData();
   formData.append('emoji_icon', currentEmoji);
   formData.append('display_name', displayNameInput.value.trim());
@@ -684,9 +763,28 @@ formEl.addEventListener('submit', async (e) => {
   formData.append('sort_order', sortOrderInput.value);
   formData.append('is_active', activeStatus.checked);
   
+  let dataUrlFallback = null;
   if (imageInput.files[0]) {
-    const compressed = window.compressImage ? await window.compressImage(imageInput.files[0], { maxWidth: 1200, maxHeight: 1200 }) : imageInput.files[0];
+    const rawFile = imageInput.files[0];
+    const compressed = window.compressImage
+      ? await window.compressImage(rawFile, { maxWidth: 800, maxHeight: 800, quality: 0.85 })
+      : rawFile;
     formData.append('image', compressed);
+
+    // Prepare client-side fallback data URL in case cloud storage encounters issue
+    try {
+      dataUrlFallback = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve(ev.target.result);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(compressed);
+      });
+      if (dataUrlFallback) {
+        formData.append('fallback_image_url', dataUrlFallback);
+      }
+    } catch (readErr) {
+      console.warn('Could not generate data URL fallback:', readErr);
+    }
   } else if (imageUrlInput.value.trim()) {
     formData.append('image_url', imageUrlInput.value.trim());
     formData.append('banner_image_url', imageUrlInput.value.trim());
@@ -701,7 +799,44 @@ formEl.addEventListener('submit', async (e) => {
     fetchCategories();
     resetForm();
   } catch (error) {
-    alert(error.response?.data?.message || 'Failed to save category');
+    // If multipart/cloud upload threw an error and we have the data URL fallback, retry seamlessly
+    if (dataUrlFallback) {
+      try {
+        const jsonPayload = {
+          emoji_icon: currentEmoji,
+          display_name: displayNameInput.value.trim(),
+          slug: slugInput.value.trim(),
+          description: descriptionInput.value.trim(),
+          sort_order: sortOrderInput.value,
+          is_active: activeStatus.checked,
+          image_url: dataUrlFallback,
+          banner_image_url: dataUrlFallback,
+          fallback_image_url: dataUrlFallback
+        };
+        if (editingCategoryId) {
+          await adminApiClient.patch(`/admin/categories/${editingCategoryId}`, jsonPayload);
+        } else {
+          await adminApiClient.post('/admin/categories', jsonPayload);
+        }
+        fetchCategories();
+        resetForm();
+        return;
+      } catch (retryErr) {
+        console.error('Seamless data-URL fallback save failed:', retryErr);
+      }
+    }
+
+    const rawMsg = error.response?.data?.message || error.message || 'Failed to save category';
+    if (rawMsg.toLowerCase().includes('signature')) {
+      alert('Could not upload image to cloud storage. Please try entering an image URL or choose a different image.');
+    } else {
+      alert(rawMsg);
+    }
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = origBtnContent;
+    }
   }
 });
 

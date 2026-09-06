@@ -152,6 +152,17 @@ app.use('/api/seller',        sellerRoutes);
 app.use('/api/admin',         adminRoutes);
 app.use('/api/products',      productRoutes);
 app.use('/api/product',       productRoutes);  // Alias
+
+// /api/v1 Aliases
+app.use('/api/v1/admin',      adminRoutes);
+app.use('/api/v1/seller',     sellerRoutes);
+app.use('/api/v1/products',   productRoutes);
+app.use('/api/v1/product',    productRoutes);
+app.use('/api/v1/orders',     orderRoutes);
+app.use('/api/v1/order',      orderRoutes);
+app.use('/api/v1/buyer',      buyerRoutes);
+app.use('/api/v1/cart',       cartRoutes);
+app.use('/api/v1/auth',       authRoutes);
 app.use('/api/cart',          cartRoutes);
 app.use('/api/orders',        orderRoutes);
 app.use('/api/order',         orderRoutes);    // Alias

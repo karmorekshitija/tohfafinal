@@ -17,18 +17,21 @@ async function handleRazorpayWebhook(req, res) {
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
     if (!webhookSecret || !signature) {
-      return res.status(400).send('Webhook secret or signature missing');
+      return res.status(400).json({ status: 'error', message: 'Webhook secret or signature missing' });
     }
 
-    const rawBody = req.body.toString('utf8');
+    const rawBody = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : (typeof req.body === 'string' ? req.body : JSON.stringify(req.body));
     const expectedSignature = crypto
       .createHmac('sha256', webhookSecret)
       .update(rawBody)
       .digest('hex');
 
-    if (expectedSignature !== signature) {
+    const expectedBuffer = Buffer.from(expectedSignature, 'utf8');
+    const signatureBuffer = Buffer.from(String(signature), 'utf8');
+
+    if (expectedBuffer.length !== signatureBuffer.length || !crypto.timingSafeEqual(expectedBuffer, signatureBuffer)) {
       console.error('[Webhook] Invalid Razorpay webhook signature');
-      return res.status(400).send('Invalid signature');
+      return res.status(400).json({ status: 'error', message: 'Invalid signature' });
     }
 
     const event = JSON.parse(rawBody);

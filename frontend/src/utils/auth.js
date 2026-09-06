@@ -7,17 +7,47 @@
 export const TOKEN_KEY = 'tohfa_auth_token';
 export const USER_KEY = 'tohfa_user_data';
 
+/**
+ * Checks whether a given JWT token is expired by decoding its exp claim.
+ * Returns true if expired or invalid.
+ */
+export function isTokenExpired(token) {
+  if (!token || typeof token !== 'string') return true;
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const parsed = JSON.parse(jsonPayload);
+    if (!parsed || !parsed.exp) return false;
+    return (parsed.exp * 1000) <= (Date.now() - 5000);
+  } catch (e) {
+    return false;
+  }
+}
+
 export const authStorage = {
   getToken: () => {
-    return localStorage.getItem(TOKEN_KEY) ||
-           sessionStorage.getItem(TOKEN_KEY) ||
-           localStorage.getItem('tohfa_access_token') ||
-           sessionStorage.getItem('tohfa_access_token') ||
-           localStorage.getItem('auth_token') ||
-           sessionStorage.getItem('auth_token') ||
-           localStorage.getItem('tohfa_admin_token') ||
-           sessionStorage.getItem('tohfa_admin_token') ||
-           null;
+    const token = localStorage.getItem(TOKEN_KEY) ||
+                  sessionStorage.getItem(TOKEN_KEY) ||
+                  localStorage.getItem('tohfa_access_token') ||
+                  sessionStorage.getItem('tohfa_access_token') ||
+                  localStorage.getItem('auth_token') ||
+                  sessionStorage.getItem('auth_token') ||
+                  localStorage.getItem('tohfa_admin_token') ||
+                  sessionStorage.getItem('tohfa_admin_token') ||
+                  null;
+    if (token && isTokenExpired(token)) {
+      authStorage.clear();
+      return null;
+    }
+    return token;
   },
 
   setToken: (token) => {
@@ -238,12 +268,14 @@ if (typeof window !== 'undefined') {
   window.isLoggedIn = isLoggedIn;
   window.requireAuth = requireAuth;
   window.clearAuth = clearAuth;
+  window.isTokenExpired = isTokenExpired;
 }
 
 export default {
   TOKEN_KEY,
   USER_KEY,
   authStorage,
+  isTokenExpired,
   getSafeRedirectUrl,
   redirectUserByRole,
   getUser,

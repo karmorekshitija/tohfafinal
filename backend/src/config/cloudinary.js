@@ -11,14 +11,43 @@ require('dotenv').config();
 
 const cloudinary = require('cloudinary').v2;
 
-const cloudName = (process.env.CLOUDINARY_CLOUD_NAME || '').trim();
-const apiKey = (process.env.CLOUDINARY_API_KEY || '').trim();
-const apiSecret = (process.env.CLOUDINARY_API_SECRET || '').trim();
+function cleanVal(v) {
+  if (!v) return '';
+  return String(v).trim().replace(/^["']+|["']+$/g, '').trim();
+}
 
-if (!cloudName || !apiKey || !apiSecret) {
-  const msg = '[Cloudinary] Missing CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET — image uploads will fail.';
+let cloudName = cleanVal(process.env.CLOUDINARY_CLOUD_NAME);
+let apiKey = cleanVal(process.env.CLOUDINARY_API_KEY);
+let apiSecret = cleanVal(process.env.CLOUDINARY_API_SECRET);
+
+// If CLOUDINARY_URL is provided (e.g. from cloud provider environment), parse it
+const rawCloudUrl = cleanVal(process.env.CLOUDINARY_URL);
+if (rawCloudUrl) {
+  try {
+    const parsed = new URL(rawCloudUrl);
+    if (!cloudName || cloudName.startsWith('YOUR_')) cloudName = cleanVal(parsed.hostname);
+    if (!apiKey || apiKey.startsWith('YOUR_')) apiKey = cleanVal(parsed.username);
+    if (!apiSecret || apiSecret.startsWith('YOUR_')) apiSecret = cleanVal(parsed.password);
+  } catch (e) {
+    const match = rawCloudUrl.match(/cloudinary:\/\/([^:]+):([^@]+)@(.+)/);
+    if (match) {
+      if (!apiKey || apiKey.startsWith('YOUR_')) apiKey = cleanVal(match[1]);
+      if (!apiSecret || apiSecret.startsWith('YOUR_')) apiSecret = cleanVal(match[2]);
+      if (!cloudName || cloudName.startsWith('YOUR_')) cloudName = cleanVal(match[3]);
+    }
+  }
+}
+
+const isConfigured = Boolean(
+  cloudName && !cloudName.startsWith('YOUR_') &&
+  apiKey && !apiKey.startsWith('YOUR_') &&
+  apiSecret && !apiSecret.startsWith('YOUR_')
+);
+
+if (!isConfigured) {
+  const msg = '[Cloudinary] Missing or placeholder credentials (CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET). Resilient fallback will be used.';
   if (process.env.NODE_ENV === 'production') {
-    console.error(msg);
+    console.warn(msg);
   } else if (process.env.NODE_ENV !== 'test') {
     console.warn(msg);
   }

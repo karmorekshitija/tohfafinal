@@ -75,6 +75,15 @@ router.patch('/special-shops/:id', adminController.updateSpecialShop);
 router.post('/special-shops/:id/switch-session', adminController.switchSessionToSpecialShop);
 router.post('/special-shops/:id/impersonate', adminController.switchSessionToSpecialShop);
 router.get('/special-shops/:sellerId/switch-session', adminController.switchSessionToSpecialShop);
+
+// Special shops aliases (/shops/special)
+router.get('/shops/special', adminController.listSpecialShops);
+router.post('/shops/special', adminController.createSpecialShop);
+router.put('/shops/special/:id', adminController.updateSpecialShop);
+router.patch('/shops/special/:id', adminController.updateSpecialShop);
+router.post('/shops/special/:id/switch-session', adminController.switchSessionToSpecialShop);
+router.post('/shops/special/:id/impersonate', adminController.switchSessionToSpecialShop);
+router.get('/shops/special/:sellerId/switch-session', adminController.switchSessionToSpecialShop);
 router.get('/dashboard/revenue-breakdown', adminController.getRevenueBreakdown);
 
 // 3. Products & Tohfa Specials
@@ -91,8 +100,16 @@ router.delete('/products/:id', adminController.deleteProduct);
 router.get('/orders', orderController.getAdminOrders);
 router.get('/orders/:orderId', orderController.getOrderById);
 router.get('/orders/:id', orderController.getOrderById);
+router.patch('/orders/:id', adminController.forceUpdateOrderStatus);
+router.put('/orders/:id', adminController.forceUpdateOrderStatus);
+router.patch('/orders/:id/status', adminController.forceUpdateOrderStatus);
+router.put('/orders/:id/status', adminController.forceUpdateOrderStatus);
 router.patch('/orders/:id/force-status', adminController.forceUpdateOrderStatus);
 router.post('/orders/:id/force-status', adminController.forceUpdateOrderStatus);
+router.patch('/orders/:orderId', adminController.forceUpdateOrderStatus);
+router.put('/orders/:orderId', adminController.forceUpdateOrderStatus);
+router.patch('/orders/:orderId/status', adminController.forceUpdateOrderStatus);
+router.put('/orders/:orderId/status', adminController.forceUpdateOrderStatus);
 router.patch('/orders/:orderId/force-status', adminController.forceUpdateOrderStatus);
 router.post('/orders/:orderId/force-status', adminController.forceUpdateOrderStatus);
 router.post('/orders/:id/refund', adminController.forceRefundOrder);
@@ -125,6 +142,10 @@ router.post('/users/:userId/status', adminController.toggleUserStatus);
 router.post('/categories', uploadCategoryImage, adminController.createCategory);
 router.put('/categories/:id', uploadCategoryImage, adminController.updateCategory);
 router.patch('/categories/:id', uploadCategoryImage, adminController.updateCategory);
+router.patch('/categories/:id/toggle', adminController.toggleCategoryStatus);
+router.post('/categories/:id/toggle', adminController.toggleCategoryStatus);
+router.patch('/categories/:id/status', adminController.toggleCategoryStatus);
+router.post('/categories/:id/status', adminController.toggleCategoryStatus);
 router.delete('/categories/:id', adminController.deleteCategory);
 router.post('/subcategories', adminController.createSubcategory);
 router.patch('/subcategories/:id', adminController.updateSubcategory);

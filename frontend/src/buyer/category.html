@@ -742,7 +742,12 @@
     }
 
     function getProductCardHtml(p, isCarousel = false) {
-      const imageUrl = (p.images && p.images[0] && (p.images[0].url || p.images[0].image_url || (typeof p.images[0] === 'string' ? p.images[0] : null))) || p.cover_image || p.image_url || '/img/ceramic_bowls.jpg';
+      let rawImg = (p.images && p.images[0] && (p.images[0].url || p.images[0].image_url || (typeof p.images[0] === 'string' ? p.images[0] : null))) || p.cover_image || p.image_url || p.imagePath || p.img_url || '/img/ceramic_bowls.jpg';
+      if (typeof rawImg === 'string' && (rawImg.startsWith('/uploads/') || rawImg.startsWith('/media/'))) {
+        const cdnPrefix = window.TOHFA_CDN_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '' : 'https://thetohfa.in');
+        rawImg = cdnPrefix + rawImg;
+      }
+      const imageUrl = (typeof window.optimizeImageUrl === 'function') ? window.optimizeImageUrl(rawImg, { width: 500 }) : rawImg;
       const priceNum = p.price_paise !== undefined ? (p.price_paise / 100) : (p.base_price || p.price || 0);
       const price = `₹${Number(priceNum).toLocaleString('en-IN')}`;
 
@@ -877,10 +882,12 @@
         // If category filter by subcategory on client side
         if (selectedSubcategoryIds.length > 0 && products.length > 0) {
           const subId = selectedSubcategoryIds[0];
-          // Check if products have subcategory field
+          // Check if products match selected subcategory ID or slug
           const subFiltered = products.filter(p => 
+            String(p.category_id) === String(subId) ||
             p.subcategory_id === subId || 
             p.subcategory_slug === subId || 
+            (p.category_slug && p.category_slug === subId) ||
             (p.subcategory_name && p.subcategory_name.toLowerCase() === String(subId).toLowerCase())
           );
           if (subFiltered.length > 0) {

@@ -243,12 +243,12 @@ async function getAdminStats(req, res, next) {
   try {
     // All-time platform revenue (rupees from DB → multiply × 100 for paise)
     const { rows: rev } = await query(
-      `SELECT COALESCE(SUM(total_amount), 0) AS total_revenue_rupees FROM orders WHERE payment_status = 'paid'`
+      `SELECT COALESCE(SUM(COALESCE(total_paise / 100.0, total_amount, 0)), 0) AS total_revenue_rupees FROM orders WHERE payment_status = 'paid'`
     );
 
     // Revenue today (rupees → paise)
     const { rows: todayRev } = await query(
-      `SELECT COALESCE(SUM(total_amount), 0) AS revenue_today_rupees
+      `SELECT COALESCE(SUM(COALESCE(total_paise / 100.0, total_amount, 0)), 0) AS revenue_today_rupees
        FROM orders
        WHERE payment_status = 'paid' AND DATE(created_at) = CURRENT_DATE`
     );
@@ -349,7 +349,7 @@ async function getRevenueChart(req, res, next) {
 
     const { rows } = await query(
       `SELECT DATE(created_at) AS date,
-              COALESCE(SUM(total_amount), 0) AS revenue_rupees
+              COALESCE(SUM(COALESCE(total_paise / 100.0, total_amount, 0)), 0) AS revenue_rupees
        FROM orders
        WHERE payment_status = 'paid'
          AND ${condition}

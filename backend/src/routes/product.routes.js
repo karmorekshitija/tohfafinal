@@ -12,6 +12,7 @@ const { authMiddleware } = require('../middleware/auth');
 const { sellerOnly } = require('../middleware/sellerOnly');
 const { uploadProductImages } = require('../middleware/upload');
 const { validate, schemas } = require('../middleware/validate');
+const { verifySellerOwnership } = require('../middleware/ownership');
 
 // Public catalog & discovery
 router.get('/', productController.listProducts);
@@ -65,5 +66,6 @@ router.patch('/:id/status', authMiddleware, sellerOnly, productController.update
 router.post('/:id/images', authMiddleware, sellerOnly, uploadProductImages, productController.uploadImages);
 router.post('/:id/variants', authMiddleware, sellerOnly, productController.upsertVariants);
 router.post('/:id/fixed-options', authMiddleware, sellerOnly, productController.saveFixedOptions);
+router.delete('/:id', authMiddleware, sellerOnly, verifySellerOwnership('product'), productController.deleteProduct);
 
 module.exports = router;
