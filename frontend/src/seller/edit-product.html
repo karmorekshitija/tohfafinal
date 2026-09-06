@@ -644,8 +644,7 @@
               ? data.photos
               : (Array.isArray(data.images) ? data.images.map((img, i) => ({ url: img.url || img, sort_order: i })) : []);
 
-            const imagePhotos = allPhotos.filter(photo => photo.is_video !== 1 && photo.is_video !== 'true');
-            const videoPhoto = allPhotos.find(photo => photo.is_video === 1 || photo.is_video === 'true');
+            const imagePhotos = allPhotos;
             
             imagePhotos.forEach((photo, index) => {
                 if (index < 8) {
@@ -654,10 +653,6 @@
                     updatePhotoSlotUI(index, u);
                 }
             });
-            
-            if (videoPhoto) {
-                renderVideoPreview(videoPhoto.url);
-            }
 
             // Customization Data Population
             let customSchema = data.customization_schema;
@@ -843,7 +838,6 @@
         if (selectedVideoFile) {
             const formData = new FormData();
             formData.append('images', selectedVideoFile);
-            formData.append('is_video', 'true');
             formData.append('sort_order', '0');
             
             try {
@@ -897,8 +891,7 @@
                 photosPayload.push({
                     url: url,
                     sort_order: idx,
-                    is_cover: idx === 0,
-                    is_video: 0
+                    is_cover: idx === 0
                 });
             }
         });
@@ -907,8 +900,7 @@
             photosPayload.push({
                 url: videoUrl,
                 sort_order: 99,
-                is_cover: false,
-                is_video: 1
+                is_cover: false
             });
         }
 
