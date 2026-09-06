@@ -11,13 +11,16 @@ require('dotenv').config();
 
 const cloudinary = require('cloudinary').v2;
 
-const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-const apiKey = process.env.CLOUDINARY_API_KEY;
-const apiSecret = process.env.CLOUDINARY_API_SECRET;
+const cloudName = (process.env.CLOUDINARY_CLOUD_NAME || '').trim();
+const apiKey = (process.env.CLOUDINARY_API_KEY || '').trim();
+const apiSecret = (process.env.CLOUDINARY_API_SECRET || '').trim();
 
 if (!cloudName || !apiKey || !apiSecret) {
-  if (process.env.NODE_ENV !== 'test') {
-    console.warn('⚠️ [Cloudinary] Credentials missing (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET). Media uploads will fail.');
+  const msg = '[Cloudinary] Missing CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET — image uploads will fail.';
+  if (process.env.NODE_ENV === 'production') {
+    console.error(msg);
+  } else if (process.env.NODE_ENV !== 'test') {
+    console.warn(msg);
   }
 }
 
