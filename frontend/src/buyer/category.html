@@ -467,8 +467,8 @@
             Support
           </h3>
           <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
-            <li><a href="javascript:void(0)" onclick="openContactModal(event)" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Contact Us</a></li>
-            <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Refunds &amp; Disputes</a></li>
+            <li><a href="/buyer/contact.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Contact Us</a></li>
+            <li><a href="/buyer/returns.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Refunds &amp; Disputes</a></li>
             <li><a href="/buyer/faq.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">FAQs</a></li>
           </ul>
         </div>
@@ -501,7 +501,7 @@
           </h3>
           <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
             <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Terms of Service</a></li>
-            <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Privacy Policy</a></li>
+            <li><a href="/buyer/privacy.html" class="text-[#FAF6EE]/90 no-underline">Privacy Policy</a></li>
           </ul>
         </div>
 
@@ -513,8 +513,8 @@
           <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
             <li><a onclick="handleFooterSellerLink(event)" href="#" class="text-[#FAF6EE]/90 no-underline">Sell on Tohfa</a></li>
             <li><a href="/seller/dashboard.html" class="text-[#FAF6EE]/90 no-underline">Seller Studio</a></li>
-            <li><a href="javascript:void(0)" onclick="openContactModal(event)" class="text-[#FAF6EE]/90 no-underline">Contact Us</a></li>
-            <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" class="text-[#FAF6EE]/90 no-underline">Refunds &amp; Disputes</a></li>
+            <li><a href="/buyer/contact.html" class="text-[#FAF6EE]/90 no-underline">Contact Us</a></li>
+            <li><a href="/buyer/returns.html" class="text-[#FAF6EE]/90 no-underline">Refunds &amp; Disputes</a></li>
             <li><a href="/buyer/faq.html" class="text-[#FAF6EE]/90 no-underline">FAQs</a></li>
           </ul>
         </div>
@@ -633,6 +633,31 @@
               heroHeader.style.backgroundImage = `linear-gradient(rgba(250, 246, 238, 0.88), rgba(250, 246, 238, 0.96)), url('${bannerBg}')`;
               heroHeader.style.backgroundSize = 'cover';
               heroHeader.style.backgroundPosition = 'center';
+            }
+
+            // Update Dynamic Category SEO Metadata
+            const catName = cat.display_name || cat.name || 'Category';
+            const catDesc = cat.description ? cat.description.substring(0, 160).replace(/\n/g, ' ') : `Explore handcrafted ${catName} and artisanal gifts on Tohfa.`;
+            document.title = `${catName} | Handcrafted Collections | Tohfa`;
+            const metaDescEl = document.querySelector('meta[name="description"]');
+            if (metaDescEl) metaDescEl.content = catDesc;
+            const ogTitleEl = document.querySelector('meta[property="og:title"]');
+            if (ogTitleEl) ogTitleEl.content = `${catName} | Handcrafted Collections | Tohfa`;
+            const ogDescEl = document.querySelector('meta[property="og:description"]');
+            if (ogDescEl) ogDescEl.content = catDesc;
+            const ogUrlEl = document.querySelector('meta[property="og:url"]');
+            if (ogUrlEl) ogUrlEl.content = `https://thetohfa.in/buyer/category?slug=${cat.slug || slug}`;
+            const twitterTitleEl = document.querySelector('meta[name="twitter:title"]');
+            if (twitterTitleEl) twitterTitleEl.content = `${catName} | Handcrafted Collections | Tohfa`;
+            const twitterDescEl = document.querySelector('meta[name="twitter:description"]');
+            if (twitterDescEl) twitterDescEl.content = catDesc;
+            const canonicalEl = document.querySelector('link[rel="canonical"]');
+            if (canonicalEl) canonicalEl.href = `https://thetohfa.in/buyer/category?slug=${cat.slug || slug}`;
+            if (bannerBg) {
+              const ogImgEl = document.querySelector('meta[property="og:image"]');
+              if (ogImgEl) ogImgEl.content = bannerBg;
+              const twImgEl = document.querySelector('meta[name="twitter:image"]');
+              if (twImgEl) twImgEl.content = bannerBg;
             }
 
             // Check subcategory param from URL

@@ -565,8 +565,8 @@
             Support
           </h3>
           <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
-            <li><a href="javascript:void(0)" onclick="openContactModal(event)" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Contact Us</a></li>
-            <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Refunds &amp; Disputes</a></li>
+            <li><a href="/buyer/contact.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Contact Us</a></li>
+            <li><a href="/buyer/returns.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Refunds &amp; Disputes</a></li>
             <li><a href="/buyer/faq.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">FAQs</a></li>
           </ul>
         </div>
@@ -599,7 +599,7 @@
           </h3>
           <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
             <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Terms of Service</a></li>
-            <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Privacy Policy</a></li>
+            <li><a href="/buyer/privacy.html" class="text-[#FAF6EE]/90 no-underline">Privacy Policy</a></li>
           </ul>
         </div>
 
@@ -611,8 +611,8 @@
           <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
             <li><a onclick="handleFooterSellerLink(event)" href="#" class="text-[#FAF6EE]/90 no-underline">Sell on Tohfa</a></li>
             <li><a href="/seller/dashboard.html" class="text-[#FAF6EE]/90 no-underline">Seller Studio</a></li>
-            <li><a href="javascript:void(0)" onclick="openContactModal(event)" class="text-[#FAF6EE]/90 no-underline">Contact Us</a></li>
-            <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" class="text-[#FAF6EE]/90 no-underline">Refunds &amp; Disputes</a></li>
+            <li><a href="/buyer/contact.html" class="text-[#FAF6EE]/90 no-underline">Contact Us</a></li>
+            <li><a href="/buyer/returns.html" class="text-[#FAF6EE]/90 no-underline">Refunds &amp; Disputes</a></li>
             <li><a href="/buyer/faq.html" class="text-[#FAF6EE]/90 no-underline">FAQs</a></li>
           </ul>
         </div>
@@ -913,7 +913,12 @@
                         if (twitterImgEl) twitterImgEl.content = primaryImg;
                     }
                     const canonicalEl = document.querySelector('link[rel="canonical"]');
-                    if (canonicalEl) canonicalEl.href = `https://thetohfa.in/buyer/product?id=${product.id || productId}`;
+                    const productUrl = `https://thetohfa.in/buyer/product?id=${product.id || productId}`;
+                    if (canonicalEl) canonicalEl.href = productUrl;
+                    const ogUrlEl = document.querySelector('meta[property="og:url"]');
+                    if (ogUrlEl) ogUrlEl.content = productUrl;
+                    const twitterUrlEl = document.querySelector('meta[name="twitter:url"]');
+                    if (twitterUrlEl) twitterUrlEl.content = productUrl;
 
                     // Update Dynamic Product JSON-LD Schema
                     const productJsonLdEl = document.getElementById('product-jsonld');
