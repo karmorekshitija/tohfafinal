@@ -6,7 +6,56 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <meta charset="utf-8"/>
   <title>Tohfa | Explore Crafts</title>
-  <meta name="description" content="Browse handcrafted treasures by craft category directly from independent makers."/>
+  <link rel="canonical" href="https://thetohfa.in/buyer/categories"/>
+  <meta name="description" content="Browse handcrafted treasures across curated craft categories — from candles and ceramics to customized portraits and jewellery — directly from independent makers on Tohfa."/>
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:site_name" content="Tohfa"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:title" content="Explore Handcrafted Craft Categories | Tohfa"/>
+  <meta property="og:description" content="Browse handcrafted treasures across curated craft categories directly from independent makers on Tohfa."/>
+  <meta property="og:url" content="https://thetohfa.in/buyer/categories"/>
+  <meta property="og:image" content="https://thetohfa.in/img/botanical-hero.png"/>
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Explore Handcrafted Craft Categories | Tohfa"/>
+  <meta name="twitter:description" content="Browse handcrafted treasures across curated craft categories directly from independent makers on Tohfa."/>
+  <meta name="twitter:image" content="https://thetohfa.in/img/botanical-hero.png"/>
+
+  <!-- Structured Data / JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://thetohfa.in/buyer/categories#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://thetohfa.in/buyer/home"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Categories",
+            "item": "https://thetohfa.in/buyer/categories"
+          }
+        ]
+      },
+      {
+        "@type": "CollectionPage",
+        "@id": "https://thetohfa.in/buyer/categories#collection",
+        "name": "Explore Handcrafted Craft Categories",
+        "description": "Browse handcrafted treasures across curated craft categories — from candles and ceramics to customized portraits and jewellery — directly from independent makers on Tohfa.",
+        "url": "https://thetohfa.in/buyer/categories"
+      }
+    ]
+  }
+  </script>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -204,7 +253,7 @@
 
     <!-- Bulk Orders Standalone Banner -->
     <section class="max-w-7xl mx-auto px-3 sm:px-6 md:px-8 mb-5 sm:mb-8" id="bulk-banner-section">
-      <div onclick="window.location.href='/buyer/bulk.html'" class="relative rounded-2xl overflow-hidden group cursor-pointer shadow-sm min-h-[140px] sm:min-h-[180px] md:min-h-[220px] flex items-center border border-[#14381F]/20">
+      <a href="/buyer/bulk.html" class="relative rounded-2xl overflow-hidden group cursor-pointer shadow-sm min-h-[140px] sm:min-h-[180px] md:min-h-[220px] flex items-center border border-[#14381F]/20 block no-underline text-inherit">
         <img alt="Premium artisan gift boxes stack" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="/img/categories/artisan_showcase.jpg" loading="lazy"/>
         <div class="absolute inset-0 bg-black/45 z-10"></div>
         <div class="absolute inset-0 bulk-gradient z-10"></div>
@@ -214,11 +263,11 @@
             <h2 class="font-['Playfair_Display'] text-xl sm:text-3xl md:text-4xl italic font-bold text-white mb-1 leading-tight text-shadow-premium">Bulk Orders & Corporate Gifting</h2>
             <p class="font-['DM_Sans'] text-white/85 text-xs sm:text-sm">Tailored artisan creations for celebrations, events & organizations.</p>
           </div>
-          <button onclick="event.stopPropagation(); window.location.href='/buyer/bulk.html'" class="bg-[#FAF6EE] text-[#14381F] px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs sm:text-sm hover:brightness-105 active:scale-95 transition-all shadow-md flex-shrink-0 flex items-center gap-1">
+          <span class="bg-[#FAF6EE] text-[#14381F] px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs sm:text-sm hover:brightness-105 active:scale-95 transition-all shadow-md flex-shrink-0 flex items-center gap-1">
             Explore Bulk →
-          </button>
+          </span>
         </div>
-      </div>
+      </a>
     </section>
 
     <!-- 2-Column Square Categories Grid -->
@@ -400,7 +449,6 @@
           categories.forEach(cat => {
             const displayName = cat.display_name || cat.name;
             const count = cat.product_count !== undefined ? cat.product_count : (cat.item_count || 0);
-            const clickAction = `onclick="window.location.href='category.html?slug=${cat.slug}'"`;
 
             const SLUG_IMAGE_MAP = {
               'floral-bouquets': '/img/products/meesho_tohfa/bouquet/1.jpeg',
@@ -431,7 +479,7 @@
             }
 
             html += `
-              <div ${clickAction} class="category-card-editorial aspect-square relative cursor-pointer rounded-2xl overflow-hidden shadow-xs hover:-translate-y-1 transition-all duration-300 group" data-category-name="${displayName.toLowerCase()}" data-subcategories="${subs.map(s => s.name.toLowerCase()).join(' ')}">
+              <a href="/buyer/category.html?slug=${cat.slug}" class="category-card-editorial aspect-square relative cursor-pointer rounded-2xl overflow-hidden shadow-xs hover:-translate-y-1 transition-all duration-300 group block no-underline text-inherit" data-category-name="${displayName.toLowerCase()}" data-subcategories="${subs.map(s => s.name.toLowerCase()).join(' ')}">
                 <img class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${imageToUse}" alt="${displayName}" loading="lazy" onerror="this.onerror=null; this.src='/img/categories/artisan_showcase.jpg';">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent"></div>
                 <div class="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white z-10">
@@ -439,7 +487,7 @@
                   <span class="font-['Space_Mono'] text-[9px] sm:text-[10px] text-white/80 uppercase tracking-wider block">${count} makes</span>
                   ${subsHtml}
                 </div>
-              </div>
+              </a>
             `;
           });
 

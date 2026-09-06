@@ -8,7 +8,55 @@
 <script type="module" src="/src/components/ProtectedRoute.js"></script>
     <meta charset="utf-8"/>
     <title>Tohfa | Artisan Studio Profile</title>
+    <link rel="canonical" href="https://thetohfa.in/buyer/seller-profile"/>
     <meta name="description" content="Explore artisan creations, custom works, reviews, and artisan stories on Tohfa."/>
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:site_name" content="Tohfa"/>
+    <meta property="og:type" content="profile"/>
+    <meta property="og:title" content="Tohfa | Artisan Studio Profile"/>
+    <meta property="og:description" content="Explore artisan creations, custom works, reviews, and artisan stories on Tohfa."/>
+    <meta property="og:url" content="https://thetohfa.in/buyer/seller-profile"/>
+    <meta property="og:image" content="https://thetohfa.in/img/botanical-hero.png"/>
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:title" content="Tohfa | Artisan Studio Profile"/>
+    <meta name="twitter:description" content="Explore artisan creations, custom works, reviews, and artisan stories on Tohfa."/>
+    <meta name="twitter:image" content="https://thetohfa.in/img/botanical-hero.png"/>
+
+    <!-- Structured Data / JSON-LD -->
+    <script type="application/ld+json" id="seller-jsonld">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://thetohfa.in/buyer/seller-profile#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://thetohfa.in/buyer/home"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Artisans",
+              "item": "https://thetohfa.in/buyer/categories"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "Artisan Profile",
+              "item": "https://thetohfa.in/buyer/seller-profile"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
     
     <!-- Material Symbols -->
       <!-- Google Fonts: EB Garamond & Hanken Grotesk -->
@@ -959,6 +1007,60 @@
 
         function updateProfileUI(profile) {
             document.title = `${profile.shop_name} | Tohfa Artisanal Collective`;
+            const sellerDesc = profile.bio ? profile.bio.substring(0, 160).replace(/\n/g, ' ') : `Discover handcrafted creations by ${profile.shop_name} on Tohfa.`;
+            const ogTitleEl = document.querySelector('meta[property="og:title"]');
+            if (ogTitleEl) ogTitleEl.content = `${profile.shop_name} | Tohfa Artisanal Collective`;
+            const twitterTitleEl = document.querySelector('meta[name="twitter:title"]');
+            if (twitterTitleEl) twitterTitleEl.content = `${profile.shop_name} | Tohfa Artisanal Collective`;
+            const ogDescEl = document.querySelector('meta[property="og:description"]');
+            if (ogDescEl) ogDescEl.content = sellerDesc;
+            const twitterDescEl = document.querySelector('meta[name="twitter:description"]');
+            if (twitterDescEl) twitterDescEl.content = sellerDesc;
+            const avatarUrl = profile.avatar_url || profile.cover_photo_url || profile.banner_url;
+            if (avatarUrl) {
+                const ogImgEl = document.querySelector('meta[property="og:image"]');
+                if (ogImgEl) ogImgEl.content = avatarUrl;
+                const twitterImgEl = document.querySelector('meta[name="twitter:image"]');
+                if (twitterImgEl) twitterImgEl.content = avatarUrl;
+            }
+            const canonicalEl = document.querySelector('link[rel="canonical"]');
+            if (canonicalEl) canonicalEl.href = `https://thetohfa.in/buyer/seller-profile?id=${profile.id || profile.seller_id}`;
+
+            // Update Dynamic Seller JSON-LD Schema
+            const sellerJsonLdEl = document.getElementById('seller-jsonld');
+            if (sellerJsonLdEl) {
+                const sellerGraph = [
+                    {
+                        "@type": "BreadcrumbList",
+                        "@id": `https://thetohfa.in/buyer/seller-profile?id=${profile.id || profile.seller_id}#breadcrumb`,
+                        "itemListElement": [
+                            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thetohfa.in/buyer/home" },
+                            { "@type": "ListItem", "position": 2, "name": "Artisans", "item": "https://thetohfa.in/buyer/categories" },
+                            { "@type": "ListItem", "position": 3, "name": profile.shop_name, "item": `https://thetohfa.in/buyer/seller-profile?id=${profile.id || profile.seller_id}` }
+                        ]
+                    },
+                    {
+                        "@type": "ProfilePage",
+                        "@id": `https://thetohfa.in/buyer/seller-profile?id=${profile.id || profile.seller_id}#profilepage`,
+                        "name": `${profile.shop_name} | Tohfa Artisanal Collective`,
+                        "url": `https://thetohfa.in/buyer/seller-profile?id=${profile.id || profile.seller_id}`,
+                        "mainEntity": {
+                            "@type": "Organization",
+                            "@id": `https://thetohfa.in/buyer/seller-profile?id=${profile.id || profile.seller_id}#artisan`,
+                            "name": profile.shop_name,
+                            "description": sellerDesc,
+                            "image": avatarUrl || "https://thetohfa.in/img/botanical-hero.png",
+                            "address": {
+                                "@type": "PostalAddress",
+                                "addressLocality": profile.location || "India",
+                                "addressCountry": "IN"
+                            }
+                        }
+                    }
+                ];
+                sellerJsonLdEl.textContent = JSON.stringify({ "@context": "https://schema.org", "@graph": sellerGraph }, null, 2);
+            }
+
             document.getElementById('seller-name').innerText = profile.shop_name;
             document.getElementById('seller-handle').innerText = `@${profile.handle}`;
             document.getElementById('seller-city').innerText = profile.location || 'Indian Artisan Studio';
@@ -1191,9 +1293,9 @@
             
             filtered.forEach(p => {
                 const priceFormatted = `?${(p.price_paise / 100).toLocaleString('en-IN')}`;
-                const card = document.createElement('div');
-                card.className = "group bg-[#FFF8E7] border border-[#c3c8c1] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative";
-                card.onclick = () => window.location.href = `/buyer/product.html?id=${p.id}`;
+                const card = document.createElement('a');
+                card.href = `/buyer/product.html?id=${p.id}`;
+                card.className = "group bg-[#FFF8E7] border border-[#c3c8c1] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative no-underline text-inherit";
                 
                 const isWishlisted = !!p.is_wishlisted;
                 const isSoldOut = p.status === 'sold_out' || p.stock_qty === 0;
@@ -1553,7 +1655,7 @@
                         </blockquote>
                         
                         <!-- Product Info Card -->
-                        <div class="flex items-center gap-4 p-4 bg-surface-container-lowest rounded-lg border border-outline-variant/30 mb-6 cursor-pointer" onclick="window.location.href='/buyer/product.html?id=${r.product.id}'">
+                        <a href="/buyer/product.html?id=${r.product.id}" class="flex items-center gap-4 p-4 bg-surface-container-lowest rounded-lg border border-outline-variant/30 mb-6 cursor-pointer no-underline text-inherit">
                             <div class="w-14 h-14 rounded overflow-hidden shrink-0 border border-outline-variant/20">
                                 <img src="${r.product.image_url || 'https://placehold.co/100x100/f6f3f2/061b0e?text=Product'}" alt="${r.product.name}" class="w-full h-full object-cover" loading="lazy" />
                             </div>
@@ -1561,7 +1663,7 @@
                                 <p class="text-[10px] font-label-sm text-on-surface-variant uppercase tracking-wider mb-0.5">Purchased item</p>
                                 <p class="font-label-md text-sm text-primary font-bold line-clamp-1">${r.product.name}</p>
                             </div>
-                        </div>
+                        </a>
 
                         <!-- Seller Reply (If exists) -->
                         ${r.reply_text ? `

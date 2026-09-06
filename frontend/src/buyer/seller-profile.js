@@ -91,7 +91,7 @@ async function loadSellerProducts() {
     }
 
     gridEl.innerHTML = products.map(p => `
-      <div class="product-card" onclick="window.location.href='./product.html?id=${p.id}'">
+      <a href="./product.html?id=${p.id}" class="product-card" style="text-decoration:none;color:inherit;display:block;">
         <div class="product-card__image-wrap">
           <img src="${p.primary_image || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600&q=80'}" class="product-card__image" alt="${p.name}">
         </div>
@@ -101,7 +101,7 @@ async function loadSellerProducts() {
             <span class="text-price">${formatPrice(p.base_price)}</span>
           </div>
         </div>
-      </div>
+      </a>
     `).join('');
   } catch (err) {
     gridEl.innerHTML = `<p class="text-body" style="grid-column:1/-1;">${err.message}</p>`;

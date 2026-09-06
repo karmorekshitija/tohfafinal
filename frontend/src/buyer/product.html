@@ -8,7 +8,55 @@
 <script type="module" src="/src/components/ProtectedRoute.js"></script>
     <meta charset="utf-8"/>
     <title>Tohfa | Product Details</title>
-    <meta name="description" content="Explore and purchase unique handcrafted products directly from independent artisans."/>
+    <link rel="canonical" href="https://thetohfa.in/buyer/product"/>
+    <meta name="description" content="Explore and purchase unique handcrafted products directly from independent artisans on Tohfa."/>
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:site_name" content="Tohfa"/>
+    <meta property="og:type" content="product"/>
+    <meta property="og:title" content="Tohfa | Product Details"/>
+    <meta property="og:description" content="Explore and purchase unique handcrafted products directly from independent artisans."/>
+    <meta property="og:url" content="https://thetohfa.in/buyer/product"/>
+    <meta property="og:image" content="https://thetohfa.in/img/botanical-hero.png"/>
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:title" content="Tohfa | Product Details"/>
+    <meta name="twitter:description" content="Explore and purchase unique handcrafted products directly from independent artisans."/>
+    <meta name="twitter:image" content="https://thetohfa.in/img/botanical-hero.png"/>
+
+    <!-- Structured Data / JSON-LD -->
+    <script type="application/ld+json" id="product-jsonld">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://thetohfa.in/buyer/product#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://thetohfa.in/buyer/home"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Categories",
+              "item": "https://thetohfa.in/buyer/categories"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "Product",
+              "item": "https://thetohfa.in/buyer/product"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
       <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="dns-prefetch" href="https://fonts.gstatic.com">
@@ -846,9 +894,87 @@
                     maxStock = product.stock_qty || product.stock_quantity || 0;
                     isWishlisted = !!product.is_wishlisted;
 
-                    // Update UI Info
+                    // Update UI Info & Social Metadata
+                    document.title = `${product.name} | Tohfa`;
+                    const metaDesc = product.description ? product.description.substring(0, 160).replace(/\n/g, ' ') : `Handcrafted ${product.name} available on Tohfa.`;
+                    const ogTitleEl = document.querySelector('meta[property="og:title"]');
+                    if (ogTitleEl) ogTitleEl.content = `${product.name} | Tohfa`;
+                    const twitterTitleEl = document.querySelector('meta[name="twitter:title"]');
+                    if (twitterTitleEl) twitterTitleEl.content = `${product.name} | Tohfa`;
+                    const ogDescEl = document.querySelector('meta[property="og:description"]');
+                    if (ogDescEl) ogDescEl.content = metaDesc;
+                    const twitterDescEl = document.querySelector('meta[name="twitter:description"]');
+                    if (twitterDescEl) twitterDescEl.content = metaDesc;
+                    const primaryImg = (Array.isArray(product.images) && product.images.length && product.images[0]?.url) ? product.images[0].url : (product.image_url || product.primary_image);
+                    if (primaryImg) {
+                        const ogImgEl = document.querySelector('meta[property="og:image"]');
+                        if (ogImgEl) ogImgEl.content = primaryImg;
+                        const twitterImgEl = document.querySelector('meta[name="twitter:image"]');
+                        if (twitterImgEl) twitterImgEl.content = primaryImg;
+                    }
+                    const canonicalEl = document.querySelector('link[rel="canonical"]');
+                    if (canonicalEl) canonicalEl.href = `https://thetohfa.in/buyer/product?id=${product.id || productId}`;
+
+                    // Update Dynamic Product JSON-LD Schema
+                    const productJsonLdEl = document.getElementById('product-jsonld');
+                    if (productJsonLdEl) {
+                        const priceInRupees = product.base_price || (product.price_paise ? (product.price_paise / 100) : 0);
+                        const allImgs = Array.isArray(product.images) && product.images.length
+                            ? product.images.map(img => img.url || img)
+                            : (primaryImg ? [primaryImg] : []);
+                        
+                        const graph = [
+                            {
+                                "@type": "BreadcrumbList",
+                                "@id": `https://thetohfa.in/buyer/product?id=${product.id || productId}#breadcrumb`,
+                                "itemListElement": [
+                                    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thetohfa.in/buyer/home" },
+                                    { "@type": "ListItem", "position": 2, "name": product.category_name || "Categories", "item": "https://thetohfa.in/buyer/categories" },
+                                    { "@type": "ListItem", "position": 3, "name": product.name, "item": `https://thetohfa.in/buyer/product?id=${product.id || productId}` }
+                                ]
+                            },
+                            {
+                                "@type": "Product",
+                                "@id": `https://thetohfa.in/buyer/product?id=${product.id || productId}#product`,
+                                "name": product.name,
+                                "description": metaDesc,
+                                "image": allImgs,
+                                "sku": product.slug || product.id || String(productId),
+                                "brand": {
+                                    "@type": "Brand",
+                                    "name": product.seller?.seller_name || product.store_name || "Tohfa Artisan"
+                                },
+                                "offers": {
+                                    "@type": "Offer",
+                                    "price": String(priceInRupees),
+                                    "priceCurrency": "INR",
+                                    "availability": maxStock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+                                    "url": `https://thetohfa.in/buyer/product?id=${product.id || productId}`,
+                                    "seller": {
+                                        "@type": "Organization",
+                                        "name": product.seller?.seller_name || product.store_name || "Tohfa Artisan"
+                                    }
+                                }
+                            }
+                        ];
+
+                        const revCount = Number(product.review_count) || 0;
+                        const avgRat = Number(product.avg_rating);
+                        if (revCount > 0 && !isNaN(avgRat) && avgRat > 0) {
+                            graph[1].aggregateRating = {
+                                "@type": "AggregateRating",
+                                "ratingValue": avgRat.toFixed(1),
+                                "reviewCount": String(revCount),
+                                "bestRating": "5",
+                                "worstRating": "1"
+                            };
+                        }
+
+                        productJsonLdEl.textContent = JSON.stringify({ "@context": "https://schema.org", "@graph": graph }, null, 2);
+                    }
+
                     document.getElementById('product-name').innerText = product.name;
-                    document.getElementById('product-description').innerText = product.description || 'Crafted with love and care, this piece is a heartfelt creation by an independent artisan.\nEvery detail is thoughtfully made by hand � a little treasure, made just for you.';
+                    document.getElementById('product-description').innerText = product.description || 'Crafted with love and care, this piece is a heartfelt creation by an independent artisan.\nEvery detail is thoughtfully made by hand — a little treasure, made just for you.';
                     
                     const subcontainer = document.getElementById('product-subcategories-container');
                     if (subcontainer) {

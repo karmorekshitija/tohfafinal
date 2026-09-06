@@ -149,7 +149,7 @@ function renderProducts(container, products) {
       : (p.customization_mode === 'open' ? `<span class="badge" style="position:absolute; bottom:8px; left:8px; background:var(--color-primary); color:var(--color-background); font-size:10px; font-weight:600;">Bespoke</span>` : '');
 
     return `
-      <div class="product-card" onclick="window.location.href='./product.html?id=${p.id}'">
+      <a href="./product.html?id=${p.id}" class="product-card" style="text-decoration: none; color: inherit;">
         <div class="product-card__image-wrap">
           <img src="${imgUrl}" class="product-card__image" alt="${p.name}" loading="lazy">
           <button class="product-card__wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('${p.id}', this)" title="Save to Wishlist">
@@ -167,7 +167,7 @@ function renderProducts(container, products) {
             </button>
           </div>
         </div>
-      </div>
+      </a>
     `;
   }).join('');
 }
@@ -194,7 +194,7 @@ async function renderCategoryStrips(categories) {
               ? p.images[0].url
               : (p.primary_image || 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&q=80');
             return `
-              <div class="product-card" style="width: 220px;" onclick="window.location.href='./product.html?id=${p.id}'">
+              <a href="./product.html?id=${p.id}" class="product-card" style="width: 220px; text-decoration: none; color: inherit;">
                 <div class="product-card__image-wrap">
                   <img src="${imgUrl}" class="product-card__image" alt="${p.name}" loading="lazy">
                 </div>
@@ -205,7 +205,7 @@ async function renderCategoryStrips(categories) {
                     <span class="text-price-sm">${formatPrice(p.base_price)}</span>
                   </div>
                 </div>
-              </div>
+              </a>
             `;
           }).join('')}
           </div>

@@ -7,6 +7,7 @@
   <script type="module" src="/src/components/ReportWidget.js" defer></script>
 <script type="module" src="/src/components/ProtectedRoute.js"></script>
     <meta charset="utf-8"/>
+    <meta name="robots" content="noindex, follow">
     <title>Tohfa | Search Handcrafted Goods</title>
       <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -707,7 +708,7 @@
                 const sellerName = p.seller_name || p.store_name || (p.seller?.seller_name) || (p.seller?.store_name) || 'Artisan';
 
                 return `
-                    <div class="group bg-[#FAF6EE] border border-[rgba(20,56,31,0.15)] rounded-xl p-2.5 sm:p-3 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative" onclick="window.location.href='/buyer/product.html?id=${p.id}'" data-product-id="${p.id}">
+                    <a href="/buyer/product.html?id=${p.id}" class="group bg-[#FAF6EE] border border-[rgba(20,56,31,0.15)] rounded-xl p-2.5 sm:p-3 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative block no-underline text-inherit" data-product-id="${p.id}">
                         <div>
                             <div class="relative aspect-square overflow-hidden rounded-lg bg-[#FAF6EE] mb-2 sm:mb-2.5">
                                 ${ribbonHtml}
@@ -732,7 +733,7 @@
                         <div class="w-full pt-0">
                             ${addToCartBtnHtml}
                         </div>
-                    </div>
+                    </a>
                 `;
             }).join('');
 
@@ -1181,7 +1182,7 @@
                            </button>`;
 
                 return `
-                    <div class="group bg-[#FAF6EE] border border-[rgba(20,56,31,0.15)] rounded-xl p-2.5 sm:p-3 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative" onclick="window.location.href='/buyer/product.html?id=${p.id}'" data-product-id="${p.id}">
+                    <a href="/buyer/product.html?id=${p.id}" class="group bg-[#FAF6EE] border border-[rgba(20,56,31,0.15)] rounded-xl p-2.5 sm:p-3 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative block no-underline text-inherit" data-product-id="${p.id}">
                         <div>
                             <div class="relative aspect-square overflow-hidden rounded-lg bg-[#FAF6EE] mb-2 sm:mb-2.5">
                                 ${ribbonHtml}
@@ -1206,7 +1207,7 @@
                         <div class="w-full pt-0">
                             ${addToCartBtnHtml}
                         </div>
-                    </div>
+                    </a>
                 `;
             }).join('');
 
@@ -1259,7 +1260,7 @@
                     const items = products.slice(0, 8); // Display up to 8
                     grid.innerHTML = items.map(p => {
                         const img = p.image_url || 'https://placehold.co/400x400/f4ede3/516447?text=Handcrafted';
-                        const price = `?${(p.price_paise / 100).toLocaleString('en-IN')}`;
+                        const price = `₹${(p.price_paise / 100).toLocaleString('en-IN')}`;
                         const isWishlisted = !!p.is_wishlisted;
 
                         let ribbonHtml = '';
@@ -1313,7 +1314,7 @@
                                    </button>`;
 
                         return `
-                            <div class="group bg-[#FFF8E7] border border-[#c3c8c1] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative" onclick="window.location.href='/buyer/product.html?id=${p.id}'">
+                            <a href="/buyer/product.html?id=${p.id}" class="group bg-[#FFF8E7] border border-[#c3c8c1] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative block no-underline text-inherit">
                                 <div>
                                     <div class="relative aspect-square overflow-hidden rounded-xl bg-surface-container-lowest mb-4">
                                         ${ribbonHtml}
@@ -1325,7 +1326,7 @@
                                             <span class="font-bold text-lg text-[#14381F]">${price}</span>
                                             ${parseInt(p.review_count || 0, 10) > 0
                                                 ? `<div class="flex items-center gap-1 text-xs text-[#605e57]">
-                                                    <span class="text-[#14381F] font-bold">?</span>
+                                                    <span class="text-[#14381F] font-bold">★</span>
                                                     <span class="font-semibold text-on-surface">${parseFloat(p.avg_rating).toFixed(1)}</span>
                                                     <span>(${parseInt(p.review_count, 10)})</span>
                                                   </div>`
@@ -1338,7 +1339,7 @@
                                 <div class="w-full font-['DM_Sans']">
                                     ${addToCartBtnHtml}
                                 </div>
-                            </div>
+                            </a>
                         `;
                     }).join('');
 

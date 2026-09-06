@@ -1,8 +1,8 @@
 <!--
-  FILE: components/tohfa-footer.html
+  FILE: public/components/tohfa-footer.html
   PANEL: Shared Footer Component
   PURPOSE: Universal footer — matches home page design exactly.
-  LAST_POLISHED: 2026-09-05
+  LAST_POLISHED: 2026-09-06
 -->
 
 <!-- Universal Tohfa Footer -->
@@ -34,8 +34,9 @@
           Company
         </h3>
         <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
+          <li><a href="/buyer/about.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">About Us</a></li>
           <li><a href="/buyer/terms-conditions.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Terms of Service</a></li>
-          <li><a href="/buyer/terms-conditions.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Privacy Policy</a></li>
+          <li><a href="/buyer/privacy.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Privacy Policy</a></li>
         </ul>
       </div>
 
@@ -45,7 +46,7 @@
           For Sellers
         </h3>
         <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
-          <li><a href="#" onclick="handleFooterSellerLink(event)" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Sell on Tohfa</a></li>
+          <li><a href="/auth/signup-seller.html" onclick="handleFooterSellerLink(event)" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Sell on Tohfa</a></li>
           <li><a href="/seller/dashboard.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Seller Studio</a></li>
         </ul>
       </div>
@@ -56,8 +57,8 @@
           Support
         </h3>
         <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
-          <li><a href="javascript:void(0)" onclick="openContactModal(event)" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Contact Us</a></li>
-          <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Refunds &amp; Disputes</a></li>
+          <li><a href="/buyer/contact.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Contact Us</a></li>
+          <li><a href="/buyer/returns.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Returns &amp; Refunds</a></li>
           <li><a href="/buyer/faq.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">FAQs</a></li>
         </ul>
       </div>
@@ -89,8 +90,9 @@
           Company
         </h3>
         <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
+          <li><a href="/buyer/about.html" class="text-[#FAF6EE]/90 no-underline">About Us</a></li>
           <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Terms of Service</a></li>
-          <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Privacy Policy</a></li>
+          <li><a href="/buyer/privacy.html" class="text-[#FAF6EE]/90 no-underline">Privacy Policy</a></li>
         </ul>
       </div>
 
@@ -100,10 +102,10 @@
           Sellers &amp; Support
         </h3>
         <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
-          <li><a href="#" onclick="handleFooterSellerLink(event)" class="text-[#FAF6EE]/90 no-underline">Sell on Tohfa</a></li>
+          <li><a href="/auth/signup-seller.html" onclick="handleFooterSellerLink(event)" class="text-[#FAF6EE]/90 no-underline">Sell on Tohfa</a></li>
           <li><a href="/seller/dashboard.html" class="text-[#FAF6EE]/90 no-underline">Seller Studio</a></li>
-          <li><a href="javascript:void(0)" onclick="openContactModal(event)" class="text-[#FAF6EE]/90 no-underline">Contact Us</a></li>
-          <li><a href="javascript:void(0)" onclick="openRefundsModal(event)" class="text-[#FAF6EE]/90 no-underline">Refunds &amp; Disputes</a></li>
+          <li><a href="/buyer/contact.html" class="text-[#FAF6EE]/90 no-underline">Contact Us</a></li>
+          <li><a href="/buyer/returns.html" class="text-[#FAF6EE]/90 no-underline">Returns &amp; Refunds</a></li>
           <li><a href="/buyer/faq.html" class="text-[#FAF6EE]/90 no-underline">FAQs</a></li>
         </ul>
       </div>
@@ -115,44 +117,6 @@
     </div>
   </div>
 </footer>
-
-<!-- Contact Us Modal -->
-<div id="tohfa-contact-modal" class="fixed inset-0 z-[1000] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-  <div class="bg-[#FAF6EE] border border-[#14381F]/20 rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
-    <button onclick="closeContactModal()" class="absolute top-4 right-4 text-[#14381F] p-1 rounded-full hover:bg-[#14381F]/10">
-      <span class="material-symbols-outlined">close</span>
-    </button>
-    <h3 class="font-['Playfair_Display'] text-2xl font-bold text-[#14381F] mb-2">Contact Us</h3>
-    <p class="text-sm text-[#605e57] mb-4">We would love to hear from you. Reach out to our support team directly.</p>
-    <div class="space-y-3 text-sm text-[#1C1C1A]">
-      <div class="flex items-center gap-3">
-        <span class="material-symbols-outlined text-[#14381F]">mail</span>
-        <span>tohfa126@gmail.com</span>
-      </div>
-      <div class="flex items-center gap-3">
-        <span class="material-symbols-outlined text-[#14381F]">location_on</span>
-        <span>Delhi, India</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Refunds & Disputes Modal -->
-<div id="tohfa-refunds-modal" class="fixed inset-0 z-[1000] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-  <div class="bg-[#FAF6EE] border border-[#14381F]/20 rounded-2xl p-6 max-w-lg w-full shadow-2xl relative max-h-[85vh] overflow-y-auto">
-    <button onclick="closeRefundsModal()" class="absolute top-4 right-4 text-[#14381F] p-1 rounded-full hover:bg-[#14381F]/10">
-      <span class="material-symbols-outlined">close</span>
-    </button>
-    <h3 class="font-['Playfair_Display'] text-2xl font-bold text-[#14381F] mb-2">Refunds &amp; Disputes</h3>
-    <div class="text-sm text-[#605e57] space-y-3 leading-relaxed">
-      <p>At Tohfa, every item is crafted with love and care by independent artisans across India. Because many pieces are custom-made or personalized, our policies protect both creators and buyers.</p>
-      <h4 class="font-bold text-[#14381F] text-base mt-3">Custom &amp; Bespoke Items</h4>
-      <p>Customized products are non-refundable once production has begun, unless the item arrives damaged or materially different from approved specifications.</p>
-      <h4 class="font-bold text-[#14381F] text-base mt-3">Standard Catalog Items</h4>
-      <p>Standard items can be returned within 7 days of delivery in original condition and packaging.</p>
-    </div>
-  </div>
-</div>
 
 <script>
 async function handleFooterSellerLink(e) {
@@ -183,34 +147,4 @@ async function handleFooterSellerLink(e) {
   }
   window.location.href = '/auth/signup-seller.html';
 }
-
-window.openContactModal = function(e) {
-  if (e) { e.preventDefault(); e.stopPropagation(); }
-  const modal = document.getElementById('tohfa-contact-modal');
-  if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); document.body.style.overflow = 'hidden'; }
-};
-
-window.closeContactModal = function() {
-  const modal = document.getElementById('tohfa-contact-modal');
-  if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); document.body.style.overflow = ''; }
-};
-
-window.openRefundsModal = function(e) {
-  if (e) { e.preventDefault(); e.stopPropagation(); }
-  const modal = document.getElementById('tohfa-refunds-modal');
-  if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); document.body.style.overflow = 'hidden'; }
-};
-
-window.closeRefundsModal = function() {
-  const modal = document.getElementById('tohfa-refunds-modal');
-  if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); document.body.style.overflow = ''; }
-};
-
-// Close modals on backdrop click
-document.addEventListener('click', function(e) {
-  const contactModal = document.getElementById('tohfa-contact-modal');
-  const refundsModal = document.getElementById('tohfa-refunds-modal');
-  if (contactModal && e.target === contactModal) window.closeContactModal();
-  if (refundsModal && e.target === refundsModal) window.closeRefundsModal();
-});
 </script>

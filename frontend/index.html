@@ -12,30 +12,11 @@
       admin  → /admin/dashboard.html
       buyer  → /buyer/home.html
   -->
-  <script>
-    (function() {
-      var role = 'buyer';
-      try {
-        var userStr = sessionStorage.getItem('tohfa_user');
-        if (userStr) {
-          var user = JSON.parse(userStr);
-          role = user.role || 'buyer';
-        }
-      } catch(e) {}
-
-      if (role === 'seller') {
-        window.location.replace('/seller/dashboard.html');
-      } else if (role === 'admin') {
-        window.location.replace('/admin/dashboard.html');
-      } else {
-        window.location.replace('/buyer/home.html');
-      }
-    })();
-  </script>
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="shortcut icon" href="/favicon.ico">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, follow">
   <title>Tohfa | Handcrafted Treasures</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }

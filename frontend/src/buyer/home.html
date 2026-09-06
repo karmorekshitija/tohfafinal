@@ -9,6 +9,65 @@
   <script type="module" src="/src/utils/imageHelper.js"></script>
   <meta charset="utf-8"/>
   <title>Tohfa | Handcrafted Treasures</title>
+  <link rel="canonical" href="https://thetohfa.in/buyer/home"/>
+  <meta name="description" content="India's premier curated marketplace for authentic handcrafted treasures, personalized gifts, bespoke studio creations, and artisanal craft directly from master makers."/>
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:site_name" content="Tohfa"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:title" content="Tohfa | Handcrafted Treasures &amp; Personalized Gifts"/>
+  <meta property="og:description" content="Discover soulful handcrafted gifts, personalized keepsakes, and bespoke artistic creations directly from independent Indian artisans."/>
+  <meta property="og:url" content="https://thetohfa.in/buyer/home"/>
+  <meta property="og:image" content="https://thetohfa.in/img/botanical-hero.png"/>
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Tohfa | Handcrafted Treasures &amp; Personalized Gifts"/>
+  <meta name="twitter:description" content="Discover soulful handcrafted gifts, personalized keepsakes, and bespoke artistic creations directly from independent Indian artisans."/>
+  <meta name="twitter:image" content="https://thetohfa.in/img/botanical-hero.png"/>
+
+  <!-- Structured Data / JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://thetohfa.in/#organization",
+        "name": "Tohfa",
+        "url": "https://thetohfa.in",
+        "logo": "https://thetohfa.in/img/botanical-hero.png",
+        "description": "India's premier curated marketplace for authentic handcrafted treasures, personalized gifts, bespoke studio creations, and artisanal craft directly from master makers.",
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "contactType": "customer support",
+          "email": "tohfa126@gmail.com",
+          "areaServed": "IN",
+          "availableLanguage": ["en", "hi"]
+        },
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Delhi",
+          "addressCountry": "IN"
+        }
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://thetohfa.in/#website",
+        "name": "Tohfa",
+        "url": "https://thetohfa.in",
+        "publisher": {
+          "@id": "https://thetohfa.in/#organization"
+        },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://thetohfa.in/buyer/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    ]
+  }
+  </script>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -842,9 +901,9 @@
 
   // Helper to create product card template matching new design
   function createProductCard(product, extraClasses = '') {
-    const card = document.createElement('div');
-    card.className = `group rounded-xl border flex flex-col justify-between overflow-hidden cursor-pointer transition-shadow duration-300 hover:shadow-md bg-[#FAF6EE] border-[rgba(20,56,31,0.15)] ${extraClasses}`;
-    card.onclick = () => window.location.href = `/buyer/product.html?id=${product.id}`;
+    const card = document.createElement('a');
+    card.href = `/buyer/product.html?id=${product.id}`;
+    card.className = `group rounded-xl border flex flex-col justify-between overflow-hidden cursor-pointer transition-shadow duration-300 hover:shadow-md bg-[#FAF6EE] border-[rgba(20,56,31,0.15)] no-underline text-inherit ${extraClasses}`;
 
     const ribbonHtml = getRibbonHtml(product);
     const rawPrice = product.price_paise !== undefined && product.price_paise !== null

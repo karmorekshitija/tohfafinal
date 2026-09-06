@@ -19,6 +19,13 @@
       ]
     }
   ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/buyer/home",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/admin",

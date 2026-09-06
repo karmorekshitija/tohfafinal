@@ -81,7 +81,7 @@ async function executeSearch() {
         ? p.images[0].url
         : (p.primary_image || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600&q=80');
       return `
-        <div class="product-card animate-slide-up" onclick="window.location.href='./product.html?id=${p.id}'">
+        <a href="./product.html?id=${p.id}" class="product-card animate-slide-up" style="text-decoration:none;color:inherit;display:block;">
           <div class="product-card__image-wrap">
             <img src="${imgUrl}" class="product-card__image" alt="${p.name}" loading="lazy">
           </div>
@@ -92,7 +92,7 @@ async function executeSearch() {
               <span class="text-price">${formatPrice(p.base_price)}</span>
             </div>
           </div>
-        </div>
+        </a>
       `;
     }).join('');
   } catch (err) {
