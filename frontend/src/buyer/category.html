@@ -22,6 +22,25 @@
   <meta name="twitter:title" content="Handcrafted Collections | Tohfa"/>
   <meta name="twitter:description" content="Explore handcrafted artisanal collections, curated heritage crafts, and customized gifts on Tohfa."/>
   <meta name="twitter:image" content="https://thetohfa.in/img/botanical-hero.png"/>
+  <meta name="twitter:url" content="https://thetohfa.in/buyer/category"/>
+
+  <script>
+    (function() {
+      try {
+        var p = new URLSearchParams(window.location.search);
+        var slug = p.get('slug') || p.get('category');
+        if (slug) {
+          var canonicalUrl = 'https://thetohfa.in/buyer/category?slug=' + encodeURIComponent(slug);
+          var can = document.querySelector('link[rel="canonical"]');
+          if (can) can.setAttribute('href', canonicalUrl);
+          var ogUrl = document.querySelector('meta[property="og:url"]');
+          if (ogUrl) ogUrl.setAttribute('content', canonicalUrl);
+          var twUrl = document.querySelector('meta[name="twitter:url"]');
+          if (twUrl) twUrl.setAttribute('content', canonicalUrl);
+        }
+      } catch(e) {}
+    })();
+  </script>
 
   <!-- Structured Data / JSON-LD -->
   <script type="application/ld+json">

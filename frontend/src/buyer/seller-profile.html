@@ -24,6 +24,25 @@
     <meta name="twitter:title" content="Tohfa | Artisan Studio Profile"/>
     <meta name="twitter:description" content="Explore artisan creations, custom works, reviews, and artisan stories on Tohfa."/>
     <meta name="twitter:image" content="https://thetohfa.in/img/botanical-hero.png"/>
+    <meta name="twitter:url" content="https://thetohfa.in/buyer/seller-profile"/>
+
+    <script>
+      (function() {
+        try {
+          var p = new URLSearchParams(window.location.search);
+          var id = p.get('id') || p.get('seller_id');
+          if (id) {
+            var canonicalUrl = 'https://thetohfa.in/buyer/seller-profile?id=' + encodeURIComponent(id);
+            var can = document.querySelector('link[rel="canonical"]');
+            if (can) can.setAttribute('href', canonicalUrl);
+            var ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) ogUrl.setAttribute('content', canonicalUrl);
+            var twUrl = document.querySelector('meta[name="twitter:url"]');
+            if (twUrl) twUrl.setAttribute('content', canonicalUrl);
+          }
+        } catch(e) {}
+      })();
+    </script>
 
     <!-- Structured Data / JSON-LD -->
     <script type="application/ld+json" id="seller-jsonld">
