@@ -92,7 +92,7 @@ async function listSellers(req, res, next) {
              COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
              COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS shop_name,
              COALESCE(sp.seller_type, 'Artisan') AS seller_type,
-             COALESCE(sp.is_approved, s.is_approved, FALSE) AS is_approved,
+             COALESCE(sp.is_approved, s.is_approved, 0) AS is_approved,
              COALESCE(sp.pickup_address, s.pickup_address, '{}'::jsonb) AS pickup_address,
              COALESCE(sp.bank_details, s.bank_details, '{}'::jsonb) AS bank_details,
              COALESCE(sp.onboarding_completed, s.onboarding_completed, FALSE) AS onboarding_completed,
@@ -108,7 +108,7 @@ async function listSellers(req, res, next) {
              COALESCE(sp.applied_at, s.applied_at, u.created_at) AS applied_at,
              COALESCE(sp.approved_at, s.approved_at) AS approved_at,
              COALESCE(sp.rejection_reason, s.rejection_reason) AS rejection_reason,
-             COALESCE(sp.is_admin_managed, s.is_admin_managed, FALSE) AS is_admin_managed,
+             COALESCE(sp.is_admin_managed, s.is_admin_managed, 0) AS is_admin_managed,
              (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status != 'deleted') AS product_count,
              (SELECT COALESCE(SUM(o.total_amount), 0) FROM orders o WHERE o.seller_id = u.id AND o.payment_status = 'paid') AS total_revenue,
              (SELECT MAX(o2.created_at) FROM orders o2 WHERE o2.seller_id = u.id AND o2.payment_status = 'paid') AS last_order_at
@@ -141,10 +141,10 @@ async function getSellerDetail(req, res, next) {
       `SELECT u.id, u.name, u.email, u.phone, u.profile_photo_url, u.cover_photo_url, u.is_active,
               COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
               COALESCE(sp.bio, s.bio, '') AS bio,
-              COALESCE(sp.whatsapp_number, s.whatsapp_number, u.phone) AS whatsapp_number,
+              COALESCE(sp.whatsapp_number, u.phone) AS whatsapp_number,
               COALESCE(sp.seller_type, 'Artisan') AS seller_type,
-              COALESCE(sp.is_approved, s.is_approved, FALSE) AS is_approved,
-              COALESCE(sp.is_admin_managed, s.is_admin_managed, FALSE) AS is_admin_managed,
+              COALESCE(sp.is_approved, s.is_approved, 0) AS is_approved,
+              COALESCE(sp.is_admin_managed, s.is_admin_managed, 0) AS is_admin_managed,
               COALESCE(sp.pickup_address, s.pickup_address, '{}'::jsonb) AS pickup_address,
               COALESCE(sp.bank_details, s.bank_details, '{}'::jsonb) AS bank_details,
               COALESCE(sp.onboarding_completed, s.onboarding_completed, FALSE) AS onboarding_completed,
@@ -1521,14 +1521,14 @@ async function listSpecialShops(req, res, next) {
              COALESCE(sp.verification_status, s.verification_status) AS verification_status,
              TRUE AS is_admin_managed,
              COALESCE(sp.created_at, s.created_at) AS created_at,
-             COALESCE(sp.updated_at, s.updated_at) AS updated_at,
+             sp.updated_at AS updated_at,
              (SELECT COUNT(*) FROM products p WHERE (p.seller_id = u.id OR (s.id IS NOT NULL AND p.seller_id = s.id)) AND p.status != 'deleted') AS product_count,
              (SELECT COALESCE(SUM(COALESCE(o.total_paise/100.0, o.total_amount, 0)), 0) FROM orders o WHERE (o.seller_id = u.id OR (s.id IS NOT NULL AND o.seller_id = s.id)) AND o.payment_status = 'paid') AS total_revenue,
              (SELECT COUNT(*) FROM orders o WHERE (o.seller_id = u.id OR (s.id IS NOT NULL AND o.seller_id = s.id))) AS total_orders
       FROM users u
       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
       LEFT JOIN sellers s ON s.user_id = u.id
-      WHERE sp.is_admin_managed = TRUE OR s.is_admin_managed = TRUE
+      WHERE sp.is_admin_managed = 1 OR s.is_admin_managed = 1
       ORDER BY u.id ASC
     `);
     return res.json({ success: true, data: rows });
