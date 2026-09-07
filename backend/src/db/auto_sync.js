@@ -14,6 +14,7 @@ async function autoSyncDatabase() {
     console.log('🔄 Checking database schema synchronization...');
 
     // 1. Categories columns
+    await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();`);
     await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS display_name VARCHAR(100);`);
     await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS emoji_icon VARCHAR(20);`);
     await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS icon_emoji VARCHAR(20);`);
@@ -66,6 +67,7 @@ async function autoSyncDatabase() {
     await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo_url TEXT;`);
     await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;`);
     await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS photo_url TEXT;`);
+    await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();`);
     await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS photo_url TEXT;`);
 
     // 3b. Admin-managed seller flag (migration 009 — idempotent guard)
@@ -255,7 +257,7 @@ async function autoSyncDatabase() {
     for (const cat of categoryCurations) {
       await query(`
         UPDATE categories 
-        SET display_name = $1, emoji_icon = $2, icon_emoji = $2, image_url = $3, sort_order = $4, is_active = 1
+        SET display_name = $1, emoji_icon = $2, icon_emoji = $2, image_url = $3, sort_order = $4, is_active = TRUE
         WHERE slug = $5
       `, [cat.name, cat.emoji, cat.img, cat.order, cat.slug]);
     }
