@@ -464,6 +464,28 @@ async function forceUpdateOrderStatus(req, res, next) {
             delivered_at = CASE WHEN $1::text = 'delivered' THEN NOW()::text ELSE delivered_at END
         WHERE order_id = $2::int
       `, [status, updatedOrder.id]).catch(() => {});
+
+      // Notify buyer
+      if (updatedOrder.buyer_id) {
+        const statusMessages = {
+          confirmed: 'Your order has been confirmed.',
+          processing: 'Your order is currently being prepared.',
+          in_production: 'Your order is in production with the artisan.',
+          packed: 'Your order has been packed and is ready for dispatch.',
+          shipped: 'Your order has been shipped! It is on the way.',
+          dispatched: 'Your order has been dispatched.',
+          delivered: 'Your order has been delivered. Enjoy!',
+          cancelled: 'Your order has been cancelled.',
+          cancel_requested: 'Cancellation request has been submitted for review.',
+        };
+        await createNotification(
+          updatedOrder.buyer_id,
+          'order_status',
+          `Order ${status.replace('_', ' ')}`,
+          statusMessages[status] || `Your order status has been updated to ${status}.`,
+          { order_id: updatedOrder.id, status }
+        ).catch(() => {});
+      }
     }
 
     await logAdminAction({
@@ -828,10 +850,17 @@ async function createProduct(req, res, next) {
 
     const newProduct = rows[0];
 
-    if (Array.isArray(images) && images.length > 0) {
+    const rawImage = req.body.image_url || req.body.img_url || req.body.imagePath || req.body.imageUrl || req.body.primary_image;
+    const rawImagesList = (Array.isArray(images) && images.length > 0) ? images : (
+      (Array.isArray(req.body.photos) && req.body.photos.length > 0) ? req.body.photos : (
+        rawImage ? [rawImage] : []
+      )
+    );
+
+    if (rawImagesList.length > 0) {
       let sortOrder = 0;
-      for (const img of images) {
-        const url = typeof img === 'string' ? img : (img?.url || '');
+      for (const img of rawImagesList) {
+        const url = typeof img === 'string' ? img : (img?.url || img?.imagePath || img?.img_url || img?.image_url || '');
         if (url) {
           await query(
             'INSERT INTO product_images (product_id, url, sort_order) VALUES ($1, $2, $3)',
@@ -839,11 +868,6 @@ async function createProduct(req, res, next) {
           );
         }
       }
-    } else if (image_url) {
-      await query(
-        'INSERT INTO product_images (product_id, url, sort_order) VALUES ($1, $2, 0)',
-        [newProduct.id, image_url]
-      );
     }
 
     if (Array.isArray(variants) && variants.length > 0) {
@@ -1567,7 +1591,7 @@ async function createSpecialShop(req, res, next) {
 
     const { rows: spRows } = await client.query(
       `INSERT INTO seller_profiles (user_id, store_name, slug, bio, pickup_address, is_admin_managed, is_approved, verification_status, is_active, seller_type)
-       VALUES ($1, $2, $3, $4, $5, TRUE, TRUE, 'verified', TRUE, 'Artisan')
+       VALUES ($1, $2, $3, $4, $5, TRUE, TRUE, 'verified', TRUE, 'special')
        ON CONFLICT (user_id) DO UPDATE SET
          store_name = EXCLUDED.store_name,
          slug = EXCLUDED.slug,
@@ -1577,11 +1601,21 @@ async function createSpecialShop(req, res, next) {
          is_approved = TRUE,
          verification_status = 'verified',
          is_active = TRUE,
-         seller_type = 'Artisan',
+         seller_type = 'special',
          updated_at = NOW()
        RETURNING *`,
       [userId, store_name, cleanSlug, bio || '', pickupAddressJson]
     );
+
+    const { rows: sIdRows } = await client.query('SELECT id FROM sellers WHERE user_id = $1', [userId]);
+    if (sIdRows.length > 0) {
+      await client.query(
+        `INSERT INTO wallets (seller_id, user_id, balance, currency)
+         VALUES ($1, $2, 0, 'INR')
+         ON CONFLICT (seller_id) DO NOTHING`,
+        [sIdRows[0].id, userId]
+      );
+    }
 
     await client.query('COMMIT');
 
@@ -1648,14 +1682,16 @@ async function updateSpecialShop(req, res, next) {
            bio = COALESCE($2, bio),
            pickup_address = COALESCE($3, pickup_address),
            is_active = COALESCE($4, is_active),
+           commission_rate = COALESCE($5, commission_rate),
            updated_at = NOW()
-       WHERE user_id = $5
+       WHERE user_id = $6
        RETURNING *`,
       [
         store_name || null,
         bio || null,
         formattedAddress,
         is_active !== undefined ? Boolean(is_active) : null,
+        parsedCommRate,
         user_id
       ]
     );

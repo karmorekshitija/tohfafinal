@@ -62,6 +62,7 @@ router.post('/:id/view', (req, res, next) => {
 router.get('/seller-alerts/low-stock', authMiddleware, sellerOnly, productController.getLowStockProducts);
 router.post('/', authMiddleware, sellerOnly, validate(schemas.createProduct), productController.createProduct);
 router.put('/:id', authMiddleware, sellerOnly, productController.updateProduct);
+router.patch('/:id', authMiddleware, sellerOnly, productController.updateProduct);
 router.patch('/:id/status', authMiddleware, sellerOnly, productController.updateProductStatus);
 router.post('/:id/images', authMiddleware, sellerOnly, uploadProductImages, productController.uploadImages);
 router.post('/:id/variants', authMiddleware, sellerOnly, productController.upsertVariants);

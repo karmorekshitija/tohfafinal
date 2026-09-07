@@ -884,6 +884,14 @@
           headers: getHeaders(),
           body: JSON.stringify({ status, notes, buyer_message: notes, delivery_notes: notes })
         });
+        if (res.status === 403) {
+          alert('Access Denied (403): You do not have administrative permission to force update order status.');
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save & Notify Buyer';
+          }
+          return;
+        }
         const json = await res.json();
         if (json.success) {
           DetailModal.showOrder(orderId);

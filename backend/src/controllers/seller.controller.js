@@ -1688,6 +1688,26 @@ async function getSellerWallet(req, res, next) {
 
     const wallet = rows[0];
 
+    if (!wallet) {
+      return res.json({
+        success: true,
+        data: {
+          wallet: {
+            balance: 0,
+            holding_balance: 0,
+            currency: 'INR',
+            seller_id: sellerId,
+            status: 'not_initialized'
+          },
+          balance: 0,
+          holding_balance: 0,
+          currency: 'INR',
+          seller_id: sellerId,
+          updated_at: new Date().toISOString()
+        }
+      });
+    }
+
     // Compute live holding & available balances to keep wallet in sync
     const { rows: liveAvail } = await query(
       `SELECT
@@ -2749,6 +2769,20 @@ async function completeOnboarding(req, res, next) {
        WHERE user_id = $3`,
       [JSON.stringify(pickupAddress), JSON.stringify(bankDetails), userId]
     ).catch(() => {});
+
+    // Ensure wallet exists for this seller
+    try {
+      const { rows: sellerRecord } = await query('SELECT id FROM sellers WHERE user_id = $1', [userId]);
+      const targetSellerId = sellerRecord[0]?.id || userId;
+      await query(
+        `INSERT INTO wallets (seller_id, user_id, balance, currency)
+         VALUES ($1, $2, 0, 'INR')
+         ON CONFLICT (seller_id) DO NOTHING`,
+        [targetSellerId, userId]
+      );
+    } catch (wErr) {
+      console.warn('Wallet initialization notice in completeOnboarding:', wErr.message);
+    }
 
     // Save default dispatch address to user_addresses if not existing
     try {

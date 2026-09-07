@@ -460,12 +460,15 @@
       // admin login check bypassed
     });
 
-    // Initial Load
+    // Initial Load & Auto-Refresh
     document.addEventListener('DOMContentLoaded', () => {
       loadStats();
       updateCharts('7d');
       loadViralProducts();
       loadSellerActivity();
+
+      // Periodically refresh dashboard summary stats (30s)
+      setInterval(loadStats, 30000);
     });
   </script>
 </body>

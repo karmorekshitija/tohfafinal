@@ -211,7 +211,19 @@ async function addToCart(req, res, next) {
     }
 
     const finalCustomization = customization_data || customization_payload || customization || null;
-    const jsonCustomization = finalCustomization ? JSON.stringify(finalCustomization) : null;
+    let jsonCustomization = null;
+    if (finalCustomization) {
+      if (typeof finalCustomization === 'string') {
+        try {
+          JSON.parse(finalCustomization);
+          jsonCustomization = finalCustomization;
+        } catch {
+          jsonCustomization = JSON.stringify({ notes: finalCustomization });
+        }
+      } else {
+        jsonCustomization = JSON.stringify(finalCustomization);
+      }
+    }
     const qty = Math.max(1, parseInt(quantity, 10) || 1);
 
     // Upsert
