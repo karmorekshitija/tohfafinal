@@ -1664,7 +1664,7 @@ async function updateSpecialShop(req, res, next) {
        LEFT JOIN seller_profiles sp ON sp.user_id = u.id
        LEFT JOIN sellers s ON s.user_id = u.id
        WHERE (u.id::text = $1 OR sp.id::text = $1 OR s.id::text = $1 OR sp.slug = $1 OR s.slug = $1)
-         AND (sp.is_admin_managed = TRUE OR s.is_admin_managed = TRUE)
+         AND (sp.is_admin_managed = 1 OR sp.is_admin_managed = TRUE OR s.is_admin_managed = 1 OR s.is_admin_managed = TRUE)
        LIMIT 1`,
       [shopId]
     );
@@ -1757,7 +1757,7 @@ async function switchSessionToSpecialShop(req, res, next) {
        LEFT JOIN seller_profiles sp ON sp.user_id = u.id
        LEFT JOIN sellers s ON s.user_id = u.id
        WHERE (u.id::text = $1 OR sp.id::text = $1 OR s.id::text = $1 OR sp.slug = $1 OR s.slug = $1)
-         AND (sp.is_admin_managed = TRUE OR s.is_admin_managed = TRUE)`,
+         AND (sp.is_admin_managed = 1 OR sp.is_admin_managed = TRUE OR s.is_admin_managed = 1 OR s.is_admin_managed = TRUE)`,
       [shopId]
     );
 

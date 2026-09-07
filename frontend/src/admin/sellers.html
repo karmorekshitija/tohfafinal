@@ -193,6 +193,7 @@
             <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase">Shop Name & Brand</th>
             <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase">Internal Login / Email</th>
             <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase text-center">Status</th>
+            <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase text-center">Commission</th>
             <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase text-center">Active Items</th>
             <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase text-right">Revenue (GMV)</th>
             <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase text-center">Admin Controls</th>
@@ -456,6 +457,62 @@
         <button type="submit" id="submit-create-special-shop-btn" class="px-5 py-2 bg-[#14381F] hover:bg-stone-800 text-white rounded-lg text-xs font-bold shadow transition-transform active:scale-95 flex items-center gap-1.5">
           <span class="material-symbols-outlined text-[16px]">check_circle</span>
           <span>Create & Launch Studio</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- EDIT TOHFA SPECIAL SHOP MODAL -->
+<div id="edit-special-shop-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+  <div class="bg-[#FFF8E7] border border-sage-border rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+    <div class="flex items-center justify-between border-b border-sage-border/50 pb-3">
+      <div class="flex items-center gap-2 text-primary font-bold text-base">
+        <span class="material-symbols-outlined text-amber-700">tune</span>
+        <span>Edit Special Shop Settings</span>
+      </div>
+      <button id="close-edit-special-shop-btn" class="text-text-muted hover:text-text-default">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <form id="edit-special-shop-form" class="space-y-4">
+      <input type="hidden" id="edit-special-shop-id" />
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-ink-deep mb-1">
+          Store Name
+        </label>
+        <input id="edit-special-store-name" required type="text"
+               class="w-full bg-white border border-sage-border rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-primary outline-none" />
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-ink-deep mb-1">
+          Platform Commission Rate (%)
+        </label>
+        <div class="relative">
+          <input id="edit-special-commission-rate" type="number" step="0.1" min="0" max="100" required
+                 class="w-full bg-white border border-sage-border rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-primary outline-none pr-8" />
+          <span class="absolute right-3 top-2.5 text-xs text-text-muted font-bold">%</span>
+        </div>
+        <p class="text-[11px] text-text-muted mt-1">Default is 10.0%. Enter custom commission percentage for this studio.</p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-ink-deep mb-1">
+          Shop Bio
+        </label>
+        <textarea id="edit-special-bio" rows="2"
+                  class="w-full bg-white border border-sage-border rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-primary outline-none"></textarea>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-sage-border/50">
+        <button type="button" id="cancel-edit-special-shop-btn" class="px-4 py-2 border border-sage-border text-ink-soft rounded-lg text-xs font-bold hover:bg-surface-container">
+          Cancel
+        </button>
+        <button type="submit" id="submit-edit-special-shop-btn" class="px-5 py-2 bg-[#14381F] hover:bg-stone-800 text-white rounded-lg text-xs font-bold shadow transition-transform active:scale-95 flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px]">save</span>
+          <span>Save Changes</span>
         </button>
       </div>
     </form>
@@ -1379,6 +1436,11 @@ function renderSpecialShops(shops) {
           ${shop.is_active !== false ? 'Active & Live' : 'Paused'}
         </span>
       </td>
+      <td class="px-6 py-4 text-center">
+        <span class="font-bold text-xs text-amber-900 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+          ${parseFloat(shop.commission_rate ?? 10).toFixed(1)}%
+        </span>
+      </td>
       <td class="px-6 py-4 text-center font-bold text-xs text-ink-deep">
         ${shop.product_count || 0}
       </td>
@@ -1386,9 +1448,19 @@ function renderSpecialShops(shops) {
         ${formattedRevenue}
       </td>
       <td class="px-6 py-4 text-center">
-        <div class="flex items-center justify-center gap-2">
+        <div class="flex items-center justify-center gap-1.5">
+          <button data-action="edit-special-shop"
+                  data-id="${shop.id || shop.user_id}"
+                  data-name="${(shop.store_name || '').replace(/"/g, '&quot;')}"
+                  data-commission="${shop.commission_rate ?? 10}"
+                  data-bio="${(shop.bio || '').replace(/"/g, '&quot;')}"
+                  class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1"
+                  title="Edit Shop & Commission Rate">
+            <span class="material-symbols-outlined text-[15px]">edit</span>
+            <span>Edit</span>
+          </button>
           <button data-action="enter-studio" data-id="${shop.id || shop.user_id}"
-                  class="px-3.5 py-1.5 bg-[#14381F] hover:bg-stone-800 text-[#FFF8E7] rounded-lg text-xs font-bold shadow-sm transition-transform active:scale-95 flex items-center gap-1">
+                  class="px-3 py-1.5 bg-[#14381F] hover:bg-stone-800 text-[#FFF8E7] rounded-lg text-xs font-bold shadow-sm transition-transform active:scale-95 flex items-center gap-1">
             <span class="material-symbols-outlined text-[15px]">launch</span>
             <span>Enter Studio</span>
           </button>
@@ -1464,6 +1536,70 @@ function renderSpecialShops(shops) {
         btn.innerHTML = `<span class="material-symbols-outlined text-[15px]">launch</span><span>Enter Studio</span>`;
       }
     });
+  });
+
+  // Wiring for Edit Special Shop modal
+  listEl.querySelectorAll('button[data-action="edit-special-shop"]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const shopId = btn.getAttribute('data-id');
+      const name = btn.getAttribute('data-name');
+      const commission = btn.getAttribute('data-commission');
+      const bio = btn.getAttribute('data-bio');
+
+      document.getElementById('edit-special-shop-id').value = shopId;
+      document.getElementById('edit-special-store-name').value = name;
+      document.getElementById('edit-special-commission-rate').value = commission;
+      document.getElementById('edit-special-bio').value = bio;
+
+      document.getElementById('edit-special-shop-modal').classList.remove('hidden');
+    });
+  });
+}
+
+// Edit Special Shop Modal Controls
+const editSpecialModal = document.getElementById('edit-special-shop-modal');
+const closeEditSpecialBtn = document.getElementById('close-edit-special-shop-btn');
+const cancelEditSpecialBtn = document.getElementById('cancel-edit-special-shop-btn');
+const editSpecialForm = document.getElementById('edit-special-shop-form');
+
+if (closeEditSpecialBtn) {
+  closeEditSpecialBtn.addEventListener('click', () => editSpecialModal.classList.add('hidden'));
+}
+if (cancelEditSpecialBtn) {
+  cancelEditSpecialBtn.addEventListener('click', () => editSpecialModal.classList.add('hidden'));
+}
+
+if (editSpecialForm) {
+  editSpecialForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const shopId = document.getElementById('edit-special-shop-id').value;
+    const store_name = document.getElementById('edit-special-store-name').value.trim();
+    const commission_rate = parseFloat(document.getElementById('edit-special-commission-rate').value);
+    const bio = document.getElementById('edit-special-bio').value.trim();
+
+    const submitBtn = document.getElementById('submit-edit-special-shop-btn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span> Saving...`;
+
+    try {
+      const res = await adminApiClient.patch(`/admin/special-shops/${shopId}`, {
+        store_name,
+        commission_rate,
+        bio
+      });
+
+      if (res.data?.success) {
+        showToast('Special shop updated successfully!', 'success');
+        editSpecialModal.classList.add('hidden');
+        fetchSpecialShops();
+      }
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to update special shop.', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<span class="material-symbols-outlined text-[16px]">save</span><span>Save Changes</span>`;
+    }
   });
 }
 
