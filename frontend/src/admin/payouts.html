@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <script type="module" src="/src/components/AdminSidebar.js"></script>
+  <script type="module" src="/src/components/ProtectedRoute.js"></script>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta name="robots" content="noindex, nofollow">
+  <title>Tohfa Admin | Payouts &amp; Payments</title>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/tailwind.css">
+
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+      vertical-align: middle;
+    }
+    .pulsing-dot {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .watermark-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.05;
+      z-index: 0;
+      background-image: url('/img/textures/pinstripe.png');
+    }
+  </style>
+</head>
+<body class="bg-[#FFF8E7] text-text-default min-h-screen font-body-md overflow-x-hidden">
+  <div class="watermark-overlay"></div>
+
+  <!-- Shared Sidebar Component Injected Dynamically -->
+  <aside data-sidebar="admin"></aside>
+
+  <!-- Top Navigation Header -->
+  <header class="fixed top-0 right-0 w-[calc(100%-240px)] h-[60px] bg-[#FFF8E7] border-b border-outline-variant flex justify-between items-center px-8 z-40">
+    <div class="flex items-center gap-3">
+      <span class="material-symbols-outlined text-primary text-2xl">payments</span>
+      <h2 class="font-headline-md text-headline-md italic text-primary">Payouts &amp; Payments</h2>
+    </div>
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-3">
+        <div class="text-right hidden sm:block">
+          <p class="text-body-sm font-bold leading-none text-primary">Financial Governance</p>
+          <p class="text-[11px] text-text-muted font-mono">Admin Privileges</p>
+        </div>
+        <div class="h-8 w-8 rounded-full bg-secondary-container flex items-center justify-center text-primary font-bold text-xs">TA</div>
+      </div>
+      <button id="logout-btn" class="text-on-surface-variant hover:text-primary transition-colors text-[14px] font-label-btn cursor-pointer" title="Sign out">
+        <span class="material-symbols-outlined text-xl">logout</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="ml-60 pt-[60px] p-8 max-w-[1300px] mx-auto min-h-screen relative z-10">
+    <!-- Header Section -->
+    <section class="mb-8 mt-4 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div>
+        <h1 class="font-headline-lg text-3xl text-primary leading-tight font-serif italic">Payouts &amp; Settlement Control</h1>
+        <p class="text-text-muted text-sm mt-1">Disburse verified artisan earnings with bank UTR tracking and inspect customer gateway transactions.</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="global-refresh-btn" class="px-4 py-2 bg-surface border border-outline-variant/40 rounded-xl text-xs font-bold font-label-btn text-primary hover:bg-secondary-container/20 transition-all flex items-center gap-1.5 shadow-sm">
+          <span class="material-symbols-outlined text-sm">refresh</span> Refresh Data
+        </button>
+      </div>
+    </section>
+
+    <!-- Summary Cards (Matching dashboard.html visual style) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
+      <!-- Card 1: Total Collected -->
+      <div class="bg-[#FFF8E7] p-4 sm:p-6 rounded-xl border border-outline-variant/30 border-l-4 border-l-[#14381F] shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-text-muted uppercase tracking-wider font-mono">Total Collected</span>
+          <span class="material-symbols-outlined text-[#14381F]/60 text-xl">account_balance_wallet</span>
+        </div>
+        <h2 id="summary-collected" class="font-headline-lg text-2xl sm:text-3xl text-primary mt-2 font-bold font-serif">₹0.00</h2>
+        <span class="text-[11px] text-[#14381F] font-semibold mt-1">Customer gateway volume</span>
+      </div>
+
+      <!-- Card 2: Total Disbursed -->
+      <div class="bg-[#FFF8E7] p-4 sm:p-6 rounded-xl border border-outline-variant/30 border-l-4 border-l-green-600 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-text-muted uppercase tracking-wider font-mono">Total Disbursed</span>
+          <span class="material-symbols-outlined text-green-700/70 text-xl">check_circle</span>
+        </div>
+        <h2 id="summary-disbursed" class="font-headline-lg text-2xl sm:text-3xl text-green-900 mt-2 font-bold font-serif">₹0.00</h2>
+        <span class="text-[11px] text-green-800 font-semibold mt-1">Paid to artisan bank accounts</span>
+      </div>
+
+      <!-- Card 3: Platform Commission Retained -->
+      <div class="bg-[#FFF8E7] p-4 sm:p-6 rounded-xl border border-outline-variant/30 border-l-4 border-l-amber-500 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-amber-800 uppercase tracking-wider font-mono">Commission Retained</span>
+          <span class="material-symbols-outlined text-amber-600 text-xl">savings</span>
+        </div>
+        <h2 id="summary-commission" class="font-headline-lg text-2xl sm:text-3xl text-amber-900 mt-2 font-bold font-serif">₹0.00</h2>
+        <span class="text-[11px] text-amber-700/80 font-semibold mt-1">10% standard marketplace fee</span>
+      </div>
+
+      <!-- Card 4: Pending Payout Amount -->
+      <div class="bg-[#FFF8E7] p-4 sm:p-6 rounded-xl border border-outline-variant/30 border-l-4 border-l-[#7B5EA7] shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-[#7B5EA7] uppercase tracking-wider font-mono">Pending Payouts</span>
+          <span class="material-symbols-outlined text-[#7B5EA7] text-xl pulsing-dot">hourglass_top</span>
+        </div>
+        <h2 id="summary-pending" class="font-headline-lg text-2xl sm:text-3xl text-[#7B5EA7] mt-2 font-bold font-serif">₹0.00</h2>
+        <span class="text-[11px] text-[#7B5EA7]/80 font-semibold mt-1">Awaiting bank disbursement</span>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs Switcher -->
+    <div class="flex items-center gap-3 mb-6 border-b border-outline-variant/30 pb-3">
+      <button id="tab-btn-payouts" class="px-6 py-2 rounded-full font-label-btn text-xs font-bold bg-[#14381F] text-white shadow-sm transition-all flex items-center gap-2 cursor-pointer">
+        <span class="material-symbols-outlined text-sm">outbox</span>
+        <span>Artisan Payouts</span>
+        <span id="tab-payouts-badge" class="px-2 py-0.5 rounded-full text-[10px] bg-white/20 text-white font-mono hidden">0</span>
+      </button>
+      <button id="tab-btn-payments" class="px-6 py-2 rounded-full font-label-btn text-xs font-bold text-text-muted bg-surface hover:bg-secondary-container/20 transition-all flex items-center gap-2 cursor-pointer">
+        <span class="material-symbols-outlined text-sm">receipt_long</span>
+        <span>Customer Payments</span>
+      </button>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 1: PAYOUTS SECTION                                                    -->
+    <!-- ========================================================================= -->
+    <section id="section-payouts" class="space-y-6">
+      <!-- Filter & Search Bar -->
+      <div class="bg-[#FFF8E7] p-5 rounded-2xl border border-outline-variant/30 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- Status filter dropdown -->
+          <div class="flex items-center gap-2">
+            <label for="payout-status-filter" class="text-xs font-bold text-text-muted uppercase font-mono">Status:</label>
+            <select id="payout-status-filter" class="bg-surface border border-outline-variant/50 rounded-xl px-3 py-1.5 text-xs font-mono text-text-default focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all cursor-pointer">
+              <option value="all">All Payouts</option>
+              <option value="pending" selected>Pending Verification</option>
+              <option value="paid">Disbursed (Paid)</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="processing">Processing</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Search Input -->
+        <div class="relative w-full md:w-80">
+          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-text-faint text-lg">search</span>
+          <input id="payout-search-input" class="w-full bg-surface border border-outline-variant/50 rounded-xl pl-10 pr-4 py-2 text-xs font-mono focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="Search artisan, store, reference, UTR..." type="text"/>
+        </div>
+      </div>
+
+      <!-- Payouts Table -->
+      <div class="bg-[#FFF8E7] rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden mb-6">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse" id="payouts-table">
+            <thead>
+              <tr class="bg-surface border-b border-outline-variant/30 text-xs font-bold uppercase tracking-wider text-text-muted font-mono">
+                <th class="px-6 py-4">Artisan &amp; Studio</th>
+                <th class="px-6 py-4">Amount</th>
+                <th class="px-6 py-4">Status</th>
+                <th class="px-6 py-4">Bank UTR / Ref</th>
+                <th class="px-6 py-4">Requested On</th>
+                <th class="px-6 py-4">Disbursed On</th>
+                <th class="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="payouts-table-body" class="divide-y divide-outline-variant/20 text-xs font-body">
+              <tr>
+                <td colspan="7" class="px-6 py-12 text-center text-text-muted">Loading payouts data...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Payouts Pagination -->
+        <div class="px-6 py-4 border-t border-outline-variant/20 bg-surface flex flex-col sm:flex-row items-center justify-between gap-4">
+          <span id="payouts-page-info" class="text-xs font-mono text-text-muted">Showing 0 of 0 payouts</span>
+          <div class="flex items-center gap-2" id="payouts-pagination-controls">
+            <button id="payouts-prev-btn" class="px-3 py-1.5 border border-outline-variant/40 rounded-lg text-xs font-bold text-text-muted hover:bg-surface-container transition-all disabled:opacity-40 disabled:pointer-events-none" disabled>Previous</button>
+            <span id="payouts-page-num" class="px-3 py-1 text-xs font-bold font-mono text-primary">Page 1 of 1</span>
+            <button id="payouts-next-btn" class="px-3 py-1.5 border border-outline-variant/40 rounded-lg text-xs font-bold text-text-muted hover:bg-surface-container transition-all disabled:opacity-40 disabled:pointer-events-none" disabled>Next</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 2: PAYMENTS SECTION                                                   -->
+    <!-- ========================================================================= -->
+    <section id="section-payments" class="space-y-6 hidden">
+      <!-- Filter & Date Range Bar -->
+      <div class="bg-[#FFF8E7] p-5 rounded-2xl border border-outline-variant/30 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-4">
+          <!-- Status filter dropdown -->
+          <div class="flex items-center gap-2">
+            <label for="payment-status-filter" class="text-xs font-bold text-text-muted uppercase font-mono">Status:</label>
+            <select id="payment-status-filter" class="bg-surface border border-outline-variant/50 rounded-xl px-3 py-1.5 text-xs font-mono text-text-default focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all cursor-pointer">
+              <option value="all">All Statuses</option>
+              <option value="paid">Paid</option>
+              <option value="created">Created (Pending)</option>
+              <option value="refunded">Refunded</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+
+          <!-- Date Range Picker -->
+          <div class="flex items-center gap-2">
+            <label class="text-xs font-bold text-text-muted uppercase font-mono">From:</label>
+            <input type="date" id="payment-from-date" class="bg-surface border border-outline-variant/50 rounded-xl px-2.5 py-1 text-xs font-mono text-text-default focus:ring-1 focus:ring-primary focus:border-primary outline-none"/>
+            <label class="text-xs font-bold text-text-muted uppercase font-mono">To:</label>
+            <input type="date" id="payment-to-date" class="bg-surface border border-outline-variant/50 rounded-xl px-2.5 py-1 text-xs font-mono text-text-default focus:ring-1 focus:ring-primary focus:border-primary outline-none"/>
+            <button id="payment-date-filter-btn" class="px-3 py-1 bg-primary text-white rounded-lg text-xs font-bold hover:bg-[#1f522e] transition-colors shadow-sm">Apply</button>
+            <button id="payment-date-clear-btn" class="px-2.5 py-1 text-xs text-text-muted hover:text-primary transition-colors">Clear</button>
+          </div>
+        </div>
+
+        <!-- Search Input -->
+        <div class="relative w-full lg:w-80">
+          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-text-faint text-lg">search</span>
+          <input id="payment-search-input" class="w-full bg-surface border border-outline-variant/50 rounded-xl pl-10 pr-4 py-2 text-xs font-mono focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="Search order ID, payment ID, buyer..." type="text"/>
+        </div>
+      </div>
+
+      <!-- Payments Table -->
+      <div class="bg-[#FFF8E7] rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden mb-6">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse" id="payments-table">
+            <thead>
+              <tr class="bg-surface border-b border-outline-variant/30 text-xs font-bold uppercase tracking-wider text-text-muted font-mono">
+                <th class="px-6 py-4">Order ID</th>
+                <th class="px-6 py-4">Razorpay Payment / Order ID</th>
+                <th class="px-6 py-4">Buyer Info</th>
+                <th class="px-6 py-4">Amount</th>
+                <th class="px-6 py-4">Status</th>
+                <th class="px-6 py-4">Transaction Date</th>
+              </tr>
+            </thead>
+            <tbody id="payments-table-body" class="divide-y divide-outline-variant/20 text-xs font-body">
+              <tr>
+                <td colspan="6" class="px-6 py-12 text-center text-text-muted">Loading payments data...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Payments Pagination -->
+        <div class="px-6 py-4 border-t border-outline-variant/20 bg-surface flex flex-col sm:flex-row items-center justify-between gap-4">
+          <span id="payments-page-info" class="text-xs font-mono text-text-muted">Showing 0 of 0 payments</span>
+          <div class="flex items-center gap-2" id="payments-pagination-controls">
+            <button id="payments-prev-btn" class="px-3 py-1.5 border border-outline-variant/40 rounded-lg text-xs font-bold text-text-muted hover:bg-surface-container transition-all disabled:opacity-40 disabled:pointer-events-none" disabled>Previous</button>
+            <span id="payments-page-num" class="px-3 py-1 text-xs font-bold font-mono text-primary">Page 1 of 1</span>
+            <button id="payments-next-btn" class="px-3 py-1.5 border border-outline-variant/40 rounded-lg text-xs font-bold text-text-muted hover:bg-surface-container transition-all disabled:opacity-40 disabled:pointer-events-none" disabled>Next</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- DISBURSE PAYOUT MODAL                                                     -->
+  <!-- ========================================================================= -->
+  <div id="disburse-modal" class="fixed inset-0 z-[150] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#FFF8E7] rounded-2xl max-w-md w-full border border-outline-variant/50 shadow-2xl p-6 relative">
+      <div class="flex justify-between items-center pb-4 border-b border-outline-variant/30">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-[#14381F]">
+            <span class="material-symbols-outlined text-lg">check_circle</span>
+          </div>
+          <div>
+            <h3 class="font-headline-md text-lg text-primary font-serif italic">Mark Payout as Disbursed</h3>
+            <p class="text-[11px] text-text-muted font-mono">Manual Bank Transfer Confirmation</p>
+          </div>
+        </div>
+        <button id="modal-close-btn" class="text-text-muted hover:text-primary transition-colors cursor-pointer">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <!-- Payout Details Summary -->
+      <div class="my-5 p-4 rounded-xl bg-surface border border-outline-variant/30 space-y-2">
+        <div class="flex justify-between text-xs">
+          <span class="text-text-muted font-medium">Artisan / Studio:</span>
+          <span id="modal-seller-name" class="font-bold text-text-default">—</span>
+        </div>
+        <div class="flex justify-between text-xs">
+          <span class="text-text-muted font-medium">Payout Reference:</span>
+          <span id="modal-reference" class="font-mono text-text-default">—</span>
+        </div>
+        <div class="flex justify-between items-center text-sm pt-2 border-t border-outline-variant/20">
+          <span class="font-bold text-primary">Disbursement Amount:</span>
+          <span id="modal-payout-amount" class="font-bold text-lg text-[#14381F] font-serif">₹0.00</span>
+        </div>
+      </div>
+
+      <!-- UTR Number Input Form -->
+      <div class="space-y-3 mb-6">
+        <div class="flex justify-between items-center">
+          <label for="modal-utr-input" class="block text-xs font-bold text-text-default uppercase font-mono">
+            Bank Transfer UTR Number <span class="text-red-700">*</span>
+          </label>
+          <button type="button" id="modal-autogen-utr-btn" class="text-[10px] font-mono text-primary hover:underline flex items-center gap-1 cursor-pointer">
+            <span class="material-symbols-outlined text-[13px]">autorenew</span> Auto-generate
+          </button>
+        </div>
+        <input
+          id="modal-utr-input"
+          type="text"
+          placeholder="e.g. UTR20260909987654"
+          class="w-full bg-surface border border-outline-variant/60 rounded-xl px-3.5 py-2.5 text-xs font-mono focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all uppercase"
+          required
+        />
+        <p class="text-[11px] text-text-muted leading-relaxed">
+          Record the Unique Transaction Reference (UTR) provided by the bank after IMPS/NEFT transfer.
+        </p>
+      </div>
+
+      <!-- Modal Actions -->
+      <div class="flex justify-end gap-3 pt-2 border-t border-outline-variant/30">
+        <button id="modal-cancel-btn" class="px-4 py-2 border border-outline-variant/40 rounded-xl text-xs font-bold text-text-muted hover:bg-surface transition-colors cursor-pointer">
+          Cancel
+        </button>
+        <button id="modal-confirm-btn" class="px-5 py-2 bg-[#14381F] text-[#FFF8E7] rounded-xl text-xs font-bold hover:bg-[#1b4a29] transition-all flex items-center gap-1.5 shadow-md cursor-pointer">
+          <span class="material-symbols-outlined text-xs">check</span>
+          <span>Confirm &amp; Disburse</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notifications -->
+  <div id="toast" class="fixed top-20 right-6 z-[200] hidden flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-xs font-bold transition-all duration-300 transform">
+    <span class="material-symbols-outlined text-base" id="toast-icon">check_circle</span>
+    <span id="toast-msg">Action completed</span>
+  </div>
+
+  <!-- Script Module -->
+  <script type="module">
+    import adminApiClient from '/src/utils/adminApiClient.js';
+
+    // State Variables
+    let activeTab = 'payouts';
+
+    // Payouts state
+    let allPayouts = [];
+    let payoutStatusFilter = 'pending';
+    let payoutSearchQuery = '';
+    let payoutCurrentPage = 1;
+    const payoutLimit = 10;
+    let selectedPayout = null;
+
+    // Payments state
+    let allPayments = [];
+    let paymentStatusFilter = 'all';
+    let paymentSearchQuery = '';
+    let paymentFromDate = '';
+    let paymentToDate = '';
+    let paymentCurrentPage = 1;
+    const paymentLimit = 10;
+
+    // Formatters
+    function formatRupees(amount) {
+      if (amount == null) return '₹0.00';
+      const num = parseFloat(amount) || 0;
+      return '₹' + num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatDate(dt) {
+      if (!dt) return '—';
+      try {
+        const d = new Date(dt);
+        if (isNaN(d.getTime())) return '—';
+        return d.toLocaleDateString('en-IN', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric'
+        });
+      } catch {
+        return '—';
+      }
+    }
+
+    function formatDateTime(dt) {
+      if (!dt) return '—';
+      try {
+        const d = new Date(dt);
+        if (isNaN(d.getTime())) return '—';
+        return d.toLocaleDateString('en-IN', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch {
+        return '—';
+      }
+    }
+
+    // Badge Renderers (matching sellers.html & orders.html style)
+    function payoutStatusBadge(status) {
+      const s = (status || 'pending').toLowerCase();
+      if (s === 'paid' || s === 'completed' || s === 'disbursed') {
+        return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold font-mono tracking-wider bg-green-100 text-[#14381F] border border-green-300"><span class="w-1.5 h-1.5 rounded-full bg-[#14381F]"></span>Paid</span>`;
+      }
+      if (s === 'scheduled' || s === 'processing') {
+        return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold font-mono tracking-wider bg-blue-100 text-blue-900 border border-blue-300"><span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>${s === 'scheduled' ? 'Scheduled' : 'Processing'}</span>`;
+      }
+      if (s === 'failed') {
+        return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold font-mono tracking-wider bg-red-100 text-red-900 border border-red-300"><span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>Failed</span>`;
+      }
+      return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold font-mono tracking-wider bg-amber-100 text-amber-900 border border-amber-300"><span class="w-1.5 h-1.5 rounded-full bg-amber-600 pulsing-dot"></span>Pending</span>`;
+    }
+
+    function paymentStatusBadge(status) {
+      const s = (status || 'created').toLowerCase();
+      if (s === 'paid') {
+        return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold font-mono tracking-wider bg-green-100 text-[#14381F] border border-green-300"><span class="w-1.5 h-1.5 rounded-full bg-[#14381F]"></span>Paid</span>`;
+      }
+      if (s === 'refunded') {
+        return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold font-mono tracking-wider bg-purple-100 text-purple-900 border border-purple-300"><span class="w-1.5 h-1.5 rounded-full bg-purple-600"></span>Refunded</span>`;
+      }
+      if (s === 'failed') {
+        return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold font-mono tracking-wider bg-red-100 text-red-900 border border-red-300"><span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>Failed</span>`;
+      }
+      return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold font-mono tracking-wider bg-amber-100 text-amber-900 border border-amber-300"><span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>Created</span>`;
+    }
+
+    // Toast Notification
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toast');
+      const icon = document.getElementById('toast-icon');
+      const text = document.getElementById('toast-msg');
+
+      text.textContent = msg;
+      icon.textContent = type === 'success' ? 'check_circle' : 'error';
+
+      toast.className = `fixed top-20 right-6 z-[200] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-xs font-bold transition-all duration-300 transform ${
+        type === 'success' 
+          ? 'bg-[#14381F] text-[#FFF8E7] border border-[#14381F]/30' 
+          : 'bg-red-800 text-white border border-red-900'
+      }`;
+
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 4000);
+    }
+
+    // ── 1. Load Summary Metrics ──────────────────────────────────────────────
+    async function loadSummaryMetrics() {
+      try {
+        const res = await adminApiClient.get('/admin/payments/summary');
+        if (res.data?.success && res.data?.data) {
+          const s = res.data.data;
+          document.getElementById('summary-collected').textContent = formatRupees(s.total_collected ?? s.totalCollected);
+          document.getElementById('summary-disbursed').textContent = formatRupees(s.total_disbursed ?? s.totalDisbursed);
+          document.getElementById('summary-commission').textContent = formatRupees(s.platform_commission ?? s.platformCommissionRetained);
+          document.getElementById('summary-pending').textContent = formatRupees(s.pending_payout ?? s.pendingPayoutAmount);
+        }
+      } catch (err) {
+        console.error('Failed to load payment summary metrics:', err);
+      }
+    }
+
+    // ── 2. Load Payouts Data ────────────────────────────────────────────────
+    async function loadPayouts() {
+      const tbody = document.getElementById('payouts-table-body');
+      tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-text-muted"><span class="material-symbols-outlined text-base animate-spin">refresh</span> Loading payouts queue...</td></tr>`;
+
+      try {
+        const res = await adminApiClient.get('/admin/payouts', {
+          params: {
+            status: payoutStatusFilter === 'all' ? undefined : payoutStatusFilter,
+            search: payoutSearchQuery || undefined,
+            page: payoutCurrentPage,
+            limit: payoutLimit
+          }
+        });
+
+        if (res.data?.success) {
+          const d = res.data.data;
+          allPayouts = Array.isArray(d?.payouts) ? d.payouts : (Array.isArray(d) ? d : []);
+          const total = d?.total ?? allPayouts.length;
+          const totalPages = d?.total_pages || Math.ceil(total / payoutLimit) || 1;
+
+          renderPayouts(allPayouts);
+          renderPayoutsPagination(total, payoutCurrentPage, totalPages);
+
+          // Update pending count badge on tab if pending
+          if (payoutStatusFilter === 'pending' || payoutStatusFilter === 'all') {
+            const pendingCount = allPayouts.filter(p => (p.status || '').toLowerCase() === 'pending').length;
+            const badge = document.getElementById('tab-payouts-badge');
+            if (pendingCount > 0) {
+              badge.textContent = pendingCount;
+              badge.classList.remove('hidden');
+            } else {
+              badge.classList.add('hidden');
+            }
+          }
+        } else {
+          tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-text-muted">No payouts data returned from server.</td></tr>`;
+        }
+      } catch (err) {
+        console.error('Failed to load payouts:', err);
+        tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-red-700">Failed to load payouts. Please refresh.</td></tr>`;
+        if (err.response?.status === 401) {
+          showToast('Session expired. Redirecting to login...', 'error');
+          setTimeout(() => window.location.replace('/admin/login.html'), 1500);
+        }
+      }
+    }
+
+    function renderPayouts(payouts) {
+      const tbody = document.getElementById('payouts-table-body');
+      tbody.innerHTML = '';
+
+      if (!payouts || payouts.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-text-muted font-mono">No payouts matching current filter criteria.</td></tr>`;
+        return;
+      }
+
+      payouts.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-surface-container-low/40 transition-colors border-b border-outline-variant/10';
+
+        const isPending = (p.status || '').toLowerCase() === 'pending' || (p.status || '').toLowerCase() === 'scheduled';
+        const utrDisplay = p.utr_number ? `<span class="font-mono font-bold text-primary">${p.utr_number}</span>` : `<span class="text-text-muted font-mono">—</span>`;
+        const refDisplay = p.reference ? `<span class="block text-[10px] text-text-muted font-mono">${p.reference}</span>` : '';
+
+        tr.innerHTML = `
+          <td class="px-6 py-4">
+            <div class="font-bold text-text-default text-xs">${p.store_name || p.seller_name || 'Artisan Studio'}</div>
+            <div class="text-[11px] text-text-muted">${p.seller_name || ''} &bull; ${p.seller_email || ''}</div>
+          </td>
+          <td class="px-6 py-4 font-serif font-bold text-primary text-sm">${formatRupees(p.amount)}</td>
+          <td class="px-6 py-4">${payoutStatusBadge(p.status)}</td>
+          <td class="px-6 py-4">
+            ${utrDisplay}
+            ${refDisplay}
+          </td>
+          <td class="px-6 py-4 font-mono text-[11px] text-text-muted">${formatDate(p.created_at)}</td>
+          <td class="px-6 py-4 font-mono text-[11px] text-text-muted">${formatDate(p.disbursed_at)}</td>
+          <td class="px-6 py-4 text-right">
+            ${
+              isPending 
+                ? `<button data-payout-id="${p.id}" class="disburse-action-btn px-3 py-1.5 bg-[#14381F] text-[#FFF8E7] rounded-xl text-xs font-bold hover:bg-[#1b4a29] transition-all flex items-center gap-1.5 ml-auto shadow-sm cursor-pointer">
+                    <span class="material-symbols-outlined text-xs">send</span> Disburse
+                   </button>`
+                : `<span class="text-[11px] text-text-muted font-mono">Completed</span>`
+            }
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Attach Disburse click listeners
+      document.querySelectorAll('.disburse-action-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.dataset.payoutId;
+          const payout = allPayouts.find(item => String(item.id) === String(id));
+          if (payout) openDisburseModal(payout);
+        });
+      });
+    }
+
+    function renderPayoutsPagination(total, page, totalPages) {
+      const pageInfo = document.getElementById('payouts-page-info');
+      const prevBtn = document.getElementById('payouts-prev-btn');
+      const nextBtn = document.getElementById('payouts-next-btn');
+      const pageNum = document.getElementById('payouts-page-num');
+
+      const start = total === 0 ? 0 : (page - 1) * payoutLimit + 1;
+      const end = Math.min(page * payoutLimit, total);
+      pageInfo.textContent = `Showing ${start}–${end} of ${total} payouts`;
+
+      pageNum.textContent = `Page ${page} of ${totalPages || 1}`;
+      prevBtn.disabled = page <= 1;
+      nextBtn.disabled = page >= totalPages;
+    }
+
+    // ── 3. Load Payments Data ────────────────────────────────────────────────
+    async function loadPayments() {
+      const tbody = document.getElementById('payments-table-body');
+      tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-text-muted"><span class="material-symbols-outlined text-base animate-spin">refresh</span> Loading customer payments...</td></tr>`;
+
+      try {
+        const res = await adminApiClient.get('/admin/payments', {
+          params: {
+            status: paymentStatusFilter === 'all' ? undefined : paymentStatusFilter,
+            search: paymentSearchQuery || undefined,
+            from_date: paymentFromDate || undefined,
+            to_date: paymentToDate || undefined,
+            page: paymentCurrentPage,
+            limit: paymentLimit
+          }
+        });
+
+        if (res.data?.success) {
+          const d = res.data.data;
+          allPayments = Array.isArray(d?.payments) ? d.payments : (Array.isArray(d) ? d : []);
+          const total = d?.total ?? allPayments.length;
+          const totalPages = d?.total_pages || Math.ceil(total / paymentLimit) || 1;
+
+          renderPayments(allPayments);
+          renderPaymentsPagination(total, paymentCurrentPage, totalPages);
+        } else {
+          tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-text-muted">No payments data returned from server.</td></tr>`;
+        }
+      } catch (err) {
+        console.error('Failed to load payments:', err);
+        tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-red-700">Failed to load customer payments. Please refresh.</td></tr>`;
+      }
+    }
+
+    function renderPayments(payments) {
+      const tbody = document.getElementById('payments-table-body');
+      tbody.innerHTML = '';
+
+      if (!payments || payments.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-text-muted font-mono">No customer payments matching current filters.</td></tr>`;
+        return;
+      }
+
+      payments.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-surface-container-low/40 transition-colors border-b border-outline-variant/10';
+
+        const orderIdDisplay = p.order_ref || (p.order_id ? `#ORD-${p.order_id}` : '—');
+        const rzpPayId = p.razorpay_payment_id || '—';
+        const rzpOrderId = p.razorpay_order_id ? `<span class="block text-[10px] text-text-muted font-mono">${p.razorpay_order_id}</span>` : '';
+
+        tr.innerHTML = `
+          <td class="px-6 py-4 font-mono font-bold text-primary">${orderIdDisplay}</td>
+          <td class="px-6 py-4">
+            <span class="font-mono text-xs text-text-default">${rzpPayId}</span>
+            ${rzpOrderId}
+          </td>
+          <td class="px-6 py-4">
+            <div class="font-medium text-text-default">${p.buyer_name || 'Guest Customer'}</div>
+            <div class="text-[10px] text-text-muted">${p.buyer_email || ''}</div>
+          </td>
+          <td class="px-6 py-4 font-serif font-bold text-primary text-sm">${formatRupees(p.amount)}</td>
+          <td class="px-6 py-4">${paymentStatusBadge(p.status)}</td>
+          <td class="px-6 py-4 font-mono text-[11px] text-text-muted">${formatDateTime(p.created_at)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderPaymentsPagination(total, page, totalPages) {
+      const pageInfo = document.getElementById('payments-page-info');
+      const prevBtn = document.getElementById('payments-prev-btn');
+      const nextBtn = document.getElementById('payments-next-btn');
+      const pageNum = document.getElementById('payments-page-num');
+
+      const start = total === 0 ? 0 : (page - 1) * paymentLimit + 1;
+      const end = Math.min(page * paymentLimit, total);
+      pageInfo.textContent = `Showing ${start}–${end} of ${total} payments`;
+
+      pageNum.textContent = `Page ${page} of ${totalPages || 1}`;
+      prevBtn.disabled = page <= 1;
+      nextBtn.disabled = page >= totalPages;
+    }
+
+    // ── 4. Disburse Modal Handling ───────────────────────────────────────────
+    function openDisburseModal(payout) {
+      selectedPayout = payout;
+      document.getElementById('modal-seller-name').textContent = payout.store_name || payout.seller_name || 'Artisan Studio';
+      document.getElementById('modal-reference').textContent = payout.reference || `#PAYOUT-${payout.id}`;
+      document.getElementById('modal-payout-amount').textContent = formatRupees(payout.amount);
+      
+      const utrInput = document.getElementById('modal-utr-input');
+      utrInput.value = '';
+      
+      document.getElementById('disburse-modal').classList.remove('hidden');
+      setTimeout(() => utrInput.focus(), 50);
+    }
+
+    function closeDisburseModal() {
+      document.getElementById('disburse-modal').classList.add('hidden');
+      selectedPayout = null;
+      document.getElementById('modal-utr-input').value = '';
+    }
+
+    async function executeDisburse() {
+      if (!selectedPayout) return;
+
+      const utrInput = document.getElementById('modal-utr-input');
+      const utr = utrInput.value.trim();
+
+      if (!utr) {
+        showToast('Please enter a valid bank transfer UTR number.', 'error');
+        utrInput.focus();
+        return;
+      }
+
+      const confirmBtn = document.getElementById('modal-confirm-btn');
+      confirmBtn.disabled = true;
+      confirmBtn.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">refresh</span> Disbursing...';
+
+      try {
+        // Reuse existing POST /admin/payouts/:id/disburse endpoint
+        const res = await adminApiClient.post(`/admin/payouts/${selectedPayout.id}/disburse`, {
+          utr_number: utr,
+          utrNumber: utr
+        });
+
+        if (res.data?.success) {
+          showToast(`Payout #${selectedPayout.id} disbursed successfully with UTR: ${utr}`, 'success');
+
+          // Update local status in payouts list
+          const item = allPayouts.find(p => String(p.id) === String(selectedPayout.id));
+          if (item) {
+            item.status = 'paid';
+            item.utr_number = utr;
+            item.disbursed_at = new Date().toISOString();
+          }
+
+          closeDisburseModal();
+          renderPayouts(allPayouts);
+          loadSummaryMetrics(); // Refresh metric cards immediately
+        } else {
+          showToast(res.data?.message || 'Failed to disburse payout.', 'error');
+        }
+      } catch (err) {
+        console.error('Disburse execution failed:', err);
+        showToast(err.response?.data?.message || 'Failed to disburse payout. Please check UTR and retry.', 'error');
+      } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<span class="material-symbols-outlined text-xs">check</span> Confirm &amp; Disburse';
+      }
+    }
+
+    // ── 5. Event Listeners ───────────────────────────────────────────────────
+    // Tab switching
+    const tabBtnPayouts = document.getElementById('tab-btn-payouts');
+    const tabBtnPayments = document.getElementById('tab-btn-payments');
+    const sectionPayouts = document.getElementById('section-payouts');
+    const sectionPayments = document.getElementById('section-payments');
+
+    tabBtnPayouts.addEventListener('click', () => {
+      activeTab = 'payouts';
+      tabBtnPayouts.className = 'px-6 py-2 rounded-full font-label-btn text-xs font-bold bg-[#14381F] text-white shadow-sm transition-all flex items-center gap-2 cursor-pointer';
+      tabBtnPayments.className = 'px-6 py-2 rounded-full font-label-btn text-xs font-bold text-text-muted bg-surface hover:bg-secondary-container/20 transition-all flex items-center gap-2 cursor-pointer';
+      sectionPayouts.classList.remove('hidden');
+      sectionPayments.classList.add('hidden');
+      loadPayouts();
+    });
+
+    tabBtnPayments.addEventListener('click', () => {
+      activeTab = 'payments';
+      tabBtnPayments.className = 'px-6 py-2 rounded-full font-label-btn text-xs font-bold bg-[#14381F] text-white shadow-sm transition-all flex items-center gap-2 cursor-pointer';
+      tabBtnPayouts.className = 'px-6 py-2 rounded-full font-label-btn text-xs font-bold text-text-muted bg-surface hover:bg-secondary-container/20 transition-all flex items-center gap-2 cursor-pointer';
+      sectionPayments.classList.remove('hidden');
+      sectionPayouts.classList.add('hidden');
+      loadPayments();
+    });
+
+    // Payouts filters
+    document.getElementById('payout-status-filter').addEventListener('change', (e) => {
+      payoutStatusFilter = e.target.value;
+      payoutCurrentPage = 1;
+      loadPayouts();
+    });
+
+    let payoutSearchDebounce;
+    document.getElementById('payout-search-input').addEventListener('input', (e) => {
+      clearTimeout(payoutSearchDebounce);
+      payoutSearchDebounce = setTimeout(() => {
+        payoutSearchQuery = e.target.value.trim();
+        payoutCurrentPage = 1;
+        loadPayouts();
+      }, 300);
+    });
+
+    document.getElementById('payouts-prev-btn').addEventListener('click', () => {
+      if (payoutCurrentPage > 1) {
+        payoutCurrentPage--;
+        loadPayouts();
+      }
+    });
+
+    document.getElementById('payouts-next-btn').addEventListener('click', () => {
+      payoutCurrentPage++;
+      loadPayouts();
+    });
+
+    // Payments filters
+    document.getElementById('payment-status-filter').addEventListener('change', (e) => {
+      paymentStatusFilter = e.target.value;
+      paymentCurrentPage = 1;
+      loadPayments();
+    });
+
+    let paymentSearchDebounce;
+    document.getElementById('payment-search-input').addEventListener('input', (e) => {
+      clearTimeout(paymentSearchDebounce);
+      paymentSearchDebounce = setTimeout(() => {
+        paymentSearchQuery = e.target.value.trim();
+        paymentCurrentPage = 1;
+        loadPayments();
+      }, 300);
+    });
+
+    document.getElementById('payment-date-filter-btn').addEventListener('click', () => {
+      paymentFromDate = document.getElementById('payment-from-date').value;
+      paymentToDate = document.getElementById('payment-to-date').value;
+      paymentCurrentPage = 1;
+      loadPayments();
+    });
+
+    document.getElementById('payment-date-clear-btn').addEventListener('click', () => {
+      document.getElementById('payment-from-date').value = '';
+      document.getElementById('payment-to-date').value = '';
+      paymentFromDate = '';
+      paymentToDate = '';
+      paymentCurrentPage = 1;
+      loadPayments();
+    });
+
+    document.getElementById('payments-prev-btn').addEventListener('click', () => {
+      if (paymentCurrentPage > 1) {
+        paymentCurrentPage--;
+        loadPayments();
+      }
+    });
+
+    document.getElementById('payments-next-btn').addEventListener('click', () => {
+      paymentCurrentPage++;
+      loadPayments();
+    });
+
+    // Global Refresh button
+    document.getElementById('global-refresh-btn').addEventListener('click', () => {
+      loadSummaryMetrics();
+      if (activeTab === 'payouts') loadPayouts();
+      else loadPayments();
+    });
+
+    // Modal buttons
+    document.getElementById('modal-close-btn').addEventListener('click', closeDisburseModal);
+    document.getElementById('modal-cancel-btn').addEventListener('click', closeDisburseModal);
+    document.getElementById('modal-confirm-btn').addEventListener('click', executeDisburse);
+
+    document.getElementById('modal-autogen-utr-btn').addEventListener('click', () => {
+      const now = new Date();
+      const yr = now.getFullYear();
+      const mo = String(now.getMonth() + 1).padStart(2, '0');
+      const dy = String(now.getDate()).padStart(2, '0');
+      const rand = Math.floor(100000 + Math.random() * 900000);
+      document.getElementById('modal-utr-input').value = `UTR${yr}${mo}${dy}${rand}`;
+    });
+
+    document.getElementById('modal-utr-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') executeDisburse();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeDisburseModal();
+    });
+
+    // Logout button
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      sessionStorage.removeItem('tohfa_admin_token');
+      sessionStorage.removeItem('tohfa_admin_refresh_token');
+      window.location.replace('/admin/login.html');
+    });
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSummaryMetrics();
+      loadPayouts();
+    });
+  </script>
+</body>
+</html>

@@ -126,11 +126,14 @@ router.post('/refunds/:id/reject', orderController.rejectRefund);
 router.patch('/refunds/:id/reject', orderController.rejectRefund);
 
 // 5. Payouts & Platform Financials
+router.get('/payouts', adminController.listAllPayouts);
 router.get('/payouts/pending', adminController.getPendingPayouts);
 router.post('/payouts/:id/disburse', adminController.disburseSellerPayout);
 router.patch('/payouts/:id/disburse', adminController.disburseSellerPayout);
 router.post('/payouts/:payoutId/disburse', adminController.disburseSellerPayout);
 router.patch('/payouts/:payoutId/disburse', adminController.disburseSellerPayout);
+router.get('/payments', adminController.listAllPayments);
+router.get('/payments/summary', adminController.getPaymentsSummary);
 
 // 6. User Management
 router.get('/users', adminController.getAllUsers);

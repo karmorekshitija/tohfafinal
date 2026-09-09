@@ -101,8 +101,8 @@ async function createAddress(req, res, next) {
     } = req.body;
 
     const addressLabel = label || tag || address_type || 'Home';
-    const addressName = name || recipient_name || full_name || 'Recipient';
-    const addressLine1 = line1 || address_line1 || '';
+    const addressName = name || recipient_name || full_name || req.user?.name || 'Artisan Workshop';
+    const addressLine1 = line1 || address_line1 || req.body.address_line || '';
     const addressLine2 = line2 || address_line2 || null;
     const addressLandmark = landmark || null;
     const addressType = address_type || addressLabel || 'Home';
@@ -113,31 +113,19 @@ async function createAddress(req, res, next) {
       [userId]
     );
     const isFirst = parseInt(existing[0]?.cnt || 0, 10) === 0;
-    const defaultFlag = is_default !== undefined ? Boolean(is_default) : isFirst;
+    const defaultFlag = (is_default !== undefined ? Boolean(is_default) : isFirst) ? 1 : 0;
 
-    if (defaultFlag) {
-      await query('UPDATE addresses SET is_default = FALSE WHERE user_id = $1', [userId]).catch(() => {});
+    if (defaultFlag === 1) {
+      await query('UPDATE addresses SET is_default = 0 WHERE user_id = $1', [userId]).catch(() => {});
     }
 
-    let createdRow;
-    try {
-      const { rows } = await query(
-        `INSERT INTO addresses (user_id, label, name, phone, line1, line2, landmark, city, state, pincode, address_type, is_default)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-         RETURNING *`,
-        [userId, addressLabel, addressName, phone, addressLine1, addressLine2, addressLandmark, city, state, pincode, addressType, defaultFlag]
-      );
-      createdRow = rows[0];
-    } catch (insertErr) {
-      // Fallback without landmark/address_type columns
-      const { rows } = await query(
-        `INSERT INTO addresses (user_id, label, name, phone, line1, line2, city, state, pincode, is_default)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-         RETURNING *`,
-        [userId, addressLabel, addressName, phone, addressLine1, addressLine2, city, state, pincode, defaultFlag]
-      );
-      createdRow = rows[0];
-    }
+    const { rows } = await query(
+      `INSERT INTO addresses (user_id, tag, full_name, phone, line1, line2, city, state, pincode, is_default)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING *`,
+      [userId, addressLabel, addressName, phone, addressLine1, addressLine2, city, state, pincode, defaultFlag]
+    );
+    const createdRow = rows[0];
 
     return res.status(201).json({
       success: true,
@@ -162,7 +150,6 @@ async function updateAddress(req, res, next) {
       phone,
       line1, address_line1,
       line2, address_line2,
-      landmark,
       city,
       state,
       pincode,
@@ -171,55 +158,31 @@ async function updateAddress(req, res, next) {
 
     const addressLabel = label || tag || address_type || null;
     const addressName = name || recipient_name || full_name || null;
-    const addressLine1 = line1 || address_line1 || null;
+    const addressLine1 = line1 || address_line1 || req.body.address_line || null;
     const addressLine2 = line2 !== undefined ? (line2 || address_line2 || null) : null;
-    const addressLandmark = landmark !== undefined ? (landmark || null) : null;
-    const addressType = address_type || addressLabel || null;
+    const defaultVal = is_default !== undefined ? (is_default ? 1 : 0) : null;
 
-    if (is_default === true) {
-      await query('UPDATE addresses SET is_default = FALSE WHERE user_id = $1', [userId]).catch(() => {});
+    if (defaultVal === 1) {
+      await query('UPDATE addresses SET is_default = 0 WHERE user_id = $1', [userId]).catch(() => {});
     }
 
-    let updatedRow;
-    try {
-      const { rows } = await query(
-        `UPDATE addresses
-         SET label        = COALESCE($1, label),
-             name         = COALESCE($2, name),
-             phone        = COALESCE($3, phone),
-             line1        = COALESCE($4, line1),
-             line2        = COALESCE($5, line2),
-             landmark     = COALESCE($6, landmark),
-             city         = COALESCE($7, city),
-             state        = COALESCE($8, state),
-             pincode      = COALESCE($9, pincode),
-             address_type = COALESCE($10, address_type),
-             is_default   = COALESCE($11, is_default)
-         WHERE id = $12 AND user_id = $13
-         RETURNING *`,
-        [addressLabel, addressName, phone || null, addressLine1, addressLine2, addressLandmark,
-         city || null, state || null, pincode || null, addressType, is_default !== undefined ? is_default : null, id, userId]
-      );
-      updatedRow = rows[0];
-    } catch (upErr) {
-      const { rows } = await query(
-        `UPDATE addresses
-         SET label   = COALESCE($1, label),
-             name    = COALESCE($2, name),
-             phone   = COALESCE($3, phone),
-             line1   = COALESCE($4, line1),
-             line2   = COALESCE($5, line2),
-             city    = COALESCE($6, city),
-             state   = COALESCE($7, state),
-             pincode = COALESCE($8, pincode),
-             is_default = COALESCE($9, is_default)
-         WHERE id = $10 AND user_id = $11
-         RETURNING *`,
-        [addressLabel, addressName, phone || null, addressLine1, addressLine2,
-         city || null, state || null, pincode || null, is_default !== undefined ? is_default : null, id, userId]
-      );
-      updatedRow = rows[0];
-    }
+    const { rows } = await query(
+      `UPDATE addresses
+       SET tag        = COALESCE($1, tag),
+           full_name  = COALESCE($2, full_name),
+           phone      = COALESCE($3, phone),
+           line1      = COALESCE($4, line1),
+           line2      = COALESCE($5, line2),
+           city       = COALESCE($6, city),
+           state      = COALESCE($7, state),
+           pincode    = COALESCE($8, pincode),
+           is_default = COALESCE($9, is_default)
+       WHERE id = $10 AND user_id = $11
+       RETURNING *`,
+      [addressLabel, addressName, phone || null, addressLine1, addressLine2,
+       city || null, state || null, pincode || null, defaultVal, id, userId]
+    );
+    const updatedRow = rows[0];
 
     if (!updatedRow) {
       return res.status(404).json({ success: false, message: 'Address not found.' });

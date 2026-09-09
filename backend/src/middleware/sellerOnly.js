@@ -28,12 +28,21 @@ async function sellerOnly(req, res, next) {
     try {
       let { rows } = await query(
         `SELECT sp.*, u.id AS user_id, u.email, u.name,
-                COALESCE(sp.is_admin_managed, s.is_admin_managed, FALSE) AS is_admin_managed
+                COALESCE(sp.is_admin_managed, s.is_admin_managed, 0) AS is_admin_managed
          FROM users u
          LEFT JOIN seller_profiles sp ON sp.user_id = u.id
          LEFT JOIN sellers s ON s.user_id = u.id
          WHERE (u.id::text = $1 OR sp.id::text = $1 OR s.id::text = $1 OR sp.slug = $1 OR s.slug = $1)
-           AND u.role = 'seller'`,
+           AND u.role = 'seller'
+         ORDER BY CASE 
+           WHEN sp.slug = $1 OR s.slug = $1 THEN 1
+           WHEN u.id::text = $1 AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 2
+           WHEN u.id::text = $1 THEN 3
+           WHEN sp.id::text = $1 THEN 4
+           WHEN s.id::text = $1 THEN 5
+           ELSE 6 
+         END ASC
+         LIMIT 1`,
         [actingSellerId]
       );
 

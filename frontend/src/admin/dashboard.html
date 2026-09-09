@@ -461,7 +461,7 @@
     });
 
     // Initial Load & Auto-Refresh
-    document.addEventListener('DOMContentLoaded', () => {
+    function initDashboard() {
       loadStats();
       updateCharts('7d');
       loadViralProducts();
@@ -469,7 +469,13 @@
 
       // Periodically refresh dashboard summary stats (30s)
       setInterval(loadStats, 30000);
-    });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initDashboard);
+    } else {
+      initDashboard();
+    }
   </script>
 </body>
 </html>

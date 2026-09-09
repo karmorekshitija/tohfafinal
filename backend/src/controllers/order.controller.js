@@ -237,7 +237,7 @@ async function getAdminOrders(req, res, next) {
               u.email AS buyer_email, u.phone AS buyer_phone,
               COALESCE(sp.store_name, 'Tohfa Studio') AS seller_name,
               COALESCE(sp.store_name, 'Tohfa Studio') AS store_name,
-              COALESCE(sp.is_admin_managed, FALSE) AS is_admin_managed,
+              COALESCE(sp.is_admin_managed, 0) AS is_admin_managed,
               a.line1, a.line2, a.city, a.state, a.pincode, a.phone AS address_phone, a.full_name AS address_name
        FROM orders o
        LEFT JOIN users u ON u.id = o.buyer_id
@@ -299,7 +299,7 @@ async function getOrderById(req, res, next) {
               COALESCE(o.studio_notes, '') AS notes,
               COALESCE(a.line1 || CASE WHEN a.city IS NOT NULL THEN ', ' || a.city ELSE '' END, '') AS shipping_address,
               u.name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone,
-              sp.store_name, COALESCE(sp.is_admin_managed, FALSE) AS is_admin_managed,
+              sp.store_name, COALESCE(sp.is_admin_managed, 0) AS is_admin_managed,
               a.line1, a.line2, a.city, a.state, a.pincode, a.full_name AS address_name, a.phone AS address_phone,
               COALESCE(
                 (SELECT json_agg(json_build_object(

@@ -175,10 +175,30 @@ async function getSellerReviews(req, res, next) {
   try {
     await ensureReviewColumns();
     const { sellerId } = req.params;
-    const { page = '1', limit = '20' } = req.query;
+    const { page = '1', limit = '20', filter = 'all', tab = 'all' } = req.query;
     const pageNum  = Math.max(1, parseInt(page, 10));
     const limitNum = Math.min(50, parseInt(limit, 10));
     const offset   = (pageNum - 1) * limitNum;
+
+    // Resolve all valid seller IDs (user_id and sellers.id / seller_profiles.id)
+    const { rows: sRows } = await query(
+      'SELECT id, user_id FROM sellers WHERE user_id = $1 UNION SELECT id, user_id FROM seller_profiles WHERE user_id = $1',
+      [sellerId]
+    );
+    const validSellerIds = Array.from(new Set([
+      String(sellerId),
+      ...sRows.flatMap(s => [String(s.id), String(s.user_id)])
+    ].filter(Boolean)));
+
+    const activeFilter = String(filter || tab).toLowerCase();
+    let filterCondition = '';
+    if (activeFilter === 'unread' || activeFilter === 'needs_reply') {
+      filterCondition = 'AND (r.seller_reply IS NULL OR r.seller_reply = \'\')';
+    } else if (activeFilter === 'negative' || activeFilter === 'critical') {
+      filterCondition = 'AND r.rating <= 2';
+    } else if (activeFilter === 'flagged') {
+      filterCondition = 'AND (r.rating = 1 OR r.comment ILIKE \'%damaged%\' OR r.comment ILIKE \'%fake%\')';
+    }
 
     const { rows } = await query(
       `SELECT r.id, r.order_id, r.rating, r.comment, r.seller_reply, r.replied_at, r.created_at,
@@ -186,10 +206,10 @@ async function getSellerReviews(req, res, next) {
               (SELECT p.name FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE oi.order_id = r.order_id LIMIT 1) AS listing_title
        FROM reviews r
        JOIN users u ON u.id::text = r.buyer_id::text
-       WHERE r.seller_id::text = $1
+       WHERE r.seller_id::text = ANY($1::text[]) ${filterCondition}
        ORDER BY r.created_at DESC
        LIMIT $2 OFFSET $3`,
-      [String(sellerId), limitNum, offset]
+      [validSellerIds, limitNum, offset]
     );
 
     const { rows: statsRows } = await query(
@@ -201,8 +221,8 @@ async function getSellerReviews(req, res, next) {
               COUNT(*) FILTER (WHERE rating = 3) AS star_3,
               COUNT(*) FILTER (WHERE rating = 2) AS star_2,
               COUNT(*) FILTER (WHERE rating = 1) AS star_1
-       FROM reviews WHERE seller_id::text = $1`,
-      [String(sellerId)]
+       FROM reviews WHERE seller_id::text = ANY($1::text[])`,
+      [validSellerIds]
     );
 
     const total = parseInt(statsRows[0]?.total || 0, 10);
@@ -343,7 +363,19 @@ async function replyToReview(req, res, next) {
 
     const review = reviewRows[0];
 
-    if (review.seller_id !== sellerId && !isAdmin) {
+    // Retrieve all valid seller identity representations (user_id and sellers.id / seller_profiles.id)
+    const { rows: sRows } = await query(
+      'SELECT id, user_id FROM sellers WHERE user_id = $1 UNION SELECT id, user_id FROM seller_profiles WHERE user_id = $1',
+      [req.user.id]
+    );
+    const validSellerIds = new Set([
+      String(req.user.id),
+      ...sRows.flatMap(s => [String(s.id), String(s.user_id)])
+    ]);
+
+    const isOwner = validSellerIds.has(String(review.seller_id));
+
+    if (!isOwner && !isAdmin) {
       return res.status(403).json({
         success: false,
         message: 'Unauthorized: You can only reply to reviews for your own store/products.',

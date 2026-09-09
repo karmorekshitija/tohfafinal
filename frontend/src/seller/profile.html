@@ -967,6 +967,9 @@ document.getElementById('address-form').addEventListener('submit', async (e) => 
   const editId = document.getElementById('address-edit-id').value;
   const payload = {
     label,
+    name:         document.getElementById('display-name')?.textContent?.trim() || label || 'Artisan Workshop',
+    line1:        line,
+    address_line1: line,
     address_line: line,
     city,
     state:        document.getElementById('addr-state').value.trim(),
@@ -1124,7 +1127,7 @@ async function handleFooterSellerLink(e) {
       if (data && data.success) {
         const role = data.data.role;
         if (role === 'seller') {
-          window.location.href = isMobile ? '/mobile-seller/dashboard.html' : '/seller/dashboard.html';
+          window.location.href = '/seller/dashboard.html';
           return;
         }
       }

@@ -14,7 +14,7 @@ const reviewController = require('../controllers/review.controller');
 const buyerController = require('../controllers/buyer.controller');
 const { authMiddleware } = require('../middleware/auth');
 const { sellerOnly } = require('../middleware/sellerOnly');
-const { uploadProductImages } = require('../middleware/upload');
+const { uploadProductImages, uploadProfilePhoto, uploadCoverPhoto, uploadSingleMedia } = require('../middleware/upload');
 const { validate, schemas } = require('../middleware/validate');
 const { verifySellerOwnership } = require('../middleware/ownership');
 
@@ -28,10 +28,10 @@ router.put('/onboarding-details', authMiddleware, sellerOnly, sellerController.c
 // Studio Profile
 router.get('/profile', authMiddleware, sellerOnly, sellerController.getOwnSellerProfile);
 router.put('/profile', authMiddleware, sellerOnly, sellerController.updateSellerProfile);
-router.post('/profile/photo', authMiddleware, sellerOnly, (req, res) => res.json({ success: true, message: 'Photo updated' }));
-router.post('/profile/banner', authMiddleware, sellerOnly, (req, res) => res.json({ success: true, message: 'Banner updated' }));
-router.post('/profile/about-image', authMiddleware, sellerOnly, (req, res) => res.json({ success: true, message: 'About image updated' }));
-router.get('/check-handle', authMiddleware, sellerOnly, (req, res) => res.json({ success: true, available: true }));
+router.post('/profile/photo', authMiddleware, sellerOnly, uploadProfilePhoto, sellerController.uploadProfilePhoto);
+router.post('/profile/banner', authMiddleware, sellerOnly, uploadCoverPhoto, sellerController.uploadBannerPhoto);
+router.post('/profile/about-image', authMiddleware, sellerOnly, uploadSingleMedia, sellerController.uploadAboutImage);
+router.get('/check-handle', authMiddleware, sellerOnly, sellerController.checkHandleAvailability);
 
 // Store Configuration & Vacation Mode
 router.get('/store-config', authMiddleware, sellerOnly, sellerController.getOwnSellerProfile);
@@ -39,6 +39,7 @@ router.put('/store-config', authMiddleware, sellerOnly, sellerController.updateS
 router.patch('/store-config', authMiddleware, sellerOnly, sellerController.updateStoreConfig);
 router.patch('/status', authMiddleware, sellerOnly, sellerController.toggleVacationMode);
 router.post('/zai-mode', authMiddleware, sellerOnly, sellerController.updateStoreConfig);
+router.put('/zai-mode', authMiddleware, sellerOnly, sellerController.updateStoreConfig);
 
 // Addresses (Studio dispatch/business address)
 router.get('/addresses', authMiddleware, sellerOnly, buyerController.getAddresses);
@@ -122,6 +123,43 @@ router.post('/follow', authMiddleware, sellerController.followSeller);
 router.delete('/follow', authMiddleware, sellerController.unfollowSeller);
 router.post('/:id/follow', authMiddleware, sellerController.followSeller);
 router.delete('/:id/follow', authMiddleware, sellerController.unfollowSeller);
+
+// Subscription Plans & Billing (Graceful demo/staging support for plans.html)
+router.post('/subscription/create-order', authMiddleware, sellerOnly, (req, res) => {
+  const { plan = 'pro', amount = 199 } = req.body;
+  return res.json({
+    success: true,
+    data: {
+      plan,
+      amount,
+      currency: 'INR',
+      razorpay_order: {
+        id: `order_sub_mock_${Date.now()}`,
+        amount: amount * 100,
+        currency: 'INR'
+      },
+      key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder'
+    }
+  });
+});
+
+router.post('/subscription/verify', authMiddleware, sellerOnly, (req, res) => {
+  const { plan = 'pro' } = req.body;
+  return res.json({
+    success: true,
+    message: `Successfully upgraded to ${plan} plan.`,
+    data: { plan, active: true }
+  });
+});
+
+router.patch('/subscription', authMiddleware, sellerOnly, (req, res) => {
+  const { plan = 'basic' } = req.body;
+  return res.json({
+    success: true,
+    message: `Plan updated to ${plan}.`,
+    data: { plan, active: true }
+  });
+});
 
 // Public storefront view
 router.get('/public/:userId', sellerController.getPublicSellerProfile);

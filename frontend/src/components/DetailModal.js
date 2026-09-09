@@ -780,11 +780,13 @@
     },
 
     async suspendSeller(sellerId) {
-      if (!confirm('Suspend this artisan store?')) return;
+      const reason = prompt('Enter suspension reason:', 'Administrative suspension');
+      if (reason === null) return;
       try {
         const res = await fetch(`/api/admin/sellers/${sellerId}/suspend`, {
           method: 'PATCH',
-          headers: getHeaders()
+          headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: reason.trim() || 'Administrative suspension' })
         });
         const json = await res.json();
         if (json.success) {

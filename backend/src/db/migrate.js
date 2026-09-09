@@ -33,6 +33,7 @@ const MIGRATION_FILES = [
   path.join(__dirname, 'migrations', '017_seller_onboarding_split.sql'),
   path.join(__dirname, 'migrations', '018_categories_updated_at.sql'),
   path.join(__dirname, 'migrations', '019_sellers_updated_at.sql'),
+  path.join(__dirname, 'migrations', '020_seller_whatsapp_number.sql'),
 ];
 
 async function runMigrations() {

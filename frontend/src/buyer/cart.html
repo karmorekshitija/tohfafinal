@@ -975,7 +975,7 @@ async function handleFooterSellerLink(e) {
       if (data && data.success) {
         const role = data.data.role;
         if (role === 'seller') {
-          window.location.href = isMobile ? '/mobile-seller/dashboard.html' : '/seller/dashboard.html';
+          window.location.href = '/seller/dashboard.html';
           return;
         }
       }

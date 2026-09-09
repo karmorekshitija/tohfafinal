@@ -12,10 +12,17 @@ const { authMiddleware } = require('../middleware/auth');
 const { sellerOnly } = require('../middleware/sellerOnly');
 const { validate, schemas } = require('../middleware/validate');
 
-const { uploadProofImage } = require('../middleware/upload');
+const { uploadProofImage, uploadRefImages } = require('../middleware/upload');
 
 // Public form configuration
 router.get('/config/:productId', customizationController.getConfig);
+
+// Reference images upload for buyer bespoke customization request
+router.post('/ref-images', authMiddleware, uploadRefImages, (req, res) => {
+  const files = req.files || (req.file ? [req.file] : []);
+  const images = files.map(f => ({ url: f.path || f.secure_url || f.url }));
+  return res.json({ success: true, data: { images }, url: images[0]?.url || null });
+});
 
 // Seller Setup
 router.post('/config', authMiddleware, sellerOnly, validate(schemas.openCustomizationConfig), customizationController.saveConfig);

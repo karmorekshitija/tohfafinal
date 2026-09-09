@@ -64,9 +64,9 @@ function sanitizeProduct(p) {
     stock_count: p.stock_quantity ?? p.stock_qty ?? 50,
     stock_qty: p.stock_quantity ?? p.stock_qty ?? 50,
     stock: p.stock_quantity ?? p.stock_qty ?? 50,
-    discount_active: Boolean(p.discount_active),
+    discount_active: Boolean(p.discount_active && p.discount_active != 0),
     discount_percentage: p.discount_percentage ? parseInt(p.discount_percentage, 10) : null,
-    discounted_price: p.sale_price ? parseFloat(p.sale_price) : (p.discount_active && p.discount_percentage ? Math.round(price * (1 - p.discount_percentage / 100) * 100) / 100 : null),
+    discounted_price: p.sale_price ? Math.round(parseFloat(p.sale_price) * 100) : ((p.discount_active && p.discount_active != 0) && p.discount_percentage ? Math.round(price * (1 - p.discount_percentage / 100) * 100) : null),
     sale_price: p.sale_price ? parseFloat(p.sale_price) : null,
     image_url: primaryImg,
     primary_image: primaryImg,
@@ -874,7 +874,7 @@ async function getSellerProducts(req, res, next) {
 // ---------------------------------------------------------------------------
 async function createProduct(req, res, next) {
   try {
-    const sellerId = req.seller?.id || req.user.id;
+    const sellerId = req.seller?.user_id || req.user?.id || req.seller?.id;
     const {
       name,
       category_id,
@@ -941,10 +941,11 @@ async function createProduct(req, res, next) {
         Math.max(0, parseInt(preparation_days, 10) || 2),
         Math.max(1, parseInt(weight_grams, 10) || 500),
         finalMode,
-        finalIsCustomizable,
+        finalIsCustomizable ? 1 : 0,
         schemaJson,
       ]
     );
+
 
     const product = rows[0];
 
@@ -1030,7 +1031,28 @@ async function createProduct(req, res, next) {
 async function updateProduct(req, res, next) {
   try {
     const { id } = req.params;
-    const sellerId = req.seller?.id || req.user.id;
+    const isAdmin = req.user?.role === 'admin' || req.user?.role === 'master_admin';
+
+    // Retrieve all valid seller identity representations (user_id and sellers.id / seller_profiles.id)
+    const { rows: sRows } = await query(
+      'SELECT id, user_id FROM sellers WHERE user_id = $1 UNION SELECT id, user_id FROM seller_profiles WHERE user_id = $1',
+      [req.user.id]
+    );
+    const validSellerIds = Array.from(new Set([
+      Number(req.user.id),
+      Number(req.seller?.id),
+      Number(req.seller?.user_id),
+      ...sRows.flatMap(s => [Number(s.id), Number(s.user_id)])
+    ].filter(n => !isNaN(n) && n > 0)));
+
+    const { rows: existing } = await query(
+      'SELECT id FROM products WHERE id = $1 AND (seller_id = ANY($2::int[]) OR $3 = TRUE)',
+      [id, validSellerIds, isAdmin]
+    );
+    if (!existing.length) {
+      return res.status(404).json({ success: false, message: 'Product not found.' });
+    }
+
     const {
       name,
       photos,
@@ -1052,14 +1074,6 @@ async function updateProduct(req, res, next) {
     } = req.body;
 
     const resolvedName = req.body.name !== undefined ? req.body.name : req.body.title;
-
-    const { rows: existing } = await query(
-      'SELECT id FROM products WHERE id = $1 AND (seller_id = $2 OR $3 = TRUE)',
-      [id, sellerId, req.user?.role === 'admin' || req.user?.role === 'master_admin']
-    );
-    if (!existing.length) {
-      return res.status(404).json({ success: false, message: 'Product not found.' });
-    }
 
     let finalMode = customization_mode;
     if (finalMode === undefined && is_customizable !== undefined) {
@@ -1130,11 +1144,12 @@ async function updateProduct(req, res, next) {
         preparation_days !== undefined ? Math.max(0, parseInt(preparation_days, 10)) : null,
         weight_grams !== undefined ? Math.max(1, parseInt(weight_grams, 10)) : null,
         finalMode || null,
-        finalIsCustomizable,
+        finalIsCustomizable !== null && finalIsCustomizable !== undefined ? (finalIsCustomizable ? 1 : 0) : null,
         schemaJson,
         id
       ]
     );
+
 
     // Sync occasion tags if provided
     if (Array.isArray(occasions) || Array.isArray(occasion_tags)) {
