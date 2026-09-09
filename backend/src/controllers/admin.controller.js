@@ -360,10 +360,15 @@ async function forceRefundOrder(req, res, next) {
 
     if (paymentId) {
       try {
-        const refundResult = await paymentService.refundPayment(paymentId, finalRefundAmt || order.total_amount, {
-          reason: `Admin Forced Refund: ${reason}`,
-          order_id: orderId
-        });
+        const refundResult = await paymentService.refundPayment(
+          paymentId,
+          finalRefundAmt || order.total_amount,
+          {
+            reason: `Admin Forced Refund: ${reason}`,
+            order_id: orderId
+          },
+          payment?.gateway_account || 'primary'
+        );
         if (refundResult && refundResult.id) {
           rzpRefundId = refundResult.id;
         }

@@ -11,26 +11,33 @@ const paymentService = require('../services/payment.service');
 const logisticsService = require('../services/logistics.service');
 const whatsappService = require('../services/whatsapp.service');
 
+const razorpay = require('../config/razorpay');
+
 async function handleRazorpayWebhook(req, res) {
   try {
     const signature = req.headers['x-razorpay-signature'];
-    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    const primarySecret = process.env.RAZORPAY_PRIMARY_WEBHOOK_SECRET || process.env.RAZORPAY_WEBHOOK_SECRET;
+    const secondarySecret = process.env.RAZORPAY_SECONDARY_WEBHOOK_SECRET;
 
-    if (!webhookSecret || !signature) {
+    if (!signature || (!primarySecret && !secondarySecret)) {
       return res.status(400).json({ status: 'error', message: 'Webhook secret or signature missing' });
     }
 
     const rawBody = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : (typeof req.body === 'string' ? req.body : JSON.stringify(req.body));
-    const expectedSignature = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(rawBody)
-      .digest('hex');
+    
+    let isValid = false;
+    let matchedAccount = 'primary';
 
-    const expectedBuffer = Buffer.from(expectedSignature, 'utf8');
-    const signatureBuffer = Buffer.from(String(signature), 'utf8');
+    if (primarySecret && paymentService.verifyHmacSignature(rawBody, signature, primarySecret)) {
+      isValid = true;
+      matchedAccount = 'primary';
+    } else if (secondarySecret && paymentService.verifyHmacSignature(rawBody, signature, secondarySecret)) {
+      isValid = true;
+      matchedAccount = 'secondary';
+    }
 
-    if (expectedBuffer.length !== signatureBuffer.length || !crypto.timingSafeEqual(expectedBuffer, signatureBuffer)) {
-      console.error('[Webhook] Invalid Razorpay webhook signature');
+    if (!isValid) {
+      console.error('[Webhook] Invalid Razorpay webhook signature across all configured accounts');
       return res.status(400).json({ status: 'error', message: 'Invalid signature' });
     }
 
@@ -60,7 +67,7 @@ async function handleRazorpayWebhook(req, res) {
           if (orderId) {
             const result = await paymentService.markOrderPaid(
               orderId,
-              { razorpay_payment_id: razorpayPaymentId, razorpay_order_id: razorpayOrderId },
+              { razorpay_payment_id: razorpayPaymentId, razorpay_order_id: razorpayOrderId, gateway_account: matchedAccount },
               client
             );
 

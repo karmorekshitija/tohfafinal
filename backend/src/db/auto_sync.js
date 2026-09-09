@@ -198,6 +198,10 @@ async function autoSyncDatabase() {
     await query(`ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS images TEXT[] DEFAULT '{}';`);
     await query(`CREATE INDEX IF NOT EXISTS idx_product_variants_product_id ON product_variants(product_id);`);
 
+    // Payments dual gateway support
+    await query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS gateway_account VARCHAR(20) DEFAULT 'primary';`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_payments_gateway_account ON payments(gateway_account);`);
+
     // 8. Reports Table
     await query(`
       CREATE TABLE IF NOT EXISTS reports (

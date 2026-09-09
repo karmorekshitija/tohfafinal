@@ -520,19 +520,34 @@ async function cancelOrder(req, res, next) {
     // Prepaid refund processing
     if (order.payment_status === 'paid' || order.payment_id) {
       let paymentId = order.payment_id;
+      let gatewayAccount = 'primary';
       if (!paymentId) {
         const { rows: pRows } = await query(
-          "SELECT razorpay_payment_id FROM payments WHERE order_id = $1 AND status = 'paid' ORDER BY created_at DESC LIMIT 1",
+          "SELECT razorpay_payment_id, gateway_account FROM payments WHERE order_id = $1 AND status = 'paid' ORDER BY created_at DESC LIMIT 1",
           [id]
         );
         if (pRows.length && pRows[0].razorpay_payment_id) {
           paymentId = pRows[0].razorpay_payment_id;
+          gatewayAccount = pRows[0].gateway_account || 'primary';
+        }
+      } else {
+        const { rows: pRows } = await query(
+          "SELECT gateway_account FROM payments WHERE order_id = $1 OR razorpay_payment_id = $2 LIMIT 1",
+          [id, paymentId]
+        );
+        if (pRows.length) {
+          gatewayAccount = pRows[0].gateway_account || 'primary';
         }
       }
 
       if (paymentId) {
         try {
-          const refundResult = await paymentService.refundPayment(paymentId, order.total_amount, { reason: cancelReasonText });
+          const refundResult = await paymentService.refundPayment(
+            paymentId,
+            order.total_amount,
+            { reason: cancelReasonText },
+            gatewayAccount
+          );
           refundId = refundResult?.id || `RFND-${Date.now()}`;
         } catch (rfErr) {
           console.warn('[Razorpay Refund Warning]:', rfErr.message);

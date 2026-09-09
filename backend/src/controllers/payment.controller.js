@@ -35,15 +35,16 @@ async function createOrder(req, res, next) {
 
     const razorpayOrder = await paymentService.createRazorpayOrder(
       order.total_amount,
-      order.id
+      order.id,
+      req.body.preferredAccount || 'primary'
     );
 
-    // Save payment record
+    // Save payment record with gateway_account tracking
     await query(
-      `INSERT INTO payments (order_id, razorpay_order_id, amount, status)
-       VALUES ($1, $2, $3, 'created')
-       ON CONFLICT (razorpay_order_id) DO NOTHING`,
-      [order.id, razorpayOrder.id, order.total_amount]
+      `INSERT INTO payments (order_id, razorpay_order_id, amount, status, gateway_account)
+       VALUES ($1, $2, $3, 'created', $4)
+       ON CONFLICT (razorpay_order_id) DO UPDATE SET gateway_account = EXCLUDED.gateway_account`,
+      [order.id, razorpayOrder.id, order.total_amount, razorpayOrder.gatewayAccount || 'primary']
     );
 
     // Fetch user details for prefill
@@ -53,8 +54,9 @@ async function createOrder(req, res, next) {
     return res.json({
       success: true,
       data: {
-        razorpayKeyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+        razorpayKeyId: razorpayOrder.keyId || process.env.RAZORPAY_PRIMARY_KEY_ID || process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
         razorpay_order_id: razorpayOrder.id,
+        gateway_account: razorpayOrder.gatewayAccount || 'primary',
         amount: order.total_amount,
         currency: 'INR',
         name: 'Tohfa Gifting',
@@ -89,10 +91,18 @@ async function verifyPayment(req, res, next) {
       });
     }
 
+    // Lookup which gateway account handled this order
+    const { rows: payRows } = await query(
+      'SELECT gateway_account FROM payments WHERE razorpay_order_id = $1 LIMIT 1',
+      [razorpay_order_id]
+    );
+    const gatewayAccount = payRows[0]?.gateway_account || null;
+
     const isValid = paymentService.verifyPaymentSignature(
       razorpay_order_id,
       razorpay_payment_id,
-      razorpay_signature
+      razorpay_signature,
+      gatewayAccount
     );
 
     if (!isValid) {
@@ -106,7 +116,7 @@ async function verifyPayment(req, res, next) {
 
     const result = await paymentService.markOrderPaid(
       orderId,
-      { razorpay_payment_id, razorpay_order_id, razorpay_signature },
+      { razorpay_payment_id, razorpay_order_id, razorpay_signature, gateway_account: gatewayAccount },
       client
     );
 
