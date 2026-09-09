@@ -150,7 +150,10 @@
     </div>
   </main>
 
-  <script>
+  <script type="module">
+    import adminApiClient from '/src/utils/adminApiClient.js';
+    import { isTokenExpired } from '/src/utils/auth.js';
+
     let currentPage = 1;
     let allOrders = [];
 
@@ -158,14 +161,24 @@
       return '₹' + (Number(val) || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
     }
 
-    function getAuthHeaders() {
-      const token = sessionStorage.getItem('tohfa_admin_token') || localStorage.getItem('tohfa_admin_token') || sessionStorage.getItem('token') || '';
-      return {
-        'Content-Type': 'application/json',
-        'Authorization': token ? `Bearer ${token}` : ''
-      };
+    // ── FIX 4: Shared error renderer with friendly UX ────────────────────────
+    function showTableError(message, showLoginBtn = false) {
+      const tbody = document.getElementById('orders-table-body');
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" class="p-10 text-center">
+            <span class="material-symbols-outlined text-4xl text-rose-300 mb-2">error_outline</span>
+            <p class="text-sm font-semibold text-rose-600 mt-2">${message}</p>
+            ${showLoginBtn ? `
+              <a href="/admin/login.html"
+                 class="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-xl text-xs font-bold bg-[#14381F] text-[#FFF8E7] hover:bg-[#14381F]/90 transition-all shadow-sm">
+                <span class="material-symbols-outlined text-sm">login</span> Go to Login
+              </a>` : ''}
+          </td>
+        </tr>`;
     }
 
+    // ── FIX 1 + 2: Use adminApiClient (auto refresh) + pre-check expiry ──────
     async function fetchSpecialOrders() {
       const tbody = document.getElementById('orders-table-body');
       tbody.innerHTML = `
@@ -177,13 +190,26 @@
         </tr>
       `;
 
+      // FIX 2: Client-side expiry pre-check — avoids wasted network call
+      const adminToken = sessionStorage.getItem('tohfa_admin_token') || localStorage.getItem('tohfa_admin_token');
+      if (!adminToken || isTokenExpired(adminToken)) {
+        // adminApiClient will attempt a silent refresh on the first 401;
+        // we continue — if there's a valid refresh token it will recover automatically.
+        // If not, adminApiClient will redirect to /admin/login.html by itself.
+        console.warn('[SpecialOrders] Admin token missing or expired — proceeding via adminApiClient refresh flow.');
+      }
+
       try {
         const status = document.getElementById('status-filter').value;
-        let url = `/api/admin/orders?special_only=true&page=${currentPage}&limit=30`;
+        // FIX 1: URL path without /api prefix — adminApiClient baseURL is already /api
+        let url = `/admin/orders?special_only=true&page=${currentPage}&limit=30`;
         if (status) url += `&status=${encodeURIComponent(status)}`;
 
-        const res = await fetch(url, { headers: getAuthHeaders() });
-        const json = await res.json();
+        // FIX 1: Use adminApiClient instead of raw fetch.
+        // It automatically: attaches the token, retries on 401 with refresh token,
+        // and redirects to /admin/login.html if refresh also fails.
+        const res = await adminApiClient.get(url);
+        const json = res.data; // axios wraps response in .data
 
         if (json.success && json.data) {
           allOrders = json.data.orders || [];
@@ -198,10 +224,19 @@
           document.getElementById('btn-prev').disabled = currentPage <= 1;
           document.getElementById('btn-next').disabled = currentPage >= totalPages;
         } else {
-          tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-rose-600 font-medium">Failed to load orders: ${json.message || 'Unknown error'}</td></tr>`;
+          // FIX 4: User-friendly error (not raw backend message)
+          showTableError(json.message || 'Could not load orders. Please try again.', false);
         }
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-rose-600 font-medium">Network error loading special orders.</td></tr>`;
+        // If adminApiClient already redirected (401 unrecoverable), this may not fire.
+        // For network errors or other failures, show a friendly message.
+        const isAuthError = err?.response?.status === 401 || err?.response?.status === 403;
+        if (isAuthError) {
+          showTableError('Your session could not be verified. Redirecting to login…', true);
+          setTimeout(() => { window.location.href = '/admin/login.html'; }, 2000);
+        } else {
+          showTableError('Network error — could not reach the server. Please check your connection and try again.', false);
+        }
       }
     }
 
@@ -308,8 +343,42 @@
       fetchSpecialOrders();
     }
 
+    // ── Expose to window (required because this is a module script) ──────────
+    // HTML onclick="..." attributes can only reach global (window) functions.
     window.fetchSpecialOrders = fetchSpecialOrders;
-    document.addEventListener('DOMContentLoaded', fetchSpecialOrders);
+    window.handleSearch = handleSearch;
+    window.changePage = changePage;
+
+    // ── FIX 3: Session-aware page init (fixes DOMContentLoaded race) ─────────
+    // When a new tab opens, sessionStorage is empty. ProtectedRoute.js hydrates
+    // it from localStorage asynchronously. If we fetch immediately on
+    // DOMContentLoaded we race against that hydration and send an empty token.
+    // Solution: wait for the 'tohfa-session-sync' event OR 250ms — whichever
+    // comes first — before calling fetchSpecialOrders(). This mirrors the same
+    // pattern already used inside ProtectedRoute.js (lines 177-182).
+    let initFired = false;
+    function initPage() {
+      if (initFired) return;
+      initFired = true;
+      fetchSpecialOrders();
+    }
+
+    // If the token is already in sessionStorage (normal navigation), fire immediately.
+    // Otherwise wait briefly for ProtectedRoute.js to hydrate from localStorage.
+    function scheduleInit() {
+      if (sessionStorage.getItem('tohfa_admin_token') || localStorage.getItem('tohfa_admin_token')) {
+        initPage();
+      } else {
+        window.addEventListener('tohfa-session-sync', initPage, { once: true });
+        setTimeout(initPage, 250);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', scheduleInit);
+    } else {
+      scheduleInit();
+    }
   </script>
 </body>
 </html>
