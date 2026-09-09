@@ -20,7 +20,7 @@ const { createNotification } = require('../controllers/notification.controller')
 async function isEligibleForIThink(sellerId) {
   try {
     const { rows } = await query(
-      `SELECT COALESCE(sp.is_admin_managed, s.is_admin_managed, FALSE) AS is_admin_managed
+      `SELECT COALESCE(sp.is_admin_managed, s.is_admin_managed, 0) AS is_admin_managed
        FROM users u
        LEFT JOIN seller_profiles sp ON sp.user_id = u.id
        LEFT JOIN sellers s ON (s.user_id = u.id OR s.id = u.id)

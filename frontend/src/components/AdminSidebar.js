@@ -19,6 +19,7 @@
     { name: 'All Products',   href: '/admin/products.html',        icon: 'inventory_2'        },
     { name: 'Orders',         href: '/admin/orders.html',          icon: 'shopping_bag'       },
     { name: 'Refunds',        href: '/admin/refunds.html',         icon: 'currency_exchange'  },
+    { name: 'Payouts & Payments', href: '/admin/payouts.html',    icon: 'payments'           },
     { name: 'Categories',     href: '/admin/categories.html',      icon: 'category'           },
     { name: 'Reports',        href: '/admin/reports.html',         icon: 'flag'               },
     { name: 'Audit Logs',     href: '/admin/audit-logs.html',      icon: 'history_edu'        },

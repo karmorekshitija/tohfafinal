@@ -88,18 +88,29 @@ async function getOwnSellerProfile(req, res, next) {
     const { rows } = await query(
       `SELECT sp.id, sp.user_id,
               COALESCE(sp.store_name, sp.shop_name, u.display_name, u.name) AS store_name,
+              COALESCE(sp.shop_name, sp.store_name, u.display_name, u.name) AS shop_name,
+              COALESCE(sp.display_name, u.display_name, u.name) AS display_name,
+              sp.handle, sp.location,
               COALESCE(sp.bio, sp.shop_bio) AS bio,
+              sp.shop_bio,
+              sp.badges,
+              sp.story_headline, sp.story_description, sp.working_on, sp.video_url, sp.about_image_url,
               sp.whatsapp_number,
-              COALESCE(sp.profile_photo, sp.avatar_url, u.profile_photo_url) AS profile_photo,
+              COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, u.profile_photo_url) AS profile_photo,
               COALESCE(sp.banner_url, u.cover_photo_url) AS cover_photo,
-              COALESCE(sp.profile_photo, sp.avatar_url, u.profile_photo_url) AS logo_url,
+              COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, u.profile_photo_url) AS avatar_url,
+              COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, u.profile_photo_url) AS logo_url,
               COALESCE(sp.banner_url, u.cover_photo_url) AS banner_url,
               sp.seller_type, sp.is_approved,
               sp.rejection_reason,
               COALESCE(sp.vacation_mode_active, 0) AS vacation_mode,
+              COALESCE(sp.vacation_mode_active, 0) AS vacation_mode_active,
+              sp.vacation_message,
+              COALESCE(sp.is_accepting_orders, 1) AS is_accepting_orders,
+              COALESCE(sp.zai_mode_enabled, 0) AS zai_mode_enabled,
               sp.pickup_address, sp.bank_details,
               COALESCE(sp.onboarding_completed, FALSE) AS onboarding_completed,
-              COALESCE(sp.is_admin_managed, FALSE) AS is_admin_managed,
+              COALESCE(sp.is_admin_managed, 0) AS is_admin_managed,
               sp.created_at,
               u.name, u.email, u.phone
        FROM seller_profiles sp
@@ -139,32 +150,128 @@ async function getOwnSellerProfile(req, res, next) {
 async function updateSellerProfile(req, res, next) {
   try {
     const userId = req.user.id;
-    const { store_name, bio, whatsapp_number } = req.body;
+    const {
+      store_name, shop_name, display_name, handle, location,
+      bio, shop_bio, badges, whatsapp_number,
+      story_headline, story_description, working_on, video_url,
+      bank_details, bank_holder_name, bank_name, bank_account_num, bank_ifsc, bank_upi
+    } = req.body;
 
-    // Photo from upload middleware
+    const resolvedStoreName = store_name || shop_name || null;
+    const resolvedBio = bio || shop_bio || null;
+    const resolvedBadges = Array.isArray(badges) ? JSON.stringify(badges) : (badges || null);
+
+    // Profile photo & banner from upload middleware (if multipart was used)
     const profilePhoto = req.file?.path || null;
     const coverPhoto   = req.coverFile?.path || null;
 
+    let resolvedBankDetails = null;
+    if (bank_details && typeof bank_details === 'object') {
+      resolvedBankDetails = JSON.stringify(bank_details);
+    } else if (bank_holder_name || bank_name || bank_account_num || bank_ifsc || bank_upi) {
+      resolvedBankDetails = JSON.stringify({
+        account_holder: bank_holder_name || '',
+        account_holder_name: bank_holder_name || '',
+        bank_name: bank_name || '',
+        account_number: bank_account_num || '',
+        ifsc_code: (bank_ifsc || '').toUpperCase(),
+        upi_id: bank_upi || null
+      });
+    }
+
     const { rows } = await query(
       `UPDATE seller_profiles
-       SET store_name      = COALESCE($1, store_name),
-           bio             = COALESCE($2, bio),
-           whatsapp_number = COALESCE($3, whatsapp_number),
-           logo_url        = COALESCE($4, logo_url),
-           banner_url      = COALESCE($5, banner_url),
-           updated_at      = NOW()
-       WHERE user_id = $6
-       RETURNING id, store_name, bio, whatsapp_number,
-                 logo_url AS profile_photo, banner_url AS cover_photo, logo_url, banner_url,
-                 seller_type, is_approved, vacation_mode, store_visibility, capacity_limit`,
-      [store_name || null, bio || null, whatsapp_number || null, profilePhoto, coverPhoto, userId]
+       SET store_name        = COALESCE($1, store_name),
+           shop_name         = COALESCE($1, shop_name),
+           display_name      = COALESCE($2, display_name),
+           handle            = COALESCE($3, handle),
+           location          = COALESCE($4, location),
+           bio               = COALESCE($5, bio),
+           shop_bio          = COALESCE($5, shop_bio),
+           badges            = COALESCE($6, badges),
+           whatsapp_number   = COALESCE($7, whatsapp_number),
+           story_headline    = COALESCE($8, story_headline),
+           story_description = COALESCE($9, story_description),
+           working_on        = COALESCE($10, working_on),
+           video_url         = COALESCE($11, video_url),
+           profile_photo     = COALESCE($12, profile_photo),
+           avatar_url        = COALESCE($12, avatar_url),
+           banner_url        = COALESCE($13, banner_url),
+           bank_details      = COALESCE($14::jsonb, bank_details),
+           updated_at        = NOW()
+       WHERE user_id = $15
+       RETURNING *`,
+      [
+        resolvedStoreName,
+        display_name || null,
+        handle ? handle.toLowerCase() : null,
+        location || null,
+        resolvedBio,
+        resolvedBadges,
+        whatsapp_number || null,
+        story_headline || null,
+        story_description || null,
+        working_on || null,
+        video_url || null,
+        profilePhoto,
+        coverPhoto,
+        resolvedBankDetails,
+        userId
+      ]
     );
 
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'Seller profile not found.' });
     }
 
-    return res.json({ success: true, data: { profile: sanitizeSellerProfile(rows[0]) } });
+    // Keep sellers master table in sync if applicable
+    await query(
+      `UPDATE sellers
+       SET store_name        = COALESCE($1, store_name),
+           shop_name         = COALESCE($1, shop_name),
+           handle            = COALESCE($2, handle),
+           city              = COALESCE($3, city),
+           bio               = COALESCE($4, bio),
+           badges            = COALESCE($5, badges),
+           whatsapp_number   = COALESCE($6, whatsapp_number),
+           about_headline    = COALESCE($7, about_headline),
+           about_description = COALESCE($8, about_description),
+           working_on_label  = COALESCE($9, working_on_label),
+           about_video_url   = COALESCE($10, about_video_url),
+           photo_url         = COALESCE($11, photo_url),
+           banner_url        = COALESCE($12, banner_url),
+           bank_details      = COALESCE($13::jsonb, bank_details),
+           updated_at        = NOW()
+       WHERE user_id = $14`,
+      [
+        resolvedStoreName,
+        handle ? handle.toLowerCase() : null,
+        location || null,
+        resolvedBio,
+        resolvedBadges,
+        whatsapp_number || null,
+        story_headline || null,
+        story_description || null,
+        working_on || null,
+        video_url || null,
+        profilePhoto,
+        coverPhoto,
+        resolvedBankDetails,
+        userId
+      ]
+    ).catch(() => {});
+
+    const updatedProfile = sanitizeSellerProfile(rows[0]);
+    const photo = updatedProfile.profile_photo || updatedProfile.avatar_url || '/img/default-avatar.png';
+    const banner = updatedProfile.banner_url || '/img/default-seller-banner.png';
+    updatedProfile.profile_photo = photo;
+    updatedProfile.avatar_url = photo;
+    updatedProfile.logo_url = photo;
+    updatedProfile.banner_url = banner;
+    updatedProfile.cover_photo = banner;
+    updatedProfile.vacation_mode = Boolean(updatedProfile.vacation_mode_active);
+
+    return res.json({ success: true, data: { profile: updatedProfile, ...updatedProfile } });
   } catch (err) {
     next(err);
   }
@@ -199,6 +306,14 @@ async function getPublicSellerProfile(req, res, next) {
           OR s.id::text = $1::text
           OR sp.slug = $1
           OR s.slug = $1
+       ORDER BY CASE 
+         WHEN sp.slug = $1 OR s.slug = $1 THEN 1
+         WHEN u.id::text = $1::text AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 2
+         WHEN u.id::text = $1::text THEN 3
+         WHEN sp.id::text = $1::text THEN 4
+         WHEN s.id::text = $1::text THEN 5
+         ELSE 6 
+       END ASC
        LIMIT 1`,
       [String(rawId)]
     );
@@ -275,38 +390,76 @@ async function getPublicSellerProfile(req, res, next) {
 async function updateStoreConfig(req, res, next) {
   try {
     const userId = req.user.id;
-    const { vacation_mode, vacation_mode_active, store_visibility, shipping_presets, capacity_limit, pickup_address, vacation_message, vacation_note } = req.body;
-    const finalVacationMode = vacation_mode !== undefined ? Boolean(vacation_mode) : (vacation_mode_active !== undefined ? Boolean(vacation_mode_active) : undefined);
+    const {
+      vacation_mode,
+      vacation_mode_active,
+      is_accepting_orders,
+      accept_orders,
+      zai_mode,
+      zai_mode_enabled,
+      pickup_address,
+      vacation_message,
+      weekly_capacity,
+      daily_limit
+    } = req.body;
+
+    let finalVacationMode = null;
+    if (vacation_mode !== undefined) {
+      finalVacationMode = (vacation_mode === true || vacation_mode === 1 || vacation_mode === '1') ? 1 : 0;
+    } else if (vacation_mode_active !== undefined) {
+      finalVacationMode = (vacation_mode_active === true || vacation_mode_active === 1 || vacation_mode_active === '1') ? 1 : 0;
+    }
+
+    let finalAcceptingOrders = null;
+    if (is_accepting_orders !== undefined) {
+      finalAcceptingOrders = (is_accepting_orders === true || is_accepting_orders === 1 || is_accepting_orders === '1') ? 1 : 0;
+    } else if (accept_orders !== undefined) {
+      finalAcceptingOrders = (accept_orders === true || accept_orders === 1 || accept_orders === '1') ? 1 : 0;
+    }
+
+    let finalZaiMode = null;
+    if (zai_mode !== undefined) {
+      finalZaiMode = (zai_mode === true || zai_mode === 1 || zai_mode === '1') ? 1 : 0;
+    } else if (zai_mode_enabled !== undefined) {
+      finalZaiMode = (zai_mode_enabled === true || zai_mode_enabled === 1 || zai_mode_enabled === '1') ? 1 : 0;
+    }
+
+    const msg = vacation_message !== undefined ? vacation_message : null;
 
     const { rows } = await query(
       `UPDATE seller_profiles
-       SET vacation_mode    = COALESCE($1, vacation_mode),
-           store_visibility = COALESCE($2, store_visibility),
-           shipping_presets = COALESCE($3, shipping_presets),
-           capacity_limit   = COALESCE($4, capacity_limit),
-           pickup_address   = COALESCE($5, pickup_address),
-           vacation_message = COALESCE($6, vacation_message),
-           is_active        = CASE WHEN $1 = TRUE THEN FALSE WHEN $1 = FALSE THEN TRUE ELSE is_active END,
-           updated_at       = NOW()
-       WHERE user_id = $7
-       RETURNING id, vacation_mode, store_visibility, shipping_presets, capacity_limit, pickup_address, vacation_message`,
+       SET vacation_mode_active = COALESCE($1, vacation_mode_active),
+           is_accepting_orders  = COALESCE($2, is_accepting_orders),
+           zai_mode_enabled     = COALESCE($3, zai_mode_enabled),
+           vacation_message     = COALESCE($4, vacation_message),
+           pickup_address       = COALESCE($5::jsonb, pickup_address),
+           weekly_production_capacity = COALESCE($6, weekly_production_capacity),
+           daily_order_limit    = COALESCE($7, daily_order_limit),
+           is_active            = CASE WHEN $1 = 1 THEN 0 WHEN $1 = 0 THEN 1 ELSE is_active END,
+           updated_at           = NOW()
+       WHERE user_id = $8
+       RETURNING id, user_id, vacation_mode_active, vacation_mode_active AS vacation_mode,
+                 is_accepting_orders, is_accepting_orders AS store_visibility,
+                 zai_mode_enabled, vacation_message, pickup_address,
+                 weekly_production_capacity, daily_order_limit, is_active`,
       [
-        finalVacationMode !== undefined ? finalVacationMode : null,
-        store_visibility !== undefined ? store_visibility : (finalVacationMode === true ? false : null),
-        shipping_presets ? JSON.stringify(shipping_presets) : null,
-        capacity_limit !== undefined ? capacity_limit : null,
+        finalVacationMode,
+        finalAcceptingOrders,
+        finalZaiMode,
+        msg,
         pickup_address ? (typeof pickup_address === 'string' ? pickup_address : JSON.stringify(pickup_address)) : null,
-        vacation_message || vacation_note || null,
-        userId,
+        weekly_capacity !== undefined ? parseInt(weekly_capacity, 10) : null,
+        daily_limit !== undefined ? parseInt(daily_limit, 10) : null,
+        userId
       ]
     );
 
-    if (finalVacationMode !== undefined) {
+    if (finalVacationMode !== null) {
       await query(
         `UPDATE sellers
-         SET is_active = $1, vacation_mode = $2, updated_at = NOW()
-         WHERE user_id = $3 OR id = $3`,
-        [!finalVacationMode, finalVacationMode, userId]
+         SET is_active = $1, updated_at = NOW()
+         WHERE user_id = $2 OR id = $2`,
+        [finalVacationMode === 1 ? 0 : 1, userId]
       ).catch(() => {});
     }
 
@@ -314,7 +467,16 @@ async function updateStoreConfig(req, res, next) {
       return res.status(404).json({ success: false, message: 'Seller profile not found.' });
     }
 
-    return res.json({ success: true, data: { config: rows[0] } });
+    const config = {
+      ...rows[0],
+      vacation_mode: Boolean(rows[0].vacation_mode_active),
+      vacation_mode_active: rows[0].vacation_mode_active,
+      is_accepting_orders: rows[0].is_accepting_orders,
+      store_visibility: Boolean(rows[0].is_accepting_orders),
+      zai_mode_enabled: rows[0].zai_mode_enabled,
+    };
+
+    return res.json({ success: true, data: { config, ...config } });
   } catch (err) {
     next(err);
   }
@@ -326,10 +488,10 @@ async function updateStoreConfig(req, res, next) {
 async function toggleVacationMode(req, res, next) {
   try {
     const userId = req.user.id;
-    const { vacation_mode, is_active, store_visibility, vacation_message } = req.body;
+    const { vacation_mode, is_active, vacation_message } = req.body;
 
     const { rows: currentProfile } = await query(
-      'SELECT vacation_mode, store_visibility FROM seller_profiles WHERE user_id = $1',
+      'SELECT vacation_mode_active, is_active FROM seller_profiles WHERE user_id = $1',
       [userId]
     );
 
@@ -337,39 +499,31 @@ async function toggleVacationMode(req, res, next) {
       return res.status(404).json({ success: false, message: 'Seller profile not found.' });
     }
 
-    let newVacationMode = currentProfile[0].vacation_mode;
+    let newVacationMode = currentProfile[0].vacation_mode_active === 1;
     if (vacation_mode !== undefined) {
-      newVacationMode = Boolean(vacation_mode);
+      newVacationMode = Boolean(vacation_mode === true || vacation_mode === 1 || vacation_mode === '1');
     } else if (is_active !== undefined) {
-      newVacationMode = !Boolean(is_active);
-    }
-
-    let newVisibility = currentProfile[0].store_visibility;
-    if (store_visibility !== undefined) {
-      newVisibility = Boolean(store_visibility);
-    } else if (newVacationMode) {
-      newVisibility = false;
+      newVacationMode = !Boolean(is_active === true || is_active === 1 || is_active === '1');
     } else {
-      newVisibility = true;
+      newVacationMode = !newVacationMode;
     }
 
     const { rows } = await query(
       `UPDATE seller_profiles
-       SET vacation_mode = $1,
-           store_visibility = $2,
-           is_active = $3,
-           vacation_message = COALESCE($4, vacation_message),
+       SET vacation_mode_active = $1,
+           is_active = $2,
+           vacation_message = COALESCE($3, vacation_message),
            updated_at = NOW()
-       WHERE user_id = $5
-       RETURNING id, vacation_mode, store_visibility, capacity_limit, is_active, vacation_message`,
-      [newVacationMode, newVisibility, !newVacationMode, vacation_message || null, userId]
+       WHERE user_id = $4
+       RETURNING id, vacation_mode_active, is_active, vacation_message`,
+      [newVacationMode ? 1 : 0, newVacationMode ? 0 : 1, vacation_message || null, userId]
     );
 
     await query(
       `UPDATE sellers
-       SET is_active = $1, vacation_mode = $2, updated_at = NOW()
-       WHERE user_id = $3 OR id = $3`,
-      [!newVacationMode, newVacationMode, userId]
+       SET is_active = $1, updated_at = NOW()
+       WHERE user_id = $2 OR id = $2`,
+      [newVacationMode ? 0 : 1, userId]
     ).catch(() => {});
 
     return res.json({
@@ -377,10 +531,11 @@ async function toggleVacationMode(req, res, next) {
       message: newVacationMode ? 'Store placed on vacation mode.' : 'Store is now active and accepting orders.',
       data: {
         config: rows[0],
-        vacation_mode: rows[0].vacation_mode,
-        store_visibility: rows[0].store_visibility,
+        vacation_mode: newVacationMode,
+        vacation_mode_active: newVacationMode ? 1 : 0,
         is_active: rows[0].is_active,
-      },
+        vacation_message: rows[0].vacation_message
+      }
     });
   } catch (err) {
     next(err);
@@ -555,7 +710,7 @@ async function getApplicationStatus(req, res, next) {
     let { rows } = await query(
       `SELECT is_approved, verification_status, rejection_reason, seller_type, created_at, is_active,
               COALESCE(onboarding_completed, FALSE) AS onboarding_completed,
-              COALESCE(is_admin_managed, FALSE) AS is_admin_managed
+              COALESCE(is_admin_managed, 0) AS is_admin_managed
        FROM seller_profiles WHERE user_id = $1`,
       [userId]
     );
@@ -564,7 +719,7 @@ async function getApplicationStatus(req, res, next) {
       const sellerRes = await query(
         `SELECT is_approved, verification_status, rejection_reason, created_at, is_active,
                 COALESCE(onboarding_completed, FALSE) AS onboarding_completed,
-                COALESCE(is_admin_managed, FALSE) AS is_admin_managed
+                COALESCE(is_admin_managed, 0) AS is_admin_managed
          FROM sellers WHERE user_id = $1`,
         [userId]
       );
@@ -1124,7 +1279,7 @@ async function getSellerOrders(req, res, next) {
       `SELECT o.id, o.buyer_id, o.seller_id, o.total_amount, o.total_paise,
               o.order_ref, o.order_type, o.customization, o.customization_summary,
               o.status, o.payment_status, o.payout_status,
-              o.tracking_id, o.tracking_url, o.delivered_at, o.created_at, o.updated_at,
+              o.tracking_id, o.tracking_url, o.notes, o.studio_notes, o.delivered_at, o.created_at, o.updated_at,
               u.name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone,
               a.line1 AS delivery_line1, a.line2 AS delivery_line2, a.city AS delivery_city,
               a.state AS delivery_state, a.pincode AS delivery_pincode,
@@ -1192,6 +1347,19 @@ async function getSellerOrders(req, res, next) {
       }
       const rawTotal = o.total_amount ? (o.total_amount >= 10000 ? o.total_amount / 100.0 : parseFloat(o.total_amount)) : (o.total_paise ? o.total_paise / 100.0 : 0);
 
+      let studio_notes = [];
+      const rawNotes = o.notes || o.studio_notes;
+      if (rawNotes) {
+        try {
+          const parsed = JSON.parse(rawNotes);
+          if (Array.isArray(parsed)) studio_notes = parsed;
+          else if (typeof parsed === 'object') studio_notes = [parsed];
+          else studio_notes = [{ text: String(rawNotes), ts: o.updated_at || o.created_at }];
+        } catch {
+          studio_notes = [{ text: String(rawNotes), ts: o.updated_at || o.created_at }];
+        }
+      }
+
       return {
         ...o,
         order_ref: o.order_ref || `TOHFA-${String(o.id).substring(0, 8).toUpperCase()}`,
@@ -1200,17 +1368,27 @@ async function getSellerOrders(req, res, next) {
         total_paise: Math.round(rawTotal * 100),
         item_preview: itemPreview,
         items,
+        studio_notes,
       };
     });
+
+    const total = parseInt(countRows[0]?.total || 0, 10);
+    const totalPages = Math.ceil(total / limitNum) || 1;
 
     return res.json({
       success: true,
       data: {
         orders: formattedOrders,
-        total: parseInt(countRows[0]?.total || 0, 10),
+        total,
         page: pageNum,
         limit: limitNum,
+        total_pages: totalPages,
       },
+      orders: formattedOrders,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      total_pages: totalPages
     });
   } catch (err) {
     next(err);
@@ -1242,7 +1420,7 @@ async function getSellerOrderDetail(req, res, next) {
 
     const { rows } = await query(
       `SELECT o.id, o.buyer_id, o.seller_id, o.address_id, o.total_amount, o.status, o.payment_status,
-              o.payout_status, o.tracking_id, o.tracking_url, o.notes, o.delivered_at, o.created_at, o.updated_at,
+              o.payout_status, o.tracking_id, o.tracking_url, o.notes, o.studio_notes, o.delivered_at, o.created_at, o.updated_at,
               u.name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone,
               sp.store_name, sp.whatsapp_number AS seller_whatsapp, sp.pickup_address,
               a.name AS recipient_name, a.phone AS recipient_phone,
@@ -1351,14 +1529,15 @@ async function getSellerOrderDetail(req, res, next) {
 
     // Studio notes extraction
     let studio_notes = [];
-    if (order.notes) {
+    const rawNotes = order.notes || order.studio_notes;
+    if (rawNotes) {
       try {
-        const parsed = JSON.parse(order.notes);
+        const parsed = JSON.parse(rawNotes);
         if (Array.isArray(parsed)) studio_notes = parsed;
         else if (typeof parsed === 'object') studio_notes = [parsed];
-        else studio_notes = [{ text: String(order.notes), ts: order.updated_at || order.created_at }];
+        else studio_notes = [{ text: String(rawNotes), ts: order.updated_at || order.created_at }];
       } catch {
-        studio_notes = [{ text: String(order.notes), ts: order.updated_at || order.created_at }];
+        studio_notes = [{ text: String(rawNotes), ts: order.updated_at || order.created_at }];
       }
     }
 
@@ -1462,11 +1641,15 @@ async function updateSellerOrderStatus(req, res, next) {
     }
 
     const currentOrder = orderCheck[0];
+    const currentStatus = String(currentOrder.status || '').toLowerCase();
+    const targetStatus = String(status || '').toLowerCase();
+    const isStatusChange = currentStatus !== targetStatus;
+    const isNoteOnly = Boolean(req.body.studio_note && !isStatusChange);
 
-    // Validate state transition if not admin
-    if (role !== 'admin' && role !== 'master_admin') {
-      const allowedNext = VALID_TRANSITIONS[currentOrder.status] || [];
-      if (!allowedNext.includes(status)) {
+    // Validate state transition if not admin and not a note-only update
+    if (role !== 'admin' && role !== 'master_admin' && !isNoteOnly) {
+      const allowedNext = VALID_TRANSITIONS[currentOrder.status] || VALID_TRANSITIONS[currentStatus] || [];
+      if (!allowedNext.includes(targetStatus)) {
         return res.status(400).json({
           success: false,
           message: `Cannot transition order status from "${currentOrder.status}" to "${status}". Valid transitions are: ${allowedNext.join(', ') || 'none (terminal state)'}.`,
@@ -1482,16 +1665,18 @@ async function updateSellerOrderStatus(req, res, next) {
 
     if (req.body.studio_note) {
       let existingNotes = [];
+      const rawNotes = currentOrder.notes || currentOrder.studio_notes;
       try {
-        const p = JSON.parse(currentOrder.notes);
+        const p = JSON.parse(rawNotes);
         if (Array.isArray(p)) existingNotes = p;
-        else if (currentOrder.notes) existingNotes = [{ text: currentOrder.notes, ts: currentOrder.created_at }];
+        else if (rawNotes) existingNotes = [{ text: String(rawNotes), ts: currentOrder.created_at }];
       } catch {
-        if (currentOrder.notes) existingNotes = [{ text: currentOrder.notes, ts: currentOrder.created_at }];
+        if (rawNotes) existingNotes = [{ text: String(rawNotes), ts: currentOrder.created_at }];
       }
       existingNotes.push({ text: req.body.studio_note, ts: new Date().toISOString() });
-      queryParams.push(JSON.stringify(existingNotes));
-      updateQuery += `, notes = $${queryParams.length}`;
+      const serializedNotes = JSON.stringify(existingNotes);
+      queryParams.push(serializedNotes);
+      updateQuery += `, notes = $${queryParams.length}, studio_notes = $${queryParams.length}`;
     }
 
     if (req.body.tracking_id || req.body.tracking_number) {
@@ -1507,8 +1692,8 @@ async function updateSellerOrderStatus(req, res, next) {
 
     const order = rows[0];
 
-    // If cancelled, restock product inventory
-    if (status === 'cancelled') {
+    // If cancelled, restock product inventory (only when status actually changes to cancelled)
+    if (isStatusChange && targetStatus === 'cancelled') {
       const { rows: itemRows } = await query(
         'SELECT product_id, quantity FROM order_items WHERE order_id = $1',
         [id]
@@ -1521,7 +1706,7 @@ async function updateSellerOrderStatus(req, res, next) {
       }
     }
 
-    // Notify buyer
+    // Notify buyer only if the status actually changed
     const statusMessages = {
       confirmed: 'Your handcrafted gift order has been confirmed by the artisan.',
       crafting: 'The artisan has begun handcrafting your bespoke creation!',
@@ -1531,7 +1716,7 @@ async function updateSellerOrderStatus(req, res, next) {
       cancelled: 'Your order has been cancelled.',
     };
 
-    if (order.buyer_id) {
+    if (isStatusChange && order.buyer_id) {
       await createNotification(
         order.buyer_id,
         'order_status',
@@ -1541,9 +1726,13 @@ async function updateSellerOrderStatus(req, res, next) {
       ).catch(e => console.warn('[Order Status] Notification trigger failed:', e.message));
     }
 
+    const responseMsg = isNoteOnly
+      ? 'Studio note saved.'
+      : `Order status updated to ${status}.`;
+
     return res.json({
       success: true,
-      message: `Order status updated to ${status}.`,
+      message: responseMsg,
       data: {
         ...order,
         order,
@@ -1676,17 +1865,41 @@ async function getSellerWallet(req, res, next) {
     );
 
     if (!rows.length) {
-      const initRes = await query(
-        `INSERT INTO wallets (seller_id, user_id, balance, holding_balance, currency)
-         VALUES ($1, $2, 0.00, 0.00, 'INR')
-         ON CONFLICT (seller_id) DO UPDATE SET updated_at = NOW()
-         RETURNING *`,
-        [sellerId, userId]
-      );
-      rows = initRes.rows;
+      try {
+        const initRes = await query(
+          `INSERT INTO wallets (seller_id, user_id, balance, holding_balance, currency)
+           VALUES ($1, $2, 0.00, 0.00, 'INR')
+           ON CONFLICT (seller_id) DO UPDATE SET updated_at = NOW()
+           RETURNING *`,
+          [sellerId, userId]
+        );
+        rows = initRes.rows;
+      } catch (initErr) {
+        console.warn('[getSellerWallet] Auto-insert wallet notice:', initErr.message);
+      }
     }
 
     const wallet = rows[0];
+
+    if (!wallet) {
+      return res.json({
+        success: true,
+        data: {
+          wallet: {
+            balance: 0,
+            holding_balance: 0,
+            currency: 'INR',
+            seller_id: sellerId,
+            status: 'not_initialized'
+          },
+          balance: 0,
+          holding_balance: 0,
+          currency: 'INR',
+          seller_id: sellerId,
+          updated_at: new Date().toISOString()
+        }
+      });
+    }
 
     // Compute live holding & available balances to keep wallet in sync
     const { rows: liveAvail } = await query(
@@ -2426,7 +2639,15 @@ async function updateOrderTracking(req, res, next) {
 
     // Verify order exists and belongs to seller (or admin)
     const { rows: existingRows } = await query(
-      `SELECT * FROM orders WHERE id = $1 AND (seller_id = $2 OR $3 = 'admin' OR $3 = 'master_admin')`,
+      `SELECT * FROM orders 
+       WHERE (id::text = $1 OR order_ref = $1)
+         AND (
+           seller_id = $2 
+           OR seller_id IN (SELECT id FROM sellers WHERE user_id = $2)
+           OR seller_id IN (SELECT id FROM seller_profiles WHERE user_id = $2)
+           OR $3 = 'admin' 
+           OR $3 = 'master_admin'
+         )`,
       [id, sellerId, role]
     );
 
@@ -2440,12 +2661,14 @@ async function updateOrderTracking(req, res, next) {
     const { rows } = await query(
       `UPDATE orders
        SET tracking_id = $1,
-           tracking_url = $2,
-           status = $3,
+           courier = $2,
+           tracking_url = $3,
+           status = $4,
+           dispatched_at = COALESCE(dispatched_at, NOW()::text),
            updated_at = NOW()
-       WHERE id = $4
+       WHERE id = $5
        RETURNING *`,
-      [trackingNumber, trackingUrl, newStatus, id]
+      [trackingNumber, courier, trackingUrl, newStatus, order.id]
     );
 
     await query(
@@ -2453,10 +2676,13 @@ async function updateOrderTracking(req, res, next) {
        SET tracking_url = $1,
            updated_at = NOW()
        WHERE order_id = $2 OR id = $2`,
-      [trackingUrl, id]
+      [trackingUrl, order.id]
     ).catch(() => {});
 
-    const updatedOrder = rows[0];
+    const updatedOrder = rows[0] || order;
+    if (updatedOrder) {
+      updatedOrder.tracking_number = updatedOrder.tracking_id;
+    }
 
     // Notify buyer
     if (updatedOrder.buyer_id) {
@@ -2466,7 +2692,7 @@ async function updateOrderTracking(req, res, next) {
         'Your Order Has Been Dispatched! 🚚',
         `Your handcrafted creation is on its way with ${courier}. Waybill tracking #${trackingNumber}.`,
         {
-          order_id: id,
+          order_id: order.id,
           tracking_id: trackingNumber,
           tracking_url: trackingUrl,
           courier
@@ -2477,7 +2703,12 @@ async function updateOrderTracking(req, res, next) {
     return res.json({
       success: true,
       message: 'Order tracking details updated successfully.',
-      data: { order: updatedOrder }
+      data: { 
+        order: updatedOrder,
+        tracking_number: trackingNumber,
+        tracking_id: trackingNumber,
+        courier
+      }
     });
   } catch (err) {
     next(err);
@@ -2495,10 +2726,14 @@ async function getCatalogSummary(req, res, next) {
     const { rows } = await query(
       `SELECT 
          COUNT(*)::int AS total_listings,
-         COUNT(*) FILTER (WHERE stock_quantity <= COALESCE(low_stock_threshold, 5))::int AS low_stock,
+         COUNT(*) FILTER (WHERE COALESCE(stock_quantity, stock_qty, 0) <= COALESCE(low_stock_threshold, 5))::int AS low_stock,
          COUNT(*) FILTER (WHERE discount_active::text IN ('true', '1', 't'))::int AS on_discount
        FROM products
-       WHERE seller_id::text = $1`,
+       WHERE (
+         seller_id::text = $1 
+         OR seller_id IN (SELECT id FROM sellers WHERE user_id = $1::int)
+         OR seller_id IN (SELECT id FROM seller_profiles WHERE user_id = $1::int)
+       ) AND status NOT IN ('deleted')`,
       [String(sellerId)]
     );
 
@@ -2527,7 +2762,7 @@ async function updateListingDiscount(req, res, next) {
     const role = req.user.role;
     const { discount_active, discount_percentage } = req.body;
 
-    const isActive = Boolean(discount_active);
+    const isActive = discount_active === true || discount_active === 'true' || discount_active === 1 || discount_active === '1';
     const pct = isActive ? parseInt(discount_percentage, 10) : null;
 
     if (isActive && (!pct || isNaN(pct) || pct < 1 || pct > 90)) {
@@ -2535,7 +2770,15 @@ async function updateListingDiscount(req, res, next) {
     }
 
     const { rows: pRows } = await query(
-      `SELECT id, base_price FROM products WHERE id = $1 AND (seller_id = $2 OR $3 = 'admin' OR $3 = 'master_admin')`,
+      `SELECT id, base_price FROM products 
+       WHERE id::text = $1 
+         AND (
+           seller_id = $2 
+           OR seller_id IN (SELECT id FROM sellers WHERE user_id = $2)
+           OR seller_id IN (SELECT id FROM seller_profiles WHERE user_id = $2)
+           OR $3 = 'admin' 
+           OR $3 = 'master_admin'
+         )`,
       [id, sellerId, role]
     );
 
@@ -2544,7 +2787,8 @@ async function updateListingDiscount(req, res, next) {
     }
 
     const basePrice = parseFloat(pRows[0].base_price || 0);
-    const discountedPrice = isActive ? Math.round(basePrice * (1 - pct / 100) * 100) / 100 : null;
+    const salePrice = isActive ? Math.round(basePrice * (1 - pct / 100) * 100) / 100 : null;
+    const discountedPricePaise = isActive ? Math.round(basePrice * (1 - pct / 100) * 100) : null;
 
     const { rows } = await query(
       `UPDATE products
@@ -2554,7 +2798,7 @@ async function updateListingDiscount(req, res, next) {
            updated_at = NOW()
        WHERE id = $4
        RETURNING id, name, base_price, discount_active, discount_percentage, sale_price`,
-      [isActive, pct, discountedPrice, id]
+      [isActive ? 1 : 0, pct, salePrice, pRows[0].id]
     );
 
     return res.json({
@@ -2565,7 +2809,8 @@ async function updateListingDiscount(req, res, next) {
         id,
         discount_active: isActive,
         discount_percentage: pct,
-        discounted_price: discountedPrice
+        discounted_price: discountedPricePaise,
+        sale_price: salePrice
       }
     });
   } catch (err) {
@@ -2583,7 +2828,7 @@ async function bulkDiscountListings(req, res, next) {
     const role = req.user.role;
     const { product_ids, discount_percentage, discount_active } = req.body;
 
-    const isActive = discount_active !== false && discount_active !== 'false' && discount_active !== 0;
+    const isActive = discount_active !== false && discount_active !== 'false' && discount_active !== 0 && discount_active !== '0';
     const pct = isActive ? parseInt(discount_percentage, 10) : null;
 
     if (isActive && (!pct || isNaN(pct) || pct < 1 || pct > 90)) {
@@ -2594,15 +2839,33 @@ async function bulkDiscountListings(req, res, next) {
       return res.status(400).json({ success: false, message: 'product_ids array is required.' });
     }
 
+    const numericIds = product_ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+    if (!numericIds.length) {
+      return res.status(400).json({ success: false, message: 'Valid product IDs are required.' });
+    }
+
+    const multiplier = (isActive && pct) ? (1.0 - pct / 100.0) : null;
+
     const { rows } = await query(
       `UPDATE products
        SET discount_active = $1,
            discount_percentage = $2,
-           sale_price = CASE WHEN $1 = TRUE THEN ROUND((base_price * (1 - ($2::numeric / 100)))::numeric, 2) ELSE NULL END,
+           sale_price = CASE 
+             WHEN $1 = 1 AND $3::numeric IS NOT NULL 
+             THEN ROUND(base_price * $3::numeric, 2) 
+             ELSE NULL 
+           END,
            updated_at = NOW()
-       WHERE id = ANY($3::uuid[]) AND (seller_id = $4 OR $5 = 'admin' OR $5 = 'master_admin')
+       WHERE id = ANY($4::int[]) 
+         AND (
+           seller_id = $5 
+           OR seller_id IN (SELECT id FROM sellers WHERE user_id = $5)
+           OR seller_id IN (SELECT id FROM seller_profiles WHERE user_id = $5)
+           OR $6 = 'admin' 
+           OR $6 = 'master_admin'
+         )
        RETURNING id, base_price, discount_active, discount_percentage, sale_price`,
-      [isActive, pct, product_ids, sellerId, role]
+      [isActive ? 1 : 0, pct, multiplier, numericIds, sellerId, role]
     );
 
     return res.json({
@@ -2625,22 +2888,34 @@ async function bulkDiscountAllListings(req, res, next) {
     const role = req.user.role;
     const { discount_percentage, discount_active } = req.body;
 
-    const isActive = discount_active !== false && discount_active !== 'false' && discount_active !== 0;
+    const isActive = discount_active !== false && discount_active !== 'false' && discount_active !== 0 && discount_active !== '0';
     const pct = isActive ? parseInt(discount_percentage, 10) : null;
 
     if (isActive && (!pct || isNaN(pct) || pct < 1 || pct > 90)) {
       return res.status(400).json({ success: false, message: 'Discount percentage must be between 1 and 90.' });
     }
 
+    const multiplier = (isActive && pct) ? (1.0 - pct / 100.0) : null;
+
     const { rows } = await query(
       `UPDATE products
        SET discount_active = $1,
-           discount_percentage = ($2)::integer,
-           sale_price = CASE WHEN $1 = TRUE AND ($2)::numeric IS NOT NULL THEN ROUND((base_price * (1 - (($2)::numeric / 100.0)))::numeric, 2) ELSE NULL END,
+           discount_percentage = $2,
+           sale_price = CASE 
+             WHEN $1 = 1 AND $3::numeric IS NOT NULL 
+             THEN ROUND(base_price * $3::numeric, 2) 
+             ELSE NULL 
+           END,
            updated_at = NOW()
-       WHERE (seller_id = $3 OR $4 = 'admin' OR $4 = 'master_admin')
+       WHERE (
+         seller_id = $4 
+         OR seller_id IN (SELECT id FROM sellers WHERE user_id = $4)
+         OR seller_id IN (SELECT id FROM seller_profiles WHERE user_id = $4)
+         OR $5 = 'admin' 
+         OR $5 = 'master_admin'
+       ) AND status NOT IN ('deleted')
        RETURNING id, base_price, discount_active, discount_percentage, sale_price`,
-      [isActive, pct, sellerId, role]
+      [isActive ? 1 : 0, pct, multiplier, sellerId, role]
     );
 
     return res.json({
@@ -2750,6 +3025,20 @@ async function completeOnboarding(req, res, next) {
       [JSON.stringify(pickupAddress), JSON.stringify(bankDetails), userId]
     ).catch(() => {});
 
+    // Ensure wallet exists for this seller
+    try {
+      const { rows: sellerRecord } = await query('SELECT id FROM sellers WHERE user_id = $1', [userId]);
+      const targetSellerId = sellerRecord[0]?.id || userId;
+      await query(
+        `INSERT INTO wallets (seller_id, user_id, balance, currency)
+         VALUES ($1, $2, 0, 'INR')
+         ON CONFLICT (seller_id) DO NOTHING`,
+        [targetSellerId, userId]
+      );
+    } catch (wErr) {
+      console.warn('Wallet initialization notice in completeOnboarding:', wErr.message);
+    }
+
     // Save default dispatch address to user_addresses if not existing
     try {
       const { rows: addrRows } = await query('SELECT id FROM user_addresses WHERE user_id = $1 LIMIT 1', [userId]);
@@ -2780,12 +3069,123 @@ async function completeOnboarding(req, res, next) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Profile Media & Handle Validation
+// ---------------------------------------------------------------------------
+async function uploadProfilePhoto(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const photoUrl = req.file?.path || req.file?.secure_url || req.file?.url;
+    if (!photoUrl) {
+      return res.status(400).json({ success: false, message: 'No profile photo uploaded.' });
+    }
+
+    await query(
+      `UPDATE seller_profiles
+       SET profile_photo = $1::varchar, avatar_url = $1::text, updated_at = NOW()
+       WHERE user_id = $2`,
+      [photoUrl, userId]
+    );
+    await query('UPDATE sellers SET photo_url = $1, updated_at = NOW() WHERE user_id = $2', [photoUrl, userId]).catch(() => {});
+    await query('UPDATE users SET profile_photo_url = $1, updated_at = NOW() WHERE id = $2', [photoUrl, userId]).catch(() => {});
+
+    return res.json({
+      success: true,
+      message: 'Profile photo updated',
+      data: { avatar_url: photoUrl, photo_url: photoUrl, profile_photo: photoUrl }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function uploadBannerPhoto(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const bannerUrl = req.file?.path || req.file?.secure_url || req.file?.url;
+    if (!bannerUrl) {
+      return res.status(400).json({ success: false, message: 'No banner image uploaded.' });
+    }
+
+    await query(
+      `UPDATE seller_profiles
+       SET banner_url = $1, updated_at = NOW()
+       WHERE user_id = $2`,
+      [bannerUrl, userId]
+    );
+    await query('UPDATE sellers SET banner_url = $1, updated_at = NOW() WHERE user_id = $2', [bannerUrl, userId]).catch(() => {});
+    await query('UPDATE users SET cover_photo_url = $1, updated_at = NOW() WHERE id = $2', [bannerUrl, userId]).catch(() => {});
+
+    return res.json({
+      success: true,
+      message: 'Banner updated',
+      data: { banner_url: bannerUrl, cover_photo: bannerUrl }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function uploadAboutImage(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const imageUrl = req.file?.path || req.file?.secure_url || req.file?.url;
+    if (!imageUrl) {
+      return res.status(400).json({ success: false, message: 'No about image uploaded.' });
+    }
+
+    await query(
+      `UPDATE seller_profiles
+       SET about_image_url = $1, updated_at = NOW()
+       WHERE user_id = $2`,
+      [imageUrl, userId]
+    );
+
+    return res.json({
+      success: true,
+      message: 'About image updated',
+      data: { about_image_url: imageUrl }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function checkHandleAvailability(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const handle = String(req.query.handle || req.query.slug || '').trim().toLowerCase();
+    if (!handle) {
+      return res.status(400).json({ success: false, message: 'Handle is required.' });
+    }
+
+    const { rows } = await query(
+      `SELECT id FROM seller_profiles WHERE LOWER(handle) = LOWER($1) AND user_id != $2
+       UNION
+       SELECT id FROM sellers WHERE LOWER(handle) = LOWER($1) AND user_id != $2`,
+      [handle, userId]
+    );
+
+    return res.json({
+      success: true,
+      available: rows.length === 0,
+      handle
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   getOwnSellerProfile,
   updateSellerProfile,
   getPublicSellerProfile,
   updateStoreConfig,
   toggleVacationMode,
+  uploadProfilePhoto,
+  uploadBannerPhoto,
+  uploadAboutImage,
+  checkHandleAvailability,
   applyAsSeller,
   getApplicationStatus,
   completeOnboarding,

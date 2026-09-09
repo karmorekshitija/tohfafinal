@@ -237,7 +237,7 @@ async function getAdminOrders(req, res, next) {
               u.email AS buyer_email, u.phone AS buyer_phone,
               COALESCE(sp.store_name, 'Tohfa Studio') AS seller_name,
               COALESCE(sp.store_name, 'Tohfa Studio') AS store_name,
-              COALESCE(sp.is_admin_managed, FALSE) AS is_admin_managed,
+              COALESCE(sp.is_admin_managed, 0) AS is_admin_managed,
               a.line1, a.line2, a.city, a.state, a.pincode, a.phone AS address_phone, a.full_name AS address_name
        FROM orders o
        LEFT JOIN users u ON u.id = o.buyer_id
@@ -299,7 +299,7 @@ async function getOrderById(req, res, next) {
               COALESCE(o.studio_notes, '') AS notes,
               COALESCE(a.line1 || CASE WHEN a.city IS NOT NULL THEN ', ' || a.city ELSE '' END, '') AS shipping_address,
               u.name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone,
-              sp.store_name, COALESCE(sp.is_admin_managed, FALSE) AS is_admin_managed,
+              sp.store_name, COALESCE(sp.is_admin_managed, 0) AS is_admin_managed,
               a.line1, a.line2, a.city, a.state, a.pincode, a.full_name AS address_name, a.phone AS address_phone,
               COALESCE(
                 (SELECT json_agg(json_build_object(
@@ -673,7 +673,7 @@ async function listRefundRequests(req, res, next) {
                   'id', oi.id,
                   'product_id', oi.product_id,
                   'quantity', oi.quantity,
-                  'unit_price', COALESCE(oi.unit_price_paise / 100.0, 0),
+                  'unit_price', COALESCE(oi.unit_price_paise / 100.0, oi.unit_price, 0),
                   'product_name', COALESCE(oi.product_name, pr.name, 'Handcrafted Item'),
                   'customization_mode', COALESCE(pr.customization_mode, 'none')
                 ))
@@ -683,9 +683,9 @@ async function listRefundRequests(req, res, next) {
                 '[]'
               ) AS items
        FROM refund_requests rr
-       JOIN orders o ON o.id = rr.order_id
-       JOIN users u_b ON u_b.id = rr.buyer_id
-       JOIN users u_s ON u_s.id = rr.seller_id
+       LEFT JOIN orders o ON o.id = rr.order_id
+       LEFT JOIN users u_b ON u_b.id = rr.buyer_id
+       LEFT JOIN users u_s ON u_s.id = rr.seller_id
        LEFT JOIN seller_profiles sp ON sp.user_id = rr.seller_id
        ${where}
        ORDER BY rr.created_at DESC

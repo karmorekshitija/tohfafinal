@@ -8,7 +8,9 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
+const buyerController = require('../controllers/buyer.controller');
 const { authRateLimiter } = require('../middleware/rateLimiter');
+const { authMiddleware } = require('../middleware/auth');
 const { validate, schemas } = require('../middleware/validate');
 
 // Registration endpoints
@@ -22,7 +24,8 @@ router.post('/login', authRateLimiter, validate(schemas.login), authController.l
 router.post('/login/admin', authRateLimiter, validate(schemas.adminLogin), authController.adminLogin);
 router.post('/admin-login', authRateLimiter, validate(schemas.adminLogin), authController.adminLogin);
 
-// Session token management
+// Session token management & current user profile
+router.get('/me', authMiddleware, buyerController.getOwnProfile);
 router.post('/refresh', authController.refresh);
 router.post('/refresh-token', authController.refresh);
 router.post('/logout', authController.logout);

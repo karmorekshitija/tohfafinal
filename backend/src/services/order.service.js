@@ -300,10 +300,19 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
       // Insert order items referencing BOTH order_id and seller_order_id (CHK-19 & CHK-25)
       for (const item of items) {
         const customPayload = item.customization_payload || item.customization_data || {};
-        const customJson = typeof customPayload === 'object' && customPayload !== null
-          ? JSON.stringify(customPayload)
-          : (customPayload || '{}');
-        const customStatus = (item.customization_mode && item.customization_mode !== 'none') || (customPayload && Object.keys(customPayload).length > 0)
+        let parsedPayload = {};
+        if (typeof customPayload === 'string') {
+          try {
+            parsedPayload = JSON.parse(customPayload);
+          } catch {
+            parsedPayload = customPayload ? { note: customPayload } : {};
+          }
+        } else if (typeof customPayload === 'object' && customPayload !== null) {
+          parsedPayload = customPayload;
+        }
+        const customJson = JSON.stringify(parsedPayload);
+        const hasCustomData = parsedPayload && Object.keys(parsedPayload).length > 0;
+        const customStatus = (item.customization_mode && item.customization_mode !== 'none') || hasCustomData
           ? 'pending'
           : 'none';
 

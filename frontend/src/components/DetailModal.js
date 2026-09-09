@@ -780,11 +780,13 @@
     },
 
     async suspendSeller(sellerId) {
-      if (!confirm('Suspend this artisan store?')) return;
+      const reason = prompt('Enter suspension reason:', 'Administrative suspension');
+      if (reason === null) return;
       try {
         const res = await fetch(`/api/admin/sellers/${sellerId}/suspend`, {
           method: 'PATCH',
-          headers: getHeaders()
+          headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: reason.trim() || 'Administrative suspension' })
         });
         const json = await res.json();
         if (json.success) {
@@ -884,6 +886,14 @@
           headers: getHeaders(),
           body: JSON.stringify({ status, notes, buyer_message: notes, delivery_notes: notes })
         });
+        if (res.status === 403) {
+          alert('Access Denied (403): You do not have administrative permission to force update order status.');
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save & Notify Buyer';
+          }
+          return;
+        }
         const json = await res.json();
         if (json.success) {
           DetailModal.showOrder(orderId);

@@ -70,6 +70,7 @@ router.post('/seller-applications/:id/reject', adminController.rejectSeller);
 // 2.1 TOFA Special Admin-Owned Shops
 router.get('/special-shops', adminController.listSpecialShops);
 router.post('/special-shops', adminController.createSpecialShop);
+router.post('/special-shops/:id', adminController.updateSpecialShop);
 router.put('/special-shops/:id', adminController.updateSpecialShop);
 router.patch('/special-shops/:id', adminController.updateSpecialShop);
 router.post('/special-shops/:id/switch-session', adminController.switchSessionToSpecialShop);
@@ -79,6 +80,7 @@ router.get('/special-shops/:sellerId/switch-session', adminController.switchSess
 // Special shops aliases (/shops/special)
 router.get('/shops/special', adminController.listSpecialShops);
 router.post('/shops/special', adminController.createSpecialShop);
+router.post('/shops/special/:id', adminController.updateSpecialShop);
 router.put('/shops/special/:id', adminController.updateSpecialShop);
 router.patch('/shops/special/:id', adminController.updateSpecialShop);
 router.post('/shops/special/:id/switch-session', adminController.switchSessionToSpecialShop);
@@ -124,11 +126,14 @@ router.post('/refunds/:id/reject', orderController.rejectRefund);
 router.patch('/refunds/:id/reject', orderController.rejectRefund);
 
 // 5. Payouts & Platform Financials
+router.get('/payouts', adminController.listAllPayouts);
 router.get('/payouts/pending', adminController.getPendingPayouts);
 router.post('/payouts/:id/disburse', adminController.disburseSellerPayout);
 router.patch('/payouts/:id/disburse', adminController.disburseSellerPayout);
 router.post('/payouts/:payoutId/disburse', adminController.disburseSellerPayout);
 router.patch('/payouts/:payoutId/disburse', adminController.disburseSellerPayout);
+router.get('/payments', adminController.listAllPayments);
+router.get('/payments/summary', adminController.getPaymentsSummary);
 
 // 6. User Management
 router.get('/users', adminController.getAllUsers);

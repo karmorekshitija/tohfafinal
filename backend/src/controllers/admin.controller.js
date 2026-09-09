@@ -1,5 +1,5 @@
 /**
- * Tohfa v2 — Master Admin Controller
+ * Tohfa v2 â€” Master Admin Controller
  * File: backend/src/controllers/admin.controller.js
  * Role: Full platform governance, catalog curation, dispute resolution,
  *       and immutable audit logging for Super Admins.
@@ -70,11 +70,11 @@ async function listSellers(req, res, next) {
     const params = [];
 
     if (status === 'pending') {
-      baseSql += ` AND (COALESCE(sp.is_approved, s.is_approved, FALSE) = FALSE AND sp.rejection_reason IS NULL AND s.rejection_reason IS NULL AND u.is_active = TRUE)`;
+      baseSql += ` AND (COALESCE(sp.is_approved, s.is_approved, 0) = 0 AND sp.rejection_reason IS NULL AND s.rejection_reason IS NULL AND u.is_active = TRUE)`;
     } else if (status === 'active' || status === 'verified' || status === 'approved') {
-      baseSql += ` AND (COALESCE(sp.is_approved, s.is_approved, FALSE) = TRUE AND u.is_active = TRUE)`;
+      baseSql += ` AND ((COALESCE(sp.is_approved, s.is_approved, 0) = 1 OR COALESCE(sp.verification_status, s.verification_status) = 'verified') AND u.is_active = TRUE)`;
     } else if (status === 'rejected') {
-      baseSql += ` AND (COALESCE(sp.is_approved, s.is_approved, FALSE) = FALSE AND (sp.rejection_reason IS NOT NULL OR s.rejection_reason IS NOT NULL))`;
+      baseSql += ` AND (COALESCE(sp.is_approved, s.is_approved, 0) = 0 AND (sp.rejection_reason IS NOT NULL OR s.rejection_reason IS NOT NULL))`;
     } else if (status === 'banned') {
       baseSql += ` AND u.is_active = FALSE`;
     }
@@ -92,7 +92,7 @@ async function listSellers(req, res, next) {
              COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
              COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS shop_name,
              COALESCE(sp.seller_type, 'Artisan') AS seller_type,
-             COALESCE(sp.is_approved, s.is_approved, FALSE) AS is_approved,
+             COALESCE(sp.is_approved, s.is_approved, 0) AS is_approved,
              COALESCE(sp.pickup_address, s.pickup_address, '{}'::jsonb) AS pickup_address,
              COALESCE(sp.bank_details, s.bank_details, '{}'::jsonb) AS bank_details,
              COALESCE(sp.onboarding_completed, s.onboarding_completed, FALSE) AS onboarding_completed,
@@ -103,12 +103,12 @@ async function listSellers(req, res, next) {
              COALESCE(sp.pan_number, s.pan_number) AS pan_number,
              COALESCE(sp.gst_number, s.gst_number) AS gst_number,
              COALESCE(sp.portfolio_images, s.portfolio_images, '{}'::text[]) AS portfolio_images,
-             COALESCE(sp.verification_status, s.verification_status, CASE WHEN sp.is_approved OR s.is_approved THEN 'verified' WHEN sp.rejection_reason IS NOT NULL OR s.rejection_reason IS NOT NULL THEN 'rejected' ELSE 'pending_verification' END) AS verification_status,
+             COALESCE(sp.verification_status, s.verification_status, CASE WHEN sp.is_approved = 1 OR s.is_approved = 1 THEN 'verified' WHEN sp.rejection_reason IS NOT NULL OR s.rejection_reason IS NOT NULL THEN 'rejected' ELSE 'pending_verification' END) AS verification_status,
              COALESCE(sp.commission_rate, s.commission_rate, 10.00) AS commission_rate,
              COALESCE(sp.applied_at, s.applied_at, u.created_at) AS applied_at,
              COALESCE(sp.approved_at, s.approved_at) AS approved_at,
              COALESCE(sp.rejection_reason, s.rejection_reason) AS rejection_reason,
-             COALESCE(sp.is_admin_managed, s.is_admin_managed, FALSE) AS is_admin_managed,
+             COALESCE(sp.is_admin_managed, s.is_admin_managed, 0) AS is_admin_managed,
              (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status != 'deleted') AS product_count,
              (SELECT COALESCE(SUM(o.total_amount), 0) FROM orders o WHERE o.seller_id = u.id AND o.payment_status = 'paid') AS total_revenue,
              (SELECT MAX(o2.created_at) FROM orders o2 WHERE o2.seller_id = u.id AND o2.payment_status = 'paid') AS last_order_at
@@ -143,8 +143,8 @@ async function getSellerDetail(req, res, next) {
               COALESCE(sp.bio, s.bio, '') AS bio,
               COALESCE(sp.whatsapp_number, s.whatsapp_number, u.phone) AS whatsapp_number,
               COALESCE(sp.seller_type, 'Artisan') AS seller_type,
-              COALESCE(sp.is_approved, s.is_approved, FALSE) AS is_approved,
-              COALESCE(sp.is_admin_managed, s.is_admin_managed, FALSE) AS is_admin_managed,
+              COALESCE(sp.is_approved, s.is_approved, 0) AS is_approved,
+              COALESCE(sp.is_admin_managed, s.is_admin_managed, 0) AS is_admin_managed,
               COALESCE(sp.pickup_address, s.pickup_address, '{}'::jsonb) AS pickup_address,
               COALESCE(sp.bank_details, s.bank_details, '{}'::jsonb) AS bank_details,
               COALESCE(sp.onboarding_completed, s.onboarding_completed, FALSE) AS onboarding_completed,
@@ -155,7 +155,7 @@ async function getSellerDetail(req, res, next) {
               COALESCE(sp.pan_number, s.pan_number) AS pan_number,
               COALESCE(sp.gst_number, s.gst_number) AS gst_number,
               COALESCE(sp.portfolio_images, s.portfolio_images, '{}'::text[]) AS portfolio_images,
-              COALESCE(sp.verification_status, s.verification_status, CASE WHEN sp.is_approved OR s.is_approved THEN 'verified' WHEN sp.rejection_reason IS NOT NULL OR s.rejection_reason IS NOT NULL THEN 'rejected' ELSE 'pending_verification' END) AS verification_status,
+              COALESCE(sp.verification_status, s.verification_status, CASE WHEN sp.is_approved = 1 OR s.is_approved = 1 THEN 'verified' WHEN sp.rejection_reason IS NOT NULL OR s.rejection_reason IS NOT NULL THEN 'rejected' ELSE 'pending_verification' END) AS verification_status,
               COALESCE(sp.commission_rate, s.commission_rate, 10.00) AS commission_rate,
               COALESCE(sp.applied_at, s.applied_at, u.created_at) AS applied_at,
               COALESCE(sp.approved_at, s.approved_at) AS approved_at,
@@ -166,7 +166,15 @@ async function getSellerDetail(req, res, next) {
        FROM users u
        LEFT JOIN seller_profiles sp ON sp.user_id = u.id
        LEFT JOIN sellers s ON s.user_id = u.id
-       WHERE u.id::text = $1::text OR sp.id::text = $1::text OR s.id::text = $1::text`,
+       WHERE u.id::text = $1::text OR sp.id::text = $1::text OR s.id::text = $1::text
+       ORDER BY CASE 
+         WHEN u.id::text = $1::text AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 1
+         WHEN u.id::text = $1::text THEN 2
+         WHEN sp.id::text = $1::text THEN 3
+         WHEN s.id::text = $1::text THEN 4
+         ELSE 5 
+       END ASC
+       LIMIT 1`,
       [String(sellerId)]
     );
 
@@ -194,13 +202,21 @@ async function verifySellerKYC(req, res, next) {
     const isApproved = status === 'verified';
     const rejectReason = status === 'rejected' ? (finalRejectionReason || 'Application criteria not met') : null;
 
-    // Resolve target user_id
+    // Resolve target user_id with priority given to direct user ID matches
     const userRes = await query(
       `SELECT u.id, u.email, COALESCE(sp.store_name, s.store_name, 'Artisan Studio') as store_name
        FROM users u
        LEFT JOIN seller_profiles sp ON sp.user_id = u.id
        LEFT JOIN sellers s ON s.user_id = u.id
-       WHERE u.id::text = $1::text OR sp.id::text = $1::text OR s.id::text = $1::text`,
+       WHERE u.id::text = $1::text OR sp.id::text = $1::text OR s.id::text = $1::text
+       ORDER BY CASE 
+         WHEN u.id::text = $1::text AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 1
+         WHEN u.id::text = $1::text THEN 2
+         WHEN sp.id::text = $1::text THEN 3
+         WHEN s.id::text = $1::text THEN 4
+         ELSE 5 
+       END ASC
+       LIMIT 1`,
       [String(rawId)]
     );
 
@@ -212,17 +228,20 @@ async function verifySellerKYC(req, res, next) {
     const storeName = userRes.rows[0].store_name;
     const sellerEmail = userRes.rows[0].email;
 
+    // isApprovedInt: pass as integer (1/0) to match the live DB column type.
+    // isApprovedBool is a separate param used only in the CASE WHEN comparison.
+    const isApprovedInt = isApproved ? 1 : 0;
     const result = await query(`
       UPDATE seller_profiles
       SET is_approved = $1,
           verification_status = $2,
           commission_rate = COALESCE($3, commission_rate),
           rejection_reason = $4,
-          approved_at = CASE WHEN $1 = TRUE THEN NOW() ELSE approved_at END,
+          approved_at = CASE WHEN $1 = 1 THEN NOW() ELSE approved_at END,
           updated_at = NOW()
       WHERE user_id::text = $5::text
       RETURNING *
-    `, [isApproved, status, finalCommission !== undefined ? Number(finalCommission) : null, rejectReason, String(targetUserId)]);
+    `, [isApprovedInt, status, finalCommission !== undefined ? Number(finalCommission) : null, rejectReason, String(targetUserId)]);
 
     // Also sync master sellers table
     await query(`
@@ -231,12 +250,12 @@ async function verifySellerKYC(req, res, next) {
           verification_status = $2,
           commission_rate = COALESCE($3, commission_rate),
           rejection_reason = $4,
-          approved_at = CASE WHEN $1 = TRUE THEN NOW() ELSE approved_at END
+          approved_at = CASE WHEN $1 = 1 THEN NOW() ELSE approved_at END
       WHERE user_id::text = $5::text
-    `, [isApproved, status, finalCommission !== undefined ? Number(finalCommission) : null, rejectReason, String(targetUserId)]).catch(() => {});
+    `, [isApprovedInt, status, finalCommission !== undefined ? Number(finalCommission) : null, rejectReason, String(targetUserId)]).catch(() => {});
 
-    // Ensure user role and status
-    await query(`UPDATE users SET is_active = TRUE, role = 'seller' WHERE id::text = $1::text`, [String(targetUserId)]).catch(() => {});
+    // Ensure user role and status (users.is_active is integer on live DB)
+    await query(`UPDATE users SET is_active = 1, role = 'seller' WHERE id::text = $1::text`, [String(targetUserId)]).catch(() => {});
 
     const { rows: userRows } = await query('SELECT name, email FROM users WHERE id::text = $1::text', [String(targetUserId)]);
     const sellerUser = userRows[0] || {};
@@ -246,7 +265,7 @@ async function verifySellerKYC(req, res, next) {
       await createNotification(
         targetUserId,
         'seller_approved',
-        'Welcome to Tohfa Studio! 🎉',
+        'Welcome to Tohfa Studio! ðŸŽ‰',
         'Your artisan KYC application has been verified and approved. You can now publish handcrafted creations.'
       ).catch(() => {});
     } else if (status === 'rejected') {
@@ -283,23 +302,43 @@ async function suspendSeller(req, res, next) {
     const sellerId = req.params.sellerId || req.params.id;
     const reason = req.body.reason || req.body.ban_reason || 'Administrative suspension';
 
-    await query('UPDATE users SET is_active = FALSE WHERE id::text = $1', [String(sellerId)])
+    // Resolve target user_id with priority given to direct user ID matches
+    const userRes = await query(
+      `SELECT u.id
+       FROM users u
+       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+       LEFT JOIN sellers s ON s.user_id = u.id
+       WHERE u.id::text = $1::text OR sp.id::text = $1::text OR s.id::text = $1::text
+       ORDER BY CASE 
+         WHEN u.id::text = $1::text AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 1
+         WHEN u.id::text = $1::text THEN 2
+         WHEN sp.id::text = $1::text THEN 3
+         WHEN s.id::text = $1::text THEN 4
+         ELSE 5 
+       END ASC
+       LIMIT 1`,
+      [String(sellerId)]
+    );
+
+    const targetUserId = userRes.rows[0]?.id || sellerId;
+
+    await query('UPDATE users SET is_active = 0 WHERE id::text = $1', [String(targetUserId)])
       .catch(() => {});
 
-    await query("UPDATE seller_profiles SET verification_status = 'suspended', is_approved = FALSE, updated_at = NOW() WHERE user_id::text = $1", [String(sellerId)])
+    await query("UPDATE seller_profiles SET verification_status = 'suspended', is_approved = 0, updated_at = NOW() WHERE user_id::text = $1", [String(targetUserId)])
       .catch(() => {});
 
-    await query("UPDATE sellers SET verification_status = 'suspended', is_approved = FALSE WHERE user_id::text = $1", [String(sellerId)])
+    await query("UPDATE sellers SET verification_status = 'suspended', is_approved = 0 WHERE user_id::text = $1", [String(targetUserId)])
       .catch(() => {});
 
-    await query("UPDATE products SET status = 'paused' WHERE seller_id::text = $1", [String(sellerId)])
+    await query("UPDATE products SET status = 'paused' WHERE seller_id::text = $1", [String(targetUserId)])
       .catch(() => {});
 
     await logAdminAction({
       adminId: req.user.id,
       actionType: 'SELLER_SUSPENDED',
       targetEntity: 'sellers',
-      targetId: sellerId,
+      targetId: targetUserId,
       details: { reason },
       ipAddress: req.ip
     });
@@ -401,8 +440,8 @@ async function forceRefundOrder(req, res, next) {
     await createNotification(
       order.buyer_id,
       'refund_approved',
-      'Refund Processed by Admin 💳',
-      `An instant refund of ₹${(refundPaise / 100).toFixed(2)} for Order #${String(orderId).slice(0, 8).toUpperCase()} has been initiated.`,
+      'Refund Processed by Admin ðŸ’³',
+      `An instant refund of â‚¹${(refundPaise / 100).toFixed(2)} for Order #${String(orderId).slice(0, 8).toUpperCase()} has been initiated.`,
       { order_id: orderId, refund_id: rzpRefundId }
     ).catch(() => {});
 
@@ -469,6 +508,28 @@ async function forceUpdateOrderStatus(req, res, next) {
             delivered_at = CASE WHEN $1::text = 'delivered' THEN NOW()::text ELSE delivered_at END
         WHERE order_id = $2::int
       `, [status, updatedOrder.id]).catch(() => {});
+
+      // Notify buyer
+      if (updatedOrder.buyer_id) {
+        const statusMessages = {
+          confirmed: 'Your order has been confirmed.',
+          processing: 'Your order is currently being prepared.',
+          in_production: 'Your order is in production with the artisan.',
+          packed: 'Your order has been packed and is ready for dispatch.',
+          shipped: 'Your order has been shipped! It is on the way.',
+          dispatched: 'Your order has been dispatched.',
+          delivered: 'Your order has been delivered. Enjoy!',
+          cancelled: 'Your order has been cancelled.',
+          cancel_requested: 'Cancellation request has been submitted for review.',
+        };
+        await createNotification(
+          updatedOrder.buyer_id,
+          'order_status',
+          `Order ${status.replace('_', ' ')}`,
+          statusMessages[status] || `Your order status has been updated to ${status}.`,
+          { order_id: updatedOrder.id, status }
+        ).catch(() => {});
+      }
     }
 
     await logAdminAction({
@@ -545,6 +606,174 @@ async function disburseSellerPayout(req, res, next) {
   }
 }
 
+async function listAllPayouts(req, res, next) {
+  try {
+    const { status = 'all', search = '', page = 1, limit = 10, per_page } = req.query;
+    const pageNum = Math.max(1, parseInt(page, 10));
+    const limitNum = Math.min(100, parseInt(per_page || limit, 10));
+    const offset = (pageNum - 1) * limitNum;
+
+    let baseSql = `
+      FROM seller_payouts sp
+      JOIN users u ON u.id = sp.seller_id
+      LEFT JOIN seller_profiles prof ON prof.user_id = sp.seller_id
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (status && status !== 'all') {
+      params.push(status.toLowerCase());
+      baseSql += ` AND LOWER(sp.status) = $${params.length}`;
+    }
+
+    if (search && search.trim()) {
+      params.push(`%${search.trim()}%`);
+      baseSql += ` AND (u.name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR prof.store_name ILIKE $${params.length} OR sp.reference ILIKE $${params.length} OR sp.utr_number ILIKE $${params.length})`;
+    }
+
+    const countRes = await query(`SELECT COUNT(*) AS total ${baseSql}`, params);
+    const total = parseInt(countRes.rows[0]?.total || 0, 10);
+
+    const selectSql = `
+      SELECT sp.id, sp.seller_id, sp.amount, sp.status, sp.utr_number, sp.reference,
+             sp.disbursed_at, sp.created_at, sp.updated_at,
+             u.name AS seller_name, u.email AS seller_email, u.phone AS seller_phone,
+             COALESCE(prof.store_name, u.name, 'Artisan Studio') AS store_name
+      ${baseSql}
+      ORDER BY sp.created_at DESC
+      LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+    `;
+    params.push(limitNum, offset);
+
+    const { rows } = await query(selectSql, params);
+    return res.json({
+      success: true,
+      data: {
+        payouts: rows,
+        total,
+        page: pageNum,
+        per_page: limitNum,
+        total_pages: Math.ceil(total / limitNum) || 1
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function listAllPayments(req, res, next) {
+  try {
+    const { status = 'all', from_date, to_date, search = '', page = 1, limit = 10, per_page } = req.query;
+    const pageNum = Math.max(1, parseInt(page, 10));
+    const limitNum = Math.min(100, parseInt(per_page || limit, 10));
+    const offset = (pageNum - 1) * limitNum;
+
+    let baseSql = `
+      FROM payments p
+      LEFT JOIN orders o ON o.id = p.order_id
+      LEFT JOIN users u ON u.id = o.buyer_id
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (status && status !== 'all') {
+      params.push(status.toLowerCase());
+      baseSql += ` AND LOWER(p.status) = $${params.length}`;
+    }
+
+    if (from_date) {
+      params.push(from_date);
+      baseSql += ` AND p.created_at >= $${params.length}::timestamptz`;
+    }
+
+    if (to_date) {
+      params.push(`${to_date} 23:59:59.999Z`);
+      baseSql += ` AND p.created_at <= $${params.length}::timestamptz`;
+    }
+
+    if (search && search.trim()) {
+      params.push(`%${search.trim()}%`);
+      baseSql += ` AND (
+        p.razorpay_payment_id ILIKE $${params.length} OR 
+        p.razorpay_order_id ILIKE $${params.length} OR 
+        o.order_ref ILIKE $${params.length} OR 
+        CAST(p.order_id AS TEXT) ILIKE $${params.length} OR 
+        u.name ILIKE $${params.length} OR 
+        u.email ILIKE $${params.length}
+      )`;
+    }
+
+    const countRes = await query(`SELECT COUNT(*) AS total ${baseSql}`, params);
+    const total = parseInt(countRes.rows[0]?.total || 0, 10);
+
+    const selectSql = `
+      SELECT p.id, p.order_id, p.razorpay_order_id, p.razorpay_payment_id, p.amount, p.status,
+             p.created_at, p.updated_at,
+             COALESCE(o.order_ref, 'ORD-' || p.order_id) AS order_ref,
+             u.name AS buyer_name, u.email AS buyer_email
+      ${baseSql}
+      ORDER BY p.created_at DESC
+      LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+    `;
+    params.push(limitNum, offset);
+
+    const { rows } = await query(selectSql, params);
+    return res.json({
+      success: true,
+      data: {
+        payments: rows,
+        total,
+        page: pageNum,
+        per_page: limitNum,
+        total_pages: Math.ceil(total / limitNum) || 1
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getPaymentsSummary(req, res, next) {
+  try {
+    const collectedRes = await query(`
+      SELECT COALESCE(SUM(amount), 0) AS total_collected
+      FROM payments
+      WHERE LOWER(status) = 'paid'
+    `);
+    const disbursedRes = await query(`
+      SELECT COALESCE(SUM(amount), 0) AS total_disbursed
+      FROM seller_payouts
+      WHERE LOWER(status) IN ('paid', 'completed')
+    `);
+    const pendingRes = await query(`
+      SELECT COALESCE(SUM(amount), 0) AS pending_payout
+      FROM seller_payouts
+      WHERE LOWER(status) IN ('pending', 'scheduled', 'processing')
+    `);
+
+    const totalCollected = parseFloat(collectedRes.rows[0]?.total_collected || 0);
+    const totalDisbursed = parseFloat(disbursedRes.rows[0]?.total_disbursed || 0);
+    const pendingPayout = parseFloat(pendingRes.rows[0]?.pending_payout || 0);
+    const commissionRetained = parseFloat((totalCollected * 0.10).toFixed(2));
+
+    return res.json({
+      success: true,
+      data: {
+        total_collected: totalCollected,
+        total_disbursed: totalDisbursed,
+        platform_commission: commissionRetained,
+        pending_payout: pendingPayout,
+        totalCollected,
+        totalDisbursed,
+        platformCommissionRetained: commissionRetained,
+        pendingPayoutAmount: pendingPayout
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // 6. USER MODERATION (BAN / ACTIVATE)
 // ---------------------------------------------------------------------------
@@ -603,7 +832,8 @@ async function toggleUserStatus(req, res, next) {
   try {
     const userId = req.params.userId || req.params.id;
     const { isActive, is_active, banReason, reason } = req.body;
-    const activeVal = isActive !== undefined ? Boolean(isActive) : (is_active !== undefined ? Boolean(is_active) : false);
+    // users.is_active, products.is_active, seller_profiles.is_active are integer on the live DB
+    const activeVal = isActive !== undefined ? (isActive ? 1 : 0) : (is_active !== undefined ? (is_active ? 1 : 0) : 0);
     const why = banReason || reason || '';
 
     const result = await query(`
@@ -615,8 +845,8 @@ async function toggleUserStatus(req, res, next) {
     }
 
     if (!activeVal) {
-      await query("UPDATE products SET status = 'paused', is_active = FALSE WHERE seller_id = $1", [userId]).catch(() => {});
-      await query("UPDATE seller_profiles SET is_active = FALSE WHERE user_id = $1", [userId]).catch(() => {});
+      await query("UPDATE products SET status = 'paused', is_active = 0 WHERE seller_id = $1", [userId]).catch(() => {});
+      await query("UPDATE seller_profiles SET is_active = 0 WHERE user_id = $1", [userId]).catch(() => {});
     }
 
     await logAdminAction({
@@ -652,10 +882,12 @@ async function listAuditLogs(req, res, next) {
     const conditions = [];
     const params = [];
 
-    const eventQuery = event_type || action;
+    const eventQuery = (event_type || action || '').trim();
     if (eventQuery) {
+      const sanitized = eventQuery.replace(/^admin\./i, '').replace(/[\.\-_ ]+/g, '%');
       params.push(`%${eventQuery}%`);
-      conditions.push(`(al.action_type ILIKE $${params.length} OR al.action ILIKE $${params.length})`);
+      params.push(`%${sanitized}%`);
+      conditions.push(`(al.action_type ILIKE $${params.length - 1} OR al.action_type ILIKE $${params.length} OR al.action ILIKE $${params.length - 1} OR al.action ILIKE $${params.length})`);
     }
     if (actor) {
       params.push(`%${actor}%`);
@@ -831,10 +1063,17 @@ async function createProduct(req, res, next) {
 
     const newProduct = rows[0];
 
-    if (Array.isArray(images) && images.length > 0) {
+    const rawImage = req.body.image_url || req.body.img_url || req.body.imagePath || req.body.imageUrl || req.body.primary_image;
+    const rawImagesList = (Array.isArray(images) && images.length > 0) ? images : (
+      (Array.isArray(req.body.photos) && req.body.photos.length > 0) ? req.body.photos : (
+        rawImage ? [rawImage] : []
+      )
+    );
+
+    if (rawImagesList.length > 0) {
       let sortOrder = 0;
-      for (const img of images) {
-        const url = typeof img === 'string' ? img : (img?.url || '');
+      for (const img of rawImagesList) {
+        const url = typeof img === 'string' ? img : (img?.url || img?.imagePath || img?.img_url || img?.image_url || '');
         if (url) {
           await query(
             'INSERT INTO product_images (product_id, url, sort_order) VALUES ($1, $2, $3)',
@@ -842,11 +1081,6 @@ async function createProduct(req, res, next) {
           );
         }
       }
-    } else if (image_url) {
-      await query(
-        'INSERT INTO product_images (product_id, url, sort_order) VALUES ($1, $2, 0)',
-        [newProduct.id, image_url]
-      );
     }
 
     if (Array.isArray(variants) && variants.length > 0) {
@@ -1119,7 +1353,7 @@ async function createCategory(req, res, next) {
       ? req.body.slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
       : name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-    const emoji = emoji_icon || icon_emoji || '🏺';
+    const emoji = emoji_icon || icon_emoji || 'ðŸº';
     const uploadedUrl = req.file ? req.file.path : null;
     const imgUrl = uploadedUrl || req.body.fallback_image_url || image_url || banner_image_url || null;
 
@@ -1500,14 +1734,14 @@ async function listSpecialShops(req, res, next) {
              COALESCE(sp.verification_status, s.verification_status) AS verification_status,
              TRUE AS is_admin_managed,
              COALESCE(sp.created_at, s.created_at) AS created_at,
-             COALESCE(sp.updated_at, s.updated_at) AS updated_at,
+             sp.updated_at AS updated_at,
              (SELECT COUNT(*) FROM products p WHERE (p.seller_id = u.id OR (s.id IS NOT NULL AND p.seller_id = s.id)) AND p.status != 'deleted') AS product_count,
              (SELECT COALESCE(SUM(COALESCE(o.total_paise/100.0, o.total_amount, 0)), 0) FROM orders o WHERE (o.seller_id = u.id OR (s.id IS NOT NULL AND o.seller_id = s.id)) AND o.payment_status = 'paid') AS total_revenue,
              (SELECT COUNT(*) FROM orders o WHERE (o.seller_id = u.id OR (s.id IS NOT NULL AND o.seller_id = s.id))) AS total_orders
       FROM users u
       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
       LEFT JOIN sellers s ON s.user_id = u.id
-      WHERE sp.is_admin_managed = TRUE OR s.is_admin_managed = TRUE
+      WHERE sp.is_admin_managed = 1 OR s.is_admin_managed = 1
       ORDER BY u.id ASC
     `);
     return res.json({ success: true, data: rows });
@@ -1538,11 +1772,11 @@ async function createSpecialShop(req, res, next) {
 
     if (existingUser.length > 0) {
       userId = existingUser[0].id;
-      await client.query('UPDATE users SET role = $1, is_active = TRUE, name = $2 WHERE id = $3', ['seller', store_name, userId]);
+      await client.query('UPDATE users SET role = $1, is_active = 1, name = $2 WHERE id = $3', ['seller', store_name, userId]);
     } else {
       const { rows: newUser } = await client.query(
         `INSERT INTO users (name, full_name, display_name, email, phone, password_hash, role, is_active)
-         VALUES ($1, $1, $1, $2, $3, $4, 'seller', TRUE)
+         VALUES ($1, $1, $1, $2, $3, $4, 'seller', 1)
          RETURNING id`,
         [store_name, cleanEmail, cleanPhone, dummyHash]
       );
@@ -1555,36 +1789,46 @@ async function createSpecialShop(req, res, next) {
 
     await client.query(
       `INSERT INTO sellers (user_id, store_name, slug, bio, pickup_address, is_admin_managed, is_approved, verification_status, is_active)
-       VALUES ($1, $2, $3, $4, $5, TRUE, TRUE, 'verified', TRUE)
+       VALUES ($1, $2, $3, $4, $5, 1, 1, 'verified', 1)
        ON CONFLICT (user_id) DO UPDATE SET
          store_name = EXCLUDED.store_name,
          slug = EXCLUDED.slug,
          bio = EXCLUDED.bio,
          pickup_address = EXCLUDED.pickup_address,
-         is_admin_managed = TRUE,
-         is_approved = TRUE,
+         is_admin_managed = 1,
+         is_approved = 1,
          verification_status = 'verified',
-         is_active = TRUE`,
+         is_active = 1`,
       [userId, store_name, cleanSlug, bio || '', pickupAddressJson]
     );
 
     const { rows: spRows } = await client.query(
       `INSERT INTO seller_profiles (user_id, store_name, slug, bio, pickup_address, is_admin_managed, is_approved, verification_status, is_active, seller_type)
-       VALUES ($1, $2, $3, $4, $5, TRUE, TRUE, 'verified', TRUE, 'Artisan')
+       VALUES ($1, $2, $3, $4, $5, 1, 1, 'verified', 1, 'special')
        ON CONFLICT (user_id) DO UPDATE SET
          store_name = EXCLUDED.store_name,
          slug = EXCLUDED.slug,
          bio = EXCLUDED.bio,
          pickup_address = EXCLUDED.pickup_address,
-         is_admin_managed = TRUE,
-         is_approved = TRUE,
+         is_admin_managed = 1,
+         is_approved = 1,
          verification_status = 'verified',
-         is_active = TRUE,
-         seller_type = 'Artisan',
+         is_active = 1,
+         seller_type = 'special',
          updated_at = NOW()
        RETURNING *`,
       [userId, store_name, cleanSlug, bio || '', pickupAddressJson]
     );
+
+    const { rows: sIdRows } = await client.query('SELECT id FROM sellers WHERE user_id = $1', [userId]);
+    if (sIdRows.length > 0) {
+      await client.query(
+        `INSERT INTO wallets (seller_id, user_id, balance, currency)
+         VALUES ($1, $2, 0, 'INR')
+         ON CONFLICT (seller_id) DO NOTHING`,
+        [sIdRows[0].id, userId]
+      );
+    }
 
     await client.query('COMMIT');
 
@@ -1633,7 +1877,15 @@ async function updateSpecialShop(req, res, next) {
        LEFT JOIN seller_profiles sp ON sp.user_id = u.id
        LEFT JOIN sellers s ON s.user_id = u.id
        WHERE (u.id::text = $1 OR sp.id::text = $1 OR s.id::text = $1 OR sp.slug = $1 OR s.slug = $1)
-         AND (sp.is_admin_managed = TRUE OR s.is_admin_managed = TRUE)
+         AND (sp.is_admin_managed = 1 OR sp.is_admin_managed = TRUE OR s.is_admin_managed = 1 OR s.is_admin_managed = TRUE)
+       ORDER BY CASE 
+         WHEN sp.slug = $1 OR s.slug = $1 THEN 1
+         WHEN u.id::text = $1 AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 2
+         WHEN u.id::text = $1 THEN 3
+         WHEN sp.id::text = $1 THEN 4
+         WHEN s.id::text = $1 THEN 5
+         ELSE 6 
+       END ASC
        LIMIT 1`,
       [shopId]
     );
@@ -1651,14 +1903,16 @@ async function updateSpecialShop(req, res, next) {
            bio = COALESCE($2, bio),
            pickup_address = COALESCE($3, pickup_address),
            is_active = COALESCE($4, is_active),
+           commission_rate = COALESCE($5, commission_rate),
            updated_at = NOW()
-       WHERE user_id = $5
+       WHERE user_id = $6
        RETURNING *`,
       [
         store_name || null,
         bio || null,
         formattedAddress,
-        is_active !== undefined ? Boolean(is_active) : null,
+        is_active !== undefined ? (is_active ? 1 : 0) : null,
+        parsedCommRate,
         user_id
       ]
     );
@@ -1677,7 +1931,7 @@ async function updateSpecialShop(req, res, next) {
         store_name || null,
         bio || null,
         formattedAddress,
-        is_active !== undefined ? Boolean(is_active) : null,
+        is_active !== undefined ? (is_active ? 1 : 0) : null,
         parsedCommRate,
         user_id
       ]
@@ -1724,7 +1978,16 @@ async function switchSessionToSpecialShop(req, res, next) {
        LEFT JOIN seller_profiles sp ON sp.user_id = u.id
        LEFT JOIN sellers s ON s.user_id = u.id
        WHERE (u.id::text = $1 OR sp.id::text = $1 OR s.id::text = $1 OR sp.slug = $1 OR s.slug = $1)
-         AND (sp.is_admin_managed = TRUE OR s.is_admin_managed = TRUE)`,
+         AND (sp.is_admin_managed = 1 OR sp.is_admin_managed = TRUE OR s.is_admin_managed = 1 OR s.is_admin_managed = TRUE)
+       ORDER BY CASE 
+         WHEN sp.slug = $1 OR s.slug = $1 THEN 1
+         WHEN u.id::text = $1 AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 2
+         WHEN u.id::text = $1 THEN 3
+         WHEN sp.id::text = $1 THEN 4
+         WHEN s.id::text = $1 THEN 5
+         ELSE 6 
+       END ASC
+       LIMIT 1`,
       [shopId]
     );
 
@@ -1817,16 +2080,18 @@ async function getRevenueBreakdown(req, res, next) {
 async function getAuditLogDiff(req, res, next) {
   try {
     const { id } = req.params;
-    const { rows } = await query('SELECT details, meta FROM audit_logs WHERE id = $1', [id]);
+    const { rows } = await query('SELECT details, meta, before_json, after_json FROM audit_logs WHERE id = $1', [id]);
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'Log not found.' });
     }
     const details = rows[0].details || rows[0].meta || {};
+    const beforeJson = rows[0].before_json || (details.before ? JSON.stringify(details.before) : null);
+    const afterJson = rows[0].after_json || (details.after ? JSON.stringify(details.after) : JSON.stringify(details));
     return res.json({
       success: true,
       data: {
-        before_json: details.before ? JSON.stringify(details.before) : null,
-        after_json: details.after ? JSON.stringify(details.after) : JSON.stringify(details)
+        before_json: beforeJson,
+        after_json: afterJson
       }
     });
   } catch (err) {
@@ -1849,6 +2114,9 @@ module.exports = {
   forceUpdateOrderStatus,
   getPendingPayouts,
   disburseSellerPayout,
+  listAllPayouts,
+  listAllPayments,
+  getPaymentsSummary,
   getAllUsers,
   toggleUserStatus,
   listAuditLogs,

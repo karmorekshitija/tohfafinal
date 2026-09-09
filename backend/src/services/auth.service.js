@@ -153,7 +153,16 @@ async function buildTokenPayload(user) {
         [user.id]
       );
     });
-    isSellerApproved = rows[0]?.is_approved || rows[0]?.verification_status === 'verified' || false;
+    const sp = rows[0];
+    isSellerApproved = Boolean(
+      sp && (
+        sp.is_approved === 1 ||
+        sp.is_approved === true ||
+        sp.is_approved === '1' ||
+        sp.is_approved === 'true' ||
+        sp.verification_status === 'verified'
+      )
+    );
   }
   return { id: user.id, email: user.email, role: user.role, isSellerApproved };
 }
@@ -305,24 +314,38 @@ async function signupSeller(data) {
     const sellerUserName = name || data.full_name || '';
     const userRes = await client.query(
       `INSERT INTO users (full_name, name, display_name, email, phone, password_hash, role, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, 'seller', TRUE)
+       VALUES ($1, $2, $3, $4, $5, $6, 'seller', 1)
        RETURNING id, full_name, name, email, role, phone, created_at`,
       [sellerUserName, sellerUserName, sellerUserName, email, phone, passwordHash]
     );
     const user = userRes.rows[0];
 
     // 2. Initialize Master sellers row
-    await client.query(
+    const sellerRes = await client.query(
       `INSERT INTO sellers (user_id, store_name, slug, bio, verification_status, is_active, is_approved, pickup_address, bank_details, onboarding_completed)
-       VALUES ($1, $2, $3, $4, 'pending_verification', TRUE, FALSE, $5, '{}', FALSE)
+       VALUES ($1, $2, $3, $4, 'pending_verification', 1, 0, $5, '{}', FALSE)
        ON CONFLICT (user_id) DO UPDATE SET
          store_name = EXCLUDED.store_name,
          slug = EXCLUDED.slug,
          bio = EXCLUDED.bio,
          pickup_address = EXCLUDED.pickup_address,
-         verification_status = 'pending_verification'`,
+         verification_status = 'pending_verification'
+       RETURNING id`,
       [user.id, storeName, storeSlug, bio, JSON.stringify(pickupAddress)]
     );
+    const sellerId = sellerRes.rows[0]?.id;
+
+    // 2b. Initialize Wallet row inside the same transaction
+    // Required by deferred foreign key fk_seller_wallet on sellers(id) -> wallets(seller_id).
+    // Note: No silent .catch() - any failure will throw and roll back the transaction cleanly.
+    if (sellerId) {
+      await client.query(
+        `INSERT INTO wallets (seller_id, user_id, balance, holding_balance, currency)
+         VALUES ($1, $2, 0.00, 0.00, 'INR')
+         ON CONFLICT (seller_id) DO NOTHING`,
+        [sellerId, user.id]
+      );
+    }
 
     // Apply optional migration-added columns separately
     await client.query(
@@ -340,7 +363,7 @@ async function signupSeller(data) {
     try {
       await client.query(
         `INSERT INTO seller_profiles (user_id, store_name, slug, bio, seller_type, verification_status, is_approved, is_active, pickup_address, bank_details, pan_number, gst_number, portfolio_images, applied_at, onboarding_completed)
-         VALUES ($1, $2, $3, $4, 'regular', 'pending_verification', FALSE, TRUE, $5, '{}', $6, $7, $8::text[], NOW(), FALSE)
+         VALUES ($1, $2, $3, $4, 'regular', 'pending_verification', 0, 1, $5, '{}', $6, $7, $8::text[], NOW(), FALSE)
          ON CONFLICT (user_id) DO UPDATE SET
            store_name = EXCLUDED.store_name,
            slug = EXCLUDED.slug,
@@ -357,7 +380,7 @@ async function signupSeller(data) {
         console.error('[signupSeller] seller_profiles missing expected columns — falling back to minimal insert. Run db:migrate against production.', insertErr.message);
         await client.query(
           `INSERT INTO seller_profiles (user_id, store_name, slug, bio, seller_type, verification_status, is_approved, is_active, pickup_address, bank_details)
-           VALUES ($1, $2, $3, $4, 'regular', 'pending_verification', FALSE, TRUE, $5, '{}')
+           VALUES ($1, $2, $3, $4, 'regular', 'pending_verification', 0, 1, $5, '{}')
            ON CONFLICT (user_id) DO UPDATE SET
              store_name = EXCLUDED.store_name,
              slug = EXCLUDED.slug,
@@ -557,7 +580,8 @@ async function login(data) {
       email: user.email,
       role: user.role,
       phone: user.phone,
-      is_approved: sellerProfile ? (sellerProfile.is_approved || sellerProfile.verification_status === 'verified' ? 1 : 0) : 0,
+      is_approved: sellerProfile ? (sellerProfile.is_approved === 1 || sellerProfile.is_approved === true || sellerProfile.is_approved === '1' || sellerProfile.verification_status === 'verified' ? 1 : 0) : 0,
+      isSellerApproved: sellerProfile ? Boolean(sellerProfile.is_approved === 1 || sellerProfile.is_approved === true || sellerProfile.is_approved === '1' || sellerProfile.verification_status === 'verified') : false,
       verification_status: sellerProfile?.verification_status || 'pending_verification',
       store_name: sellerProfile?.store_name || user.name,
       seller_type: sellerProfile?.seller_type || 'Artisan',

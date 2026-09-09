@@ -907,12 +907,33 @@
 
 
     // Init
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         const token = getAuthToken();
         if (!token) {
             window.location.href = '/auth/login.html';
             return;
         }
+
+        // Role verification
+        try {
+            const pr = await fetch(`${API_BASE}/api/profile/me`, { headers: getAuthHeaders() });
+            if (pr.status === 401 || pr.status === 403) {
+                sessionStorage.clear();
+                window.location.href = '/auth/login.html';
+                return;
+            }
+            if (pr.ok) {
+                const pd = await pr.json();
+                const u = pd.data || pd;
+                if (u.role && u.role !== 'seller') {
+                    window.location.href = '/buyer/profile.html';
+                    return;
+                }
+            }
+        } catch (e) {
+            console.warn("Profile check failed:", e);
+        }
+
         loadInitialData();
 
         const withdrawBtn = document.getElementById('withdraw-funds-btn');
@@ -970,7 +991,7 @@ async function handleFooterSellerLink(e) {
       if (data && data.success) {
         const role = data.data.role;
         if (role === 'seller') {
-          window.location.href = isMobile ? '/mobile-seller/dashboard.html' : '/seller/dashboard.html';
+          window.location.href = '/seller/dashboard.html';
           return;
         }
       }

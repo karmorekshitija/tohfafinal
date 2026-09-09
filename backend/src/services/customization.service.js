@@ -18,10 +18,22 @@ const whatsappService = require('./whatsapp.service');
  */
 async function getConfigForProduct(productId) {
   const { rows } = await query(
-    'SELECT * FROM open_customization_configs WHERE product_id = $1',
-    [productId]
+    'SELECT * FROM open_customization_configs WHERE product_id::text = $1::text',
+    [String(productId)]
   );
-  return rows[0] || null;
+  if (!rows[0]) return null;
+  const config = rows[0];
+  if (typeof config.allowed_types === 'string') {
+    try {
+      config.allowed_types = JSON.parse(config.allowed_types);
+    } catch {
+      config.allowed_types = config.allowed_types.split(',').map(s => s.trim()).filter(Boolean);
+    }
+  }
+  if (!Array.isArray(config.allowed_types)) {
+    config.allowed_types = [config.allowed_types].filter(Boolean);
+  }
+  return config;
 }
 
 /**
@@ -30,15 +42,15 @@ async function getConfigForProduct(productId) {
 async function saveConfig(productId, sellerId, config) {
   // Verify ownership
   const { rows: prodRows } = await query(
-    'SELECT id, seller_id FROM products WHERE id = $1',
-    [productId]
+    'SELECT id, seller_id FROM products WHERE id::text = $1::text',
+    [String(productId)]
   );
   if (!prodRows.length) {
     const err = new Error('Product not found.');
     err.status = 404;
     throw err;
   }
-  if (prodRows[0].seller_id !== sellerId) {
+  if (String(prodRows[0].seller_id) !== String(sellerId)) {
     const err = new Error('Unauthorized to configure this product.');
     err.status = 403;
     throw err;
@@ -53,6 +65,21 @@ async function saveConfig(productId, sellerId, config) {
     turnaround_days = '5-7 business days',
     quote_window_hours = 48,
   } = config;
+
+  let safeAllowedTypes = allowed_types;
+  if (typeof safeAllowedTypes === 'string') {
+    try {
+      safeAllowedTypes = JSON.parse(safeAllowedTypes);
+    } catch {
+      safeAllowedTypes = safeAllowedTypes.split(',').map(s => s.trim()).filter(Boolean);
+    }
+  }
+  if (!Array.isArray(safeAllowedTypes)) {
+    safeAllowedTypes = [safeAllowedTypes].filter(Boolean);
+  }
+  if (!safeAllowedTypes.length) {
+    safeAllowedTypes = ['text'];
+  }
 
   const { rows } = await query(
     `INSERT INTO open_customization_configs 
@@ -69,8 +96,8 @@ async function saveConfig(productId, sellerId, config) {
       updated_at = NOW()
      RETURNING *`,
     [
-      productId,
-      JSON.stringify(allowed_types),
+      prodRows[0].id,
+      JSON.stringify(safeAllowedTypes),
       instructions,
       ref_image_mode,
       budget_min,
@@ -80,7 +107,16 @@ async function saveConfig(productId, sellerId, config) {
     ]
   );
 
-  return rows[0];
+  const saved = rows[0];
+  if (typeof saved.allowed_types === 'string') {
+    try {
+      saved.allowed_types = JSON.parse(saved.allowed_types);
+    } catch {
+      saved.allowed_types = safeAllowedTypes;
+    }
+  }
+
+  return saved;
 }
 
 

@@ -113,7 +113,7 @@
 
     // Admin guard
     if (path.startsWith('/admin/') && !path.endsWith('/admin/login.html') && !path.endsWith('/admin/login') && !path.endsWith('/admin/index.html') && path !== '/admin' && path !== '/admin/') {
-      const adminToken = sessionStorage.getItem('tohfa_admin_token') || localStorage.getItem('tohfa_admin_token');
+      const adminToken = sessionStorage.getItem('tohfa_admin_token') || localStorage.getItem('tohfa_admin_token') || sessionStorage.getItem('tohfa_access_token') || localStorage.getItem('tohfa_access_token');
       if (!adminToken) {
         window.location.replace('/admin/login.html');
         return;

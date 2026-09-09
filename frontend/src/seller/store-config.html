@@ -567,8 +567,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Prefill Accept Orders toggle
       const acceptToggle = document.getElementById('accept-orders-toggle');
-      if (acceptToggle && config.store_identity) {
-        acceptToggle.checked = !!config.store_identity.is_accepting_orders;
+      if (acceptToggle) {
+        if (config.is_accepting_orders !== undefined) {
+          acceptToggle.checked = Boolean(config.is_accepting_orders);
+        } else if (config.store_identity && config.store_identity.is_accepting_orders !== undefined) {
+          acceptToggle.checked = !!config.store_identity.is_accepting_orders;
+        }
       }
 
       // Prefill Flat Shipping Fee

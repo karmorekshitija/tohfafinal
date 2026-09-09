@@ -54,14 +54,15 @@
 <label class="block text-accent-caps font-accent-caps text-text-faint mb-2 uppercase">Event Type</label>
 <select id="event-type-filter" class="w-full bg-transparent border-sage-soft rounded-lg font-body-sm text-text-default focus:ring-primary focus:border-primary">
 <option value="">All Events</option>
-<option value="admin.seller.banned">admin.seller.banned</option>
-<option value="admin.seller.unbanned">admin.seller.unbanned</option>
-<option value="admin.order.status_overridden">admin.order.status_overridden</option>
-<option value="admin.product.sponsored_toggled">admin.product.sponsored_toggled</option>
-<option value="admin.category.created">admin.category.created</option>
-<option value="admin.category.updated">admin.category.updated</option>
-<option value="admin.category.deleted">admin.category.deleted</option>
-<option value="admin.session.login">admin.session.login</option>
+<option value="CATEGORY">Category Changes</option>
+<option value="SELLER_KYC">Seller KYC & Verification</option>
+<option value="SELLER_STATUS">Seller Account Status & Bans</option>
+<option value="SELLER_FEATURED_OUR_STORY">Artisan Featured (Our Story)</option>
+<option value="ADMIN_ORDER_STATUS">Order Status Overrides</option>
+<option value="PRODUCT_STATUS">Product Moderation / Status</option>
+<option value="SELLER_PAYOUT_DISBURSED">Seller Payouts Disbursed</option>
+<option value="COUPON">Coupons (Created / Deactivated)</option>
+<option value="SPECIAL_SHOP">Special Shop Assigned</option>
 </select>
 </div>
 <div>
@@ -132,8 +133,15 @@
 <script type="module">
 import adminApiClient from '/src/utils/adminApiClient.js';
 
-if (!sessionStorage.getItem('tohfa_admin_token')) {
-  // admin login check bypassed
+const token = sessionStorage.getItem('tohfa_admin_token') ||
+              localStorage.getItem('tohfa_admin_token') ||
+              sessionStorage.getItem('tohfa_access_token') ||
+              localStorage.getItem('tohfa_access_token') ||
+              sessionStorage.getItem('auth_token') ||
+              localStorage.getItem('auth_token');
+
+if (!token) {
+  // If not authenticated, prompt user cleanly
 }
 
 let logs = [];
@@ -158,6 +166,19 @@ const pageButtonsContainer = document.getElementById('page-buttons');
 const loadMoreBtn = document.getElementById('load-more-btn');
 
 async function fetchLogs(append = false) {
+  if (!append) {
+    listEl.innerHTML = `
+      <tr>
+        <td colspan="5" class="px-6 py-12 text-center text-text-muted">
+          <div class="inline-flex items-center gap-3">
+            <span class="inline-block w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
+            <span class="text-sm font-serif-ui-sm">Loading audit logs...</span>
+          </div>
+        </td>
+      </tr>
+    `;
+  }
+
   try {
     const response = await adminApiClient.get('/admin/audit-logs', {
       params: {
@@ -172,19 +193,54 @@ async function fetchLogs(append = false) {
 
     if (response.data?.success) {
       const data = response.data.data;
-      totalPages = data.total_pages;
+      totalPages = data.total_pages || 1;
       
       if (append) {
-        logs = [...logs, ...data.logs];
+        logs = [...logs, ...(data.logs || [])];
       } else {
-        logs = data.logs;
+        logs = data.logs || [];
       }
       
       renderLogs();
-      renderPagination(data.total, data.page, data.per_page);
+      renderPagination(data.total || 0, data.page || 1, data.per_page || currentLimit);
     }
   } catch (error) {
     console.error('Failed to fetch audit logs:', error);
+    const status = error.response?.status;
+    if (status === 401 || status === 403) {
+      listEl.innerHTML = `
+        <tr>
+          <td colspan="5" class="px-6 py-12 text-center">
+            <div class="max-w-md mx-auto p-6 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 shadow-sm">
+              <span class="material-symbols-outlined text-3xl text-amber-600 mb-2">lock</span>
+              <h3 class="font-serif-ui-md font-bold text-base mb-1">Admin Authentication Required</h3>
+              <p class="text-xs text-amber-700 mb-4">Your admin session is missing or has expired. Please sign in with administrator credentials to view audit logs.</p>
+              <a href="/admin/login.html" class="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-primary/90 transition-colors">
+                <span class="material-symbols-outlined text-sm">login</span> Sign In to Admin Console
+              </a>
+            </div>
+          </td>
+        </tr>
+      `;
+      paginationInfo.innerHTML = `Showing <span class="text-primary font-bold">0</span> of <span class="text-primary font-bold">0</span> log entries`;
+    } else {
+      listEl.innerHTML = `
+        <tr>
+          <td colspan="5" class="px-6 py-12 text-center">
+            <div class="max-w-md mx-auto p-6 bg-rose-50 border border-rose-200 rounded-xl text-rose-900 shadow-sm">
+              <span class="material-symbols-outlined text-3xl text-rose-600 mb-2">cloud_off</span>
+              <h3 class="font-serif-ui-md font-bold text-base mb-1">Unable to Load Audit Logs</h3>
+              <p class="text-xs text-rose-700 mb-4">${error.response?.data?.message || 'Server or network connection error. Please verify backend availability and retry.'}</p>
+              <button id="retry-logs-btn" class="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-primary/90 transition-colors">
+                <span class="material-symbols-outlined text-sm">refresh</span> Retry
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+      document.getElementById('retry-logs-btn')?.addEventListener('click', () => fetchLogs());
+      paginationInfo.innerHTML = `Showing <span class="text-primary font-bold">0</span> of <span class="text-primary font-bold">0</span> log entries`;
+    }
   }
 }
 
@@ -207,12 +263,23 @@ function renderLogs() {
     tr.className = "bg-[#FFF8E7] hover:bg-surface-bright transition-colors border-l-2 border-l-highlight-gold/40";
     
     // Choose badge background/text color based on event type
-    let badgeClass = "bg-bg-cream-deep text-text-muted";
-    if (log.event_type.includes('.banned')) badgeClass = "bg-gold-soft text-highlight-gold";
-    else if (log.event_type.includes('.unbanned') || log.event_type.includes('.created')) badgeClass = "bg-sage-soft text-primary";
-    else if (log.event_type.includes('.updated') || log.event_type.includes('.status_') || log.event_type.includes('.sponsored_')) badgeClass = "bg-violet-soft text-accent-violet";
+    const evt = (log.event_type || log.event_label || '').toUpperCase();
+    let badgeClass = "bg-surface-container-low text-text-muted border border-outline-variant";
+    if (evt.includes('BAN') || evt.includes('REJECT') || evt.includes('DEACTIVAT')) {
+      badgeClass = "bg-rose-50 text-rose-700 border border-rose-200";
+    } else if (evt.includes('CREATE') || evt.includes('APPROV') || evt.includes('VERIF')) {
+      badgeClass = "bg-emerald-50 text-emerald-700 border border-emerald-200";
+    } else if (evt.includes('ORDER') || evt.includes('PAYOUT')) {
+      badgeClass = "bg-amber-50 text-amber-700 border border-amber-200";
+    } else if (evt.includes('STATUS') || evt.includes('TOGGLE') || evt.includes('FEATURE') || evt.includes('SPECIAL')) {
+      badgeClass = "bg-indigo-50 text-indigo-700 border border-indigo-200";
+    }
     
-    const badgeHtml = `<span class="px-3 py-1 ${badgeClass} text-[10px] font-bold rounded-full uppercase tracking-tight">${log.event_label}</span>`;
+    const displayLabel = log.event_label 
+      ? log.event_label.replace(/_/g, ' ') 
+      : (log.event_type ? log.event_type.replace(/_/g, ' ') : 'System Action');
+
+    const badgeHtml = `<span class="px-2.5 py-1 ${badgeClass} text-[10px] font-bold rounded-full uppercase tracking-tight">${displayLabel}</span>`;
     
     const actionButtonHtml = log.has_diff
       ? `<button class="view-diff-btn text-primary font-label-btn text-[12px] hover:underline flex items-center gap-1" data-id="${log.id}">
@@ -244,7 +311,7 @@ function renderLogs() {
           <div class="diff-content-container diff-code p-4 rounded-lg font-data-meta text-[11px] leading-relaxed shadow-inner">
             <span class="text-text-muted">Loading diff details...</span>
           </div>
-          <p class="mt-2 text-[10px] text-text-faint italic font-serif-ui-sm">The before_json/after_json only loads when the 'View diff' is clicked — lazy loaded to keep table fast.</p>
+          <p class="mt-2 text-[10px] text-text-faint italic font-serif-ui-sm">Changes captured by Tohfa Audit System.</p>
         </td>
       `;
       listEl.appendChild(diffTr);
@@ -291,8 +358,13 @@ function renderLogs() {
 
 function generateDiffHtml(beforeJson, afterJson) {
   try {
-    const before = beforeJson ? JSON.parse(beforeJson) : null;
-    const after = afterJson ? JSON.parse(afterJson) : null;
+    const parse = (val) => {
+      if (!val) return null;
+      if (typeof val === 'object') return val;
+      try { return JSON.parse(val); } catch { return { data: val }; }
+    };
+    const before = parse(beforeJson);
+    const after = parse(afterJson);
     
     if (!before && !after) return '<span class="text-text-faint">No details recorded</span>';
     

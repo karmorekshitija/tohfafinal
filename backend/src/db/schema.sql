@@ -157,6 +157,22 @@ CREATE INDEX IF NOT EXISTS idx_seller_profiles_seller_type         ON seller_pro
 CREATE INDEX IF NOT EXISTS idx_seller_profiles_is_admin_managed    ON seller_profiles(is_admin_managed);
 
 -- =============================================================================
+-- WALLETS (Seller Balance & Ledger)
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS wallets (
+  id              SERIAL PRIMARY KEY,
+  seller_id       UUID NOT NULL UNIQUE REFERENCES sellers(id) ON DELETE CASCADE,
+  user_id         UUID REFERENCES users(id) ON DELETE CASCADE,
+  balance         NUMERIC(12,2) DEFAULT 0.00,
+  holding_balance NUMERIC(12,2) DEFAULT 0.00,
+  currency        VARCHAR(10) DEFAULT 'INR',
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_wallets_seller_id ON wallets(seller_id);
+
+-- =============================================================================
 -- 4. CATEGORIES
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS categories (

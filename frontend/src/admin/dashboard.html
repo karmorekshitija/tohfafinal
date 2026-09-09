@@ -460,13 +460,22 @@
       // admin login check bypassed
     });
 
-    // Initial Load
-    document.addEventListener('DOMContentLoaded', () => {
+    // Initial Load & Auto-Refresh
+    function initDashboard() {
       loadStats();
       updateCharts('7d');
       loadViralProducts();
       loadSellerActivity();
-    });
+
+      // Periodically refresh dashboard summary stats (30s)
+      setInterval(loadStats, 30000);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initDashboard);
+    } else {
+      initDashboard();
+    }
   </script>
 </body>
 </html>
