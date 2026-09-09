@@ -308,7 +308,7 @@ async function getOrderById(req, res, next) {
                   'variant_id', oi.variant_id,
                   'quantity', oi.quantity,
                   'unit_price', COALESCE(oi.unit_price_paise / 100.0, 0),
-                  'product_name', COALESCE(oi.product_name, p.name, 'Handcrafted Item'),
+                  'product_name', COALESCE(p.name, 'Handcrafted Item'),
                   'variant_name', COALESCE(oi.variant_name, pv.variant_name),
                   'customization_text', '',
                   'image_url', COALESCE(
@@ -661,7 +661,7 @@ async function listRefundRequests(req, res, next) {
               u_s.name AS seller_name, u_s.email AS seller_email,
               COALESCE(sp.store_name, u_s.name, 'Artisan Studio') AS store_name,
               COALESCE(
-                (SELECT oi.product_name FROM order_items oi WHERE oi.order_id = rr.order_id LIMIT 1),
+                (SELECT p.name AS product_name FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE oi.order_id = rr.order_id LIMIT 1),
                 'Handcrafted Creation'
               ) AS product_name,
               COALESCE(
@@ -674,7 +674,7 @@ async function listRefundRequests(req, res, next) {
                   'product_id', oi.product_id,
                   'quantity', oi.quantity,
                   'unit_price', COALESCE(oi.unit_price_paise / 100.0, oi.unit_price, 0),
-                  'product_name', COALESCE(oi.product_name, pr.name, 'Handcrafted Item'),
+                  'product_name', COALESCE(pr.name, 'Handcrafted Item'),
                   'customization_mode', COALESCE(pr.customization_mode, 'none')
                 ))
                 FROM order_items oi
