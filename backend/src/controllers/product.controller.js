@@ -414,7 +414,7 @@ async function forYouFeed(req, res, next) {
     if (userId) {
       // Weighted: viewed categories + purchase history
       const { rows: fetched } = await query(
-        `SELECT DISTINCT p.id, p.name, p.description, p.base_price, p.category_id, p.tags,
+        `SELECT p.id, p.name, p.description, p.base_price, p.category_id, p.tags,
                 p.images AS direct_images,
                 p.customization_mode, p.is_customizable, p.is_sponsored,
                 p.status, p.view_count, p.seller_id, p.created_at,
@@ -446,7 +446,7 @@ async function forYouFeed(req, res, next) {
              )
            )
          GROUP BY p.id, sp.store_name, s.store_name, p.special_packaging_available
-         ORDER BY p.created_at DESC
+         ORDER BY RANDOM()
          LIMIT $2`,
         [userId, limit]
       );
@@ -477,7 +477,7 @@ async function forYouFeed(req, res, next) {
              OR (sp.user_id IS NULL AND s.user_id IS NULL)
            )
          GROUP BY p.id, sp.store_name, s.store_name, p.special_packaging_available
-         ORDER BY p.created_at DESC
+         ORDER BY RANDOM()
          LIMIT $1`,
         [limit]
       );
