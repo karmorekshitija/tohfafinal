@@ -16,8 +16,13 @@ function uniqueImageUrls(values) {
     if (typeof value === 'string') return value;
     return value?.url || value?.image_url || value?.imagePath || value?.img_url || null;
   }).filter((url) => {
-    if (!url || seen.has(url)) return false;
-    seen.add(url);
+    if (!url) return false;
+    const normalizedUrl = url
+      .split('?')[0]
+      .replace(/\.(jpe?g|png|webp)$/i, '')
+      .toLowerCase();
+    if (seen.has(normalizedUrl)) return false;
+    seen.add(normalizedUrl);
     return true;
   });
 }
@@ -1190,9 +1195,18 @@ async function updateProduct(req, res, next) {
     if (Array.isArray(photoList)) {
       await query('DELETE FROM product_images WHERE product_id = $1', [id]);
       let sortOrder = 0;
-      for (const url of uniqueImageUrls(photoList)) {
+      const seenImageKeys = new Set();
+      for (const image of photoList) {
+        const url = uniqueImageUrls([image])[0];
+        const imageKey = url
+          ? url.split('?')[0].replace(/\.(jpe?g|png|webp)$/i, '').toLowerCase()
+          : null;
+        if (!url || !imageKey || seenImageKeys.has(imageKey)) continue;
+        seenImageKeys.add(imageKey);
         if (url) {
-          const order = (img && typeof img === 'object' && img.sort_order !== undefined) ? img.sort_order : sortOrder++;
+          const order = (image && typeof image === 'object' && image.sort_order !== undefined)
+            ? image.sort_order
+            : sortOrder++;
           await query(
             `INSERT INTO product_images (product_id, url, sort_order)
              VALUES ($1, $2, $3)`,

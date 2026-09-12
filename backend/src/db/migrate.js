@@ -37,6 +37,7 @@ const MIGRATION_FILES = [
   path.join(__dirname, 'migrations', '021_dual_razorpay_gateway.sql'),
   path.join(__dirname, 'migrations', '022_cart_image_integrity.sql'),
   path.join(__dirname, 'migrations', '023_overflow_orders.sql'),
+  path.join(__dirname, 'migrations', '024_product_image_format_dedup.sql'),
 ];
 
 async function runMigrations() {
