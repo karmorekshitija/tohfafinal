@@ -329,6 +329,12 @@ CREATE TABLE IF NOT EXISTS cart_items (
 CREATE INDEX IF NOT EXISTS idx_cart_items_cart_id ON cart_items(cart_id);
 CREATE INDEX IF NOT EXISTS idx_cart_items_buyer_id ON cart_items(buyer_id);
 CREATE INDEX IF NOT EXISTS idx_cart_items_product_id ON cart_items(product_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_cart_items_buyer_product_no_variant
+  ON cart_items (buyer_id, product_id)
+  WHERE variant_id IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_cart_items_buyer_product_variant
+  ON cart_items (buyer_id, product_id, variant_id)
+  WHERE variant_id IS NOT NULL;
 
 -- =============================================================================
 -- 7. COUPONS & PROMOTIONS

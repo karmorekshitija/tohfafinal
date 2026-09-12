@@ -24,6 +24,100 @@ async function placeOrder(req, res, next) {
       return res.status(400).json({ success: false, message: 'address_id is required.' });
     }
 
+    // POST /api/orders/overflow — create an unpaid request for a busy artisan.
+    async function createOverflowOrder(req, res, next) {
+      try {
+        const buyerId = req.user.id;
+        const { address_id, cart_item_ids } = req.body;
+        if (!address_id) {
+          return res.status(400).json({ success: false, message: 'address_id is required.' });
+        }
+
+        const itemIds = Array.isArray(cart_item_ids) && cart_item_ids.length ? cart_item_ids : null;
+        const params = [buyerId];
+        const itemFilter = itemIds ? 'AND ci.id = ANY($2::uuid[])' : '';
+        if (itemIds) params.push(itemIds);
+        const { rows: items } = await query(
+          `SELECT ci.id, ci.product_id, ci.variant_id, ci.quantity,
+                  p.name AS product_name, p.base_price, p.seller_id,
+                  pv.additional_price AS variant_additional_price,
+                  COALESCE(sp.capacity_limit, 50) AS capacity_limit
+           FROM cart_items ci
+           JOIN products p ON p.id = ci.product_id
+           LEFT JOIN product_variants pv ON pv.id = ci.variant_id
+           LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
+           WHERE (ci.buyer_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
+             AND p.status = 'active' AND p.is_active = TRUE
+             ${itemFilter}`,
+          params
+        );
+        if (!items.length) {
+          return res.status(400).json({ success: false, message: 'No active cart items found.' });
+        }
+
+        const { rows: addressRows } = await query(
+          `SELECT id FROM addresses WHERE id = $1 AND user_id = $2
+           UNION ALL
+           SELECT id FROM user_addresses WHERE id = $1 AND user_id = $2
+           LIMIT 1`,
+          [address_id, buyerId]
+        );
+        if (!addressRows.length) {
+          return res.status(400).json({ success: false, message: 'Invalid delivery address.' });
+        }
+
+        const grouped = new Map();
+        for (const item of items) {
+          if (!grouped.has(item.seller_id)) grouped.set(item.seller_id, []);
+          grouped.get(item.seller_id).push(item);
+        }
+
+        const requests = [];
+        for (const [sellerId, sellerItems] of grouped) {
+          const { rows: capacityRows } = await query(
+            `SELECT COUNT(*)::INTEGER AS active_orders
+             FROM seller_orders
+             WHERE seller_id = $1
+               AND status NOT IN ('delivered', 'cancelled', 'returned')`,
+            [sellerId]
+          );
+          if (Number(capacityRows[0].active_orders) < Number(sellerItems[0].capacity_limit)) continue;
+
+          const snapshot = sellerItems.map(item => ({
+            cart_item_id: item.id,
+            product_id: item.product_id,
+            variant_id: item.variant_id,
+            product_name: item.product_name,
+            quantity: item.quantity,
+            unit_price: Number(item.base_price || 0) + Number(item.variant_additional_price || 0),
+          }));
+          const totalAmount = snapshot.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
+          const { rows } = await query(
+            `INSERT INTO overflow_orders
+               (buyer_id, seller_id, address_id, cart_item_ids, items_snapshot, total_amount)
+             VALUES ($1, $2, $3, $4, $5, $6)
+             RETURNING *`,
+            [
+              buyerId,
+              sellerId,
+              address_id,
+              sellerItems.map(item => item.id),
+              JSON.stringify(snapshot),
+              totalAmount.toFixed(2),
+            ]
+          );
+          requests.push(rows[0]);
+        }
+
+        if (!requests.length) {
+          return res.status(409).json({ success: false, message: 'No seller currently requires an overflow request.' });
+        }
+        return res.status(201).json({ success: true, data: { requests } });
+      } catch (err) {
+        next(err);
+      }
+    }
+
     const result = await placeOrders(buyerId, address_id, cart_item_ids || null, {
       coupon_code: coupon_code || coupon || code,
       coupon_id,
@@ -418,7 +512,7 @@ async function updateOrderStatus(req, res, next) {
     // If order was cancelled, restock product inventory
     if (status === 'cancelled') {
       const { rows: itemRows } = await query(
-        'SELECT product_id, quantity FROM order_items WHERE order_id = $1',
+        'SELECT product_id, variant_id, quantity FROM order_items WHERE order_id = $1',
         [id]
       );
       for (const item of itemRows) {
@@ -426,6 +520,12 @@ async function updateOrderStatus(req, res, next) {
           'UPDATE products SET stock_quantity = stock_quantity + $1, updated_at = NOW() WHERE id = $2',
           [item.quantity, item.product_id]
         );
+        if (item.variant_id) {
+          await query(
+            'UPDATE product_variants SET stock_qty = stock_qty + $1 WHERE id = $2',
+            [item.quantity, item.variant_id]
+          );
+        }
       }
     }
 
@@ -512,6 +612,12 @@ async function cancelOrder(req, res, next) {
         'UPDATE products SET stock_quantity = stock_quantity + $1, updated_at = NOW() WHERE id = $2',
         [item.quantity, item.product_id]
       ).catch(() => {});
+      if (item.variant_id) {
+        await query(
+          'UPDATE product_variants SET stock_qty = stock_qty + $1 WHERE id = $2',
+          [item.quantity, item.variant_id]
+        ).catch(() => {});
+      }
     }
 
     const cancelReasonText = String(reason || notes || 'Cancelled by buyer').trim();
@@ -772,6 +878,13 @@ async function approveRefund(req, res, next) {
          WHERE oi.order_id = $1 AND p.id = oi.product_id`,
         [refundReq.order_id]
       );
+      await query(
+        `UPDATE product_variants v
+         SET stock_qty = v.stock_qty + oi.quantity
+         FROM order_items oi
+         WHERE oi.order_id = $1 AND oi.variant_id = v.id`,
+        [refundReq.order_id]
+      );
     } catch (e) {
       console.warn('[Inventory restock notice]:', e.message);
     }
@@ -876,6 +989,7 @@ async function rejectRefund(req, res, next) {
 
 module.exports = {
   placeOrder,
+  createOverflowOrder,
   getBuyerOrders,
   getSellerOrders,
   getAdminOrders,
