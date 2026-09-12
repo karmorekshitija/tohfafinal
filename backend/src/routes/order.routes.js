@@ -23,6 +23,7 @@ router.use(authMiddleware);
 
 // Buyer & shared
 router.post('/', orderController.placeOrder);
+router.post('/overflow', orderController.createOverflowOrder);
 router.get('/', orderController.getBuyerOrders);
 router.get('/seller', sellerOnly, orderController.getSellerOrders);
 router.get('/admin', adminOnly, orderController.getAdminOrders);

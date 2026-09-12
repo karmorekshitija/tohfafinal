@@ -231,9 +231,65 @@ async function markOrderPaid(orderId, paymentDetails = {}, externalClient = null
     const signature = paymentDetails.razorpay_signature || null;
     const gatewayAccount = paymentDetails.gateway_account || 'primary';
 
-    // 3. Atomically update orders table
+    // 3. Reserve product inventory exactly once, with row locks and stock guards.
+    const productStockRes = await client.query(
+      `WITH requested AS (
+         SELECT product_id, SUM(quantity)::INTEGER AS quantity
+         FROM order_items
+         WHERE order_id = $1
+         GROUP BY product_id
+       )
+       UPDATE products p
+       SET stock_quantity = p.stock_quantity - requested.quantity,
+           updated_at = NOW()
+       FROM requested
+       WHERE p.id = requested.product_id
+         AND p.stock_quantity >= requested.quantity
+       RETURNING p.id`,
+      [orderId]
+    );
+    const { rows: productCountRows } = await client.query(
+      `SELECT COUNT(DISTINCT product_id)::INTEGER AS count
+       FROM order_items
+       WHERE order_id = $1`,
+      [orderId]
+    );
+    if (productStockRes.rowCount !== productCountRows[0].count) {
+      const stockError = new Error('One or more products no longer have enough stock.');
+      stockError.status = 409;
+      throw stockError;
+    }
+
+    const variantStockRes = await client.query(
+      `WITH requested AS (
+         SELECT variant_id, SUM(quantity)::INTEGER AS quantity
+         FROM order_items
+         WHERE order_id = $1 AND variant_id IS NOT NULL
+         GROUP BY variant_id
+       )
+       UPDATE product_variants v
+       SET stock_qty = v.stock_qty - requested.quantity
+       FROM requested
+       WHERE v.id = requested.variant_id
+         AND v.stock_qty >= requested.quantity
+       RETURNING v.id`,
+      [orderId]
+    );
+    const { rows: variantCountRows } = await client.query(
+      `SELECT COUNT(DISTINCT variant_id)::INTEGER AS count
+       FROM order_items
+       WHERE order_id = $1 AND variant_id IS NOT NULL`,
+      [orderId]
+    );
+    if (variantStockRes.rowCount !== variantCountRows[0].count) {
+      const stockError = new Error('One or more selected variants no longer have enough stock.');
+      stockError.status = 409;
+      throw stockError;
+    }
+
+    // 4. Atomically update orders table after inventory reservation succeeds.
     const updateOrderRes = await client.query(
-      `UPDATE orders 
+      `UPDATE orders
        SET status = 'confirmed',
            payment_status = 'paid',
            payment_id = COALESCE($2, payment_id),
@@ -266,16 +322,6 @@ async function markOrderPaid(orderId, paymentDetails = {}, externalClient = null
     } catch (_) {
       // payments table update guard
     }
-
-    // 5. Atomically decrement product inventory
-    await client.query(
-      `UPDATE products p
-       SET stock_quantity = p.stock_quantity - oi.quantity,
-           updated_at = NOW()
-       FROM order_items oi
-       WHERE oi.order_id = $1 AND p.id = oi.product_id`,
-      [orderId]
-    );
 
     if (shouldManageTx) {
       await client.query('COMMIT');

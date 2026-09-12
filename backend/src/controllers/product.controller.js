@@ -10,6 +10,18 @@
 
 const { query, getClient } = require('../config/db');
 
+function uniqueImageUrls(values) {
+  const seen = new Set();
+  return values.map((value) => {
+    if (typeof value === 'string') return value;
+    return value?.url || value?.image_url || value?.imagePath || value?.img_url || null;
+  }).filter((url) => {
+    if (!url || seen.has(url)) return false;
+    seen.add(url);
+    return true;
+  });
+}
+
 // Normalize fields for all frontend views
 function sanitizeProduct(p) {
   if (!p) return null;
@@ -26,6 +38,7 @@ function sanitizeProduct(p) {
   } else if (p.image_url || p.primary_image) {
     images = [{ url: p.image_url || p.primary_image }];
   }
+  images = uniqueImageUrls(images).map(url => ({ url }));
 
   const primaryImg = (images.length > 0 && images[0].url)
     ? images[0].url
@@ -38,7 +51,7 @@ function sanitizeProduct(p) {
   const variants = rawVariants.map(v => {
     let vImgs = [];
     if (Array.isArray(v.images) && v.images.length > 0) {
-      vImgs = v.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || img))).filter(Boolean);
+      vImgs = uniqueImageUrls(v.images);
     } else if (v.image_url) {
       vImgs = [v.image_url];
     }
@@ -974,10 +987,10 @@ async function createProduct(req, res, next) {
           : []
       )
     );
-    if (rawImagesList.length > 0) {
+    const uniqueRawImagesList = uniqueImageUrls(rawImagesList);
+    if (uniqueRawImagesList.length > 0) {
       let sortOrder = 0;
-      for (const img of rawImagesList) {
-        const url = typeof img === 'string' ? img : (img?.url || img?.imagePath || img?.img_url || '');
+      for (const url of uniqueRawImagesList) {
         if (url) {
           await query(
             `INSERT INTO product_images (product_id, url, sort_order)
@@ -994,7 +1007,7 @@ async function createProduct(req, res, next) {
       for (const v of variants) {
         let vImgs = [];
         if (Array.isArray(v.images) && v.images.length > 0) {
-          vImgs = v.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || ''))).filter(Boolean);
+          vImgs = uniqueImageUrls(v.images);
         } else if (v.image_url) {
           vImgs = [v.image_url];
         }
@@ -1177,8 +1190,7 @@ async function updateProduct(req, res, next) {
     if (Array.isArray(photoList)) {
       await query('DELETE FROM product_images WHERE product_id = $1', [id]);
       let sortOrder = 0;
-      for (const img of photoList) {
-        const url = typeof img === 'string' ? img : (img?.url || img?.imagePath || img?.img_url || '');
+      for (const url of uniqueImageUrls(photoList)) {
         if (url) {
           const order = (img && typeof img === 'object' && img.sort_order !== undefined) ? img.sort_order : sortOrder++;
           await query(
@@ -1196,7 +1208,7 @@ async function updateProduct(req, res, next) {
       for (const v of variants) {
         let vImgs = [];
         if (Array.isArray(v.images) && v.images.length > 0) {
-          vImgs = v.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || img.imagePath || ''))).filter(Boolean);
+          vImgs = uniqueImageUrls(v.images);
         } else if (v.image_url || v.imagePath) {
           vImgs = [v.image_url || v.imagePath];
         }
@@ -1323,12 +1335,12 @@ async function uploadImages(req, res, next) {
     let sortOrder = parseInt(maxRows[0].max_order, 10) + 1;
 
     const inserted = [];
-    for (const file of req.files) {
+    for (const filePath of uniqueImageUrls(req.files.map(file => file.path))) {
       const { rows } = await query(
         `INSERT INTO product_images (product_id, url, sort_order)
          VALUES ($1, $2, $3)
          RETURNING id, url, sort_order`,
-        [id, file.path, sortOrder++]
+        [id, filePath, sortOrder++]
       );
       inserted.push(rows[0]);
     }
@@ -1372,7 +1384,7 @@ async function upsertVariants(req, res, next) {
       for (const v of variants) {
         let vImgs = [];
         if (Array.isArray(v.images) && v.images.length > 0) {
-          vImgs = v.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || ''))).filter(Boolean);
+          vImgs = uniqueImageUrls(v.images);
         } else if (v.image_url) {
           vImgs = [v.image_url];
         }
@@ -1615,4 +1627,3 @@ module.exports = {
   getRecommendations,
   getMoreLikeThis: getRecommendations,
 };
-
