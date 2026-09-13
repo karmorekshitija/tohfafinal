@@ -25,13 +25,22 @@ async function createOverflowOrder(req, res, next) {
 
     const itemIds = Array.isArray(cart_item_ids) && cart_item_ids.length ? cart_item_ids : null;
     const params = [buyerId];
+<<<<<<< HEAD
     const itemFilter = itemIds ? 'AND ci.id::text = ANY($2::text[])' : '';
     if (itemIds) params.push(itemIds.map(String));
+=======
+    const itemFilter = itemIds ? 'AND ci.id = ANY($2::uuid[])' : '';
+    if (itemIds) params.push(itemIds);
+>>>>>>> 8819c84f0a359c3b8b8645ea17835911536a2597
     const { rows: items } = await query(
       `SELECT ci.id, ci.product_id, ci.variant_id, ci.quantity,
               p.name AS product_name, p.base_price, p.seller_id,
               pv.additional_price AS variant_additional_price,
+<<<<<<< HEAD
               COALESCE(sp.capacity_limit, sp.daily_order_limit, sp.daily_capacity_max, 50) AS capacity_limit
+=======
+              COALESCE(sp.capacity_limit, 50) AS capacity_limit
+>>>>>>> 8819c84f0a359c3b8b8645ea17835911536a2597
        FROM cart_items ci
        JOIN products p ON p.id = ci.product_id
        LEFT JOIN product_variants pv ON pv.id = ci.variant_id
@@ -514,7 +523,7 @@ async function updateOrderStatus(req, res, next) {
     // If order was cancelled, restock product inventory
     if (status === 'cancelled') {
       const { rows: itemRows } = await query(
-        'SELECT product_id, quantity FROM order_items WHERE order_id = $1',
+        'SELECT product_id, variant_id, quantity FROM order_items WHERE order_id = $1',
         [id]
       );
       for (const item of itemRows) {
@@ -522,6 +531,12 @@ async function updateOrderStatus(req, res, next) {
           'UPDATE products SET stock_quantity = stock_quantity + $1, updated_at = NOW() WHERE id = $2',
           [item.quantity, item.product_id]
         );
+        if (item.variant_id) {
+          await query(
+            'UPDATE product_variants SET stock_qty = stock_qty + $1 WHERE id = $2',
+            [item.quantity, item.variant_id]
+          );
+        }
       }
     }
 
@@ -608,6 +623,12 @@ async function cancelOrder(req, res, next) {
         'UPDATE products SET stock_quantity = stock_quantity + $1, updated_at = NOW() WHERE id = $2',
         [item.quantity, item.product_id]
       ).catch(() => {});
+      if (item.variant_id) {
+        await query(
+          'UPDATE product_variants SET stock_qty = stock_qty + $1 WHERE id = $2',
+          [item.quantity, item.variant_id]
+        ).catch(() => {});
+      }
     }
 
     const cancelReasonText = String(reason || notes || 'Cancelled by buyer').trim();
@@ -866,6 +887,13 @@ async function approveRefund(req, res, next) {
          SET stock_quantity = p.stock_quantity + oi.quantity, updated_at = NOW()
          FROM order_items oi
          WHERE oi.order_id = $1 AND p.id = oi.product_id`,
+        [refundReq.order_id]
+      );
+      await query(
+        `UPDATE product_variants v
+         SET stock_qty = v.stock_qty + oi.quantity
+         FROM order_items oi
+         WHERE oi.order_id = $1 AND oi.variant_id = v.id`,
         [refundReq.order_id]
       );
     } catch (e) {

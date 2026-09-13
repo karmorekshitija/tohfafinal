@@ -93,9 +93,17 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
              COALESCE(p.weight_grams, 500) AS weight_grams,
              COALESCE(pv.additional_price, 0) AS variant_additional_price,
              COALESCE(sp.commission_rate, s.commission_rate, 10.00) AS commission_rate,
+<<<<<<< HEAD
              COALESCE(sp.capacity_limit, sp.daily_order_limit, sp.daily_capacity_max, 50) AS capacity_limit,
              COALESCE(sp.vacation_mode, sp.vacation_mode_active = 1, FALSE) AS vacation_mode,
              COALESCE(sp.store_visibility, sp.is_accepting_orders = 1, TRUE) AS store_visibility
+=======
+             COALESCE(sp.capacity_limit, 50) AS capacity_limit,
+             COALESCE(sp.vacation_mode, FALSE) AS vacation_mode,
+             COALESCE(sp.store_visibility, TRUE) AS store_visibility,
+             pv.product_id AS variant_product_id,
+             pv.stock_qty AS variant_stock_qty
+>>>>>>> 8819c84f0a359c3b8b8645ea17835911536a2597
       FROM cart_items ci
       JOIN products p ON p.id = ci.product_id
       LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
@@ -116,9 +124,17 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
              COALESCE(p.weight_grams, 500) AS weight_grams,
              COALESCE(pv.additional_price, 0) AS variant_additional_price,
              COALESCE(sp.commission_rate, s.commission_rate, 10.00) AS commission_rate,
+<<<<<<< HEAD
              COALESCE(sp.capacity_limit, sp.daily_order_limit, sp.daily_capacity_max, 50) AS capacity_limit,
              COALESCE(sp.vacation_mode, sp.vacation_mode_active = 1, FALSE) AS vacation_mode,
              COALESCE(sp.store_visibility, sp.is_accepting_orders = 1, TRUE) AS store_visibility
+=======
+             COALESCE(sp.capacity_limit, 50) AS capacity_limit,
+             COALESCE(sp.vacation_mode, FALSE) AS vacation_mode,
+             COALESCE(sp.store_visibility, TRUE) AS store_visibility,
+             pv.product_id AS variant_product_id,
+             pv.stock_qty AS variant_stock_qty
+>>>>>>> 8819c84f0a359c3b8b8645ea17835911536a2597
       FROM cart_items ci
       JOIN products p ON p.id = ci.product_id
       LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
@@ -141,8 +157,14 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
   // Validate quantities, stock availability, and compute server-side item unit prices (CHK-28)
   const cartItems = rawCartItems.map(item => {
     const qty = Math.max(1, parseInt(item.quantity, 10) || 1);
-    if (item.stock_quantity < qty) {
-      const err = new Error(`Insufficient stock for "${item.product_name}". Only ${item.stock_quantity} available.`);
+    const availableStock = item.variant_id ? item.variant_stock_qty : item.stock_quantity;
+    if (item.variant_id && item.variant_product_id !== item.product_id) {
+      const err = new Error(`Selected variant does not belong to "${item.product_name}".`);
+      err.status = 400;
+      throw err;
+    }
+    if (availableStock < qty) {
+      const err = new Error(`Insufficient stock for "${item.product_name}". Only ${availableStock} available.`);
       err.status = 400;
       throw err;
     }
@@ -211,6 +233,23 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
       const err = new Error('Artisan is currently on vacation and not accepting new orders.');
       err.status = 400;
       throw err;
+    }
+
+    if (Number.isFinite(Number(group.capacity_limit)) && Number(group.capacity_limit) > 0) {
+      const { rows: capacityRows } = await query(
+        `SELECT COUNT(*)::INTEGER AS active_orders
+         FROM seller_orders
+         WHERE seller_id = $1
+           AND status NOT IN ('delivered', 'cancelled', 'returned')`,
+        [sellerId]
+      );
+      if (Number(capacityRows[0].active_orders) >= Number(group.capacity_limit)) {
+        const err = new Error('Artisan is currently at capacity. Submit an overflow request instead.');
+        err.status = 409;
+        err.is_overflow = true;
+        err.seller_id = sellerId;
+        throw err;
+      }
     }
   }
 
@@ -395,5 +434,3 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
 }
 
 module.exports = { placeOrders };
-
-

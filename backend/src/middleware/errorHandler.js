@@ -39,7 +39,12 @@ function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-va
     ? err.message
     : 'Something went wrong. Please try again.';
 
-  res.status(statusCode).json({ success: false, message });
+  const response = { success: false, message };
+  if (err.is_overflow) {
+    response.is_overflow = true;
+    response.seller_id = err.seller_id;
+  }
+  res.status(statusCode).json(response);
 }
 
 module.exports = { errorHandler };

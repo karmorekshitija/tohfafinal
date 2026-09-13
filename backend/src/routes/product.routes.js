@@ -44,6 +44,7 @@ router.get('/trending-searches', async (req, res) => {
   return res.json({ success: true, data: { searches: ['Ceramic Mug', 'Resin Art', 'Embroidered Tote', 'Scented Candles', 'Handmade Journal'] } });
 });
 router.get('/seller/:sellerId', productController.getSellerProducts);
+router.get('/:id/similar', productController.getRecommendations);
 router.get('/:id', productController.getProduct);
 router.post('/:id/event', (req, res) => {
   return res.json({ success: true, message: 'Event logged.' });

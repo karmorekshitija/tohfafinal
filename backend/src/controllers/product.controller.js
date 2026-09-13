@@ -10,6 +10,23 @@
 
 const { query, getClient } = require('../config/db');
 
+function uniqueImageUrls(values) {
+  const seen = new Set();
+  return values.map((value) => {
+    if (typeof value === 'string') return value;
+    return value?.url || value?.image_url || value?.imagePath || value?.img_url || null;
+  }).filter((url) => {
+    if (!url) return false;
+    const normalizedUrl = url
+      .split('?')[0]
+      .replace(/\.(jpe?g|png|webp)$/i, '')
+      .toLowerCase();
+    if (seen.has(normalizedUrl)) return false;
+    seen.add(normalizedUrl);
+    return true;
+  });
+}
+
 // Normalize fields for all frontend views
 function sanitizeProduct(p) {
   if (!p) return null;
@@ -26,6 +43,7 @@ function sanitizeProduct(p) {
   } else if (p.image_url || p.primary_image) {
     images = [{ url: p.image_url || p.primary_image }];
   }
+  images = uniqueImageUrls(images).map(url => ({ url }));
 
   const primaryImg = (images.length > 0 && images[0].url)
     ? images[0].url
@@ -38,7 +56,7 @@ function sanitizeProduct(p) {
   const variants = rawVariants.map(v => {
     let vImgs = [];
     if (Array.isArray(v.images) && v.images.length > 0) {
-      vImgs = v.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || img))).filter(Boolean);
+      vImgs = uniqueImageUrls(v.images);
     } else if (v.image_url) {
       vImgs = [v.image_url];
     }
@@ -1004,11 +1022,16 @@ async function createProduct(req, res, next) {
           ? [req.body.img_url || req.body.imagePath || req.body.imageUrl || req.body.image_url]
           : []
       )
+<<<<<<< HEAD
     ));
     if (rawImagesList.length > 0) {
+=======
+    );
+    const uniqueRawImagesList = uniqueImageUrls(rawImagesList);
+    if (uniqueRawImagesList.length > 0) {
+>>>>>>> 8819c84f0a359c3b8b8645ea17835911536a2597
       let sortOrder = 0;
-      for (const img of rawImagesList) {
-        const url = typeof img === 'string' ? img : (img?.url || img?.imagePath || img?.img_url || '');
+      for (const url of uniqueRawImagesList) {
         if (url) {
           await query(
             `INSERT INTO product_images (product_id, url, sort_order)
@@ -1025,7 +1048,7 @@ async function createProduct(req, res, next) {
       for (const v of variants) {
         let vImgs = [];
         if (Array.isArray(v.images) && v.images.length > 0) {
-          vImgs = v.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || ''))).filter(Boolean);
+          vImgs = uniqueImageUrls(v.images);
         } else if (v.image_url) {
           vImgs = [v.image_url];
         }
@@ -1208,10 +1231,18 @@ async function updateProduct(req, res, next) {
     if (Array.isArray(photoList)) {
       await query('DELETE FROM product_images WHERE product_id = $1', [id]);
       let sortOrder = 0;
-      for (const img of photoList) {
-        const url = typeof img === 'string' ? img : (img?.url || img?.imagePath || img?.img_url || '');
+      const seenImageKeys = new Set();
+      for (const image of photoList) {
+        const url = uniqueImageUrls([image])[0];
+        const imageKey = url
+          ? url.split('?')[0].replace(/\.(jpe?g|png|webp)$/i, '').toLowerCase()
+          : null;
+        if (!url || !imageKey || seenImageKeys.has(imageKey)) continue;
+        seenImageKeys.add(imageKey);
         if (url) {
-          const order = (img && typeof img === 'object' && img.sort_order !== undefined) ? img.sort_order : sortOrder++;
+          const order = (image && typeof image === 'object' && image.sort_order !== undefined)
+            ? image.sort_order
+            : sortOrder++;
           await query(
             `INSERT INTO product_images (product_id, url, sort_order)
              VALUES ($1, $2, $3)`,
@@ -1227,7 +1258,7 @@ async function updateProduct(req, res, next) {
       for (const v of variants) {
         let vImgs = [];
         if (Array.isArray(v.images) && v.images.length > 0) {
-          vImgs = v.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || img.imagePath || ''))).filter(Boolean);
+          vImgs = uniqueImageUrls(v.images);
         } else if (v.image_url || v.imagePath) {
           vImgs = [v.image_url || v.imagePath];
         }
@@ -1354,13 +1385,17 @@ async function uploadImages(req, res, next) {
     let sortOrder = parseInt(maxRows[0].max_order, 10) + 1;
 
     const inserted = [];
+<<<<<<< HEAD
     const filesToInsert = dedupeAlternateFormatImages(req.files);
     for (const file of filesToInsert) {
+=======
+    for (const filePath of uniqueImageUrls(req.files.map(file => file.path))) {
+>>>>>>> 8819c84f0a359c3b8b8645ea17835911536a2597
       const { rows } = await query(
         `INSERT INTO product_images (product_id, url, sort_order)
          VALUES ($1, $2, $3)
          RETURNING id, url, sort_order`,
-        [id, file.path, sortOrder++]
+        [id, filePath, sortOrder++]
       );
       inserted.push(rows[0]);
     }
@@ -1404,7 +1439,7 @@ async function upsertVariants(req, res, next) {
       for (const v of variants) {
         let vImgs = [];
         if (Array.isArray(v.images) && v.images.length > 0) {
-          vImgs = v.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || ''))).filter(Boolean);
+          vImgs = uniqueImageUrls(v.images);
         } else if (v.image_url) {
           vImgs = [v.image_url];
         }
@@ -1647,4 +1682,3 @@ module.exports = {
   getRecommendations,
   getMoreLikeThis: getRecommendations,
 };
-
