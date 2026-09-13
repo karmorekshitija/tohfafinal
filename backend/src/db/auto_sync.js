@@ -393,16 +393,98 @@ async function autoSyncDatabase() {
       console.warn('⚠️ [Auto-Sync Step 9c - Payments Notice]:', err.message);
     }
 
-    // 9d. Orders Notes & Studio Notes Columns + Address columns (Sync so seller endpoints never fail)
+    // 9d. Orders Notes, Total Paise, Order Ref & Studio Notes + Order Items & Address columns
     try {
       await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS notes TEXT;`);
       await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS studio_notes TEXT;`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS total_paise BIGINT;`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_ref TEXT;`);
+      await query(`UPDATE orders SET total_paise = ROUND(total_amount * 100) WHERE total_paise IS NULL AND total_amount IS NOT NULL;`);
+      await query(`UPDATE orders SET order_ref = 'TOHFA-' || UPPER(SUBSTRING(id::text, 1, 8)) WHERE order_ref IS NULL;`);
       await query(`UPDATE orders SET notes = studio_notes WHERE notes IS NULL AND studio_notes IS NOT NULL;`);
       await query(`UPDATE orders SET studio_notes = notes WHERE studio_notes IS NULL AND notes IS NOT NULL;`);
+      await query(`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS unit_price_paise BIGINT;`);
+      await query(`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS variant_name TEXT;`);
+      await query(`UPDATE order_items SET unit_price_paise = ROUND(unit_price * 100) WHERE unit_price_paise IS NULL AND unit_price IS NOT NULL;`);
+
+      // Seller profiles social/capacity/KYC fields
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS pan_number TEXT;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS gst_number TEXT;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS portfolio_images TEXT[] DEFAULT '{}';`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT FALSE;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS daily_capacity_min INT DEFAULT NULL;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS daily_capacity_max INT DEFAULT NULL;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS instagram_handle TEXT DEFAULT NULL;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS instagram_followers TEXT DEFAULT NULL;`);
+
       await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS name TEXT;`);
       await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS recipient_name TEXT;`);
       await query(`UPDATE addresses SET name = full_name WHERE name IS NULL AND full_name IS NOT NULL;`);
       await query(`UPDATE addresses SET recipient_name = full_name WHERE recipient_name IS NULL AND full_name IS NOT NULL;`);
+      await query(`CREATE OR REPLACE VIEW user_addresses AS SELECT * FROM addresses;`);
+
+      // Orders missing columns (Bug 2 & Bug 3)
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_id VARCHAR(100);`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER;`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_amount NUMERIC(10,2) DEFAULT 0.00;`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_amount NUMERIC(10,2) DEFAULT 0.00;`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_id INTEGER;`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method TEXT DEFAULT 'razorpay';`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_address JSONB DEFAULT '{}';`);
+      await query(`UPDATE orders SET user_id = buyer_id WHERE user_id IS NULL AND buyer_id IS NOT NULL;`);
+      await query(`UPDATE orders SET buyer_id = user_id WHERE buyer_id IS NULL AND user_id IS NOT NULL;`);
+
+      // Seller profiles compatibility fields (Bug 3)
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS capacity_limit INT DEFAULT 50;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS vacation_mode BOOLEAN DEFAULT FALSE;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS store_visibility BOOLEAN DEFAULT TRUE;`);
+      await query(`UPDATE seller_profiles SET capacity_limit = COALESCE(daily_order_limit, daily_capacity_max, 50) WHERE capacity_limit IS NULL;`);
+      await query(`UPDATE seller_profiles SET vacation_mode = (vacation_mode_active = 1) WHERE vacation_mode IS NULL AND vacation_mode_active IS NOT NULL;`);
+      await query(`UPDATE seller_profiles SET store_visibility = (is_accepting_orders = 1) WHERE store_visibility IS NULL AND is_accepting_orders IS NOT NULL;`);
+
+      // Order items compatibility fields (Bug 3)
+      await query(`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS seller_order_id INTEGER;`);
+      await query(`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS customization_details TEXT;`);
+
+      // Create seller_orders table (Bug 3)
+      await query(`
+        CREATE TABLE IF NOT EXISTS seller_orders (
+          id SERIAL PRIMARY KEY,
+          order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
+          seller_id INTEGER REFERENCES users(id) ON DELETE RESTRICT,
+          subtotal NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+          shipping_fee NUMERIC(10,2) DEFAULT 0.00,
+          platform_commission NUMERIC(10,2) DEFAULT 0.00,
+          seller_payout_amount NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+          status VARCHAR(50) DEFAULT 'order_placed',
+          awb_number VARCHAR(100),
+          courier_name VARCHAR(100),
+          tracking_url TEXT,
+          payout_status VARCHAR(50) DEFAULT 'unsettled',
+          delivered_at TIMESTAMPTZ,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+      `);
+      await query(`CREATE INDEX IF NOT EXISTS idx_seller_orders_order_id ON seller_orders(order_id);`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_seller_orders_seller_id ON seller_orders(seller_id);`);
+
+      // Notifications compatibility columns
+      await query(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS title TEXT;`);
+      await query(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS body TEXT;`);
+      await query(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS meta JSONB DEFAULT '{}';`);
+      await query(`
+        DO $$
+        BEGIN
+          IF EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name = 'notifications' AND column_name = 'is_read' AND data_type != 'boolean'
+          ) THEN
+            ALTER TABLE notifications ALTER COLUMN is_read DROP DEFAULT;
+            ALTER TABLE notifications ALTER COLUMN is_read TYPE BOOLEAN USING (CASE WHEN is_read IS NULL THEN FALSE WHEN is_read::text = '1' THEN TRUE ELSE FALSE END);
+            ALTER TABLE notifications ALTER COLUMN is_read SET DEFAULT FALSE;
+          END IF;
+        END $$;
+      `);
     } catch (err) {
       console.warn('⚠️ [Auto-Sync Step 9d - Orders Notes Notice]:', err.message);
     }

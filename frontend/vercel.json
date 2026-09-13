@@ -36,6 +36,18 @@
       "destination": "/admin/index.html"
     },
     {
+      "source": "/src/responsive.css",
+      "destination": "/responsive.css"
+    },
+    {
+      "source": "/assets/tohfa-footer.html",
+      "destination": "/components/tohfa-footer.html"
+    },
+    {
+      "source": "/assets/tohfa-navbar.html",
+      "destination": "/components/tohfa-navbar.html"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://tohfafinal.onrender.com/api/:path*"
     }

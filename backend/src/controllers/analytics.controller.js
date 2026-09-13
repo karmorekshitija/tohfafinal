@@ -260,7 +260,7 @@ async function getAdminStats(req, res, next) {
 
     // Active (approved) sellers
     const { rows: sellers } = await query(
-      `SELECT COUNT(id) AS total_sellers FROM seller_profiles WHERE is_approved = TRUE`
+      `SELECT COUNT(id) AS total_sellers FROM seller_profiles WHERE (is_approved = TRUE OR is_approved = 1 OR verification_status = 'verified')`
     );
 
     // Registered buyers
@@ -272,7 +272,7 @@ async function getAdminStats(req, res, next) {
     const { rows: pending } = await query(
       `SELECT COUNT(id) AS pending_applications
        FROM seller_profiles
-       WHERE is_approved = FALSE AND rejection_reason IS NULL`
+       WHERE (is_approved = FALSE OR is_approved = 0 OR is_approved IS NULL) AND rejection_reason IS NULL`
     );
 
     return res.json({

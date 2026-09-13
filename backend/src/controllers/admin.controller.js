@@ -1042,6 +1042,37 @@ async function listAllProducts(req, res, next) {
   }
 }
 
+// Deduplicate alternate format pairs (e.g. JPEG and WebP of the same image)
+function dedupeAlternateFormatImages(list) {
+  if (!Array.isArray(list)) return [];
+  const map = new Map();
+  for (const item of list) {
+    const url = typeof item === 'string' ? item : (item?.url || item?.imagePath || item?.path || item?.img_url || item?.image_url || '');
+    if (!url) continue;
+    const clean = url.split('?')[0];
+    const lastSlash = clean.lastIndexOf('/');
+    const dir = lastSlash !== -1 ? clean.substring(0, lastSlash).toLowerCase() : '';
+    const filename = lastSlash !== -1 ? clean.substring(lastSlash + 1) : clean;
+    const lastDot = filename.lastIndexOf('.');
+    const stem = (lastDot !== -1 ? filename.substring(0, lastDot) : filename).toLowerCase();
+    const ext = (lastDot !== -1 ? filename.substring(lastDot) : '').toLowerCase();
+    const key = `${dir}/${stem}`;
+
+    if (!map.has(key)) {
+      map.set(key, item);
+    } else {
+      const existing = map.get(key);
+      const existingUrl = typeof existing === 'string' ? existing : (existing?.url || existing?.imagePath || existing?.path || existing?.img_url || existing?.image_url || '');
+      const existingClean = existingUrl.split('?')[0];
+      const existingExt = existingClean.substring(existingClean.lastIndexOf('.')).toLowerCase();
+      if (ext === '.webp' && existingExt !== '.webp') {
+        map.set(key, item);
+      }
+    }
+  }
+  return Array.from(map.values());
+}
+
 async function createProduct(req, res, next) {
   try {
     const { name, description, base_price, category_id, seller_id, image_url, images, variants } = req.body;
@@ -1064,11 +1095,11 @@ async function createProduct(req, res, next) {
     const newProduct = rows[0];
 
     const rawImage = req.body.image_url || req.body.img_url || req.body.imagePath || req.body.imageUrl || req.body.primary_image;
-    const rawImagesList = (Array.isArray(images) && images.length > 0) ? images : (
+    const rawImagesList = dedupeAlternateFormatImages((Array.isArray(images) && images.length > 0) ? images : (
       (Array.isArray(req.body.photos) && req.body.photos.length > 0) ? req.body.photos : (
         rawImage ? [rawImage] : []
       )
-    );
+    ));
 
     if (rawImagesList.length > 0) {
       let sortOrder = 0;
@@ -1179,7 +1210,8 @@ async function updateProduct(req, res, next) {
     if (Array.isArray(images)) {
       await query('DELETE FROM product_images WHERE product_id = $1', [id]);
       let sortOrder = 0;
-      for (const img of images) {
+      const cleanImages = dedupeAlternateFormatImages(images);
+      for (const img of cleanImages) {
         const url = typeof img === 'string' ? img : (img?.url || '');
         if (url) {
           await query(

@@ -2,8 +2,8 @@
 document.addEventListener("DOMContentLoaded", () => {
     // Get the base directory of this script so we fetch components from the same folder
     const scriptSrc = import.meta.url;
-    let baseDir = '.';
-    if (scriptSrc && scriptSrc.includes('/')) {
+    let baseDir = '/components';
+    if (scriptSrc && scriptSrc.includes('/') && !scriptSrc.includes('/assets')) {
         baseDir = scriptSrc.substring(0, scriptSrc.lastIndexOf('/'));
     }
 

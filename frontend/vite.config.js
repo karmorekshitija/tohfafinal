@@ -1,5 +1,5 @@
 import { resolve, join } from 'path';
-import { readdirSync, statSync, cpSync, existsSync } from 'fs';
+import { readdirSync, statSync, cpSync, existsSync, mkdirSync, copyFileSync } from 'fs';
 import { defineConfig } from 'vite';
 
 /**
@@ -62,6 +62,23 @@ const copyDistSrcPlugin = () => ({
     const dist = resolve(__dirname, 'dist');
     if (existsSync(distSrc)) {
       cpSync(distSrc, dist, { recursive: true });
+    }
+    // Ensure static responsive.css and components are available at all requested production paths
+    const responsiveCss = resolve(__dirname, 'src', 'responsive.css');
+    if (existsSync(responsiveCss)) {
+      const distSrcDir = resolve(dist, 'src');
+      if (!existsSync(distSrcDir)) {
+        mkdirSync(distSrcDir, { recursive: true });
+      }
+      copyFileSync(responsiveCss, resolve(distSrcDir, 'responsive.css'));
+      copyFileSync(responsiveCss, resolve(dist, 'responsive.css'));
+    }
+    const distAssets = resolve(dist, 'assets');
+    const footerHtml = resolve(__dirname, 'public', 'components', 'tohfa-footer.html');
+    const navbarHtml = resolve(__dirname, 'public', 'components', 'tohfa-navbar.html');
+    if (existsSync(distAssets)) {
+      if (existsSync(footerHtml)) copyFileSync(footerHtml, resolve(distAssets, 'tohfa-footer.html'));
+      if (existsSync(navbarHtml)) copyFileSync(navbarHtml, resolve(distAssets, 'tohfa-navbar.html'));
     }
   }
 });

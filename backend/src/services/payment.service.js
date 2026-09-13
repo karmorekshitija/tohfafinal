@@ -237,6 +237,7 @@ async function markOrderPaid(orderId, paymentDetails = {}, externalClient = null
        SET status = 'confirmed',
            payment_status = 'paid',
            payment_id = COALESCE($2, payment_id),
+           razorpay_payment_id = COALESCE($2, razorpay_payment_id),
            updated_at = NOW()
        WHERE id = $1
        RETURNING *`,

@@ -114,13 +114,29 @@ function getFolderImages(folderName) {
     console.warn(`⚠️ Warning: Folder ${folderName} not found in ${MEESHO_DIR}`);
     return [];
   }
-  const files = fs.readdirSync(folderPath)
-    .filter(f => !f.startsWith('.') && f.match(/\.(jpe?g|png|webp)$/i))
-    .sort((a, b) => {
-      const numA = parseInt(a, 10) || 0;
-      const numB = parseInt(b, 10) || 0;
-      return numA - numB || a.localeCompare(b);
-    });
+  const rawFiles = fs.readdirSync(folderPath)
+    .filter(f => !f.startsWith('.') && f.match(/\.(jpe?g|png|webp)$/i));
+
+  // Deduplicate alternate format pairs (e.g. 1.jpeg and 1.webp)
+  const map = new Map();
+  for (const f of rawFiles) {
+    const ext = path.extname(f).toLowerCase();
+    const stem = path.basename(f, ext);
+    if (!map.has(stem)) {
+      map.set(stem, f);
+    } else {
+      const currentExt = path.extname(map.get(stem)).toLowerCase();
+      if (ext === '.webp' && currentExt !== '.webp') {
+        map.set(stem, f);
+      }
+    }
+  }
+
+  const files = Array.from(map.values()).sort((a, b) => {
+    const numA = parseInt(a, 10) || 0;
+    const numB = parseInt(b, 10) || 0;
+    return numA - numB || a.localeCompare(b);
+  });
   return files.map(f => `${URL_PREFIX}/${folderName}/${f}`);
 }
 
@@ -130,14 +146,30 @@ function getNewFolderImages(folderName) {
     console.warn(`⚠️ Warning: Folder "${folderName}" not found in ${MEESHO_NEW_DIR}`);
     return [];
   }
-  const files = fs.readdirSync(folderPath)
-    .filter(f => !f.startsWith('.') && !f.startsWith('._') && f.match(/\.(jpe?g|png|webp)$/i))
-    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+  const rawFiles = fs.readdirSync(folderPath)
+    .filter(f => !f.startsWith('.') && !f.startsWith('._') && f.match(/\.(jpe?g|png|webp)$/i));
 
-  if (files.length === 0) {
+  if (rawFiles.length === 0) {
     console.warn(`⚠️  [SKIPPED] Folder "${folderName}" has NO images inside (skipped or empty).`);
     return [];
   }
+
+  // Deduplicate alternate format pairs
+  const map = new Map();
+  for (const f of rawFiles) {
+    const ext = path.extname(f).toLowerCase();
+    const stem = path.basename(f, ext);
+    if (!map.has(stem)) {
+      map.set(stem, f);
+    } else {
+      const currentExt = path.extname(map.get(stem)).toLowerCase();
+      if (ext === '.webp' && currentExt !== '.webp') {
+        map.set(stem, f);
+      }
+    }
+  }
+
+  const files = Array.from(map.values()).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
   return files.map(f => `${NEW_URL_PREFIX}/${folderName}/${f}`);
 }
 

@@ -15,6 +15,7 @@
   const NAV_ITEMS = [
     { name: 'Dashboard',      href: '/admin/dashboard.html',      icon: 'grid_view'          },
     { name: 'Special Orders', href: '/admin/special-orders.html', icon: 'stars'              },
+    { name: 'Special Shops',  href: '/admin/sellers.html?tab=special-shops', icon: 'storefront' },
     { name: 'Artisans & KYC', href: '/admin/sellers.html',         icon: 'group'              },
     { name: 'All Products',   href: '/admin/products.html',        icon: 'inventory_2'        },
     { name: 'Orders',         href: '/admin/orders.html',          icon: 'shopping_bag'       },
@@ -30,13 +31,24 @@
     if (!aside) return;
 
     const currentPath = window.location.pathname;
+    const currentSearch = window.location.search;
+    const isSpecialShopsTab = currentSearch.includes('tab=special-shops') || currentSearch.includes('tab=specials');
 
     const navHtml = NAV_ITEMS.map(item => {
       const cleanPath = currentPath.replace(/\.html$/, '').replace(/\/$/, '');
-      const cleanItemHref = item.href.replace(/\.html$/, '');
-      const isActive = currentPath === item.href ||
-        cleanPath === cleanItemHref ||
-        (cleanItemHref === '/admin/dashboard' && (cleanPath === '/admin' || cleanPath === '/admin/index' || cleanPath === ''));
+      const [itemPath, itemQuery] = item.href.split('?');
+      const cleanItemPath = itemPath.replace(/\.html$/, '');
+
+      let isActive = false;
+      if (itemQuery && (itemQuery.includes('tab=special-shops') || itemQuery.includes('tab=specials'))) {
+        isActive = (cleanPath === '/admin/sellers' || currentPath === '/admin/sellers.html') && isSpecialShopsTab;
+      } else if (cleanItemPath === '/admin/sellers') {
+        isActive = (cleanPath === '/admin/sellers' || currentPath === '/admin/sellers.html') && !isSpecialShopsTab;
+      } else {
+        isActive = currentPath === item.href ||
+          cleanPath === cleanItemPath ||
+          (cleanItemPath === '/admin/dashboard' && (cleanPath === '/admin' || cleanPath === '/admin/index' || cleanPath === ''));
+      }
 
       return `
         <a href="${item.href}"

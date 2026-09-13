@@ -201,7 +201,6 @@
         if (!admin.role) admin.role = 'admin';
 
         if (token) {
-          authStorage.setToken(token);
           localStorage.setItem('tohfa_admin_token', token);
           sessionStorage.setItem('tohfa_admin_token', token);
         }
@@ -209,12 +208,9 @@
         if (refreshToken) {
           localStorage.setItem('tohfa_admin_refresh_token', refreshToken);
           sessionStorage.setItem('tohfa_admin_refresh_token', refreshToken);
-          localStorage.setItem('tohfa_refresh_token', refreshToken);
-          sessionStorage.setItem('tohfa_refresh_token', refreshToken);
         }
 
         if (admin) {
-          authStorage.setUser(admin);
           localStorage.setItem('tohfa_admin', JSON.stringify(admin));
           sessionStorage.setItem('tohfa_admin', JSON.stringify(admin));
         }

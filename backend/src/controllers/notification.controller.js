@@ -25,11 +25,12 @@ async function createNotification(userId, type, title, body, meta = null) {
   const notifTitle = title || 'Notification';
   const notifBody  = body || '';
   const notifMeta  = meta ? JSON.stringify(meta) : '{}';
+  const notifMessage = [notifTitle, notifBody].filter(Boolean).join(': ') || notifTitle;
 
   await query(
-    `INSERT INTO notifications (user_id, type, title, body, is_read, meta)
-     VALUES ($1, $2, $3, $4, FALSE, $5)`,
-    [userId, type, notifTitle, notifBody, notifMeta]
+    `INSERT INTO notifications (user_id, type, title, body, message, is_read, meta)
+     VALUES ($1, $2, $3, $4, $5, FALSE, $6)`,
+    [userId, type, notifTitle, notifBody, notifMessage, notifMeta]
   ).catch(async () => {
     // Fallback if table has message column
     const message = [notifTitle, notifBody].filter(Boolean).join(': ') || notifTitle;

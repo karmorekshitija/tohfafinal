@@ -95,6 +95,37 @@ function sanitizeProduct(p) {
   };
 }
 
+// Deduplicate alternate format pairs (e.g. JPEG and WebP of the same image)
+function dedupeAlternateFormatImages(list) {
+  if (!Array.isArray(list)) return [];
+  const map = new Map();
+  for (const item of list) {
+    const url = typeof item === 'string' ? item : (item?.url || item?.imagePath || item?.path || item?.img_url || item?.image_url || '');
+    if (!url) continue;
+    const clean = url.split('?')[0];
+    const lastSlash = clean.lastIndexOf('/');
+    const dir = lastSlash !== -1 ? clean.substring(0, lastSlash).toLowerCase() : '';
+    const filename = lastSlash !== -1 ? clean.substring(lastSlash + 1) : clean;
+    const lastDot = filename.lastIndexOf('.');
+    const stem = (lastDot !== -1 ? filename.substring(0, lastDot) : filename).toLowerCase();
+    const ext = (lastDot !== -1 ? filename.substring(lastDot) : '').toLowerCase();
+    const key = `${dir}/${stem}`;
+
+    if (!map.has(key)) {
+      map.set(key, item);
+    } else {
+      const existing = map.get(key);
+      const existingUrl = typeof existing === 'string' ? existing : (existing?.url || existing?.imagePath || existing?.path || existing?.img_url || existing?.image_url || '');
+      const existingClean = existingUrl.split('?')[0];
+      const existingExt = existingClean.substring(existingClean.lastIndexOf('.')).toLowerCase();
+      if (ext === '.webp' && existingExt !== '.webp') {
+        map.set(key, item);
+      }
+    }
+  }
+  return Array.from(map.values());
+}
+
 // Helper to safely resolve category from ID, slug, or name (Bug Audit Phase 1 & 2)
 async function resolveCategoryId(rawCategory) {
   if (rawCategory === undefined || rawCategory === null || rawCategory === '') {
@@ -533,7 +564,7 @@ async function getSponsoredProducts(req, res, next) {
          LEFT JOIN sellers s ON s.user_id = p.seller_id
          LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
          WHERE (p.status = 'active' OR p.is_active = TRUE)
-           AND NOT (p.id = ANY($1::uuid[]))
+           AND NOT (p.id::text = ANY($1::text[]))
            AND (
              sp.verification_status = 'verified'
              OR s.verification_status = 'verified'
@@ -544,7 +575,7 @@ async function getSponsoredProducts(req, res, next) {
          GROUP BY p.id, sp.store_name, s.store_name, p.special_packaging_available
          ORDER BY p.priority_rank DESC, p.created_at DESC
          LIMIT $2`,
-        [existingIds.length ? existingIds : ['00000000-0000-0000-0000-000000000000'], needed]
+        [existingIds.length ? existingIds.map(String) : ['-1'], needed]
       );
 
       finalRows = finalRows.concat(fallbackRows);
@@ -967,13 +998,13 @@ async function createProduct(req, res, next) {
     }
 
     // Handle images if provided in body (support images, photos, img_url, imagePath)
-    const rawImagesList = (Array.isArray(images) && images.length > 0) ? images : (
+    const rawImagesList = dedupeAlternateFormatImages((Array.isArray(images) && images.length > 0) ? images : (
       (Array.isArray(req.body.photos) && req.body.photos.length > 0) ? req.body.photos : (
         (req.body.img_url || req.body.imagePath || req.body.imageUrl || req.body.image_url)
           ? [req.body.img_url || req.body.imagePath || req.body.imageUrl || req.body.image_url]
           : []
       )
-    );
+    ));
     if (rawImagesList.length > 0) {
       let sortOrder = 0;
       for (const img of rawImagesList) {
@@ -1169,11 +1200,11 @@ async function updateProduct(req, res, next) {
     }
 
     // If photos or images array is provided, replace images (supports img_url, imagePath, etc.)
-    const photoList = Array.isArray(photos) ? photos : (Array.isArray(images) ? images : (
+    const photoList = dedupeAlternateFormatImages(Array.isArray(photos) ? photos : (Array.isArray(images) ? images : (
       (req.body.img_url || req.body.imagePath || req.body.imageUrl || req.body.image_url)
         ? [req.body.img_url || req.body.imagePath || req.body.imageUrl || req.body.image_url]
         : null
-    ));
+    )));
     if (Array.isArray(photoList)) {
       await query('DELETE FROM product_images WHERE product_id = $1', [id]);
       let sortOrder = 0;
@@ -1323,7 +1354,8 @@ async function uploadImages(req, res, next) {
     let sortOrder = parseInt(maxRows[0].max_order, 10) + 1;
 
     const inserted = [];
-    for (const file of req.files) {
+    const filesToInsert = dedupeAlternateFormatImages(req.files);
+    for (const file of filesToInsert) {
       const { rows } = await query(
         `INSERT INTO product_images (product_id, url, sort_order)
          VALUES ($1, $2, $3)

@@ -93,16 +93,16 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
              COALESCE(p.weight_grams, 500) AS weight_grams,
              COALESCE(pv.additional_price, 0) AS variant_additional_price,
              COALESCE(sp.commission_rate, s.commission_rate, 10.00) AS commission_rate,
-             COALESCE(sp.capacity_limit, 50) AS capacity_limit,
-             COALESCE(sp.vacation_mode, FALSE) AS vacation_mode,
-             COALESCE(sp.store_visibility, TRUE) AS store_visibility
+             COALESCE(sp.capacity_limit, sp.daily_order_limit, sp.daily_capacity_max, 50) AS capacity_limit,
+             COALESCE(sp.vacation_mode, sp.vacation_mode_active = 1, FALSE) AS vacation_mode,
+             COALESCE(sp.store_visibility, sp.is_accepting_orders = 1, TRUE) AS store_visibility
       FROM cart_items ci
       JOIN products p ON p.id = ci.product_id
       LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
       LEFT JOIN sellers s ON s.user_id = p.seller_id
       LEFT JOIN product_variants pv ON pv.id = ci.variant_id
       WHERE (ci.buyer_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
-        AND ci.id = ANY($2::uuid[])
+        AND ci.id::text = ANY($2::text[])
         AND (p.status = 'active' OR p.is_active = TRUE)
     `;
     cartParams = [buyerId, cartItemIds];
@@ -116,9 +116,9 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
              COALESCE(p.weight_grams, 500) AS weight_grams,
              COALESCE(pv.additional_price, 0) AS variant_additional_price,
              COALESCE(sp.commission_rate, s.commission_rate, 10.00) AS commission_rate,
-             COALESCE(sp.capacity_limit, 50) AS capacity_limit,
-             COALESCE(sp.vacation_mode, FALSE) AS vacation_mode,
-             COALESCE(sp.store_visibility, TRUE) AS store_visibility
+             COALESCE(sp.capacity_limit, sp.daily_order_limit, sp.daily_capacity_max, 50) AS capacity_limit,
+             COALESCE(sp.vacation_mode, sp.vacation_mode_active = 1, FALSE) AS vacation_mode,
+             COALESCE(sp.store_visibility, sp.is_accepting_orders = 1, TRUE) AS store_visibility
       FROM cart_items ci
       JOIN products p ON p.id = ci.product_id
       LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
@@ -228,19 +228,28 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
     const sellerIds = Object.keys(sellerGroups);
     const primarySellerId = sellerIds[0] || cartItems[0]?.seller_id || null;
 
+    const totalPaise = Math.round(finalParentTotal * 100);
+    const subtotalPaise = Math.round(cartGrossTotal * 100);
+    const shippingPaise = Math.round(shippingAmount * 100);
+    const orderRef = 'TOHFA-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+
     const { rows: parentOrderRows } = await client.query(
       `INSERT INTO orders
-         (user_id, buyer_id, seller_id, address_id, total_amount, discount_amount, shipping_amount,
-          coupon_id, payment_method, payment_status, status, payout_status, shipping_address, notes)
-       VALUES ($1, $1, $2, $3, $4, $5, $6, $7, 'razorpay', 'pending', 'pending', 'pending', $8, $9)
+         (user_id, buyer_id, seller_id, address_id, total_amount, total_paise, subtotal_paise, shipping_paise,
+          order_ref, discount_amount, shipping_amount, coupon_id, payment_method, payment_status, status, payout_status, shipping_address, notes)
+       VALUES ($1, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'razorpay', 'unpaid', 'pending', 'pending', $12, $13)
        RETURNING *`,
       [
         buyerId,
         primarySellerId,
         addressId,
-        finalParentTotal.toFixed(2),
-        totalDiscount.toFixed(2),
-        shippingAmount.toFixed(2),
+        Math.round(finalParentTotal),
+        totalPaise,
+        subtotalPaise,
+        shippingPaise,
+        orderRef,
+        parseFloat(totalDiscount.toFixed(2)),
+        parseFloat(shippingAmount.toFixed(2)),
         verifiedCoupon ? verifiedCoupon.coupon_id : null,
         JSON.stringify(shippingAddressSnapshot),
         options.notes || null,
@@ -318,17 +327,20 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
 
         const { rows: itemRows } = await client.query(
           `INSERT INTO order_items
-             (order_id, seller_order_id, product_id, variant_id, quantity,
-              unit_price, customization_details, customization_data, customization_status)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $7, $8)
+             (order_id, seller_order_id, sub_order_id, product_id, variant_id, quantity,
+              unit_price, unit_price_paise, customization_details, customization_data, customization_status)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
            RETURNING *`,
           [
             parentOrder.id,
             sellerOrder.id,
+            null,
             item.product_id,
             item.variant_id || null,
             item.quantity,
             item.unit_price,
+            Math.round(item.unit_price * 100),
+            customJson,
             customJson,
             customStatus,
           ]
@@ -342,16 +354,16 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
         sellerId,
         'new_order',
         'New Order Received! 🎁',
-        `You have a new sub-order #${sellerOrder.id.slice(0, 8)} in Order #${parentOrder.id.slice(0, 8)}.`,
+        `You have a new sub-order #${String(sellerOrder.id).slice(0, 8)} in Order #${String(parentOrder.id).slice(0, 8)}.`,
         { order_id: parentOrder.id, seller_order_id: sellerOrder.id }
       ).catch(() => {});
     }
 
     // 6. Delete processed cart items from DB
-    const itemIds = cartItems.map(it => it.id);
+    const itemIds = cartItems.map(it => String(it.id));
     await client.query(
       `DELETE FROM cart_items
-       WHERE id = ANY($1::uuid[])
+       WHERE id::text = ANY($1::text[])
          AND (buyer_id = $2 OR cart_id IN (SELECT id FROM carts WHERE user_id = $2))`,
       [itemIds, buyerId]
     );
@@ -361,7 +373,7 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
       buyerId,
       'order_placed',
       'Order Placed Successfully! 🎉',
-      `Your order #${parentOrder.id.slice(0, 8).toUpperCase()} for ₹${parentOrder.total_amount} has been placed. Complete payment to begin crafting.`,
+      `Your order #${String(parentOrder.id).slice(0, 8).toUpperCase()} for ₹${parentOrder.total_amount} has been placed. Complete payment to begin crafting.`,
       { order_id: parentOrder.id }
     ).catch(() => {});
 

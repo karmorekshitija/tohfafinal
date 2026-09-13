@@ -30,8 +30,6 @@ export const authStorage = {
            sessionStorage.getItem(KEYS.ACCESS_TOKEN) ||
            localStorage.getItem('auth_token') ||
            sessionStorage.getItem('auth_token') ||
-           localStorage.getItem('tohfa_admin_token') ||
-           sessionStorage.getItem('tohfa_admin_token') ||
            null;
   },
 
