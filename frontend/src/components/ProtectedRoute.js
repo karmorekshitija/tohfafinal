@@ -100,7 +100,7 @@
   const PUBLIC_BUYER_PAGES = new Set([
     'home', 'categories', 'category', 'product',
     'seller-profile', 'search', 'zip-gift', 'faq', 'bulk',
-    'terms-conditions', 'occasions'
+    'terms-conditions', 'occasions', 'cart', 'cart-empty', 'checkout'
   ]);
 
   let guardsRun = false;

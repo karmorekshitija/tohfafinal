@@ -562,8 +562,8 @@
 
         try {
             const payload = {
-                product_id: Number(reviewProductId),
-                order_id: Number(orderId),
+                product_id: String(reviewProductId).trim(),
+                order_id: String(orderId).trim(),
                 rating: selectedRating,
                 body: body
             };

@@ -1,0 +1,890 @@
+{
+  "orders.total_paise": [
+    {
+      "file": "backend\\src\\controllers\\admin.controller.js",
+      "line": 24,
+      "code": "COALESCE(SUM(COALESCE(o.total_paise / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0)), 0) AS total_gmv,"
+    },
+    {
+      "file": "backend\\src\\controllers\\admin.controller.js",
+      "line": 25,
+      "code": "COALESCE(SUM(CASE WHEN LOWER(o.status) = 'delivered' THEN COALESCE(o.total_paise / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0) * 0.10 ELSE 0 END), 0) AS net_platform_revenue,"
+    },
+    {
+      "file": "backend\\src\\controllers\\admin.controller.js",
+      "line": 1771,
+      "code": "(SELECT COALESCE(SUM(COALESCE(o.total_paise/100.0, o.total_amount, 0)), 0) FROM orders o WHERE (o.seller_id = u.id OR (s.id IS NOT NULL AND o.seller_id = s.id)) AND o.payment_status = 'paid') AS total_revenue,"
+    },
+    {
+      "file": "backend\\src\\controllers\\analytics.controller.js",
+      "line": 246,
+      "code": "`SELECT COALESCE(SUM(COALESCE(total_paise / 100.0, total_amount, 0)), 0) AS total_revenue_rupees FROM orders WHERE payment_status = 'paid'`"
+    },
+    {
+      "file": "backend\\src\\controllers\\analytics.controller.js",
+      "line": 251,
+      "code": "`SELECT COALESCE(SUM(COALESCE(total_paise / 100.0, total_amount, 0)), 0) AS revenue_today_rupees"
+    },
+    {
+      "file": "backend\\src\\controllers\\analytics.controller.js",
+      "line": 352,
+      "code": "COALESCE(SUM(COALESCE(total_paise / 100.0, total_amount, 0)), 0) AS revenue_rupees"
+    },
+    {
+      "file": "backend\\src\\controllers\\cart.controller.js",
+      "line": 131,
+      "code": "subtotal_paise: itemPricePaise * quantity,"
+    },
+    {
+      "file": "backend\\src\\controllers\\cart.controller.js",
+      "line": 158,
+      "code": "const subtotalPaise = items.reduce((sum, i) => sum + (i.available ? i.subtotal_paise : 0), 0);"
+    },
+    {
+      "file": "backend\\src\\controllers\\cart.controller.js",
+      "line": 172,
+      "code": "subtotal_paise: subtotalPaise,"
+    },
+    {
+      "file": "backend\\src\\controllers\\cart.controller.js",
+      "line": 177,
+      "code": "total_paise: totalPaise,"
+    },
+    {
+      "file": "backend\\src\\controllers\\order.controller.js",
+      "line": 211,
+      "code": "total_paise: totalPaise,"
+    },
+    {
+      "file": "backend\\src\\controllers\\order.controller.js",
+      "line": 342,
+      "code": "COALESCE(o.total_paise, o.total_amount * 100) AS amount_paise,"
+    },
+    {
+      "file": "backend\\src\\controllers\\payment.controller.js",
+      "line": 59,
+      "code": "const amountPaise = razorpayOrder.amount || (order.total_paise ? Number(order.total_paise) : Math.round(Number(order.total_amount) * 100));"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 767,
+      "code": "COALESCE(SUM(CASE WHEN LOWER(COALESCE(payment_status, '')) = 'paid' AND LOWER(COALESCE(status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN COALESCE(NULLIF(total_paise, 0) / 100.0, CASE WHEN total_amount >= 10000 THEN total_amount / 100.0 ELSE total_amount END, 0) ELSE 0 END), 0) AS all_revenue,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 778,
+      "code": "COALESCE(SUM(CASE WHEN LOWER(COALESCE(payment_status, '')) = 'paid' AND LOWER(COALESCE(status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN COALESCE(NULLIF(total_paise, 0) / 100.0, CASE WHEN total_amount >= 10000 THEN total_amount / 100.0 ELSE total_amount END, 0) ELSE 0 END), 0) AS curr_revenue,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 789,
+      "code": "COALESCE(SUM(CASE WHEN LOWER(COALESCE(payment_status, '')) = 'paid' AND LOWER(COALESCE(status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN COALESCE(NULLIF(total_paise, 0) / 100.0, CASE WHEN total_amount >= 10000 THEN total_amount / 100.0 ELSE total_amount END, 0) ELSE 0 END), 0) AS prev_revenue,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 895,
+      "code": "total_paise: Math.round(parseFloat(o.total_amount || 0) * 100),"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1028,
+      "code": "COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN COALESCE(NULLIF(o.total_paise, 0) / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0) ELSE 0 END), 0) AS total_revenue,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1056,
+      "code": "COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN COALESCE(NULLIF(o.total_paise, 0) / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0) ELSE 0 END), 0) AS daily_revenue,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1134,
+      "code": "COALESCE(SUM(CASE WHEN (LOWER(COALESCE(o.order_type, '')) IN ('custom', 'customized') OR o.customization IS NOT NULL OR EXISTS (SELECT 1 FROM order_items oi WHERE oi.order_id = o.id AND (oi.customization_data IS NOT NULL AND oi.customization_data::text NOT IN ('', 'null', '{}')))) THEN COALESCE(NULLIF(o.total_paise, 0) / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0) ELSE 0 END), 0) AS custom_revenue,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1136,
+      "code": "COALESCE(SUM(CASE WHEN (LOWER(COALESCE(o.order_type, '')) NOT IN ('custom', 'customized') AND o.customization IS NULL AND NOT EXISTS (SELECT 1 FROM order_items oi WHERE oi.order_id = o.id AND (oi.customization_data IS NOT NULL AND oi.customization_data::text NOT IN ('', 'null', '{}')))) THEN COALESCE(NULLIF(o.total_paise, 0) / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0) ELSE 0 END), 0) AS premade_revenue"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1166,
+      "code": "COALESCE(SUM(COALESCE(NULLIF(o.total_paise, 0) / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0)), 0) AS revenue"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1279,
+      "code": "`SELECT o.id, o.buyer_id, o.seller_id, o.total_amount, o.total_paise,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1336,
+      "code": "unit_price: o.total_amount ? (o.total_amount >= 10000 ? o.total_amount / 100.0 : parseFloat(o.total_amount)) : (o.total_paise ? o.total_paise / 100.0 : 0),"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1348,
+      "code": "const rawTotal = o.total_amount ? (o.total_amount >= 10000 ? o.total_amount / 100.0 : parseFloat(o.total_amount)) : (o.total_paise ? o.total_paise / 100.0 : 0);"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1368,
+      "code": "total_paise: Math.round(rawTotal * 100),"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1474,
+      "code": "unit_price: order.total_amount ? (order.total_amount >= 10000 ? order.total_amount / 100.0 : parseFloat(order.total_amount)) : (order.total_paise ? order.total_paise / 100.0 : 0),"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1559,
+      "code": "total_paise: Math.round(parseFloat(order.total_amount || 0) * 100),"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1907,
+      "code": "COALESCE(SUM(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0), 0) AS available_balance"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1918,
+      "code": "COALESCE(SUM(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0), 0) AS holding_balance"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1969,
+      "code": "COALESCE(SUM(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0), 0) AS available_balance,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1982,
+      "code": "COALESCE(SUM(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0), 0) AS holding_balance,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 2031,
+      "code": "COALESCE(SUM(CASE WHEN o.created_at >= DATE_TRUNC('month', NOW()) THEN COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0 ELSE 0 END), 0) AS month_earned,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 2032,
+      "code": "COALESCE(SUM(CASE WHEN o.created_at >= NOW() - INTERVAL '7 days' THEN COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0 ELSE 0 END), 0) AS week_earned,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 2033,
+      "code": "COALESCE(SUM(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0), 0) AS total_earned"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 2105,
+      "code": "SUM(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0) AS total_day_amount"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 2246,
+      "code": "`SELECT o.id, ROUND(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0, 2) AS amount,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 2342,
+      "code": "SUM(COALESCE(o.total_paise, o.total_amount * 100, 0) / 100.0) AS gross_sales,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 2343,
+      "code": "ROUND(SUM(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0), 2) AS net_payout"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 2418,
+      "code": "COALESCE(SUM(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0), 0) AS available_balance"
+    },
+    {
+      "file": "backend\\src\\db\\apply_022_migration.js",
+      "line": 37,
+      "code": "{ table: 'orders',      column: 'total_paise'      },"
+    },
+    {
+      "file": "backend\\src\\db\\apply_022_migration.js",
+      "line": 76,
+      "code": "COUNT(total_paise) AS with_paise"
+    },
+    {
+      "file": "backend\\src\\db\\apply_022_migration.js",
+      "line": 81,
+      "code": "console.log(`\\n  📊  orders: ${total} rows — ${with_ref} have order_ref, ${with_paise} have total_paise`);"
+    },
+    {
+      "file": "backend\\src\\db\\auto_sync.js",
+      "line": 357,
+      "code": "// 9b-2. Ensure Orders total_paise & order_ref exist before payments backfill (Step 9c)"
+    },
+    {
+      "file": "backend\\src\\db\\auto_sync.js",
+      "line": 359,
+      "code": "await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS total_paise BIGINT;`);"
+    },
+    {
+      "file": "backend\\src\\db\\auto_sync.js",
+      "line": 361,
+      "code": "await query(`UPDATE orders SET total_paise = ROUND(total_amount * 100) WHERE total_paise IS NULL AND total_amount IS NOT NULL;`);"
+    },
+    {
+      "file": "backend\\src\\db\\auto_sync.js",
+      "line": 364,
+      "code": "console.warn('⚠️ [Auto-Sync Orders total_paise/order_ref Notice]:', err.message);"
+    },
+    {
+      "file": "backend\\src\\db\\auto_sync.js",
+      "line": 394,
+      "code": "COALESCE(NULLIF(total_paise, 0) / 100.0, total_amount, 0),"
+    },
+    {
+      "file": "backend\\src\\db\\migrations\\022_fix_missing_order_columns.sql",
+      "line": 9,
+      "code": "ALTER TABLE orders ADD COLUMN IF NOT EXISTS total_paise BIGINT;"
+    },
+    {
+      "file": "backend\\src\\db\\migrations\\022_fix_missing_order_columns.sql",
+      "line": 28,
+      "code": "SET total_paise = ROUND(total_amount * 100)"
+    },
+    {
+      "file": "backend\\src\\db\\migrations\\022_fix_missing_order_columns.sql",
+      "line": 29,
+      "code": "WHERE total_paise IS NULL;"
+    },
+    {
+      "file": "backend\\src\\db\\schema.sql",
+      "line": 395,
+      "code": "total_paise         BIGINT,"
+    },
+    {
+      "file": "backend\\src\\services\\order.service.js",
+      "line": 265,
+      "code": "(user_id, buyer_id, seller_id, address_id, total_amount, total_paise, subtotal_paise, shipping_paise,"
+    },
+    {
+      "file": "frontend\\src\\buyer\\cart.html",
+      "line": 340,
+      "code": "const { items, subtotal_paise, shipping_paise, total_paise, item_count } = res.data.data;"
+    },
+    {
+      "file": "frontend\\src\\buyer\\checkout.html",
+      "line": 345,
+      "code": "const { items, subtotal_paise, shipping_paise, total_paise, item_count } = res.data.data;"
+    },
+    {
+      "file": "frontend\\src\\buyer\\checkout.html",
+      "line": 347,
+      "code": "currentCartTotalPaise = total_paise || (subtotal_paise + (shipping_paise || 0));"
+    },
+    {
+      "file": "frontend\\src\\buyer\\checkout.html",
+      "line": 410,
+      "code": "document.getElementById('summary-subtotal').innerText = formatPaise(subtotal_paise);"
+    },
+    {
+      "file": "frontend\\src\\buyer\\order-detail.html",
+      "line": 398,
+      "code": "<span class=\"font-data-price text-on-surface\">${formatPaise(o.subtotal_paise)}</span>"
+    },
+    {
+      "file": "frontend\\src\\buyer\\order-detail.html",
+      "line": 406,
+      "code": "<span class=\"font-data-price text-[#14381F] text-[18px] font-bold\">${formatPaise(o.total_paise)}</span>"
+    },
+    {
+      "file": "frontend\\src\\buyer\\orders.html",
+      "line": 365,
+      "code": "<span class=\"font-data-price text-lg font-bold text-gold ${priceOpacityClass}\">${formatPaise(o.total_paise)}</span>"
+    },
+    {
+      "file": "frontend\\src\\seller\\order-detail.html",
+      "line": 345,
+      "code": "<span class=\"font-bold text-primary font-mono text-base\">${formatPaise(item.unit_price ? Math.round(parseFloat(item.unit_price) * 100 * (item.quantity || 1)) : (o.total_paise || (o.total_amount ? o.total_amount * 100 : 0)))}</span>"
+    },
+    {
+      "file": "frontend\\src\\seller\\orders.html",
+      "line": 321,
+      "code": "const totalPaise = o.total_paise != null ? o.total_paise : Math.round(parseFloat(o.total_amount || 0) * 100);"
+    },
+    {
+      "file": "frontend\\src\\seller\\orders.html",
+      "line": 366,
+      "code": "total_paise: 249900,"
+    },
+    {
+      "file": "frontend\\src\\seller\\orders.html",
+      "line": 383,
+      "code": "total_paise: 185000,"
+    },
+    {
+      "file": "frontend\\src\\seller\\orders.html",
+      "line": 400,
+      "code": "total_paise: 349900,"
+    },
+    {
+      "file": "frontend\\src\\seller\\orders.html",
+      "line": 533,
+      "code": "<p class=\"font-bold text-primary mt-1\" style=\"font-family:'Space Mono',monospace\">${formatPaise(item.unit_price ? Math.round(parseFloat(item.unit_price) * 100 * (item.quantity || 1)) : o.total_paise)}</p>"
+    },
+    {
+      "file": "scripts\\screenshot_all.js",
+      "line": 50,
+      "code": "subtotal_paise: 74700, shipping_paise: 7900, total_paise: 82600, item_count: 3"
+    }
+  ],
+  "orders.order_ref": [
+    {
+      "file": "backend\\src\\controllers\\admin.controller.js",
+      "line": 493,
+      "code": "WHERE id::text = $3::text OR order_ref = $3::text"
+    },
+    {
+      "file": "backend\\src\\controllers\\admin.controller.js",
+      "line": 699,
+      "code": "o.order_ref ILIKE $${params.length} OR"
+    },
+    {
+      "file": "backend\\src\\controllers\\admin.controller.js",
+      "line": 712,
+      "code": "COALESCE(o.order_ref, 'ORD-' || p.order_id) AS order_ref,"
+    },
+    {
+      "file": "backend\\src\\controllers\\logistics.controller.js",
+      "line": 213,
+      "code": "<title>Shipping Label - ${labelData.order_ref}</title>"
+    },
+    {
+      "file": "backend\\src\\controllers\\logistics.controller.js",
+      "line": 226,
+      "code": "<strong>Order Ref:</strong> ${labelData.order_ref}"
+    },
+    {
+      "file": "backend\\src\\controllers\\order.controller.js",
+      "line": 130,
+      "code": "const orderRef = order.order_reference || order.order_ref || order.id;"
+    },
+    {
+      "file": "backend\\src\\controllers\\order.controller.js",
+      "line": 139,
+      "code": "order_ref: orderRef,"
+    },
+    {
+      "file": "backend\\src\\controllers\\order.controller.js",
+      "line": 209,
+      "code": "order_ref: orderRef,"
+    },
+    {
+      "file": "backend\\src\\controllers\\order.controller.js",
+      "line": 329,
+      "code": "conditions.push(`(o.id::text ILIKE $${params.length} OR COALESCE(o.order_ref, '') ILIKE $${params.length} OR u.name ILIKE $${params.length} OR sp.store_name ILIKE $${params.length})`);"
+    },
+    {
+      "file": "backend\\src\\controllers\\order.controller.js",
+      "line": 339,
+      "code": "`SELECT o.id, COALESCE(o.order_ref, 'TOHFA-' || UPPER(SUBSTRING(o.id::text, 1, 8))) AS order_ref,"
+    },
+    {
+      "file": "backend\\src\\controllers\\order.controller.js",
+      "line": 408,
+      "code": "`SELECT o.id, COALESCE(o.order_ref, 'TOHFA-' || UPPER(SUBSTRING(o.id::text, 1, 8))) AS order_ref,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 887,
+      "code": "order_ref: `TOHFA-${String(o.id).substring(0, 8).toUpperCase()}`,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1280,
+      "code": "o.order_ref, o.order_type, o.customization, o.customization_summary,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1365,
+      "code": "order_ref: o.order_ref || `TOHFA-${String(o.id).substring(0, 8).toUpperCase()}`,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1409,
+      "code": "const { rows: orderCheck } = await query('SELECT id, seller_id FROM orders WHERE id::text = $1 OR order_ref = $1', [String(id)]);"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1451,
+      "code": "WHERE (o.id::text = $1 OR o.order_ref = $1)`,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1552,
+      "code": "order_ref: orderRef,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1630,
+      "code": "const { rows: orderCheck } = await query('SELECT * FROM orders WHERE id::text = $1 OR order_ref = $1', [String(id)]);"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 2248,
+      "code": "COALESCE(o.order_ref, 'TOHFA-' || o.id::text) AS reference,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 2387,
+      "code": "COALESCE(o.order_ref, 'TOHFA-' || rr.order_id::text) AS order_ref,"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 2643,
+      "code": "WHERE (id::text = $1 OR order_ref = $1)"
+    },
+    {
+      "file": "backend\\src\\db\\apply_022_migration.js",
+      "line": 35,
+      "code": "{ table: 'orders',      column: 'order_ref'        },"
+    },
+    {
+      "file": "backend\\src\\db\\apply_022_migration.js",
+      "line": 59,
+      "code": "// ── Verify unique index on orders.order_ref ───────────────────────────────"
+    },
+    {
+      "file": "backend\\src\\db\\apply_022_migration.js",
+      "line": 66,
+      "code": "console.log('\\n  ✅  UNIQUE INDEX idx_orders_order_ref exists on orders(order_ref)');"
+    },
+    {
+      "file": "backend\\src\\db\\apply_022_migration.js",
+      "line": 75,
+      "code": "COUNT(order_ref)   AS with_ref,"
+    },
+    {
+      "file": "backend\\src\\db\\apply_022_migration.js",
+      "line": 81,
+      "code": "console.log(`\\n  📊  orders: ${total} rows — ${with_ref} have order_ref, ${with_paise} have total_paise`);"
+    },
+    {
+      "file": "backend\\src\\db\\auto_sync.js",
+      "line": 357,
+      "code": "// 9b-2. Ensure Orders total_paise & order_ref exist before payments backfill (Step 9c)"
+    },
+    {
+      "file": "backend\\src\\db\\auto_sync.js",
+      "line": 360,
+      "code": "await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_ref TEXT;`);"
+    },
+    {
+      "file": "backend\\src\\db\\auto_sync.js",
+      "line": 362,
+      "code": "await query(`UPDATE orders SET order_ref = 'TOHFA-' || UPPER(SUBSTRING(id::text, 1, 8)) WHERE order_ref IS NULL;`);"
+    },
+    {
+      "file": "backend\\src\\db\\auto_sync.js",
+      "line": 364,
+      "code": "console.warn('⚠️ [Auto-Sync Orders total_paise/order_ref Notice]:', err.message);"
+    },
+    {
+      "file": "backend\\src\\db\\auto_sync.js",
+      "line": 392,
+      "code": "COALESCE(razorpay_order_id, 'order_' || COALESCE(order_ref, id::text)),"
+    },
+    {
+      "file": "backend\\src\\db\\auto_sync.js",
+      "line": 393,
+      "code": "COALESCE(razorpay_payment_id, 'pay_' || lower(replace(COALESCE(order_ref, id::text), '-', ''))),"
+    },
+    {
+      "file": "backend\\src\\db\\migrations\\022_fix_missing_order_columns.sql",
+      "line": 7,
+      "code": "ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_ref TEXT;"
+    },
+    {
+      "file": "backend\\src\\db\\migrations\\022_fix_missing_order_columns.sql",
+      "line": 15,
+      "code": "-- ── Unique index on orders.order_ref (partial, so existing NULLs don't conflict)"
+    },
+    {
+      "file": "backend\\src\\db\\migrations\\022_fix_missing_order_columns.sql",
+      "line": 17,
+      "code": "ON orders(order_ref)"
+    },
+    {
+      "file": "backend\\src\\db\\migrations\\022_fix_missing_order_columns.sql",
+      "line": 18,
+      "code": "WHERE order_ref IS NOT NULL;"
+    },
+    {
+      "file": "backend\\src\\db\\migrations\\022_fix_missing_order_columns.sql",
+      "line": 23,
+      "code": "SET order_ref = 'TOHFA-' || UPPER(SUBSTRING(id::text, 1, 8))"
+    },
+    {
+      "file": "backend\\src\\db\\migrations\\022_fix_missing_order_columns.sql",
+      "line": 24,
+      "code": "WHERE order_ref IS NULL;"
+    },
+    {
+      "file": "backend\\src\\db\\schema.sql",
+      "line": 394,
+      "code": "order_ref           TEXT,"
+    },
+    {
+      "file": "backend\\src\\middleware\\ownership.js",
+      "line": 48,
+      "code": "'SELECT id, seller_id FROM orders WHERE id::text = $1 OR order_ref = $1',"
+    },
+    {
+      "file": "backend\\src\\services\\logistics.service.js",
+      "line": 385,
+      "code": "order_ref: `TOHFA-${String(orderData.id).substring(0, 8).toUpperCase()}`,"
+    },
+    {
+      "file": "backend\\src\\services\\order.service.js",
+      "line": 266,
+      "code": "order_ref, discount_amount, shipping_amount, coupon_id, payment_method, payment_status, status, payout_status, shipping_address, notes)"
+    },
+    {
+      "file": "frontend\\src\\admin\\payouts.html",
+      "line": 645,
+      "code": "const orderIdDisplay = p.order_ref || (p.order_id ? `#ORD-${p.order_id}` : '—');"
+    },
+    {
+      "file": "frontend\\src\\admin\\special-orders.html",
+      "line": 260,
+      "code": "const orderRef = o.order_ref || `TOHFA-${String(o.id).substring(0, 8).toUpperCase()}`;"
+    },
+    {
+      "file": "frontend\\src\\admin\\special-orders.html",
+      "line": 333,
+      "code": "(o.order_ref && o.order_ref.toLowerCase().includes(q)) ||"
+    },
+    {
+      "file": "frontend\\src\\buyer\\cart.html",
+      "line": 821,
+      "code": "description: `Order Ref: ${order.order_ref}`,"
+    },
+    {
+      "file": "frontend\\src\\buyer\\cart.html",
+      "line": 832,
+      "code": "window.location.href = `payment-success.html?order_ref=${order.order_ref}&order_id=${orderId}`;"
+    },
+    {
+      "file": "frontend\\src\\buyer\\cart.html",
+      "line": 834,
+      "code": "window.location.href = `payment-failure.html?order_ref=${order.order_ref}`;"
+    },
+    {
+      "file": "frontend\\src\\buyer\\cart.html",
+      "line": 838,
+      "code": "window.location.href = `payment-failure.html?order_ref=${order.order_ref}`;"
+    },
+    {
+      "file": "frontend\\src\\buyer\\cart.html",
+      "line": 852,
+      "code": "window.location.href = `payment-failure.html?order_ref=${order.order_ref}`;"
+    },
+    {
+      "file": "frontend\\src\\buyer\\checkout.html",
+      "line": 755,
+      "code": "resolve({ won: true, order_id: pData.order_id || orderId, order_ref: pData.order_ref || orderRef });"
+    },
+    {
+      "file": "frontend\\src\\buyer\\checkout.html",
+      "line": 797,
+      "code": "let orderRef = order.order_ref;"
+    },
+    {
+      "file": "frontend\\src\\buyer\\checkout.html",
+      "line": 811,
+      "code": "orderRef = result.order_ref;"
+    },
+    {
+      "file": "frontend\\src\\buyer\\checkout.html",
+      "line": 837,
+      "code": "window.location.href = `payment-success.html?order_ref=${orderRef}&order_id=${orderId}`;"
+    },
+    {
+      "file": "frontend\\src\\buyer\\checkout.html",
+      "line": 839,
+      "code": "window.location.href = `payment-failure.html?order_ref=${orderRef}`;"
+    },
+    {
+      "file": "frontend\\src\\buyer\\checkout.html",
+      "line": 843,
+      "code": "window.location.href = `payment-failure.html?order_ref=${orderRef}`;"
+    },
+    {
+      "file": "frontend\\src\\buyer\\checkout.html",
+      "line": 857,
+      "code": "window.location.href = `payment-failure.html?order_ref=${orderRef}`;"
+    },
+    {
+      "file": "frontend\\src\\buyer\\order-detail.html",
+      "line": 277,
+      "code": "<p class=\"font-data-price text-[14px] text-on-surface-variant font-bold\">#${o.order_ref}</p>"
+    },
+    {
+      "file": "frontend\\src\\buyer\\orders.html",
+      "line": 327,
+      "code": "let displayRef = o.order_ref;"
+    },
+    {
+      "file": "frontend\\src\\buyer\\orders.html",
+      "line": 328,
+      "code": "const seedMatch = o.order_ref.match(/^(TH-\\d+)-(\\d+)$/);"
+    },
+    {
+      "file": "frontend\\src\\buyer\\payment-failure.html",
+      "line": 175,
+      "code": "const orderRef = params.get('order_ref') || 'N/A';"
+    },
+    {
+      "file": "frontend\\src\\buyer\\payment-success.html",
+      "line": 190,
+      "code": "const orderRef = params.get('order_ref') || 'N/A';"
+    },
+    {
+      "file": "frontend\\src\\components\\DetailModal.js",
+      "line": 532,
+      "code": "<p class=\"text-xs text-[#FFF8E7]/70 font-mono\">Ref: ${escapeHtml(order.order_ref || order.id)} • Placed: ${order.created_at ? new Date(order.created_at).toLocaleString('en-IN') : 'n/a'}</p>"
+    },
+    {
+      "file": "frontend\\src\\seller\\js\\orders.js",
+      "line": 43,
+      "code": "const idStr = String(o.order_id || o.order_ref || o.id || o.internal_id || '').toLowerCase();"
+    },
+    {
+      "file": "frontend\\src\\seller\\order-detail.html",
+      "line": 311,
+      "code": "if (titleEl) titleEl.textContent = `Order #${escapeHtml(o.order_id || o.order_ref || (orderId ? 'TOHFA-' + String(orderId).slice(0, 8).toUpperCase() : '—'))}`;"
+    },
+    {
+      "file": "frontend\\src\\seller\\order-detail.html",
+      "line": 314,
+      "code": "if (refLabel) refLabel.textContent = `Reference #${escapeHtml(o.order_id || o.order_ref || (orderId ? 'TOHFA-' + String(orderId).slice(0, 8).toUpperCase() : '—'))}`;"
+    },
+    {
+      "file": "frontend\\src\\seller\\orders.html",
+      "line": 284,
+      "code": "const idStr = String(o.order_id || o.order_ref || o.id || o.internal_id || '').toLowerCase();"
+    },
+    {
+      "file": "frontend\\src\\seller\\orders.html",
+      "line": 318,
+      "code": "const orderRef = o.order_id || o.order_ref || (id ? `TF-${String(id).slice(0, 8).toUpperCase()}` : '—');"
+    },
+    {
+      "file": "frontend\\src\\seller\\orders.html",
+      "line": 360,
+      "code": "order_ref: 'TF-20260815-001',"
+    },
+    {
+      "file": "frontend\\src\\seller\\orders.html",
+      "line": 377,
+      "code": "order_ref: 'TF-20260815-002',"
+    },
+    {
+      "file": "frontend\\src\\seller\\orders.html",
+      "line": 394,
+      "code": "order_ref: 'TF-20260815-003',"
+    },
+    {
+      "file": "frontend\\src\\seller\\orders.html",
+      "line": 510,
+      "code": "document.getElementById('modal-order-ref').textContent = `Order #${escapeHtml(o.order_id || o.order_ref || (internalId ? 'TOHFA-' + String(internalId).slice(0, 8).toUpperCase() : '—'))}`;"
+    },
+    {
+      "file": "frontend\\src\\seller\\payment-history.html",
+      "line": 175,
+      "code": "order_ref: 'ORD-9942',"
+    },
+    {
+      "file": "frontend\\src\\seller\\payment-history.html",
+      "line": 186,
+      "code": "order_ref: 'ORD-9810',"
+    },
+    {
+      "file": "frontend\\src\\seller\\payment-history.html",
+      "line": 197,
+      "code": "order_ref: 'ORD-9755',"
+    },
+    {
+      "file": "frontend\\src\\seller\\payment-history.html",
+      "line": 208,
+      "code": "order_ref: 'ORD-9988',"
+    },
+    {
+      "file": "frontend\\src\\seller\\payment-history.html",
+      "line": 219,
+      "code": "order_ref: 'ORD-9994',"
+    },
+    {
+      "file": "frontend\\src\\seller\\payment-history.html",
+      "line": 256,
+      "code": "order_ref: p.order_ref || (p.order_id ? `ORD-${p.order_id}` : 'ORD-REF'),"
+    },
+    {
+      "file": "frontend\\src\\seller\\payment-history.html",
+      "line": 301,
+      "code": "t.order_ref.toLowerCase().includes(searchQuery) ||"
+    },
+    {
+      "file": "frontend\\src\\seller\\payment-history.html",
+      "line": 322,
+      "code": "<p class=\"text-[10px] text-[#587A5B] font-mono\">Ref: ${t.order_ref}</p>"
+    },
+    {
+      "file": "frontend\\src\\seller\\payment-history.html",
+      "line": 361,
+      "code": "const rows = transactions.map(t => `${t.id},${t.order_ref},${t.date},${t.type},${t.gross},${t.fee},${t.net},${t.status}`).join('\\n');"
+    },
+    {
+      "file": "frontend\\src\\seller\\payouts.html",
+      "line": 900,
+      "code": "<p class=\"text-sm font-semibold text-forest mt-1\">Order Ref: ${disp.order_ref} · Buyer: ${disp.buyer_name}</p>"
+    }
+  ],
+  "order_items.unit_price_paise": [
+    {
+      "file": "backend\\src\\controllers\\order.controller.js",
+      "line": 422,
+      "code": "'unit_price', COALESCE(oi.unit_price_paise / 100.0, 0),"
+    },
+    {
+      "file": "backend\\src\\controllers\\order.controller.js",
+      "line": 800,
+      "code": "'unit_price', COALESCE(oi.unit_price_paise / 100.0, oi.unit_price, 0),"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 862,
+      "code": "'unit_price', COALESCE(oi.unit_price, (oi.unit_price_paise::numeric / 100.0), 0),"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1293,
+      "code": "'unit_price', COALESCE(oi.unit_price, (oi.unit_price_paise::numeric / 100.0), 0),"
+    },
+    {
+      "file": "backend\\src\\controllers\\seller.controller.js",
+      "line": 1436,
+      "code": "'unit_price', COALESCE(oi.unit_price, (oi.unit_price_paise::numeric / 100.0), 0),"
+    },
+    {
+      "file": "backend\\src\\db\\apply_022_migration.js",
+      "line": 38,
+      "code": "{ table: 'order_items', column: 'unit_price_paise' },"
+    },
+    {
+      "file": "backend\\src\\db\\auto_sync.js",
+      "line": 412,
+      "code": "await query(`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS unit_price_paise BIGINT;`);"
+    },
+    {
+      "file": "backend\\src\\db\\auto_sync.js",
+      "line": 414,
+      "code": "await query(`UPDATE order_items SET unit_price_paise = ROUND(unit_price * 100) WHERE unit_price_paise IS NULL AND unit_price IS NOT NULL;`);"
+    },
+    {
+      "file": "backend\\src\\db\\migrations\\022_fix_missing_order_columns.sql",
+      "line": 12,
+      "code": "ALTER TABLE order_items ADD COLUMN IF NOT EXISTS unit_price_paise BIGINT;"
+    },
+    {
+      "file": "backend\\src\\db\\migrations\\022_fix_missing_order_columns.sql",
+      "line": 33,
+      "code": "SET unit_price_paise = ROUND(unit_price * 100)"
+    },
+    {
+      "file": "backend\\src\\db\\migrations\\022_fix_missing_order_columns.sql",
+      "line": 34,
+      "code": "WHERE unit_price_paise IS NULL"
+    },
+    {
+      "file": "backend\\src\\db\\schema.sql",
+      "line": 441,
+      "code": "unit_price_paise      BIGINT,"
+    },
+    {
+      "file": "backend\\src\\services\\order.service.js",
+      "line": 358,
+      "code": "unit_price, unit_price_paise, customization_details, customization_data, customization_status)"
+    },
+    {
+      "file": "frontend\\src\\buyer\\order-detail.html",
+      "line": 347,
+      "code": "<p class=\"font-data-price text-on-surface-variant text-[12px] mt-1\">Qty ${item.quantity} � ${formatPaise(item.unit_price_paise)}</p>"
+    },
+    {
+      "file": "frontend\\src\\buyer\\order-detail.html",
+      "line": 350,
+      "code": "<span class=\"font-data-price text-[#14381F] text-[15px] font-bold\">${formatPaise(item.unit_price_paise * item.quantity)}</span>"
+    },
+    {
+      "file": "frontend\\src\\buyer\\payment-success.html",
+      "line": 213,
+      "code": "<p class=\"text-[10px] text-on-surface-variant font-mono mt-0.5\">Qty ${item.quantity} � ${item.unit_price_paise ? (item.unit_price_paise / 100).toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }) : ''}</p>"
+    },
+    {
+      "file": "scripts\\audit_schema.js",
+      "line": 59,
+      "code": "targetColumn: 'unit_price_paise',"
+    }
+  ],
+  "order_items.variant_name": [
+    {
+      "file": "backend\\src\\controllers\\order.controller.js",
+      "line": 424,
+      "code": "'variant_name', COALESCE(oi.variant_name, pv.variant_name),"
+    },
+    {
+      "file": "backend\\src\\db\\apply_022_migration.js",
+      "line": 39,
+      "code": "{ table: 'order_items', column: 'variant_name'     },"
+    },
+    {
+      "file": "backend\\src\\db\\auto_sync.js",
+      "line": 413,
+      "code": "await query(`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS variant_name TEXT;`);"
+    },
+    {
+      "file": "backend\\src\\db\\migrations\\022_fix_missing_order_columns.sql",
+      "line": 13,
+      "code": "ALTER TABLE order_items ADD COLUMN IF NOT EXISTS variant_name TEXT;"
+    },
+    {
+      "file": "backend\\src\\db\\migrations\\022_fix_missing_order_columns.sql",
+      "line": 37,
+      "code": "-- studio_notes and order_items.variant_name are left NULL intentionally;"
+    },
+    {
+      "file": "frontend\\src\\buyer\\cart.html",
+      "line": 449,
+      "code": "${ci.variant_name ? `<span class=\"inline-block mt-xs px-2 py-[2px] text-[11px] font-semibold rounded-full bg-primary/10 text-primary border border-primary/20\">${ci.variant_name}</span>` : ''}"
+    },
+    {
+      "file": "frontend\\src\\buyer\\checkout.html",
+      "line": 380,
+      "code": "${ci.variant_name ? `<span class=\"inline-block mt-xs px-2 py-[2px] text-[11px] font-semibold rounded-full bg-primary/10 text-primary border border-primary/20\">${ci.variant_name}</span>` : ''}"
+    },
+    {
+      "file": "frontend\\src\\buyer\\order-detail.html",
+      "line": 346,
+      "code": "${item.variant_name ? `<span class=\"inline-block mt-1 mb-1 px-2 py-[2px] text-[11px] font-semibold rounded-full bg-primary/10 text-primary border border-primary/20\">${item.variant_name}</span>` : ''}"
+    },
+    {
+      "file": "frontend\\src\\buyer\\payment-success.html",
+      "line": 214,
+      "code": "${item.variant_name ? `<span class=\"inline-block mt-1 px-2 py-[2px] text-[10px] font-semibold rounded-full bg-primary/10 text-primary border border-primary/20\">${item.variant_name}</span>` : ''}"
+    },
+    {
+      "file": "frontend\\src\\buyer\\product.js",
+      "line": 135,
+      "code": "${thumbImg ? `<img src=\"${thumbImg}\" alt=\"${v.variant_name || v.color_name || 'Variant'}\" loading=\"lazy\" decoding=\"async\" style=\"width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(0,0,0,0.15);\" onerror=\"this.style.display='none'\">` : (hasHex ? `<span style=\"width: 14px; height: 14px; border-radius: 50%; background-color: ${v.color_hex}; border: 1px solid rgba(0,0,0,0.2); display: inline-block;\"></span>` : '')}"
+    }
+  ]
+}

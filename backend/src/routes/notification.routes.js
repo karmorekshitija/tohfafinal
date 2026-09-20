@@ -14,6 +14,8 @@ router.use(authMiddleware);
 
 router.get('/', notificationController.getNotifications);
 router.patch('/read-all', notificationController.markAllRead);
+router.patch('/mark-read', notificationController.markAllRead);
+router.post('/mark-read', notificationController.markAllRead);
 router.patch('/:id/read', notificationController.markOneRead);
 
 module.exports = router;

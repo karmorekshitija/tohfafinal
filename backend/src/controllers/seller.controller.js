@@ -110,7 +110,7 @@ async function getOwnSellerProfile(req, res, next) {
               COALESCE(sp.zai_mode_enabled, 0) AS zai_mode_enabled,
               sp.pickup_address, sp.bank_details,
               COALESCE(sp.onboarding_completed, FALSE) AS onboarding_completed,
-              COALESCE(sp.is_admin_managed, 0) AS is_admin_managed,
+              (COALESCE(sp.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
               sp.created_at,
               u.name, u.email, u.phone
        FROM seller_profiles sp
@@ -710,7 +710,7 @@ async function getApplicationStatus(req, res, next) {
     let { rows } = await query(
       `SELECT is_approved, verification_status, rejection_reason, seller_type, created_at, is_active,
               COALESCE(onboarding_completed, FALSE) AS onboarding_completed,
-              COALESCE(is_admin_managed, 0) AS is_admin_managed
+              (COALESCE(is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed
        FROM seller_profiles WHERE user_id = $1`,
       [userId]
     );
@@ -719,7 +719,7 @@ async function getApplicationStatus(req, res, next) {
       const sellerRes = await query(
         `SELECT is_approved, verification_status, rejection_reason, created_at, is_active,
                 COALESCE(onboarding_completed, FALSE) AS onboarding_completed,
-                COALESCE(is_admin_managed, 0) AS is_admin_managed
+                (COALESCE(is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed
          FROM sellers WHERE user_id = $1`,
         [userId]
       );

@@ -27,6 +27,8 @@ router.post('/merge', cartController.mergeCart);
 router.put('/update', cartController.updateCartItem);
 router.put('/items/:id', cartController.updateCartItem);
 router.put('/:itemId', cartController.updateCartItem);
+router.patch('/items/:id', cartController.updateQuantity || cartController.updateCartItem);
+router.patch('/:itemId', cartController.updateQuantity || cartController.updateCartItem);
 
 // Remove Cart Item
 router.delete('/items/:id', cartController.removeCartItem);

@@ -269,31 +269,38 @@
   </div>
 
   <!-- Desktop Navigation Links -->
-  <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+  <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full" aria-label="Main Navigation">
     <a
       href="/buyer/home.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
     >
       <span class="material-symbols-outlined text-[20px]">home</span>
       <span>Home</span>
     </a>
     <a
       href="/buyer/categories.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
     >
       <span class="material-symbols-outlined text-[20px]">category</span>
       <span>Category</span>
     </a>
     <a
+      href="/buyer/category.html?slug=best-sellers"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
+    >
+      <span class="material-symbols-outlined text-[20px]">military_tech</span>
+      <span>Best Sellers</span>
+    </a>
+    <a
       href="/buyer/zip-gift.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
     >
       <span class="material-symbols-outlined text-[20px]">bolt</span>
       <span>ZipGift</span>
     </a>
     <a
       href="/buyer/profile.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
     >
       <span class="material-symbols-outlined text-[20px]">person</span>
       <span>Profile</span>
@@ -306,8 +313,9 @@
     <a
       href="/buyer/search.html?focus=true"
       id="header-search-btn"
-      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Search"
+      aria-label="Search the marketplace"
     >
       <span class="material-symbols-outlined text-[20px] sm:text-[22px]">search</span>
     </a>
@@ -315,8 +323,9 @@
     <!-- Wishlist Button -->
     <a
       href="/buyer/wishlist.html"
-      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Saved Makes"
+      aria-label="Saved Makes"
     >
       <span class="material-symbols-outlined text-[20px] sm:text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
       <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
@@ -920,11 +929,11 @@
 
         // Extract Seller ID from Query Param (support both id and seller_id)
         const urlParams = new URLSearchParams(window.location.search);
-        sellerId = Number(urlParams.get('id') || urlParams.get('seller_id'));
+        sellerId = String(urlParams.get('id') || urlParams.get('seller_id') || '').trim();
 
         // Initialize Page
         async function initPage() {
-            if (!sellerId || isNaN(sellerId)) {
+            if (!sellerId) {
                 window.Toast?.show("Invalid artisan studio ID", "error");
                 setTimeout(() => window.location.href = '/buyer/home.html', 1500);
                 return;
@@ -1316,7 +1325,7 @@
             empty.classList.add('hidden');
             
             filtered.forEach(p => {
-                const priceFormatted = `?${(p.price_paise / 100).toLocaleString('en-IN')}`;
+                const priceFormatted = `₹${(p.price_paise / 100).toLocaleString('en-IN')}`;
                 const card = document.createElement('a');
                 card.href = `/buyer/product.html?id=${p.id}`;
                 card.className = "group bg-[#FFF8E7] border border-[#c3c8c1] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative no-underline text-inherit";
@@ -1346,7 +1355,7 @@
                     `;
                 }
 
-                const isOwner = currentUser && sellerProfile && Number(currentUser.id) === Number(sellerProfile.id);
+                const isOwner = currentUser && sellerProfile && String(currentUser.id) === String(sellerProfile.id);
 
                 const wishlistBtnHtml = isOwner
                     ? `<button class="absolute top-1.5 right-1.5 w-6 h-6 sm:w-[26px] sm:h-[26px] min-w-0 min-h-0 rounded-full bg-[rgba(250,246,238,0.85)] opacity-50 cursor-not-allowed flex items-center justify-center z-10 p-0 toggle-wishlist-btn" disabled onclick="event.stopPropagation();">
@@ -1528,7 +1537,7 @@
                 empty.classList.add('hidden');
                 
                 list.forEach(c => {
-                    const priceFormatted = `Starting from ?${c.base_price.toLocaleString('en-IN')}`;
+                    const priceFormatted = `Starting from ₹${c.base_price.toLocaleString('en-IN')}`;
                     const card = document.createElement('div');
                     card.className = "group bg-[#FFF8E7] border border-[#c3c8c1] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative";
                     
@@ -1733,7 +1742,7 @@
 
             try {
                 const res = await apiClient.post('/requests', {
-                    listing_id: Number(productId),
+                    listing_id: String(productId).trim(),
                     request_type: 'customization',
                     quantity: 1
                 });
@@ -1745,14 +1754,13 @@
                 }
             } catch (err) {
                 console.error("Failed to start customization request:", err);
-                window.Toast?.show("Failed to start chat. Please try again.", "error");
                 btn.disabled = false;
                 btn.innerText = originalText;
             }
         };
 
         window.handleConciergeChatClick = async function() {
-            if (currentUser && sellerProfile && currentUser.id === sellerProfile.id) {
+            if (currentUser && sellerProfile && String(currentUser.id) === String(sellerProfile.id)) {
                 window.Toast?.show("Sellers cannot start a chat with themselves", "error");
                 return;
             }
@@ -1790,7 +1798,7 @@
 
         window.addToCart = async function(e, productId) {
             e.stopPropagation();
-            if (currentUser && sellerProfile && currentUser.id === sellerProfile.id) {
+            if (currentUser && sellerProfile && String(currentUser.id) === String(sellerProfile.id)) {
                 window.Toast?.show("Sellers cannot purchase their own products", "error");
                 return;
             }
@@ -1802,7 +1810,7 @@
 
             try {
                 const response = await apiClient.post('/cart/items', {
-                    product_id: Number(productId),
+                    product_id: String(productId).trim(),
                     quantity: 1
                 });
                 if (response.data && response.data.success) {
@@ -1914,7 +1922,7 @@
 
             try {
                 const response = await apiClient.post('/conversations', {
-                    listing_id: Number(listingId),
+                    listing_id: String(listingId).trim(),
                     product_type_tag: productTypeTag
                 });
                 

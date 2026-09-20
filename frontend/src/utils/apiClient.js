@@ -354,6 +354,7 @@ apiClient.interceptors.response.use(
       if (!isGet || forceShow) {
         const msg = error.response?.data?.message || error.message || 'Request failed';
         Toast.show(msg, 'error');
+        error.toastShown = true;
       }
     }
 

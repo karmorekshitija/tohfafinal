@@ -25,22 +25,13 @@ async function createOverflowOrder(req, res, next) {
 
     const itemIds = Array.isArray(cart_item_ids) && cart_item_ids.length ? cart_item_ids : null;
     const params = [buyerId];
-<<<<<<< HEAD
     const itemFilter = itemIds ? 'AND ci.id::text = ANY($2::text[])' : '';
     if (itemIds) params.push(itemIds.map(String));
-=======
-    const itemFilter = itemIds ? 'AND ci.id = ANY($2::uuid[])' : '';
-    if (itemIds) params.push(itemIds);
->>>>>>> 8819c84f0a359c3b8b8645ea17835911536a2597
     const { rows: items } = await query(
       `SELECT ci.id, ci.product_id, ci.variant_id, ci.quantity,
               p.name AS product_name, p.base_price, p.seller_id,
               pv.additional_price AS variant_additional_price,
-<<<<<<< HEAD
-              COALESCE(sp.capacity_limit, sp.daily_order_limit, sp.daily_capacity_max, 50) AS capacity_limit
-=======
               COALESCE(sp.capacity_limit, 50) AS capacity_limit
->>>>>>> 8819c84f0a359c3b8b8645ea17835911536a2597
        FROM cart_items ci
        JOIN products p ON p.id = ci.product_id
        LEFT JOIN product_variants pv ON pv.id = ci.variant_id
@@ -133,11 +124,27 @@ async function placeOrder(req, res, next) {
       coupon_code: coupon_code || coupon || code,
       coupon_id,
     });
-    return res.status(201).json({ success: true, data: result });
+
+    const order = result.order || result;
+    const orderId = order.id;
+    const orderRef = order.order_reference || order.order_ref || order.id;
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        ...result,
+        order,
+        order_id: orderId,
+        orderId: orderId,
+        order_ref: orderRef,
+      },
+    });
   } catch (err) {
     next(err);
   }
 }
+
+const createOrder = placeOrder;
 
 // ---------------------------------------------------------------------------
 // GET /api/orders  — buyer history
@@ -313,9 +320,9 @@ async function getAdminOrders(req, res, next) {
       conditions.push(`o.created_at <= $${params.length}`);
     }
     if (special_only === 'true' || special_only === true) {
-      conditions.push(`(sp.is_admin_managed = 1 OR sp.is_admin_managed = TRUE)`);
+      conditions.push(`(sp.is_admin_managed::text IN ('true', 't', '1'))`);
     } else if (special_only === 'false' || special_only === false || exclude_special === 'true' || exclude_special === true) {
-      conditions.push(`(sp.is_admin_managed IS NULL OR sp.is_admin_managed = 0 OR sp.is_admin_managed = FALSE)`);
+      conditions.push(`(sp.is_admin_managed IS NULL OR sp.is_admin_managed::text IN ('false', 'f', '0'))`);
     }
     if (search && search.trim() !== '') {
       params.push(`%${search.trim()}%`);
@@ -342,7 +349,7 @@ async function getAdminOrders(req, res, next) {
               u.email AS buyer_email, u.phone AS buyer_phone,
               COALESCE(sp.store_name, 'Tohfa Studio') AS seller_name,
               COALESCE(sp.store_name, 'Tohfa Studio') AS store_name,
-              COALESCE(sp.is_admin_managed, 0) AS is_admin_managed,
+              (COALESCE(sp.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
               a.line1, a.line2, a.city, a.state, a.pincode, a.phone AS address_phone, a.full_name AS address_name
        FROM orders o
        LEFT JOIN users u ON u.id = o.buyer_id
@@ -404,7 +411,7 @@ async function getOrderById(req, res, next) {
               COALESCE(o.studio_notes, '') AS notes,
               COALESCE(a.line1 || CASE WHEN a.city IS NOT NULL THEN ', ' || a.city ELSE '' END, '') AS shipping_address,
               u.name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone,
-              sp.store_name, COALESCE(sp.is_admin_managed, 0) AS is_admin_managed,
+              sp.store_name, (COALESCE(sp.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
               a.line1, a.line2, a.city, a.state, a.pincode, a.full_name AS address_name, a.phone AS address_phone,
               COALESCE(
                 (SELECT json_agg(json_build_object(
@@ -1000,6 +1007,7 @@ async function rejectRefund(req, res, next) {
 
 module.exports = {
   placeOrder,
+  createOrder: placeOrder,
   createOverflowOrder,
   getBuyerOrders,
   getSellerOrders,

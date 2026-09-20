@@ -93,17 +93,11 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
              COALESCE(p.weight_grams, 500) AS weight_grams,
              COALESCE(pv.additional_price, 0) AS variant_additional_price,
              COALESCE(sp.commission_rate, s.commission_rate, 10.00) AS commission_rate,
-<<<<<<< HEAD
-             COALESCE(sp.capacity_limit, sp.daily_order_limit, sp.daily_capacity_max, 50) AS capacity_limit,
-             COALESCE(sp.vacation_mode, sp.vacation_mode_active = 1, FALSE) AS vacation_mode,
-             COALESCE(sp.store_visibility, sp.is_accepting_orders = 1, TRUE) AS store_visibility
-=======
              COALESCE(sp.capacity_limit, 50) AS capacity_limit,
              COALESCE(sp.vacation_mode, FALSE) AS vacation_mode,
              COALESCE(sp.store_visibility, TRUE) AS store_visibility,
              pv.product_id AS variant_product_id,
              pv.stock_qty AS variant_stock_qty
->>>>>>> 8819c84f0a359c3b8b8645ea17835911536a2597
       FROM cart_items ci
       JOIN products p ON p.id = ci.product_id
       LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
@@ -124,17 +118,11 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
              COALESCE(p.weight_grams, 500) AS weight_grams,
              COALESCE(pv.additional_price, 0) AS variant_additional_price,
              COALESCE(sp.commission_rate, s.commission_rate, 10.00) AS commission_rate,
-<<<<<<< HEAD
-             COALESCE(sp.capacity_limit, sp.daily_order_limit, sp.daily_capacity_max, 50) AS capacity_limit,
-             COALESCE(sp.vacation_mode, sp.vacation_mode_active = 1, FALSE) AS vacation_mode,
-             COALESCE(sp.store_visibility, sp.is_accepting_orders = 1, TRUE) AS store_visibility
-=======
              COALESCE(sp.capacity_limit, 50) AS capacity_limit,
              COALESCE(sp.vacation_mode, FALSE) AS vacation_mode,
              COALESCE(sp.store_visibility, TRUE) AS store_visibility,
              pv.product_id AS variant_product_id,
              pv.stock_qty AS variant_stock_qty
->>>>>>> 8819c84f0a359c3b8b8645ea17835911536a2597
       FROM cart_items ci
       JOIN products p ON p.id = ci.product_id
       LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id

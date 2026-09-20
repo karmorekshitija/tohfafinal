@@ -1022,14 +1022,9 @@ async function createProduct(req, res, next) {
           ? [req.body.img_url || req.body.imagePath || req.body.imageUrl || req.body.image_url]
           : []
       )
-<<<<<<< HEAD
     ));
-    if (rawImagesList.length > 0) {
-=======
-    );
     const uniqueRawImagesList = uniqueImageUrls(rawImagesList);
     if (uniqueRawImagesList.length > 0) {
->>>>>>> 8819c84f0a359c3b8b8645ea17835911536a2597
       let sortOrder = 0;
       for (const url of uniqueRawImagesList) {
         if (url) {
@@ -1385,12 +1380,8 @@ async function uploadImages(req, res, next) {
     let sortOrder = parseInt(maxRows[0].max_order, 10) + 1;
 
     const inserted = [];
-<<<<<<< HEAD
     const filesToInsert = dedupeAlternateFormatImages(req.files);
-    for (const file of filesToInsert) {
-=======
-    for (const filePath of uniqueImageUrls(req.files.map(file => file.path))) {
->>>>>>> 8819c84f0a359c3b8b8645ea17835911536a2597
+    for (const filePath of uniqueImageUrls(filesToInsert.map(file => file.path))) {
       const { rows } = await query(
         `INSERT INTO product_images (product_id, url, sort_order)
          VALUES ($1, $2, $3)

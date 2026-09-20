@@ -20,11 +20,11 @@
   </div>
 
   <!-- Desktop Navigation Links -->
-  <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+  <nav aria-label="Main Navigation" class="hidden md:flex items-center justify-center gap-5 lg:gap-7 h-full">
     <a
       href="/buyer/home.html"
       id="nav-link-home"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328] rounded"
     >
       <span class="material-symbols-outlined text-[20px]">home</span>
       <span>Home</span>
@@ -32,15 +32,23 @@
     <a
       href="/buyer/categories.html"
       id="nav-link-categories"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328] rounded"
     >
       <span class="material-symbols-outlined text-[20px]">category</span>
       <span>Category</span>
     </a>
     <a
+      href="/buyer/category.html?slug=best-sellers"
+      id="nav-link-bestsellers"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328] rounded"
+    >
+      <span class="material-symbols-outlined text-[20px] text-[#E29578]">local_fire_department</span>
+      <span>Best Sellers</span>
+    </a>
+    <a
       href="/buyer/bulk.html"
       id="nav-link-bulk"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328] rounded"
     >
       <span class="material-symbols-outlined text-[20px]">inventory_2</span>
       <span>Bulk Gifting</span>
@@ -48,7 +56,7 @@
     <a
       href="/buyer/zip-gift.html"
       id="nav-link-zipgift"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328] rounded"
     >
       <span class="material-symbols-outlined text-[20px]">bolt</span>
       <span>ZipGift</span>
@@ -56,7 +64,7 @@
     <a
       href="/buyer/profile.html"
       id="nav-link-profile"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328] rounded"
     >
       <span class="material-symbols-outlined text-[20px]">person</span>
       <span>Profile</span>
@@ -69,47 +77,51 @@
     <a
       href="/buyer/search.html?focus=true"
       id="header-search-btn"
-      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+      aria-label="Search the marketplace"
+      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328]"
       title="Search"
     >
-      <span class="material-symbols-outlined text-[20px] sm:text-[22px]">search</span>
+      <span class="material-symbols-outlined text-[20px] sm:text-[22px]" aria-hidden="true">search</span>
     </a>
 
     <!-- Wishlist Button -->
     <a
       href="/buyer/wishlist.html"
-      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      aria-label="View saved wishlist items"
+      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328]"
       title="Wishlist"
     >
-      <span class="material-symbols-outlined text-[20px] sm:text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+      <span class="material-symbols-outlined text-[20px] sm:text-[22px]" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">favorite</span>
       <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
     </a>
 
     <!-- Cart Button -->
     <a
       href="/buyer/cart.html"
-      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      aria-label="View shopping basket"
+      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328]"
       title="Shopping Cart"
     >
-      <span class="material-symbols-outlined text-[20px] sm:text-[22px]">shopping_bag</span>
+      <span class="material-symbols-outlined text-[20px] sm:text-[22px]" aria-hidden="true">shopping_bag</span>
       <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
     </a>
 
     <!-- Notifications Button -->
     <a
       href="/buyer/notifications.html"
-      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      aria-label="View notifications"
+      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328]"
       title="Notifications"
     >
-      <span class="material-symbols-outlined text-[20px] sm:text-[22px]">notifications</span>
+      <span class="material-symbols-outlined text-[20px] sm:text-[22px]" aria-hidden="true">notifications</span>
       <span id="nav-notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
       <span id="nav-notif-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
     </a>
 
     <!-- Auth Container (Desktop Only) -->
     <div id="auth-buttons-container" class="hidden md:flex items-center gap-2 ml-2 md:ml-4">
-      <a href="/auth/login.html" class="text-sm font-semibold text-[#FAF6EE] hover:text-white hover:underline no-underline" style="font-family: 'DM Sans', sans-serif;">Login</a>
-      <a href="/auth/signup-buyer.html" class="text-[#14381F] text-sm font-semibold px-3.5 py-1.5 rounded-lg bg-[#FAF6EE] hover:bg-white transition-all no-underline shadow-sm" style="font-family: 'DM Sans', sans-serif;">Sign Up</a>
+      <a href="/auth/login.html" class="text-sm font-semibold text-[#FAF6EE] hover:text-white hover:underline no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded px-1.5 py-1" style="font-family: 'DM Sans', sans-serif;">Login</a>
+      <a href="/auth/signup-buyer.html" class="text-[#14381F] text-sm font-semibold px-3.5 py-1.5 rounded-lg bg-[#FAF6EE] hover:bg-white transition-all no-underline shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]" style="font-family: 'DM Sans', sans-serif;">Sign Up</a>
     </div>
   </div>
 </header>

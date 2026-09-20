@@ -242,8 +242,8 @@
                 for (const item of guestItems) {
                   try {
                     await apiClient.post('/cart/items', {
-                      product_id: Number(item.product_id || item.productId),
-                      variant_id: item.variant_id || item.variantId || null,
+                      product_id: String(item.product_id || item.productId).trim(),
+                      variant_id: item.variant_id || item.variantId ? String(item.variant_id || item.variantId).trim() : null,
                       quantity: Number(item.quantity) || 1,
                       customization_data: item.customization_data || item.customizationData || null
                     });
@@ -268,8 +268,8 @@
             const action = JSON.parse(pendingActionStr);
             if (action.type === 'add_to_cart' && action.productId) {
               await apiClient.post('/cart/items', {
-                product_id: Number(action.productId),
-                variant_id: action.variantId || null,
+                product_id: String(action.productId).trim(),
+                variant_id: action.variantId ? String(action.variantId).trim() : null,
                 quantity: action.quantity || 1
               });
             }

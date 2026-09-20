@@ -15,6 +15,9 @@ router.use(authMiddleware);
 router.get('/', wishlistController.getWishlist);
 router.post('/', wishlistController.addToWishlist);
 router.post('/add', wishlistController.addToWishlist);
+router.post('/:id', wishlistController.addToWishlist);
+router.post('/:productId', wishlistController.addToWishlist);
 router.delete('/:productId', wishlistController.removeFromWishlist);
+router.delete('/:id', wishlistController.removeFromWishlist);
 
 module.exports = router;

@@ -231,31 +231,38 @@
   </div>
 
   <!-- Desktop Navigation Links -->
-  <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+  <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full" aria-label="Main Navigation">
     <a
       href="/buyer/home.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
     >
       <span class="material-symbols-outlined text-[20px]">home</span>
       <span>Home</span>
     </a>
     <a
       href="/buyer/categories.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
     >
       <span class="material-symbols-outlined text-[20px]">category</span>
       <span>Category</span>
     </a>
     <a
+      href="/buyer/category.html?slug=best-sellers"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
+    >
+      <span class="material-symbols-outlined text-[20px]">military_tech</span>
+      <span>Best Sellers</span>
+    </a>
+    <a
       href="/buyer/zip-gift.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
     >
       <span class="material-symbols-outlined text-[20px]">bolt</span>
       <span>ZipGift</span>
     </a>
     <a
       href="/buyer/profile.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
     >
       <span class="material-symbols-outlined text-[20px]">person</span>
       <span>Profile</span>
@@ -268,8 +275,9 @@
     <a
       href="/buyer/search.html?focus=true"
       id="header-search-btn"
-      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Search"
+      aria-label="Search the marketplace"
     >
       <span class="material-symbols-outlined text-[20px] sm:text-[22px]">search</span>
     </a>
@@ -277,8 +285,9 @@
     <!-- Wishlist Button -->
     <a
       href="/buyer/wishlist.html"
-      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Saved Makes"
+      aria-label="Saved Makes"
     >
       <span class="material-symbols-outlined text-[20px] sm:text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
       <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
@@ -287,8 +296,9 @@
     <!-- Cart Button -->
     <a
       href="/buyer/cart.html"
-      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Shopping Cart"
+      aria-label="Shopping Cart"
     >
       <span class="material-symbols-outlined text-[20px] sm:text-[22px]">shopping_bag</span>
       <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
@@ -297,8 +307,9 @@
     <!-- Notifications Button -->
     <a
       href="/buyer/notifications.html"
-      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Notifications"
+      aria-label="Notifications"
     >
       <span class="material-symbols-outlined text-[20px] sm:text-[22px]">notifications</span>
       <span id="nav-notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
@@ -311,7 +322,7 @@
 </header>
 
     <!-- Main Content Area -->
-    <main class="pt-4 sm:pt-6 max-w-7xl mx-auto px-3 sm:px-6 md:px-8 relative z-10 pb-24 w-full overflow-x-hidden">
+    <main class="pt-4 sm:pt-6 max-w-7xl mx-auto px-4 md:px-6 lg:px-8 relative z-10 pb-24 w-full overflow-x-hidden">
         
         <!-- Search Input Bar -->
         <div class="max-w-3xl mx-auto mb-5 sm:mb-8">
@@ -321,7 +332,8 @@
                     type="text"
                     id="search-input"
                     class="w-full bg-transparent border-none outline-none font-['DM_Sans'] text-sm sm:text-base text-[#1C1C1A] placeholder-[#717972]"
-                    placeholder="Search handcrafted gifts, artisans, occasions..."
+                    placeholder="Search handcrafted pottery, brass idols, embroidered shawls, or artisans..."
+                    aria-label="Search handcrafted goods"
                     autocomplete="off"
                 />
                 <button
@@ -351,7 +363,10 @@
 
             <!-- Trending Searches -->
             <section>
-                <h2 class="font-label-caps text-[11px] text-gold tracking-widest mb-md uppercase">Trending Now ??</h2>
+                <h2 class="font-label-caps text-[11px] text-[#1A3A32] tracking-widest mb-md uppercase flex items-center gap-1 font-bold">
+                    <span>Trending Now</span>
+                    <span class="material-symbols-outlined text-[15px] text-[#C85A32]">local_fire_department</span>
+                </h2>
                 <div id="trending-container" class="grid grid-rows-3 grid-flow-col gap-sm overflow-x-auto scrollbar-hide pb-2" style="grid-template-rows: repeat(3, auto); -ms-overflow-style: none; scrollbar-width: none;">
                     <!-- Dynamically populated -->
                 </div>
@@ -493,18 +508,19 @@
         <!-- ==================== STATE 3: SEARCH RESULTS / NO RESULTS VIEW ==================== -->
         <div id="results-view" class="space-y-lg hidden">
             <!-- Search Result Stats and Sorting -->
-            <div id="results-header" class="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-outline-variant/30 pb-md mb-xl gap-sm">
+            <div id="results-header" class="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-[#1A3A32]/15 pb-md mb-xl gap-sm">
                 <div>
-                    <h2 class="font-headline-lg text-primary" id="results-title">Search Results</h2>
-                    <p class="font-body-md text-on-surface-variant" id="results-count">Finding treasures...</p>
+                    <h2 class="font-headline-lg text-[#1A3A32]" id="results-title">Search Results</h2>
+                    <p class="font-body-md text-[#1A3A32]/70 text-sm font-medium" id="results-count">Finding treasures...</p>
                 </div>
                 <div class="flex items-center gap-sm self-end">
-                    <span class="text-xs text-outline font-label-caps whitespace-nowrap">Sort:</span>
-                    <select id="sort-select" class="px-md py-sm rounded-lg bg-surface text-on-surface-variant font-body-md text-sm border border-outline-variant/20 focus:ring-0 focus:outline-none cursor-pointer">
-                        <option value="newest">Newest</option>
+                    <span class="text-xs text-[#1A3A32]/60 font-label-caps whitespace-nowrap font-medium">Sort:</span>
+                    <select id="sort-select" class="px-3 py-1.5 rounded-lg bg-surface text-[#1A3A32] font-['DM_Sans'] text-sm border border-[#1A3A32]/20 focus:ring-2 focus:ring-[#1A3A32]/20 focus:outline-none cursor-pointer">
+                        <option value="relevance" selected>Relevance (Recommended)</option>
                         <option value="price_asc">Price: Low to High</option>
                         <option value="price_desc">Price: High to Low</option>
-                        <option value="top_rated">Top Rated</option>
+                        <option value="top_rated">Customer Rating</option>
+                        <option value="newest">Newest Arrivals</option>
                     </select>
                 </div>
             </div>
@@ -512,16 +528,19 @@
             <!-- Loader -->
             <div id="results-loader" class="flex flex-col items-center justify-center py-20">
                 <div class="relative w-12 h-12">
-                    <div class="absolute inset-0 border-4 border-primary/10 rounded-full"></div>
-                    <div class="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <div class="absolute inset-0 border-4 border-[#1A3A32]/10 rounded-full"></div>
+                    <div class="absolute inset-0 border-4 border-[#1A3A32] border-t-transparent rounded-full animate-spin"></div>
                 </div>
-                <p class="mt-md text-primary font-body-md italic animate-pulse">Gathering handcrafted treasures...</p>
+                <p class="mt-md text-[#1A3A32] font-body-md italic animate-pulse">Gathering handcrafted treasures...</p>
             </div>
 
             <!-- Product Grid -->
             <div id="results-grid" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-lg hidden">
                 <!-- Dynamic cards injected here -->
             </div>
+
+            <!-- Bottom Item Count Indicator (Baymard #531) -->
+            <div id="results-bottom-count" class="py-4 text-center text-xs text-[#1A3A32]/70 font-['DM_Sans'] border-t border-[#1A3A32]/10 mt-6 hidden"></div>
 
             <!-- pagination loader / end message -->
             <div id="pagination-sentinel" class="h-10"></div>
@@ -564,7 +583,7 @@
     function isProductOwned(sellerId) {
         try {
             const user = JSON.parse(sessionStorage.getItem('tohfa_user'));
-            return user && Number(user.id) === Number(sellerId);
+            return user && String(user.id) === String(sellerId);
         } catch (e) {
             return false;
         }
@@ -931,7 +950,7 @@
                         <div class="seller-chip flex-shrink-0 flex items-center gap-sm bg-surface px-3 py-1.5 rounded-full border border-outline-variant shadow-sm hover:border-primary transition-all cursor-pointer" data-query="${s.shop_name}">
                             ${avatar}
                             <span class="text-body-md font-medium text-ink">${s.shop_name}</span>
-                            <span class="font-data-price text-data-price text-gold">${s.rating} ?</span>
+                            <span class="font-data-price text-data-price text-gold">${s.rating} ★</span>
                         </div>
                     `;
                 }).join('');
@@ -1069,7 +1088,10 @@
             const sort = document.getElementById('sort-select').value;
 
             try {
-                const params = { q: query, occasion: occasion || undefined, sort, limit: 12 };
+                let apiSort = sort;
+                if (sort === 'price_asc') apiSort = 'price_low';
+                if (sort === 'price_desc') apiSort = 'price_high';
+                const params = { q: query, occasion: occasion || undefined, sort: apiSort, limit: 12 };
                 if (sort === 'newest' && cursor) {
                     params.cursor = cursor;
                 } else if (sort !== 'newest' && nextOffset > 0) {
@@ -1092,9 +1114,21 @@
                         searchResults.push(...products);
                     }
 
+                    // Client-side precision sorting
+                    if (sort === 'price_asc') {
+                        searchResults.sort((a, b) => ((a.price_paise || 0) - (b.price_paise || 0)));
+                    } else if (sort === 'price_desc') {
+                        searchResults.sort((a, b) => ((b.price_paise || 0) - (a.price_paise || 0)));
+                    } else if (sort === 'top_rated') {
+                        searchResults.sort((a, b) => (parseFloat(b.avg_rating || 0) - parseFloat(a.avg_rating || 0)));
+                    }
+
+                    const bottomCountEl = document.getElementById('results-bottom-count');
+
                     if (searchResults.length === 0) {
                         // Empty State (No Results)
                         resultsGrid.classList.add('hidden');
+                        if (bottomCountEl) bottomCountEl.classList.add('hidden');
                         noResultsView.classList.remove('hidden');
                         document.getElementById('results-count').innerText = `0 items found`;
                         const noResHeading = document.getElementById('no-results-heading');
@@ -1106,7 +1140,12 @@
                         // Display Results
                         resultsGrid.classList.remove('hidden');
                         noResultsView.classList.add('hidden');
-                        document.getElementById('results-count').innerText = `${searchResults.length}${hasMore ? '+' : ''} handcrafted item${searchResults.length === 1 ? '' : 's'} found`;
+                        const countText = `Showing ${searchResults.length}${hasMore ? '+' : ''} handcrafted ${searchResults.length === 1 ? 'item' : 'items'}`;
+                        document.getElementById('results-count').innerText = countText;
+                        if (bottomCountEl) {
+                            bottomCountEl.innerText = countText;
+                            bottomCountEl.classList.remove('hidden');
+                        }
                         renderProductGrid(searchResults);
                     }
                 }
@@ -1130,7 +1169,7 @@
         function renderProductGrid(products) {
             resultsGrid.innerHTML = products.map(p => {
                 const img = p.image_url || 'https://placehold.co/400x400/f4ede3/516447?text=Handcrafted';
-                const price = `?${(p.price_paise / 100).toLocaleString('en-IN')}`;
+                const price = `₹${(p.price_paise / 100).toLocaleString('en-IN')}`;
                 const isWishlisted = !!p.is_wishlisted;
 
                 let ribbonHtml = '';
@@ -1390,7 +1429,7 @@
 
             try {
                 const res = await apiClient.post('/requests', {
-                    listing_id: Number(productId),
+                    listing_id: String(productId).trim(),
                     request_type: 'customization',
                     quantity: 1
                 });
@@ -1402,7 +1441,6 @@
                 }
             } catch (err) {
                 console.error("Failed to start customization request:", err);
-                showToast("Failed to start chat. Please try again.", "error");
                 btn.disabled = false;
                 btn.innerText = originalText;
             }
@@ -1416,7 +1454,7 @@
             }
 
             try {
-                const res = await apiClient.post('/cart/items', { product_id: Number(productId), quantity: 1 });
+                const res = await apiClient.post('/cart/items', { product_id: String(productId).trim(), quantity: 1 });
                 if (res.data && res.data.success) {
                     showToast("Added to basket!", "success");
                 }

@@ -42,31 +42,38 @@
   </div>
 
   <!-- Desktop Navigation Links -->
-  <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+  <nav aria-label="Main Navigation" class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
     <a
       href="/buyer/home.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-lg"
     >
       <span class="material-symbols-outlined text-[20px]">home</span>
       <span>Home</span>
     </a>
     <a
       href="/buyer/categories.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-lg"
     >
       <span class="material-symbols-outlined text-[20px]">category</span>
       <span>Category</span>
     </a>
     <a
+      href="/buyer/category.html?slug=best-sellers"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-lg"
+    >
+      <span class="material-symbols-outlined text-[20px]">hotel_class</span>
+      <span>Best Sellers</span>
+    </a>
+    <a
       href="/buyer/zip-gift.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-lg"
     >
       <span class="material-symbols-outlined text-[20px]">bolt</span>
       <span>ZipGift</span>
     </a>
     <a
       href="/buyer/profile.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-lg"
     >
       <span class="material-symbols-outlined text-[20px]">person</span>
       <span>Profile</span>
@@ -79,7 +86,8 @@
     <a
       href="/buyer/search.html?focus=true"
       id="header-search-btn"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+      aria-label="Search the marketplace"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Search"
     >
       <span class="material-symbols-outlined text-[22px]">search</span>
@@ -88,7 +96,8 @@
     <!-- Wishlist Button -->
     <a
       href="/buyer/wishlist.html"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      aria-label="View Saved Makes"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Saved Makes"
     >
       <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
@@ -98,7 +107,8 @@
     <!-- Cart Button -->
     <a
       href="/buyer/cart.html"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      aria-label="View Shopping Cart"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Shopping Cart"
     >
       <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
@@ -108,7 +118,8 @@
     <!-- Notifications Button -->
     <a
       href="/buyer/notifications.html"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      aria-label="View Notifications"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Notifications"
     >
       <span class="material-symbols-outlined text-[22px]">notifications</span>
@@ -121,92 +132,177 @@
   </div>
 </header>
 
-<main class="pt-24 pb-32 max-w-2xl mx-auto px-margin-mobile md:px-0">
-<!-- Page Header -->
-<header class="flex items-center justify-between mb-lg">
-<div class="flex items-center gap-sm">
-<button onclick="window.location.href='cart.html'" class="material-symbols-outlined text-on-surface hover:bg-surface-container-low p-1 rounded-full transition-colors">chevron_left</button>
-<h1 class="font-headline-lg text-headline-lg text-primary">Checkout</h1>
-</div>
-<div class="bg-[#14381F]/10 px-3 py-1 rounded-full">
-<span id="checkout-items-count" class="font-data-price text-data-price text-[#14381F]">0 ITEMS</span>
-</div>
-</header>
-
-<!-- Cart Items List -->
-<section id="checkout-items-container" class="flex flex-col gap-md mb-xl">
-</section>
-
-<!-- Shipping Block -->
-<section class="mb-lg" id="shipping-block">
-<div class="bg-ivory-card border border-sage/30 rounded-2xl p-lg relative overflow-hidden">
-<div class="absolute top-0 right-0 w-24 h-6 wax-tape-texture -mr-4 mt-2 opacity-10"></div>
-<div class="flex justify-between items-start mb-sm">
-<h4 class="font-label-caps text-label-caps text-sage tracking-widest uppercase">SHIP TO</h4>
-<button onclick="openAddressModal()" class="text-[13px] font-medium text-tertiary hover:underline">Edit</button>
-</div>
-<div class="flex gap-md items-start">
-<span class="material-symbols-outlined text-sage">location_on</span>
-<div id="selected-address-details" class="font-body-md text-[14px] text-on-surface-variant leading-relaxed">
-    <p class="text-sage italic">Loading shipping address...</p>
-</div>
-</div>
-</div>
-</section>
-
-<!-- Promo / Coupon Code Section (BUY-03 & BUY-04) -->
-<section class="mb-lg" id="coupon-section">
-  <div class="bg-ivory-card border border-sage/30 rounded-2xl p-lg">
-    <h4 class="font-label-caps text-label-caps text-primary tracking-widest mb-sm uppercase">PROMO / GIFT CODE</h4>
-    <div class="flex gap-2">
-      <input type="text" id="coupon-input" placeholder="Enter coupon code (e.g. TOHFA10)" class="flex-1 uppercase px-4 py-2.5 rounded-xl border border-sage/40 bg-white text-xs font-mono text-on-surface focus:outline-none focus:border-primary">
-      <button type="button" id="apply-coupon-btn" onclick="applyCoupon()" class="px-5 py-2.5 bg-[#14381F] text-white rounded-xl text-xs font-bold hover:bg-[#0D2614] active:scale-95 transition-all shadow-sm cursor-pointer">Apply</button>
+<main class="pt-8 md:pt-12 pb-32 max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+  <!-- Page Header -->
+  <div class="flex items-center justify-between mb-8 pb-4 border-b border-[#1A3A32]/10">
+    <div class="flex items-center gap-3">
+      <button onclick="window.location.href='cart.html'" class="p-2 rounded-full hover:bg-black/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3A32]" aria-label="Return to basket">
+        <span class="material-symbols-outlined text-[24px] text-[#1A3A32]">arrow_back</span>
+      </button>
+      <div>
+        <h1 class="font-headline-lg text-2xl md:text-3xl font-semibold text-[#1A3A32]" style="font-family: 'Playfair Display', serif;">Secure Checkout</h1>
+        <p class="text-xs text-[#1A3A32]/70 font-['DM_Sans'] mt-0.5">Finalize your artisan order with direct workshop delivery</p>
+      </div>
     </div>
-    <div id="coupon-message" class="mt-2 text-xs"></div>
+    <div class="bg-[#1A3A32]/10 px-3.5 py-1.5 rounded-full border border-[#1A3A32]/15">
+      <span id="checkout-items-count" class="font-data-price text-xs font-bold text-[#1A3A32]">0 ITEMS</span>
+    </div>
   </div>
-</section>
 
-<!-- Order Summary -->
-<section class="mb-xl">
-<div class="bg-sage-soft rounded-2xl p-lg relative">
-<h4 class="font-label-caps text-label-caps text-primary tracking-widest mb-lg uppercase">ORDER SUMMARY</h4>
-<div class="space-y-md">
-<div class="flex justify-between items-center">
-<span class="font-body-md text-on-surface-variant">Subtotal</span>
-<span id="summary-subtotal" class="font-data-price text-on-surface">₹0.00</span>
-</div>
-<div class="flex justify-between items-center">
-<span class="font-body-md text-on-surface-variant">Shipping</span>
-<span id="summary-shipping" class="font-data-price text-on-surface">₹0.00</span>
-</div>
-<div id="summary-discount-row" class="flex justify-between items-center hidden text-emerald-800 font-semibold">
-<span class="font-body-md">Coupon Discount</span>
-<span id="summary-discount" class="font-data-price">-₹0.00</span>
-</div>
-<div class="h-[1px] bg-outline-variant/30 my-md"></div>
-<div class="flex justify-between items-center">
-<span class="font-title-serif text-primary">Total</span>
-<span id="summary-total" class="font-data-price text-[18px] font-bold text-[#14381F]">₹0.00</span>
-</div>
-</div>
-<div class="absolute bottom-4 right-4 opacity-[0.08] pointer-events-none">
-<svg fill="none" height="60" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24" width="60">
-<path d="M12 22C12 22 12 18 15 15C18 12 22 12 22 12C22 12 18 12 15 9C12 6 12 2 12 2C12 2 12 6 9 9C6 12 2 12 2 12C2 12 6 12 9 15C12 18 12 22 12 22Z"></path>
-</svg>
-</div>
-</div>
-</section>
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+    <!-- Left Column: Order Items, Guest Contact & Shipping (7 cols) -->
+    <div class="lg:col-span-7 space-y-6">
+      
+      <!-- Guest Email Contact Card (Shown for guest checkout) -->
+      <div id="guest-email-section" class="hidden bg-white/80 border border-[#1A3A32]/15 rounded-2xl p-5 shadow-xs">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="font-label-caps text-xs text-[#1A3A32] tracking-wider uppercase font-bold">CONTACT INFORMATION</h4>
+          <a href="/auth/login.html" class="text-xs text-[#C85A32] font-semibold underline hover:text-[#1A3A32]">Already have an account? Sign In</a>
+        </div>
+        <p class="text-xs text-[#1A3A32]/70 mb-3 font-['DM_Sans']">Your artisan tracking link, order receipt, and delivery updates will be sent here.</p>
+        <div>
+          <label for="guest-email-input" class="block text-xs font-semibold text-on-surface-variant uppercase mb-1">Email Address</label>
+          <input type="email" id="guest-email-input" placeholder="buyer@example.com" class="w-full border-outline-variant rounded-xl text-sm px-3.5 py-2.5 bg-white focus:ring-primary focus:border-primary font-['DM_Sans']">
+        </div>
+      </div>
 
+      <!-- Shipping Block -->
+      <section id="shipping-block">
+        <div class="bg-white/80 border border-[#1A3A32]/15 rounded-2xl p-5 shadow-xs relative overflow-hidden">
+          <div class="flex justify-between items-start mb-2">
+            <h4 class="font-label-caps text-xs text-[#1A3A32] tracking-wider uppercase font-bold">DELIVERY ADDRESS</h4>
+            <button onclick="openAddressModal()" class="text-xs font-semibold text-[#C85A32] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C85A32] rounded">Change Address</button>
+          </div>
+          <div class="flex gap-3 items-start">
+            <span class="material-symbols-outlined text-[#1A3A32] text-xl mt-0.5">location_on</span>
+            <div id="selected-address-details" class="font-['DM_Sans'] text-xs text-[#1A3A32]/80 leading-relaxed">
+              <p class="italic text-[#1A3A32]/60">Loading shipping address...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cart Items Preview List -->
+      <section>
+        <h4 class="font-label-caps text-xs text-[#1A3A32] tracking-wider uppercase font-bold mb-3">ITEMS IN THIS ORDER</h4>
+        <div id="checkout-items-container" class="flex flex-col gap-3">
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Right Column: Promo, Order Summary & Place Order (5 cols, sticky) -->
+    <div class="lg:col-span-5 space-y-6 lg:sticky lg:top-28">
+
+      <!-- Promo / Coupon Code Section (BUY-03 & BUY-04) -->
+      <section id="coupon-section">
+        <div class="bg-white/80 border border-[#1A3A32]/15 rounded-2xl p-5 shadow-xs">
+          <h4 class="font-label-caps text-xs text-[#1A3A32] tracking-wider uppercase font-bold mb-2">PROMO / GIFT CODE</h4>
+          <div class="flex gap-2">
+            <input type="text" id="coupon-input" placeholder="e.g. TOHFA10" class="flex-1 uppercase px-4 py-2.5 rounded-xl border border-[#1A3A32]/20 bg-white text-xs font-mono text-on-surface focus:outline-none focus:border-primary">
+            <button type="button" id="apply-coupon-btn" onclick="applyCoupon()" class="px-5 py-2.5 bg-[#1A3A32] text-white rounded-xl text-xs font-bold hover:bg-opacity-90 active:scale-95 transition-all shadow-xs cursor-pointer font-['DM_Sans']">Apply</button>
+          </div>
+          <div id="coupon-message" class="mt-2 text-xs"></div>
+        </div>
+      </section>
+
+      <!-- Order Summary -->
+      <section>
+        <div class="bg-white/90 border border-[#1A3A32]/15 rounded-2xl p-6 shadow-sm relative">
+          <h4 class="font-headline-lg text-base text-[#1A3A32] font-semibold tracking-wider mb-4 uppercase" style="font-family: 'Playfair Display', serif;">Order Summary</h4>
+          <div class="space-y-3 font-['DM_Sans'] text-sm">
+            <div class="flex justify-between items-center text-[#1A3A32]/80">
+              <span>Subtotal</span>
+              <span id="summary-subtotal" class="font-data-price font-semibold text-[#1A3A32]">₹0.00</span>
+            </div>
+            <div class="flex justify-between items-center text-[#1A3A32]/80">
+              <span>Artisan Shipping</span>
+              <span id="summary-shipping" class="font-data-price font-semibold text-[#1A3A32]">₹0.00</span>
+            </div>
+            <div id="summary-discount-row" class="flex justify-between items-center hidden text-[#C85A32] font-semibold">
+              <span>Coupon Discount</span>
+              <span id="summary-discount" class="font-data-price font-bold">-₹0.00</span>
+            </div>
+            <div class="h-[1px] bg-[#1A3A32]/10 my-3"></div>
+            <div class="flex justify-between items-center">
+              <span class="font-title-serif font-bold text-base text-[#1A3A32]">Total to Pay</span>
+              <span id="summary-total" class="font-data-price text-xl font-bold text-[#1A3A32]">₹0.00</span>
+            </div>
+          </div>
+
+          <!-- Accepted Payment Methods -->
+          <div class="mt-6 pt-4 border-t border-[#1A3A32]/10 space-y-3">
+            <div class="flex items-center justify-between text-[11px] text-[#1A3A32]/70 font-['DM_Sans']">
+              <span>Accepted Payment Methods:</span>
+              <span class="font-semibold text-emerald-800">100% Encrypted</span>
+            </div>
+            <div class="flex items-center flex-wrap gap-2">
+              <span class="px-2 py-0.5 rounded bg-blue-50 text-[10px] font-bold text-blue-900 border border-blue-200">VISA</span>
+              <span class="px-2 py-0.5 rounded bg-red-50 text-[10px] font-bold text-red-700 border border-red-200">Mastercard</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-50 text-[10px] font-bold text-emerald-800 border border-emerald-200">RuPay</span>
+              <span class="px-2 py-0.5 rounded bg-orange-50 text-[10px] font-bold text-orange-700 border border-orange-200">UPI / QR</span>
+              <span class="px-2 py-0.5 rounded bg-gray-50 text-[10px] font-bold text-gray-700 border border-gray-200">NetBanking</span>
+            </div>
+
+            <!-- Place Order Primary CTA (Desktop) -->
+            <button id="btn-place-order" onclick="placeOrder()" class="w-full bg-[#1A3A32] text-white hover:bg-opacity-90 py-4 rounded-full font-semibold transition-all shadow-md flex items-center justify-center gap-2 font-['DM_Sans'] text-base tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3A32] active:scale-[0.98]">
+              <span>Place Order &amp; Pay</span>
+              <span id="btn-total" class="font-data-price text-sm border-l border-white/30 pl-2.5 ml-1">₹0.00</span>
+            </button>
+
+            <!-- Authority Trust & Security Seals (Guideline #1210) -->
+            <div class="p-3 bg-white rounded-xl border border-[#1A3A32]/10 flex items-center justify-around gap-2 text-center text-[10px] text-[#1A3A32]/80 font-['DM_Sans'] shadow-2xs">
+              <div class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-base text-emerald-700">verified_user</span>
+                <span class="font-semibold">Norton Secured</span>
+              </div>
+              <div class="h-4 w-px bg-[#1A3A32]/15"></div>
+              <div class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-base text-[#1A3A32]">lock</span>
+                <span class="font-semibold">256-Bit SSL</span>
+              </div>
+              <div class="h-4 w-px bg-[#1A3A32]/15"></div>
+              <div class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-base text-amber-700">shield</span>
+                <span class="font-semibold">Google Protected</span>
+              </div>
+            </div>
+
+            <!-- Concierge & Guarantee Support Links -->
+            <div class="p-3.5 bg-[#1A3A32]/5 rounded-xl border border-[#1A3A32]/15 text-xs text-[#1A3A32] space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-base text-[#1A3A32]">support_agent</span>
+                  <span>Artisan Concierge:</span>
+                </span>
+                <a href="#" onclick="if(window.openContactModal){window.openContactModal(event);return false;}" class="underline font-semibold text-[#C85A32] hover:text-[#1A3A32]">Live Assistance</a>
+              </div>
+              <div class="flex items-center justify-between text-[11px] text-[#1A3A32]/80 border-t border-[#1A3A32]/10 pt-2">
+                <span>Buyer Protection</span>
+                <a href="#" onclick="if(window.openRefundsModal){window.openRefundsModal(event);return false;}" class="underline hover:text-[#C85A32]">Returns &amp; Refund Policy</a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
 </main>
 
-<!-- Sticky Bottom Bar -->
-<div class="fixed bottom-0 left-0 w-full bg-[#FFF8E7] border-t border-sage/20 z-40 px-margin-mobile py-md">
-<div class="max-w-2xl mx-auto">
-<button id="btn-place-order" onclick="placeOrder()" class="w-full h-[52px] bg-primary text-white font-body-md font-bold rounded-lg hover:bg-primary/90 active:scale-[0.98] transition-all flex items-center justify-center gap-sm shadow-lg shadow-primary/10">
-<span>Place order</span>
-<span id="btn-total" class="font-data-price text-sm border-l border-white/20 pl-sm">?0.00</span>
-</button>
-</div>
+<!-- Sticky Bottom Bar on Mobile (hidden on desktop) -->
+<div class="md:hidden fixed bottom-0 left-0 w-full bg-[#FFF8E7]/95 backdrop-blur-md border-t border-[#1A3A32]/20 z-40 px-4 py-3 shadow-lg">
+  <div class="flex items-center justify-between gap-3">
+    <div>
+      <p class="text-[10px] uppercase font-bold text-[#1A3A32]/60">Total</p>
+      <span id="mobile-bottom-total" class="font-data-price font-bold text-lg text-[#1A3A32]">₹0.00</span>
+    </div>
+    <button onclick="placeOrder()" class="flex-1 bg-[#1A3A32] text-white hover:bg-opacity-90 py-3 px-6 rounded-full font-semibold transition-all shadow-md flex items-center justify-center gap-2 font-['DM_Sans'] text-sm tracking-wide active:scale-[0.98]">
+      <span>Place Order</span>
+      <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+    </button>
+  </div>
 </div>
 
 
@@ -240,37 +336,53 @@
       <h4 id="address-form-title" class="font-semibold text-primary text-sm uppercase tracking-wide">Add Address</h4>
       
       <div class="space-y-xs">
-        <label class="block text-xs font-semibold text-on-surface-variant uppercase">Full Name</label>
+        <label for="addr-fullname" class="block text-xs font-semibold text-on-surface-variant uppercase">Full Name</label>
         <input type="text" id="addr-fullname" required class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
       </div>
       <div class="space-y-xs">
-        <label class="block text-xs font-semibold text-on-surface-variant uppercase">Address Line 1</label>
+        <label for="addr-line1" class="block text-xs font-semibold text-on-surface-variant uppercase">Address Line 1 (Street &amp; House Number)</label>
         <input type="text" id="addr-line1" required class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
       </div>
-      <div class="space-y-xs">
-        <label class="block text-xs font-semibold text-on-surface-variant uppercase">Address Line 2 (Optional)</label>
-        <input type="text" id="addr-line2" class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
+
+      <!-- Address Line 2 Consolidation (Guideline #1203) -->
+      <div class="space-y-1">
+        <button type="button" id="toggle-addr-line2-btn" onclick="toggleAddressLine2()" class="text-xs font-semibold text-[#1A3A32] hover:text-[#C85A32] flex items-center gap-1 focus-visible:outline-none">
+          <span class="material-symbols-outlined text-[16px]" id="addr-line2-icon">add</span>
+          <span>Add Apartment, Suite, or Unit (Optional)</span>
+        </button>
+        <div id="addr-line2-wrapper" class="hidden mt-1">
+          <label for="addr-line2" class="block text-xs font-semibold text-on-surface-variant uppercase">Apartment, Suite, Unit</label>
+          <input type="text" id="addr-line2" class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
+        </div>
       </div>
+
       <div class="grid grid-cols-2 gap-sm form-row-2col">
         <div class="space-y-xs">
-          <label class="block text-xs font-semibold text-on-surface-variant uppercase">City</label>
+          <label for="addr-city" class="block text-xs font-semibold text-on-surface-variant uppercase">City</label>
           <input type="text" id="addr-city" required class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
         </div>
         <div class="space-y-xs">
-          <label class="block text-xs font-semibold text-on-surface-variant uppercase">State</label>
+          <label for="addr-state" class="block text-xs font-semibold text-on-surface-variant uppercase">State</label>
           <input type="text" id="addr-state" required class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
         </div>
       </div>
       <div class="grid grid-cols-2 gap-sm form-row-2col">
         <div class="space-y-xs">
-          <label class="block text-xs font-semibold text-on-surface-variant uppercase">Pincode</label>
+          <label for="addr-pincode" class="block text-xs font-semibold text-on-surface-variant uppercase">Pincode</label>
           <input type="text" id="addr-pincode" required class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
         </div>
         <div class="space-y-xs">
-          <label class="block text-xs font-semibold text-on-surface-variant uppercase">Phone (Optional)</label>
+          <label for="addr-phone" class="block text-xs font-semibold text-on-surface-variant uppercase">Phone (Optional)</label>
           <input type="text" id="addr-phone" class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
         </div>
       </div>
+
+      <!-- Billing address same as shipping checkbox (Guideline #1204) -->
+      <div class="flex items-center gap-2 pt-1">
+        <input type="checkbox" id="addr-billing-same" checked class="text-[#1A3A32] focus:ring-[#1A3A32] rounded w-4 h-4"/>
+        <label for="addr-billing-same" class="text-xs font-medium text-on-surface-variant">Billing address same as shipping address</label>
+      </div>
+
       <div class="flex items-center gap-xs">
         <input type="checkbox" id="addr-default" class="text-primary focus:ring-primary rounded"/>
         <label for="addr-default" class="text-sm text-on-surface-variant">Set as default shipping address</label>
@@ -285,7 +397,7 @@
 </div>
 
 <script type="module">
-    import apiClient from '/src/utils/apiClient.js';
+    import apiClient, { requireAuth } from '/src/utils/apiClient.js';
     import { logout } from '/src/utils/auth.js';
     import { formatPaise } from '/src/utils/currency.js';
     import { initSearchOverlay } from '/buyer/searchOverlay.js';
@@ -299,11 +411,44 @@
     let appliedCoupon = null;
     let discountPaise = 0;
 
+    window.toggleAddressLine2 = function() {
+        const wrapper = document.getElementById('addr-line2-wrapper');
+        const icon = document.getElementById('addr-line2-icon');
+        if (wrapper) {
+            const isHidden = wrapper.classList.contains('hidden');
+            if (isHidden) {
+                wrapper.classList.remove('hidden');
+                if (icon) icon.innerText = 'remove';
+                const input = document.getElementById('addr-line2');
+                if (input) input.focus();
+            } else {
+                wrapper.classList.add('hidden');
+                if (icon) icon.innerText = 'add';
+            }
+        }
+    };
+
     async function initCheckout() {
-        if (!apiClient.requireAuth()) {
+        const token = sessionStorage.getItem('tohfa_access_token');
+        if (!token) {
+            const guestEmailSec = document.getElementById('guest-email-section');
+            if (guestEmailSec) guestEmailSec.classList.remove('hidden');
+            await loadGuestCart();
+            const savedGuestAddr = sessionStorage.getItem('tohfa_guest_address');
+            if (savedGuestAddr) {
+                try {
+                    const parsedAddr = JSON.parse(savedGuestAddr);
+                    savedAddresses = [parsedAddr];
+                    selectedAddressId = parsedAddr.id;
+                    renderSelectedAddress(parsedAddr);
+                } catch(e) {
+                    renderNoAddressState();
+                }
+            } else {
+                renderNoAddressState();
+            }
             return;
         }
-        const token = sessionStorage.getItem('tohfa_access_token');
 
         // Setup navbar user state
         try {
@@ -338,6 +483,98 @@
         await fetchAddresses();
     }
 
+    async function loadGuestCart() {
+        const guestCartRaw = sessionStorage.getItem('tohfa_guest_cart') || localStorage.getItem('tohfa_guest_cart');
+        let guestItems = [];
+        if (guestCartRaw) {
+            try {
+                guestItems = JSON.parse(guestCartRaw) || [];
+            } catch (e) {
+                guestItems = [];
+            }
+        }
+
+        if (!Array.isArray(guestItems) || guestItems.length === 0) {
+            window.location.href = 'cart-empty.html';
+            return;
+        }
+
+        cartItems = guestItems.map((item, idx) => ({
+            id: item.id || `guest-${idx}`,
+            product_id: item.product_id || item.productId,
+            name: item.name || item.product_name || 'Handcrafted Artisan Item',
+            seller_name: item.seller_name || 'Artisan Workshop',
+            seller_id: item.seller_id || 1,
+            price_paise: item.price_paise || (item.price ? Math.round(item.price * 100) : 0),
+            quantity: Number(item.quantity) || 1,
+            image_url: item.image_url || item.primary_image || '/img/categories/artisan_showcase.jpg',
+            available: true,
+            variant_name: item.variant_name || null,
+            customization_data: item.customization_data || item.customizationData || null
+        }));
+
+        renderCheckoutItems(cartItems);
+
+        const subtotalPaise = cartItems.reduce((sum, ci) => sum + ((ci.price_paise || 0) * (ci.quantity || 1)), 0);
+        const uniqueSellers = new Set(cartItems.map(ci => ci.seller_id).filter(Boolean));
+        const sellerCount = uniqueSellers.size;
+        const rawShippingPaise = sellerCount * 7900;
+        const maxShippingPaise = 25000;
+        const shippingPaise = cartItems.length > 0 ? Math.min(rawShippingPaise, maxShippingPaise) : 0;
+        currentCartTotalPaise = subtotalPaise + shippingPaise;
+
+        const subtotalEl = document.getElementById('summary-subtotal');
+        if (subtotalEl) subtotalEl.innerText = formatPaise(subtotalPaise);
+
+        const shippingEl = document.getElementById('summary-shipping');
+        if (shippingEl) shippingEl.innerText = formatPaise(shippingPaise);
+
+        updateSummaryDisplay();
+    }
+
+    function renderCheckoutItems(items) {
+        const itemsCountSpan = document.getElementById('checkout-items-count');
+        if (itemsCountSpan) {
+            itemsCountSpan.innerText = `${items.length} ${items.length === 1 ? 'ITEM' : 'ITEMS'}`;
+        }
+
+        const container = document.getElementById('checkout-items-container');
+        if (!container) return;
+
+        container.innerHTML = items.map(ci => {
+            const imgUrl = ci.image_url ? ci.image_url : '/img/categories/artisan_showcase.jpg';
+            return `
+                <div class="bg-white/80 border border-[#1A3A32]/15 rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden group shadow-xs">
+                    <img class="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover flex-shrink-0 border border-[#1A3A32]/10" src="${imgUrl}" alt="${ci.name}" loading="lazy">
+                    <div class="flex-grow min-w-0 font-['DM_Sans']">
+                        <h3 class="font-headline-lg text-sm sm:text-base leading-tight text-[#1A3A32] font-semibold truncate" style="font-family: 'Playfair Display', serif;">${ci.name}</h3>
+                        <p class="text-xs text-[#1A3A32]/70 mt-0.5">${ci.seller_name} • Qty: <strong>${ci.quantity}</strong></p>
+                        ${ci.variant_name ? `<span class="inline-block mt-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-[#1A3A32]/10 text-[#1A3A32] border border-[#1A3A32]/15">${ci.variant_name}</span>` : ''}
+                        ${(() => {
+                            if (!ci.customization_data) return '';
+                            let cData = ci.customization_data;
+                            if (typeof cData === 'string') {
+                                try { cData = JSON.parse(cData); } catch { cData = null; }
+                            }
+                            if (!cData || typeof cData !== 'object') return '';
+                            const summary = cData.summary_text || (cData.selected_options ? Object.entries(cData.selected_options).map(([k, v]) => `${k}: ${v}`).join(', ') : (cData.text || cData.inscription || 'Personalized'));
+                            const craftingTime = cData.crafting_time || (ci.preparation_days ? `${ci.preparation_days} days` : '5-7 days');
+                            return `
+                                <div class="mt-1 flex items-start gap-1 text-[11px] text-[#1A3A32] bg-[#1A3A32]/5 border border-[#1A3A32]/15 rounded-lg px-2 py-0.5">
+                                    <span class="material-symbols-outlined text-xs text-[#1A3A32] shrink-0 mt-0.5">auto_fix_high</span>
+                                    <span class="font-medium truncate max-w-[200px] sm:max-w-[260px]">${summary}</span>
+                                </div>
+                            `;
+                        })()}
+                    </div>
+                    <div class="flex flex-col items-end shrink-0">
+                        <span class="font-data-price text-[#1A3A32] font-bold text-sm sm:text-base">${formatPaise(ci.price_paise * ci.quantity)}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
     async function fetchCart() {
         try {
             const res = await apiClient.get('/cart');
@@ -362,50 +599,7 @@
                     return;
                 }
 
-                const itemsCountSpan = document.getElementById('checkout-items-count');
-                if (itemsCountSpan) {
-                    itemsCountSpan.innerText = `${item_count} ${item_count === 1 ? 'ITEM' : 'ITEMS'}`;
-                }
-
-                const container = document.getElementById('checkout-items-container');
-                if (container) {
-                    container.innerHTML = items.map(ci => {
-                        const imgUrl = ci.image_url ? ci.image_url : 'https://placehold.co/120x120/f4ede3/516447?text=Handcrafted';
-                        return `
-                            <div class="bg-ivory-card border border-sage/30 rounded-2xl p-md flex items-center gap-md relative overflow-hidden group">
-                                <img class="w-[60px] h-[60px] rounded-[10px] object-cover flex-shrink-0" src="${imgUrl}" alt="${ci.name}" loading="lazy">
-                                <div class="flex-grow">
-                                    <h3 class="font-title-serif text-[14px] leading-tight text-on-surface font-semibold">${ci.name}</h3>
-                                    <p class="text-xs text-on-surface-variant mt-xs">${ci.seller_name} • Qty: ${ci.quantity}</p>
-                                    ${ci.variant_name ? `<span class="inline-block mt-xs px-2 py-[2px] text-[11px] font-semibold rounded-full bg-primary/10 text-primary border border-primary/20">${ci.variant_name}</span>` : ''}
-                                    ${(() => {
-                                        if (!ci.customization_data) return '';
-                                        let cData = ci.customization_data;
-                                        if (typeof cData === 'string') {
-                                            try { cData = JSON.parse(cData); } catch { cData = null; }
-                                        }
-                                        if (!cData || typeof cData !== 'object') return '';
-                                        const summary = cData.summary_text || (cData.selected_options ? Object.entries(cData.selected_options).map(([k, v]) => `${k}: ${v}`).join(', ') : (cData.text || cData.inscription || 'Personalized'));
-                                        const craftingTime = cData.crafting_time || (ci.preparation_days ? `${ci.preparation_days} days` : '5-7 days');
-                                        return `
-                                            <div class="mt-1 flex items-start gap-1 text-[11px] text-[#14381F] bg-[#14381F]/5 border border-[#14381F]/15 rounded-lg px-2 py-1">
-                                                <span class="material-symbols-outlined text-xs text-[#14381F] shrink-0 mt-0.5">auto_fix_high</span>
-                                                <span class="font-medium truncate max-w-[240px]">${summary}</span>
-                                            </div>
-                                            <div class="mt-1 flex items-center gap-1 text-[10px] text-amber-900 bg-amber-50/90 border border-amber-200/80 rounded-lg px-2 py-0.5 w-fit">
-                                                <span class="material-symbols-outlined text-[13px] text-amber-800 shrink-0">schedule</span>
-                                                <span>Est. preparation: <strong>${craftingTime}</strong></span>
-                                            </div>
-                                        `;
-                                    })()}
-                                </div>
-                                <div class="flex flex-col items-end">
-                                    <span class="font-data-price text-on-surface font-semibold">${formatPaise(ci.price_paise * ci.quantity)}</span>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                }
+                renderCheckoutItems(items);
 
                 document.getElementById('summary-subtotal').innerText = formatPaise(subtotal_paise);
                 document.getElementById('summary-shipping').innerText = formatPaise(shipping_paise);
@@ -421,6 +615,7 @@
         const discountSpan = document.getElementById('summary-discount');
         const totalSpan = document.getElementById('summary-total');
         const btnTotalSpan = document.getElementById('btn-total');
+        const mobileTotalSpan = document.getElementById('mobile-bottom-total');
 
         const finalTotalPaise = Math.max(0, currentCartTotalPaise - discountPaise);
 
@@ -435,6 +630,7 @@
 
         if (totalSpan) totalSpan.innerText = formatPaise(finalTotalPaise);
         if (btnTotalSpan) btnTotalSpan.innerText = formatPaise(finalTotalPaise);
+        if (mobileTotalSpan) mobileTotalSpan.innerText = formatPaise(finalTotalPaise);
     }
 
     async function applyCoupon() {
@@ -665,6 +861,16 @@
             is_default: document.getElementById('addr-default').checked
         };
 
+        if (!sessionStorage.getItem('tohfa_access_token')) {
+            const guestAddr = { ...body, id: 'guest-addr-1' };
+            savedAddresses = [guestAddr];
+            selectedAddressId = guestAddr.id;
+            sessionStorage.setItem('tohfa_guest_address', JSON.stringify(guestAddr));
+            renderSelectedAddress(guestAddr);
+            closeAddressModal();
+            return;
+        }
+
         try {
             if (id) {
                 const res = await apiClient.put(`/addresses/${id}`, body);
@@ -724,7 +930,9 @@
         if (banner) {
             banner.innerHTML = `
                 <div class="bg-[#FFF8E7] border border-[#14381F]/20 rounded-2xl p-8 max-w-sm text-center shadow-xl">
-                    <span class="text-3xl block mb-3">??</span>
+                    <div class="w-12 h-12 rounded-full bg-[#C85A32]/10 flex items-center justify-center mx-auto mb-3 text-[#C85A32]">
+                        <span class="material-symbols-outlined text-2xl">hourglass_disabled</span>
+                    </div>
                     <p class="font-serif italic text-xl text-[#14381F] mb-2">Someone else grabbed it</p>
                     <p class="font-sans text-xs text-[#6B6B6B] mb-6">You were just a split second late. The last unit has been purchased.</p>
                     <button onclick="window.location.href='/buyer/home.html'" class="w-full py-3 bg-[#14381F] hover:bg-[#14381F]/90 text-white rounded-xl text-sm font-semibold transition-all active:scale-[0.98]">
@@ -773,6 +981,29 @@
     // ---------------------------------------------------------------------
 
     async function placeOrder() {
+        const token = sessionStorage.getItem('tohfa_access_token');
+        if (!token) {
+            const emailInput = document.getElementById('guest-email');
+            const guestEmail = emailInput?.value?.trim();
+            if (!guestEmail || !guestEmail.includes('@')) {
+                alert('Please enter a valid contact email for your order.');
+                emailInput?.focus();
+                return;
+            }
+            if (!selectedAddressId) {
+                alert('Please add a delivery address to continue.');
+                openAddressModal();
+                showNewAddressForm();
+                return;
+            }
+            sessionStorage.setItem('tohfa_guest_email', guestEmail);
+            sessionStorage.setItem('tohfa_redirect_after_login', '/buyer/checkout.html');
+            if (confirm('To finalize and protect your handcrafted order, please sign in or create your Tohfa account. Your cart and shipping details are preserved! Click OK to proceed.')) {
+                window.location.href = `/auth/login.html?redirect=${encodeURIComponent('/buyer/checkout.html')}`;
+            }
+            return;
+        }
+
         if (!selectedAddressId) {
             alert("Please select a shipping address.");
             return;

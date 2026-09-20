@@ -54,31 +54,38 @@
     </div>
 
     <!-- Desktop Navigation Links -->
-    <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+    <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full" aria-label="Main Navigation">
       <a
         href="/buyer/home.html"
-        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
       >
         <span class="material-symbols-outlined text-[20px]">home</span>
         <span>Home</span>
       </a>
       <a
         href="/buyer/categories.html"
-        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
       >
         <span class="material-symbols-outlined text-[20px]">category</span>
         <span>Category</span>
       </a>
       <a
+        href="/buyer/category.html?slug=best-sellers"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
+      >
+        <span class="material-symbols-outlined text-[20px]">military_tech</span>
+        <span>Best Sellers</span>
+      </a>
+      <a
         href="/buyer/zip-gift.html"
-        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
       >
         <span class="material-symbols-outlined text-[20px]">bolt</span>
         <span>ZipGift</span>
       </a>
       <a
         href="/buyer/profile.html"
-        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
       >
         <span class="material-symbols-outlined text-[20px]">person</span>
         <span>Profile</span>
@@ -90,16 +97,18 @@
       <a
         href="/buyer/search.html?focus=true"
         id="header-search-btn"
-        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
         title="Search"
+        aria-label="Search the marketplace"
       >
         <span class="material-symbols-outlined text-[22px]">search</span>
       </a>
 
       <a
         href="/buyer/wishlist.html"
-        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
         title="Wishlist"
+        aria-label="Wishlist"
       >
         <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
         <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
@@ -107,8 +116,9 @@
 
       <a
         href="/buyer/cart.html"
-        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
         title="Shopping Cart"
+        aria-label="Shopping Cart"
       >
         <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
         <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
@@ -116,8 +126,9 @@
 
       <a
         href="/buyer/notifications.html"
-        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+        class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
         title="Notifications"
+        aria-label="Notifications"
       >
         <span class="material-symbols-outlined text-[22px]">notifications</span>
         <span id="nav-notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
@@ -131,28 +142,28 @@
   </header>
 
   <!-- Empty State Container -->
-  <main class="flex-grow flex items-center justify-center py-16 md:py-24 px-4">
-    <div class="max-w-xl mx-auto text-center space-y-8">
+  <main class="flex-grow flex items-center justify-center py-12 md:py-16 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+    <div class="max-w-4xl mx-auto text-center space-y-8 w-full">
       
       <!-- Botanical Graphic / Icon -->
       <div class="relative inline-flex items-center justify-center">
-        <div class="w-32 h-32 md:w-36 md:h-36 rounded-full bg-[#DCE6D8]/60 border border-[#285C3A]/20 flex items-center justify-center shadow-inner">
-          <span class="material-symbols-outlined text-6xl md:text-7xl text-[#14381F]">
+        <div class="w-28 h-28 md:w-32 md:h-32 rounded-full bg-[#DCE6D8]/60 border border-[#285C3A]/20 flex items-center justify-center shadow-inner">
+          <span class="material-symbols-outlined text-5xl md:text-6xl text-[#14381F]">
             local_florist
           </span>
         </div>
-        <div class="absolute -bottom-2 -right-2 w-11 h-11 rounded-full bg-[#14381F] text-[#FFF8E7] flex items-center justify-center shadow-md">
-          <span class="material-symbols-outlined text-xl">shopping_basket</span>
+        <div class="absolute -bottom-1.5 -right-1.5 w-10 h-10 rounded-full bg-[#14381F] text-[#FFF8E7] flex items-center justify-center shadow-md">
+          <span class="material-symbols-outlined text-lg">shopping_basket</span>
         </div>
       </div>
 
-      <!-- Copy -->
+      <!-- Copy (Artisanal Clear-Simple-Fast) -->
       <div class="space-y-3">
         <h1 class="text-3xl sm:text-4xl md:text-5xl font-normal text-[#14381F] tracking-tight leading-tight" style="font-family: 'Cormorant Garamond', Georgia, serif;">
-          Your basket is waiting for something handcrafted.
+          Every masterpiece begins with a single selection.
         </h1>
-        <p class="text-base sm:text-lg text-[#587A5B] max-w-md mx-auto font-light leading-relaxed">
-          Explore thoughtful creations made by master artisans across India, or let our AI guide find the perfect personalized gift.
+        <p class="text-base sm:text-lg text-[#587A5B] max-w-lg mx-auto font-light leading-relaxed">
+          Discover treasures crafted by hand, shaped with patience, and delivered with soul. Your basket is ready to be filled with authentic Indian craftsmanship.
         </p>
       </div>
 
@@ -166,16 +177,16 @@
           <span>Explore Categories</span>
         </a>
         <a
-          href="/buyer/occasions.html"
+          href="/buyer/category.html?slug=best-sellers"
           class="px-8 py-3.5 rounded-full border border-[#14381F]/30 bg-white text-[#14381F] text-sm font-semibold hover:bg-[#FAF6EE] transition-all flex items-center gap-2 no-underline shadow-xs"
         >
-          <span class="material-symbols-outlined text-base">auto_awesome</span>
-          <span>Gifts by Occasion</span>
+          <span class="material-symbols-outlined text-base text-[#C85A32]">military_tech</span>
+          <span>View Best Sellers</span>
         </a>
       </div>
 
       <!-- Quick Category Shortcuts -->
-      <div class="pt-8 border-t border-[#285C3A]/15">
+      <div class="pt-6 border-t border-[#285C3A]/15">
         <span class="text-xs uppercase tracking-widest text-[#587A5B] font-mono block mb-4">Popular Craft Categories</span>
         <div class="flex flex-wrap items-center justify-center gap-2.5">
           <a href="/buyer/category.html?slug=ceramics-pottery" class="craft-bubble px-4 py-2 rounded-full border border-[#285C3A]/20 bg-white text-xs font-medium text-[#14381F] no-underline">
@@ -196,6 +207,22 @@
         </div>
       </div>
 
+      <!-- Trending Handcrafted Treasures Recommendations Section -->
+      <div class="pt-10 border-t border-[#285C3A]/15 w-full text-left" id="empty-cart-recommendations-section">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[#C85A32] text-xl">local_fire_department</span>
+            <h2 class="font-['Playfair_Display'] italic text-xl font-bold text-[#14381F]">Trending Handcrafted Treasures</h2>
+          </div>
+          <a href="/buyer/category.html?slug=best-sellers" class="text-xs font-semibold text-[#14381F] hover:underline no-underline">View All →</a>
+        </div>
+        <div id="empty-cart-recommendations-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
+          <div class="col-span-full py-6 text-center text-xs text-[#587A5B] italic font-['DM_Sans']">
+            Curating artisan recommendations...
+          </div>
+        </div>
+      </div>
+
     </div>
   </main>
 
@@ -204,6 +231,8 @@
   <script type="module" src="/src/components/tohfa-include.js"></script>
 
   <script type="module">
+    import apiClient from '/src/utils/apiClient.js';
+    import { formatPaise } from '/src/utils/currency.js';
     import { initSearchOverlay } from '/buyer/searchOverlay.js';
     initSearchOverlay();
 
@@ -226,6 +255,43 @@
       }
     }
     checkAuthState();
+
+    // Load Trending Recommendations
+    async function loadTrendingRecommendations() {
+      const grid = document.getElementById('empty-cart-recommendations-grid');
+      if (!grid) return;
+      try {
+        const res = await apiClient.get('/products/trending?limit=4');
+        const products = res.data?.data?.products || res.data?.products || [];
+        if (!products || products.length === 0) {
+          document.getElementById('empty-cart-recommendations-section')?.classList.add('hidden');
+          return;
+        }
+        grid.innerHTML = products.slice(0, 4).map(p => {
+          const img = p.image_url || (Array.isArray(p.images) && p.images[0]?.url ? p.images[0].url : '/img/categories/artisan_showcase.jpg');
+          const pricePaise = p.price_paise !== undefined ? p.price_paise : (p.base_price ? Math.round(p.base_price * 100) : 0);
+          return `
+            <a href="/buyer/product.html?id=${p.id}" class="group bg-white/90 border border-[#14381F]/15 rounded-xl p-3 shadow-xs hover:shadow-md transition-all flex flex-col justify-between no-underline text-inherit block">
+              <div class="relative aspect-square rounded-lg overflow-hidden mb-2.5 bg-[#FAF6EE]">
+                <img src="${img}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
+              </div>
+              <div class="flex flex-col flex-grow">
+                <span class="text-[11px] text-[#587A5B] font-medium truncate">${p.seller_name || 'Artisan Workshop'}</span>
+                <h3 class="font-['Playfair_Display'] font-semibold text-xs sm:text-sm text-[#14381F] line-clamp-1 mt-0.5">${p.name}</h3>
+                <span class="font-['DM_Sans'] font-bold text-xs sm:text-sm text-[#14381F] mt-1">${formatPaise(pricePaise)}</span>
+              </div>
+              <span class="mt-2.5 w-full py-1 text-center rounded-lg bg-[#14381F] text-white text-[11px] font-semibold group-hover:bg-[#285C3A] transition-colors">
+                View Craft
+              </span>
+            </a>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error('Failed to load empty cart recommendations:', err);
+        document.getElementById('empty-cart-recommendations-section')?.classList.add('hidden');
+      }
+    }
+    loadTrendingRecommendations();
   </script>
 </body>
 </html>

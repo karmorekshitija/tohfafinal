@@ -16,6 +16,7 @@ router.use(authMiddleware);
 
 // Buyer & Gateway Payment Operations
 router.post('/create-order', paymentController.createOrder);
+router.post('/initiate', paymentController.createOrder);
 router.post('/verify', paymentController.verifyPayment);
 router.get('/status/:orderId', paymentController.getPaymentStatus);
 

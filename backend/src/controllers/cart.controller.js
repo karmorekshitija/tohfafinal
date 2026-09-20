@@ -24,7 +24,7 @@ async function getCart(req, res, next) {
          ci.variant_id,
          ci.quantity,
          COALESCE(ci.customization_data, ci.customization_payload) AS customization_data,
-         COALESCE(ci.created_at, ci.added_at) AS created_at,
+         ci.created_at AS created_at,
          p.name AS product_name,
          p.name AS title,
          COALESCE(p.base_price, 0) AS base_price,
@@ -49,8 +49,8 @@ async function getCart(req, res, next) {
        LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
        LEFT JOIN users u ON u.id = p.seller_id
        LEFT JOIN product_variants pv ON pv.id = ci.variant_id
-       WHERE (ci.user_id = $1 OR ci.buyer_id = $1)
-       ORDER BY COALESCE(ci.created_at, ci.added_at) DESC`,
+       WHERE (ci.buyer_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
+       ORDER BY ci.created_at DESC`,
       [buyerId]
     ).catch(async () => {
       // Minimal fallback — just the essential columns guaranteed to exist
@@ -61,7 +61,7 @@ async function getCart(req, res, next) {
            ci.variant_id,
            ci.quantity,
            ci.customization_data,
-           COALESCE(ci.created_at, ci.added_at) AS created_at,
+           ci.created_at AS created_at,
            p.name AS product_name,
            p.name AS title,
            COALESCE(p.base_price, 0) AS base_price,
@@ -77,8 +77,8 @@ async function getCart(req, res, next) {
          JOIN products p ON p.id = ci.product_id
          LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
          LEFT JOIN product_variants pv ON pv.id = ci.variant_id
-         WHERE (ci.user_id = $1 OR ci.buyer_id = $1)
-         ORDER BY COALESCE(ci.created_at, ci.added_at) DESC`,
+         WHERE (ci.buyer_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
+         ORDER BY ci.created_at DESC`,
         [buyerId]
       );
     });
@@ -249,20 +249,38 @@ async function addToCart(req, res, next) {
       });
     }
 
-<<<<<<< HEAD
+    // Ensure carts row exists for user and get cart_id
+    const { rows: cartRows } = await query(
+      `INSERT INTO carts (user_id)
+       VALUES ($1)
+       ON CONFLICT (user_id) DO UPDATE SET updated_at = NOW()
+       RETURNING id`,
+      [buyerId]
+    ).catch(async () => {
+      return await query('SELECT id FROM carts WHERE user_id = $1 LIMIT 1', [buyerId]);
+    });
+    const cartId = cartRows?.[0]?.id || null;
+
     // Upsert: check if item already exists in cart for this user
     const { rows: existingRows } = await query(
       `SELECT id, quantity FROM cart_items
-       WHERE (buyer_id = $1 OR user_id = $1)
+       WHERE (buyer_id = $1 OR cart_id = $4)
          AND product_id = $2
          AND (variant_id = $3 OR (variant_id IS NULL AND $3 IS NULL))
        LIMIT 1`,
-      [buyerId, product_id, variant_id || null]
+      [buyerId, product_id, variant_id || null, cartId]
     );
 
     let cartItem;
     if (existingRows.length > 0) {
-      const newQty = existingRows[0].quantity + qty;
+      const existingQty = Number(existingRows[0].quantity || 0);
+      const totalQty = existingQty + qty;
+      if (totalQty > availableStock) {
+        return res.status(400).json({
+          success: false,
+          message: `Only ${availableStock} item${availableStock === 1 ? '' : 's'} available in stock. You already have ${existingQty} in your cart.`,
+        });
+      }
       const { rows } = await query(
         `UPDATE cart_items
          SET quantity = $1,
@@ -270,7 +288,7 @@ async function addToCart(req, res, next) {
              customization_payload = COALESCE($2::jsonb, customization_payload)
          WHERE id = $3
          RETURNING id, product_id, variant_id, quantity, customization_data`,
-        [newQty, jsonCustomization, existingRows[0].id]
+        [totalQty, jsonCustomization, existingRows[0].id]
       ).catch(async () => {
         return await query(
           `UPDATE cart_items
@@ -278,16 +296,23 @@ async function addToCart(req, res, next) {
                customization_data = COALESCE($2, customization_data)
            WHERE id = $3
            RETURNING id, product_id, variant_id, quantity, customization_data`,
-          [newQty, jsonCustomization, existingRows[0].id]
+          [totalQty, jsonCustomization, existingRows[0].id]
         );
       });
       cartItem = rows[0];
     } else {
+      if (qty > availableStock) {
+        return res.status(400).json({
+          success: false,
+          message: `Only ${availableStock} item${availableStock === 1 ? '' : 's'} available in stock.`,
+        });
+      }
       const { rows } = await query(
-        `INSERT INTO cart_items (user_id, buyer_id, product_id, variant_id, quantity, customization_data, customization_payload)
-         VALUES ($1, $1, $2, $3, $4, $5, COALESCE($5::jsonb, '{}'::jsonb))
+        `INSERT INTO cart_items (cart_id, buyer_id, product_id, variant_id, quantity, customization_data, customization_payload)
+         VALUES ($1, $2, $3, $4, $5, $6, COALESCE($6::jsonb, '{}'::jsonb))
          RETURNING id, product_id, variant_id, quantity, customization_data`,
         [
+          cartId,
           buyerId,
           product_id,
           variant_id || null,
@@ -296,10 +321,11 @@ async function addToCart(req, res, next) {
         ]
       ).catch(async () => {
         return await query(
-          `INSERT INTO cart_items (user_id, buyer_id, product_id, variant_id, quantity, customization_data)
-           VALUES ($1, $1, $2, $3, $4, $5)
+          `INSERT INTO cart_items (cart_id, buyer_id, product_id, variant_id, quantity, customization_data)
+           VALUES ($1, $2, $3, $4, $5, $6)
            RETURNING id, product_id, variant_id, quantity, customization_data`,
           [
+            cartId,
             buyerId,
             product_id,
             variant_id || null,
@@ -309,28 +335,6 @@ async function addToCart(req, res, next) {
         );
       });
       cartItem = rows[0];
-=======
-    const conflictClause = variant_id
-      ? 'ON CONFLICT (buyer_id, product_id, variant_id) WHERE variant_id IS NOT NULL'
-      : 'ON CONFLICT (buyer_id, product_id) WHERE variant_id IS NULL';
-    const { rows } = await query(
-      `INSERT INTO cart_items (buyer_id, product_id, variant_id, quantity, customization_data, customization_payload)
-       VALUES ($1, $2, $3, $4, $5, COALESCE($5::jsonb, '{}'::jsonb))
-       ${conflictClause}
-       DO UPDATE SET
-         quantity = cart_items.quantity + EXCLUDED.quantity,
-         customization_data = COALESCE(EXCLUDED.customization_data, cart_items.customization_data),
-         customization_payload = COALESCE(EXCLUDED.customization_payload, cart_items.customization_payload)
-       WHERE cart_items.quantity + EXCLUDED.quantity <= $6
-       RETURNING id, product_id, variant_id, quantity, customization_data`,
-      [buyerId, product_id, variant_id || null, qty, jsonCustomization, availableStock]
-    );
-    if (!rows.length) {
-      return res.status(400).json({
-        success: false,
-        message: `Only ${availableStock} item${availableStock === 1 ? '' : 's'} available in total.`,
-      });
->>>>>>> 8819c84f0a359c3b8b8645ea17835911536a2597
     }
 
     return res.status(201).json({
@@ -363,13 +367,17 @@ async function mergeCart(req, res, next) {
       });
     }
 
-    // Ensure carts row exists for user
-    await query(
+    // Ensure carts row exists for user and get cart_id
+    const { rows: cartRows } = await query(
       `INSERT INTO carts (user_id)
        VALUES ($1)
-       ON CONFLICT (user_id) DO NOTHING`,
+       ON CONFLICT (user_id) DO UPDATE SET updated_at = NOW()
+       RETURNING id`,
       [buyerId]
-    ).catch(() => {});
+    ).catch(async () => {
+      return await query('SELECT id FROM carts WHERE user_id = $1 LIMIT 1', [buyerId]);
+    });
+    const cartId = cartRows?.[0]?.id || null;
 
     let mergedCount = 0;
 
@@ -397,28 +405,13 @@ async function mergeCart(req, res, next) {
       const jsonCustom = customData ? (typeof customData === 'string' ? customData : JSON.stringify(customData)) : null;
 
       try {
-<<<<<<< HEAD
         const { rows: existingRows } = await query(
           `SELECT id, quantity FROM cart_items
-           WHERE (buyer_id = $1 OR user_id = $1)
+           WHERE (buyer_id = $1 OR cart_id = $4)
              AND product_id = $2
              AND (variant_id = $3 OR (variant_id IS NULL AND $3 IS NULL))
            LIMIT 1`,
-          [buyerId, productId, variantId]
-=======
-        const conflictClause = variantId
-          ? 'ON CONFLICT (buyer_id, product_id, variant_id) WHERE variant_id IS NOT NULL'
-          : 'ON CONFLICT (buyer_id, product_id) WHERE variant_id IS NULL';
-        await query(
-          `INSERT INTO cart_items (buyer_id, product_id, variant_id, quantity, customization_data, customization_payload)
-           VALUES ($1, $2, $3, $4, $5, COALESCE($5::jsonb, '{}'::jsonb))
-           ${conflictClause}
-           DO UPDATE SET
-             quantity = cart_items.quantity + EXCLUDED.quantity,
-             customization_data = COALESCE(EXCLUDED.customization_data, cart_items.customization_data),
-             customization_payload = COALESCE(EXCLUDED.customization_payload, cart_items.customization_payload)`,
-          [buyerId, productId, variantId, quantity, jsonCustom]
->>>>>>> 8819c84f0a359c3b8b8645ea17835911536a2597
+          [buyerId, productId, variantId, cartId]
         );
 
         if (existingRows.length > 0) {
@@ -441,14 +434,14 @@ async function mergeCart(req, res, next) {
           });
         } else {
           await query(
-            `INSERT INTO cart_items (user_id, buyer_id, product_id, variant_id, quantity, customization_data, customization_payload)
-             VALUES ($1, $1, $2, $3, $4, $5, COALESCE($5::jsonb, '{}'::jsonb))`,
-            [buyerId, productId, variantId, quantity, jsonCustom]
+            `INSERT INTO cart_items (cart_id, buyer_id, product_id, variant_id, quantity, customization_data, customization_payload)
+             VALUES ($1, $2, $3, $4, $5, $6, COALESCE($6::jsonb, '{}'::jsonb))`,
+            [cartId, buyerId, productId, variantId, quantity, jsonCustom]
           ).catch(async () => {
             await query(
-              `INSERT INTO cart_items (user_id, buyer_id, product_id, variant_id, quantity, customization_data)
-               VALUES ($1, $1, $2, $3, $4, $5)`,
-              [buyerId, productId, variantId, quantity, jsonCustom]
+              `INSERT INTO cart_items (cart_id, buyer_id, product_id, variant_id, quantity, customization_data)
+               VALUES ($1, $2, $3, $4, $5, $6)`,
+              [cartId, buyerId, productId, variantId, quantity, jsonCustom]
             );
           });
         }
@@ -564,6 +557,7 @@ module.exports = {
   addToCart,
   mergeCart,
   updateCartItem,
+  updateQuantity: updateCartItem,
   removeCartItem,
   clearCart,
 };

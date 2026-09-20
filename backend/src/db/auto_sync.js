@@ -354,6 +354,16 @@ async function autoSyncDatabase() {
       console.warn('⚠️ [Auto-Sync Step 9b - Refund Requests Notice]:', err.message);
     }
 
+    // 9b-2. Ensure Orders total_paise & order_ref exist before payments backfill (Step 9c)
+    try {
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS total_paise BIGINT;`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_ref TEXT;`);
+      await query(`UPDATE orders SET total_paise = ROUND(total_amount * 100) WHERE total_paise IS NULL AND total_amount IS NOT NULL;`);
+      await query(`UPDATE orders SET order_ref = 'TOHFA-' || UPPER(SUBSTRING(id::text, 1, 8)) WHERE order_ref IS NULL;`);
+    } catch (err) {
+      console.warn('⚠️ [Auto-Sync Orders total_paise/order_ref Notice]:', err.message);
+    }
+
     // 9c. Payments Table (Razorpay customer transactions)
     try {
       await query(`
@@ -397,10 +407,6 @@ async function autoSyncDatabase() {
     try {
       await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS notes TEXT;`);
       await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS studio_notes TEXT;`);
-      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS total_paise BIGINT;`);
-      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_ref TEXT;`);
-      await query(`UPDATE orders SET total_paise = ROUND(total_amount * 100) WHERE total_paise IS NULL AND total_amount IS NOT NULL;`);
-      await query(`UPDATE orders SET order_ref = 'TOHFA-' || UPPER(SUBSTRING(id::text, 1, 8)) WHERE order_ref IS NULL;`);
       await query(`UPDATE orders SET notes = studio_notes WHERE notes IS NULL AND studio_notes IS NOT NULL;`);
       await query(`UPDATE orders SET studio_notes = notes WHERE studio_notes IS NULL AND notes IS NOT NULL;`);
       await query(`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS unit_price_paise BIGINT;`);

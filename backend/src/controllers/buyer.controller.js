@@ -413,36 +413,99 @@ async function getOwnProfile(req, res, next) {
 }
 
 /**
- * PUT /api/buyer/profile
+ * PUT / PATCH /api/buyer/profile & /api/profile/me
  */
 async function updateOwnProfile(req, res, next) {
   try {
     const userId = req.user.id;
-    const { name, phone, profile_photo_url, profile_photo, cover_photo_url, cover_photo } = req.body;
+    const {
+      name, display_name,
+      phone,
+      email,
+      profile_photo_url, profile_photo,
+      cover_photo_url, cover_photo,
+      avatar, avatar_url,
+    } = req.body;
 
-    const finalProfilePhoto = req.file?.path || profile_photo_url || profile_photo || null;
+    const finalName = display_name || name || null;
+    const finalProfilePhoto = req.file?.path || req.file?.secure_url || req.file?.url || profile_photo_url || profile_photo || avatar_url || avatar || null;
     const finalCoverPhoto   = req.coverFile?.path || cover_photo_url || cover_photo || null;
 
     const { rows } = await query(
       `UPDATE users
        SET name              = COALESCE($1, name),
            phone             = COALESCE($2, phone),
-           profile_photo_url = COALESCE($3, profile_photo_url),
-           cover_photo_url   = COALESCE($4, cover_photo_url),
+           email             = COALESCE($3, email),
+           profile_photo_url = COALESCE($4, profile_photo_url),
+           cover_photo_url   = COALESCE($5, cover_photo_url),
            updated_at        = NOW()
-       WHERE id = $5 AND is_active = true
+       WHERE id = $6
        RETURNING id, name, email, phone,
                  profile_photo_url, profile_photo_url AS profile_photo,
                  cover_photo_url, cover_photo_url AS cover_photo,
                  role`,
-      [name || null, phone || null, finalProfilePhoto, finalCoverPhoto, userId]
+      [finalName, phone || null, email || null, finalProfilePhoto, finalCoverPhoto, userId]
     );
 
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'User not found.' });
     }
 
-    return res.json({ success: true, data: { profile: rows[0] } });
+    const updatedUser = rows[0];
+    const photoUrl = updatedUser.profile_photo_url || '/img/default-avatar.png';
+    const profile = {
+      ...updatedUser,
+      display_name: updatedUser.name,
+      avatar_url: photoUrl,
+      profile_photo_url: photoUrl,
+      profile_photo: photoUrl,
+    };
+
+    return res.json({
+      success: true,
+      data: profile,
+      profile,
+      user: profile,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * POST /api/profile/me/avatar & /api/profile/avatar
+ */
+async function uploadAvatar(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const photoUrl = req.file?.path || req.file?.secure_url || req.file?.url || req.body.avatar_url || req.body.avatar || req.body.photo;
+    if (!photoUrl) {
+      return res.status(400).json({ success: false, message: 'No avatar image uploaded.' });
+    }
+
+    await query(
+      `UPDATE users
+       SET profile_photo_url = $1, updated_at = NOW()
+       WHERE id = $2`,
+      [photoUrl, userId]
+    );
+
+    await query(
+      `UPDATE seller_profiles
+       SET profile_photo = $1::varchar, avatar_url = $1::text, updated_at = NOW()
+       WHERE user_id = $2`,
+      [photoUrl, userId]
+    ).catch(() => {});
+
+    return res.json({
+      success: true,
+      message: 'Avatar updated successfully',
+      data: {
+        avatar_url: photoUrl,
+        profile_photo_url: photoUrl,
+        photo_url: photoUrl,
+      },
+    });
   } catch (err) {
     next(err);
   }
@@ -481,6 +544,7 @@ module.exports = {
   // Profile
   getOwnProfile,
   updateOwnProfile,
+  uploadAvatar,
   getPublicProfile,
   // Bulk Inquiries, Following
   submitBulkInquiry,

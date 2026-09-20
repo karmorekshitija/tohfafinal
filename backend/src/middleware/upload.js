@@ -241,10 +241,89 @@ function handleUpload(uploadFn) {
   };
 }
 
+// Avatar uploader (accepts 'avatar', 'photo', or 'file')
+function createAvatarUploader() {
+  const memUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: imageFileFilter,
+  }).fields([
+    { name: 'avatar', maxCount: 1 },
+    { name: 'photo', maxCount: 1 },
+    { name: 'file', maxCount: 1 },
+  ]);
+
+  return (req, res, next) => {
+    memUpload(req, res, async (err) => {
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({ success: false, message: `Upload error: ${err.message}` });
+      }
+      if (err) {
+        return res.status(400).json({ success: false, message: err.message });
+      }
+
+      const file = req.files?.avatar?.[0] || req.files?.photo?.[0] || req.files?.file?.[0] || req.file;
+      if (!file) {
+        return next();
+      }
+
+      req.file = file;
+      const folder = 'avatars';
+      const cfg = cloudinary.config();
+      const isCloudinaryReady = Boolean(
+        cfg.cloud_name && !cfg.cloud_name.startsWith('YOUR_') &&
+        cfg.api_key && !cfg.api_key.startsWith('YOUR_') &&
+        cfg.api_secret && !cfg.api_secret.startsWith('YOUR_')
+      );
+
+      if (isCloudinaryReady) {
+        try {
+          const uploadOptions = {
+            folder: `tohfa/${folder}`,
+            resource_type: 'image',
+            allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+            transformation: [
+              { width: 500, height: 500, crop: 'fill', quality: 'auto:good', fetch_format: 'auto' }
+            ],
+          };
+
+          const uploadResult = await new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(uploadOptions, (cErr, result) => {
+              if (cErr) return reject(cErr);
+              resolve(result);
+            });
+            stream.end(file.buffer);
+          });
+
+          req.file.path = optimizeCloudinaryUrl(uploadResult.secure_url);
+          req.file.secure_url = req.file.path;
+          req.file.url = req.file.path;
+          req.file.filename = uploadResult.public_id;
+          return next();
+        } catch (cErr) {
+          console.warn(`[Upload] Cloudinary upload for '${folder}' failed (${cErr.message}). Using resilient fallback.`);
+        }
+      }
+
+      // Safe resilient fallback: store as optimized data URI
+      const mime = file.mimetype || 'image/jpeg';
+      const base64Data = file.buffer.toString('base64');
+      req.file.path = `data:${mime};base64,${base64Data}`;
+      req.file.secure_url = req.file.path;
+      req.file.url = req.file.path;
+      req.file.filename = `local_${Date.now()}`;
+      next();
+    });
+  };
+}
+
+const uploadAvatar = createAvatarUploader();
+
 module.exports = {
   imageFileFilter,
   uploadProductImages,
   uploadProfilePhoto,
+  uploadAvatar,
   uploadCoverPhoto,
   uploadRefImages,
   uploadBannerImage,

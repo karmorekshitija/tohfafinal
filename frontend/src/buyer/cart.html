@@ -41,31 +41,38 @@
   </div>
 
   <!-- Desktop Navigation Links -->
-  <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+  <nav aria-label="Main Navigation" class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
     <a
       href="/buyer/home.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-lg"
     >
       <span class="material-symbols-outlined text-[20px]">home</span>
       <span>Home</span>
     </a>
     <a
       href="/buyer/categories.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-lg"
     >
       <span class="material-symbols-outlined text-[20px]">category</span>
       <span>Category</span>
     </a>
     <a
+      href="/buyer/category.html?slug=best-sellers"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-lg"
+    >
+      <span class="material-symbols-outlined text-[20px]">hotel_class</span>
+      <span>Best Sellers</span>
+    </a>
+    <a
       href="/buyer/zip-gift.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-lg"
     >
       <span class="material-symbols-outlined text-[20px]">bolt</span>
       <span>ZipGift</span>
     </a>
     <a
       href="/buyer/profile.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-lg"
     >
       <span class="material-symbols-outlined text-[20px]">person</span>
       <span>Profile</span>
@@ -78,7 +85,8 @@
     <a
       href="/buyer/search.html?focus=true"
       id="header-search-btn"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+      aria-label="Search the marketplace"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Search"
     >
       <span class="material-symbols-outlined text-[22px]">search</span>
@@ -87,7 +95,8 @@
     <!-- Wishlist Button -->
     <a
       href="/buyer/wishlist.html"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      aria-label="View Saved Makes"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Saved Makes"
     >
       <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
@@ -97,7 +106,8 @@
     <!-- Cart Button -->
     <a
       href="/buyer/cart.html"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      aria-label="View Shopping Cart"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Shopping Cart"
     >
       <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
@@ -107,7 +117,8 @@
     <!-- Notifications Button -->
     <a
       href="/buyer/notifications.html"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      aria-label="View Notifications"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Notifications"
     >
       <span class="material-symbols-outlined text-[22px]">notifications</span>
@@ -120,83 +131,119 @@
   </div>
 </header>
 
-<main class="pt-24 pb-32 max-w-2xl mx-auto px-margin-mobile md:px-0">
-<!-- Page Header -->
-<header class="flex items-center justify-between mb-lg">
-<div class="flex items-center gap-sm">
-<button onclick="window.history.back()" class="material-symbols-outlined text-on-surface hover:bg-surface-container-low p-1 rounded-full transition-colors">chevron_left</button>
-<h1 class="font-headline-lg text-headline-lg text-primary">Your basket</h1>
-</div>
-<div class="bg-[#14381F]/10 px-3 py-1 rounded-full">
-<span id="cart-badge-count" class="font-data-price text-data-price text-[#14381F]">0 ITEMS</span>
-</div>
-</header>
+<main class="pt-8 md:pt-12 pb-32 max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+  <!-- Page Header -->
+  <div class="flex items-center justify-between mb-8 pb-4 border-b border-[#1A3A32]/10">
+    <div class="flex items-center gap-3">
+      <button onclick="window.history.back()" class="p-2 rounded-full hover:bg-black/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3A32]" aria-label="Go back">
+        <span class="material-symbols-outlined text-[24px] text-[#1A3A32]">arrow_back</span>
+      </button>
+      <div>
+        <h1 class="font-headline-lg text-2xl md:text-3xl font-semibold text-[#1A3A32]" style="font-family: 'Playfair Display', serif;">Your Artisan Basket</h1>
+        <p class="text-xs text-[#1A3A32]/70 font-['DM_Sans'] mt-0.5">Handcrafted pieces curated directly from independent workshops</p>
+      </div>
+    </div>
+    <div class="bg-[#1A3A32]/10 px-3.5 py-1.5 rounded-full border border-[#1A3A32]/15">
+      <span id="cart-badge-count" class="font-data-price text-xs font-bold text-[#1A3A32]">0 ITEMS</span>
+    </div>
+  </div>
 
-<!-- Cart Items List -->
-<section id="cart-items-container" class="flex flex-col gap-md mb-xl">
-</section>
+  <!-- Guest Notification Banner (hidden by default) -->
+  <div id="guest-cart-notice" class="hidden mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-between gap-4 font-['DM_Sans'] text-xs text-amber-900">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-amber-700 text-lg">info</span>
+      <span>You are viewing your basket as a guest. Sign in to sync your items across devices.</span>
+    </div>
+    <a href="/auth/login.html" class="font-semibold text-amber-900 underline hover:text-[#C85A32] shrink-0">Sign In</a>
+  </div>
 
-<!-- Shipping Block -->
-<section class="mb-lg" id="shipping-block">
-<div class="bg-ivory-card border border-sage/30 rounded-2xl p-lg relative overflow-hidden">
-<div class="absolute top-0 right-0 w-24 h-6 wax-tape-texture -mr-4 mt-2 opacity-10"></div>
-<div class="flex justify-between items-start mb-sm">
-<h4 class="font-label-caps text-label-caps text-sage tracking-widest uppercase">SHIP TO</h4>
-<button onclick="openAddressModal()" class="text-[13px] font-medium text-tertiary hover:underline">Edit</button>
-</div>
-<div class="flex gap-md items-start">
-<span class="material-symbols-outlined text-sage">location_on</span>
-<div id="selected-address-details" class="font-body-md text-[14px] text-on-surface-variant leading-relaxed">
-    <p class="text-sage italic">Loading shipping address...</p>
-</div>
-</div>
-</div>
-</section>
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+    <!-- Left: Cart Items List (7 cols) -->
+    <div class="lg:col-span-7">
+      <section id="cart-items-container" class="flex flex-col gap-4">
+      </section>
+    </div>
 
-<!-- Order Summary -->
-<section class="mb-xl">
-<div class="bg-sage-soft rounded-2xl p-lg relative">
-<h4 class="font-label-caps text-label-caps text-primary tracking-widest mb-lg uppercase">ORDER SUMMARY</h4>
-<div class="space-y-md">
-<div class="flex justify-between items-center">
-<span class="font-body-md text-on-surface-variant">Subtotal</span>
-<span id="summary-subtotal" class="font-data-price text-on-surface">?0.00</span>
-</div>
-<div class="flex justify-between items-start">
-<div>
-<span class="font-body-md text-on-surface-variant">Shipping</span>
-<p id="summary-shipping-note" class="font-body-md text-[11px] text-sage mt-xs"></p>
-</div>
-<span id="summary-shipping" class="font-data-price text-on-surface">?0.00</span>
-</div>
-<div id="summary-shipping-discount-row" class="flex justify-between items-center hidden">
-  <span class="font-body-md text-primary text-sm">Special Shipping Discount</span>
-  <span id="summary-shipping-discount" class="font-data-price text-primary text-sm font-bold"></span>
-</div>
-<div class="h-[1px] bg-outline-variant/30 my-md"></div>
-<div class="flex justify-between items-center">
-<span class="font-title-serif text-primary">Total</span>
-<span id="summary-total" class="font-data-price text-[18px] font-bold text-[#14381F]">?0.00</span>
-</div>
-</div>
-<div class="absolute bottom-4 right-4 opacity-[0.08] pointer-events-none">
-<svg fill="none" height="60" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24" width="60">
-<path d="M12 22C12 22 12 18 15 15C18 12 22 12 22 12C22 12 18 12 15 9C12 6 12 2 12 2C12 2 12 6 9 9C6 12 2 12 2 12C2 12 6 12 9 15C12 18 12 22 12 22Z"></path>
-</svg>
-</div>
-</div>
-</section>
+    <!-- Right: Shipping & Order Summary (5 cols, sticky) -->
+    <div class="lg:col-span-5 space-y-6 lg:sticky lg:top-28">
+      <!-- Shipping Block -->
+      <section id="shipping-block">
+        <div class="bg-white/80 border border-[#1A3A32]/15 rounded-2xl p-5 shadow-xs relative overflow-hidden">
+          <div class="flex justify-between items-start mb-2">
+            <h4 class="font-label-caps text-xs text-[#1A3A32] tracking-wider uppercase font-bold">SHIP TO</h4>
+            <button onclick="openAddressModal()" class="text-xs font-semibold text-[#C85A32] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C85A32] rounded">Change Address</button>
+          </div>
+          <div class="flex gap-3 items-start">
+            <span class="material-symbols-outlined text-[#1A3A32] text-xl mt-0.5">location_on</span>
+            <div id="selected-address-details" class="font-['DM_Sans'] text-xs text-[#1A3A32]/80 leading-relaxed">
+              <p class="italic text-[#1A3A32]/60">Loading shipping address...</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
+      <!-- Order Summary -->
+      <section>
+        <div class="bg-white/90 border border-[#1A3A32]/15 rounded-2xl p-6 shadow-sm relative">
+          <h4 class="font-headline-lg text-base text-[#1A3A32] font-semibold tracking-wider mb-4 uppercase" style="font-family: 'Playfair Display', serif;">Order Summary</h4>
+          <div class="space-y-3 font-['DM_Sans'] text-sm">
+            <div class="flex justify-between items-center text-[#1A3A32]/80">
+              <span>Subtotal</span>
+              <span id="summary-subtotal" class="font-data-price font-semibold text-[#1A3A32]">₹0.00</span>
+            </div>
+            <div class="flex justify-between items-start text-[#1A3A32]/80">
+              <div>
+                <span>Artisan Shipping</span>
+                <p id="summary-shipping-note" class="text-[11px] text-[#1A3A32]/60 mt-0.5 font-normal"></p>
+                <p class="text-[10px] text-[#1A3A32]/50 mt-0.5">Flat ₹79/seller (capped at ₹250)</p>
+              </div>
+              <span id="summary-shipping" class="font-data-price font-semibold text-[#1A3A32]">₹0.00</span>
+            </div>
+            <div id="summary-shipping-discount-row" class="flex justify-between items-center hidden text-[#C85A32]">
+              <span>Special Shipping Cap Discount</span>
+              <span id="summary-shipping-discount" class="font-data-price font-bold"></span>
+            </div>
+            <div class="h-[1px] bg-[#1A3A32]/10 my-3"></div>
+            <div class="flex justify-between items-center">
+              <span class="font-title-serif font-bold text-base text-[#1A3A32]">Estimated Total</span>
+              <span id="summary-total" class="font-data-price text-xl font-bold text-[#1A3A32]">₹0.00</span>
+            </div>
+          </div>
+
+          <!-- Desktop Conversion CTA -->
+          <div class="mt-6 pt-4 border-t border-[#1A3A32]/10 space-y-3">
+            <button id="btn-place-order" onclick="placeOrder()" class="w-full bg-[#1A3A32] text-white hover:bg-opacity-90 py-4 rounded-full font-semibold transition-all shadow-md flex items-center justify-center gap-2 font-['DM_Sans'] text-base tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3A32] active:scale-[0.98]">
+              <span>Place Order &amp; Pay</span>
+              <span id="btn-total" class="font-data-price text-sm border-l border-white/30 pl-2.5 ml-1">₹0.00</span>
+            </button>
+
+            <!-- Trust badges below button -->
+            <div class="p-3 bg-[#1A3A32]/5 rounded-xl border border-[#1A3A32]/10 text-xs text-[#1A3A32]/80 space-y-1">
+              <div class="flex items-center gap-1.5 font-semibold text-[#1A3A32]">
+                <span class="material-symbols-outlined text-base">lock</span>
+                <span>256-Bit SSL Encrypted Checkout</span>
+              </div>
+              <p class="text-[11px] leading-tight">Free return shipping covered &bull; Direct artisan bank payout</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
 </main>
 
-<!-- Sticky Bottom Bar -->
-<div class="fixed bottom-0 left-0 w-full bg-[#FFF8E7] border-t border-sage/20 z-40 px-margin-mobile py-md">
-<div class="max-w-2xl mx-auto">
-<button id="btn-place-order" onclick="placeOrder()" class="w-full h-[52px] bg-primary text-white font-body-md font-bold rounded-lg hover:bg-primary/90 active:scale-[0.98] transition-all flex items-center justify-center gap-md shadow-lg shadow-primary/10">
-<span>Place Order & Pay</span>
-<span id="btn-total" class="font-data-price text-sm border-l border-solid border-white/40 pl-3 ml-3">?0.00</span>
-</button>
-</div>
+<!-- Sticky Bottom Bar on Mobile (hidden on desktop) -->
+<div class="md:hidden fixed bottom-0 left-0 w-full bg-[#FFF8E7]/95 backdrop-blur-md border-t border-[#1A3A32]/20 z-40 px-4 py-3 shadow-lg">
+  <div class="flex items-center justify-between gap-3">
+    <div>
+      <p class="text-[10px] uppercase font-bold text-[#1A3A32]/60">Total</p>
+      <span id="mobile-bottom-total" class="font-data-price font-bold text-lg text-[#1A3A32]">₹0.00</span>
+    </div>
+    <button onclick="placeOrder()" class="flex-1 bg-[#1A3A32] text-white hover:bg-opacity-90 py-3 px-6 rounded-full font-semibold transition-all shadow-md flex items-center justify-center gap-2 font-['DM_Sans'] text-sm tracking-wide active:scale-[0.98]">
+      <span>Place Order</span>
+      <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+    </button>
+  </div>
 </div>
 
 <!-- Address Modal -->
@@ -296,8 +343,8 @@
                 for (const item of guestItems) {
                     try {
                         await apiClient.post('/cart/items', {
-                            product_id: Number(item.product_id || item.productId),
-                            variant_id: item.variant_id || item.variantId || null,
+                            product_id: String(item.product_id || item.productId).trim(),
+                            variant_id: item.variant_id || item.variantId ? String(item.variant_id || item.variantId).trim() : null,
                             quantity: Number(item.quantity) || 1,
                             customization_data: item.customization_data || item.customizationData || null
                         });
@@ -315,13 +362,67 @@
     }
 
     async function initCart() {
-        if (!requireAuth()) {
+        const token = sessionStorage.getItem('tohfa_access_token');
+        if (!token) {
+            await loadGuestCart();
             return;
         }
 
         await mergeGuestCart();
         await fetchCart();
         await fetchAddresses();
+    }
+
+    async function loadGuestCart() {
+        const guestNotice = document.getElementById('guest-cart-notice');
+        if (guestNotice) guestNotice.classList.remove('hidden');
+
+        const guestCartRaw = sessionStorage.getItem('tohfa_guest_cart') || localStorage.getItem('tohfa_guest_cart');
+        let guestItems = [];
+        if (guestCartRaw) {
+            try {
+                guestItems = JSON.parse(guestCartRaw) || [];
+            } catch (e) {
+                guestItems = [];
+            }
+        }
+
+        if (!Array.isArray(guestItems) || guestItems.length === 0) {
+            window.location.href = 'cart-empty.html';
+            return;
+        }
+
+        cartItems = guestItems.map((item, idx) => ({
+            id: item.id || `guest-${idx}`,
+            product_id: item.product_id || item.productId,
+            name: item.name || item.product_name || 'Handcrafted Artisan Item',
+            seller_name: item.seller_name || 'Artisan Workshop',
+            seller_id: item.seller_id || 1,
+            price_paise: item.price_paise || (item.price ? Math.round(item.price * 100) : 0),
+            quantity: Number(item.quantity) || 1,
+            image_url: item.image_url || item.primary_image || '/img/categories/artisan_showcase.jpg',
+            available: true,
+            variant_name: item.variant_name || null,
+            customization_data: item.customization_data || item.customizationData || null
+        }));
+
+        const navBadge = document.getElementById('nav-cart-badge');
+        if (navBadge) {
+            navBadge.innerText = cartItems.length;
+            navBadge.classList.remove('hidden');
+        }
+
+        renderCartItems(cartItems);
+        document.getElementById('cart-badge-count').innerText = `${cartItems.length} ${cartItems.length === 1 ? 'ITEM' : 'ITEMS'}`;
+        renderShippingSummary(cartItems);
+
+        const displayContainer = document.getElementById('selected-address-details');
+        if (displayContainer) {
+            displayContainer.innerHTML = `
+                <p class="font-semibold text-[#1A3A32]">Guest Checkout</p>
+                <p class="text-xs text-[#1A3A32]/70 mt-1">Shipping address will be collected during checkout.</p>
+            `;
+        }
     }
 
     async function fetchCart() {
@@ -390,7 +491,7 @@
                 <p class="text-sm text-amber-800">Some items in your basket are <strong>unavailable</strong> and have been excluded from the total. Remove them or come back later.</p>
             </div>
         ` : '') + items.map(ci => {
-            const imgUrl = ci.image_url ? ci.image_url : 'https://placehold.co/120x120/f4ede3/516447?text=Handcrafted';
+            const imgUrl = ci.image_url ? ci.image_url : '/img/categories/artisan_showcase.jpg';
             const isUnavailable = !ci.available;
 
             // Unavailability reason label
@@ -399,54 +500,55 @@
                 const resumeStr = ci.resume_estimate_date
                     ? ` Expected back: ${new Date(ci.resume_estimate_date).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}`
                     : '';
-                unavailLabel = `<div class="flex items-center gap-xs px-2 py-1 bg-purple-50 border border-purple-200 rounded-lg mt-1">
-                    <span class="text-[12px] font-body-md text-purple-700">?? Temporarily paused by artisan.${resumeStr}</span>
+                unavailLabel = `<div class="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-xl mt-2 text-xs font-['DM_Sans'] text-purple-800">
+                    <span class="material-symbols-outlined text-sm text-purple-700">hourglass_top</span>
+                    <span>Temporarily paused by artisan.${resumeStr}</span>
                 </div>`;
             } else if (ci.unavailable_reason === 'out_of_stock') {
-                unavailLabel = `<div class="flex items-center gap-xs px-2 py-1 bg-error-container/20 rounded-lg mt-1">
-                    <span class="material-symbols-outlined text-terracotta text-sm" style="font-variation-settings: 'FILL' 1;">error</span>
-                    <span class="text-[12px] font-body-md text-terracotta">Out of stock � remove from basket</span>
+                unavailLabel = `<div class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 border border-red-200 rounded-xl mt-2 text-xs font-['DM_Sans'] text-red-800">
+                    <span class="material-symbols-outlined text-sm text-red-600" style="font-variation-settings: 'FILL' 1;">error</span>
+                    <span>Out of stock — remove from basket</span>
                 </div>`;
             }
 
             const warningHtml = (!isUnavailable && ci.quantity_warning)
-                ? `<div class="flex items-center gap-xs px-2 py-1 bg-error-container/20 rounded-lg">
-                    <span class="material-symbols-outlined text-terracotta text-sm" style="font-variation-settings: 'FILL' 1;">error</span>
-                    <span class="text-[12px] font-body-md text-terracotta">Only ${ci.stock_qty} left � adjust quantity</span>
+                ? `<div class="flex items-center gap-1.5 px-3 py-1 bg-amber-50 border border-amber-200 rounded-xl mt-1 text-xs text-amber-900 font-['DM_Sans']">
+                    <span class="material-symbols-outlined text-sm text-amber-700" style="font-variation-settings: 'FILL' 1;">warning</span>
+                    <span>Only ${ci.stock_qty} left — please adjust quantity</span>
                    </div>`
                 : '';
 
             const qtyControls = isUnavailable
                 ? `<div class="flex items-center bg-gray-100 border border-gray-200 rounded-full px-2 py-0.5 opacity-40 pointer-events-none">
-                    <button class="w-6 h-6 flex items-center justify-center text-gray-400 font-bold" disabled>-</button>
+                    <button class="w-8 h-8 flex items-center justify-center text-gray-400 font-bold" disabled>-</button>
                     <span class="px-2 font-data-price text-xs font-semibold text-gray-400">${ci.quantity}</span>
-                    <button class="w-6 h-6 flex items-center justify-center text-gray-400 font-bold" disabled>+</button>
+                    <button class="w-8 h-8 flex items-center justify-center text-gray-400 font-bold" disabled>+</button>
                    </div>`
-                : `<div class="flex items-center bg-ivory-card border border-sage/40 rounded-full px-2 py-0.5">
-                    <button onclick="updateQty('${ci.id}', ${ci.quantity - 1})" class="w-6 h-6 flex items-center justify-center text-sage hover:text-primary font-bold transition-colors">-</button>
-                    <span class="px-2 font-data-price text-xs font-semibold">${ci.quantity}</span>
-                    <button onclick="updateQty('${ci.id}', ${ci.quantity + 1})" class="w-6 h-6 flex items-center justify-center text-sage hover:text-primary font-bold transition-colors">+</button>
+                : `<div class="flex items-center bg-white border border-[#1A3A32]/25 rounded-full p-0.5 shadow-xs">
+                    <button onclick="updateQty('${ci.id}', ${ci.quantity - 1})" aria-label="Decrease quantity" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-[#1A3A32] hover:bg-[#1A3A32]/10 active:scale-95 font-bold transition-all text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3A32]">-</button>
+                    <span class="px-3 font-data-price text-sm font-bold text-[#1A3A32] select-none min-w-[28px] text-center">${ci.quantity}</span>
+                    <button onclick="updateQty('${ci.id}', ${ci.quantity + 1})" aria-label="Increase quantity" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-[#1A3A32] hover:bg-[#1A3A32]/10 active:scale-95 font-bold transition-all text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3A32]">+</button>
                    </div>`;
 
             const priceDisplay = isUnavailable
-                ? `<span class="font-data-price text-gray-400 font-semibold line-through">${formatPaise(ci.price_paise * ci.quantity)}</span>`
-                : `<span class="font-data-price text-on-surface font-semibold">${formatPaise(ci.price_paise * ci.quantity)}</span>`;
+                ? `<span class="font-data-price text-gray-400 font-semibold line-through text-sm sm:text-base">${formatPaise(ci.price_paise * ci.quantity)}</span>`
+                : `<span class="font-data-price text-[#1A3A32] font-bold text-sm sm:text-base">${formatPaise(ci.price_paise * ci.quantity)}</span>`;
 
             const opacityClass = isUnavailable ? 'opacity-50' : '';
-            const borderClass = isUnavailable ? 'border-gray-200 bg-gray-50' : 'border-sage/30 bg-ivory-card';
+            const borderClass = isUnavailable ? 'border-gray-200 bg-gray-50' : 'border-[#1A3A32]/15 bg-white/80';
 
             const innerContent = `
-                <img class="w-[60px] h-[60px] rounded-[10px] object-cover flex-shrink-0 cursor-pointer ${opacityClass}" 
+                <img class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl object-cover flex-shrink-0 cursor-pointer border border-[#1A3A32]/10 shadow-xs ${opacityClass}" 
                      onclick="window.location.href='product.html?id=${ci.product_id}'" 
                      src="${imgUrl}" 
                      alt="${ci.name}" loading="lazy">
-                <div class="flex-grow ${opacityClass}">
-                    <h3 class="font-title-serif text-[14px] leading-tight text-on-surface hover:text-primary cursor-pointer font-semibold"
+                <div class="flex-grow min-w-0 ${opacityClass}">
+                    <h3 class="font-headline-lg text-base sm:text-lg leading-tight text-[#1A3A32] hover:text-[#C85A32] cursor-pointer font-semibold" style="font-family: 'Playfair Display', serif;"
                         onclick="window.location.href='product.html?id=${ci.product_id}'">
                         ${ci.name}
                     </h3>
-                    <p class="text-xs text-on-surface-variant mt-xs hover:underline cursor-pointer" onclick="window.location.href='/buyer/seller-profile.html?id=${ci.seller_id}'">${ci.seller_name}</p>
-                    ${ci.variant_name ? `<span class="inline-block mt-xs px-2 py-[2px] text-[11px] font-semibold rounded-full bg-primary/10 text-primary border border-primary/20">${ci.variant_name}</span>` : ''}
+                    <p class="text-xs text-[#1A3A32]/70 mt-0.5 hover:underline cursor-pointer font-['DM_Sans']" onclick="window.location.href='/buyer/seller-profile.html?id=${ci.seller_id}'">by ${ci.seller_name}</p>
+                    ${ci.variant_name ? `<span class="inline-block mt-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-[#1A3A32]/10 text-[#1A3A32] border border-[#1A3A32]/15 font-['DM_Sans']">${ci.variant_name}</span>` : ''}
                     ${(() => {
                         if (!ci.customization_data) return '';
                         let cData = ci.customization_data;
@@ -457,30 +559,32 @@
                         const summary = cData.summary_text || (cData.selected_options ? Object.entries(cData.selected_options).map(([k, v]) => `${k}: ${v}`).join(', ') : (cData.text || cData.inscription || 'Personalized'));
                         const craftingTime = cData.crafting_time || (ci.preparation_days ? `${ci.preparation_days} days` : '5-7 days');
                         return `
-                            <div class="mt-1 flex items-start gap-1 text-[11px] text-[#14381F] bg-[#14381F]/5 border border-[#14381F]/15 rounded-lg px-2 py-1">
-                                <span class="material-symbols-outlined text-xs text-[#14381F] shrink-0 mt-0.5">auto_fix_high</span>
+                            <div class="mt-1.5 flex items-start gap-1 text-[11px] text-[#1A3A32] bg-[#1A3A32]/5 border border-[#1A3A32]/15 rounded-lg px-2.5 py-1">
+                                <span class="material-symbols-outlined text-xs text-[#1A3A32] shrink-0 mt-0.5">auto_fix_high</span>
                                 <span class="font-medium truncate max-w-[240px]">${summary}</span>
                             </div>
-                            <div class="mt-1 flex items-center gap-1 text-[10px] text-amber-900 bg-amber-50/90 border border-amber-200/80 rounded-lg px-2 py-0.5 w-fit">
+                            <div class="mt-1 flex items-center gap-1 text-[10px] text-amber-900 bg-amber-50/90 border border-amber-200/80 rounded-lg px-2 py-0.5 w-fit font-['DM_Sans']">
                                 <span class="material-symbols-outlined text-[13px] text-amber-800 shrink-0">schedule</span>
                                 <span>Est. preparation: <strong>${craftingTime}</strong></span>
                             </div>
                         `;
                     })()}
-                    <p class="font-data-price text-[13px] ${isUnavailable ? 'text-gray-400' : 'text-[#14381F]'} mt-xs font-semibold">${formatPaise(ci.price_paise)}</p>
+                    <p class="font-data-price text-xs ${isUnavailable ? 'text-gray-400' : 'text-[#1A3A32]/75'} mt-1">${formatPaise(ci.price_paise)} each</p>
                 </div>
-                <div class="flex flex-col items-end gap-sm">
+                <div class="flex flex-col items-end justify-between gap-3 shrink-0">
+                    <button onclick="removeItem('${ci.id}')" aria-label="Remove ${ci.name} from basket" class="p-2 rounded-full text-[#1A3A32]/50 hover:text-red-600 hover:bg-red-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500" title="Remove item">
+                        <span class="material-symbols-outlined text-lg">delete</span>
+                    </button>
                     ${qtyControls}
-                    <div class="flex items-center gap-sm">
+                    <div class="pt-1">
                         ${priceDisplay}
-                        <button onclick="removeItem('${ci.id}')" class="material-symbols-outlined text-sm text-outline hover:text-error transition-colors">close</button>
                     </div>
                 </div>
             `;
 
             return `
-                <div class="${borderClass} border rounded-2xl p-md flex flex-col gap-sm relative group" data-cart-item-id="${ci.id}">
-                    <div class="flex items-center gap-md">
+                <div class="${borderClass} border rounded-2xl p-4 sm:p-5 flex flex-col gap-2 relative group shadow-xs transition-shadow hover:shadow-sm" data-cart-item-id="${ci.id}">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         ${innerContent}
                     </div>
                     ${unavailLabel}
@@ -539,6 +643,9 @@
 
         const btnTotal = document.getElementById('btn-total');
         if (btnTotal) btnTotal.innerText = formatPaise(totalPaise);
+
+        const mobileBottomTotal = document.getElementById('mobile-bottom-total');
+        if (mobileBottomTotal) mobileBottomTotal.innerText = formatPaise(totalPaise);
     }
 
     async function updateQty(id, newQty) {
@@ -546,6 +653,23 @@
             await removeItem(id);
             return;
         }
+
+        const token = sessionStorage.getItem('tohfa_access_token');
+        if (!token) {
+            const guestCartRaw = sessionStorage.getItem('tohfa_guest_cart') || localStorage.getItem('tohfa_guest_cart');
+            if (guestCartRaw) {
+                try {
+                    let items = JSON.parse(guestCartRaw) || [];
+                    const it = items.find((x, i) => (x.id === id || `guest-${i}` === id));
+                    if (it) it.quantity = newQty;
+                    sessionStorage.setItem('tohfa_guest_cart', JSON.stringify(items));
+                    localStorage.setItem('tohfa_guest_cart', JSON.stringify(items));
+                    await loadGuestCart();
+                } catch(e){}
+            }
+            return;
+        }
+
         try {
             const res = await apiClient.patch(`/cart/items/${id}`, { quantity: newQty });
             if (res.data && res.data.success) {
@@ -562,6 +686,21 @@
     }
 
     async function removeItem(id) {
+        const token = sessionStorage.getItem('tohfa_access_token');
+        if (!token) {
+            const guestCartRaw = sessionStorage.getItem('tohfa_guest_cart') || localStorage.getItem('tohfa_guest_cart');
+            if (guestCartRaw) {
+                try {
+                    let items = JSON.parse(guestCartRaw) || [];
+                    items = items.filter((x, i) => (x.id !== id && `guest-${i}` !== id));
+                    sessionStorage.setItem('tohfa_guest_cart', JSON.stringify(items));
+                    localStorage.setItem('tohfa_guest_cart', JSON.stringify(items));
+                    await loadGuestCart();
+                } catch(e){}
+            }
+            return;
+        }
+
         try {
             const res = await apiClient.delete(`/cart/items/${id}`);
             if (res.data && res.data.success) {
@@ -778,9 +917,15 @@
 
     // Place Order & Pay
     async function placeOrder() {
-        if (!requireAuth({ type: 'checkout' })) return;
+        const token = sessionStorage.getItem('tohfa_access_token');
+        if (!token) {
+            window.location.href = '/buyer/checkout.html?mode=guest';
+            return;
+        }
+
         if (!selectedAddressId) {
             alert("Please select or add a shipping address.");
+            openAddressModal();
             return;
         }
 

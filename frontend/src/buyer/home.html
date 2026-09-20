@@ -190,31 +190,39 @@
   </div>
 
   <!-- Desktop Navigation Links -->
-  <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+  <nav aria-label="Main Navigation" class="hidden md:flex items-center justify-center gap-5 lg:gap-7 h-full">
     <a
       href="/buyer/home.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE] border-b-2 border-[#FAF6EE] no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE] border-b-2 border-[#FAF6EE] no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328] rounded"
     >
       <span class="material-symbols-outlined text-[20px]">home</span>
       <span>Home</span>
     </a>
     <a
       href="/buyer/categories.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328] rounded"
     >
       <span class="material-symbols-outlined text-[20px]">category</span>
       <span>Category</span>
     </a>
     <a
+      href="/buyer/category.html?slug=best-sellers"
+      id="nav-link-bestsellers"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328] rounded"
+    >
+      <span class="material-symbols-outlined text-[20px] text-[#E29578]">local_fire_department</span>
+      <span>Best Sellers</span>
+    </a>
+    <a
       href="/buyer/zip-gift.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328] rounded"
     >
       <span class="material-symbols-outlined text-[20px]">bolt</span>
       <span>ZipGift</span>
     </a>
     <a
       href="/buyer/profile.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328] rounded"
     >
       <span class="material-symbols-outlined text-[20px]">person</span>
       <span>Profile</span>
@@ -227,39 +235,43 @@
     <a
       href="/buyer/search.html?focus=true"
       id="header-search-btn"
-      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+      aria-label="Search the marketplace"
+      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328]"
       title="Search"
     >
-      <span class="material-symbols-outlined text-[20px] sm:text-[22px]">search</span>
+      <span class="material-symbols-outlined text-[20px] sm:text-[22px]" aria-hidden="true">search</span>
     </a>
 
     <!-- Wishlist Button -->
     <a
       href="/buyer/wishlist.html"
-      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      aria-label="View saved wishlist items"
+      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328]"
       title="Saved Makes"
     >
-      <span class="material-symbols-outlined text-[20px] sm:text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+      <span class="material-symbols-outlined text-[20px] sm:text-[22px]" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">favorite</span>
       <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#14381F] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
     </a>
 
     <!-- Cart Button -->
     <a
       href="/buyer/cart.html"
-      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      aria-label="View shopping basket"
+      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328]"
       title="Shopping Cart"
     >
-      <span class="material-symbols-outlined text-[20px] sm:text-[22px]">shopping_bag</span>
+      <span class="material-symbols-outlined text-[20px] sm:text-[22px]" aria-hidden="true">shopping_bag</span>
       <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#14381F] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
     </a>
 
     <!-- Notifications Button -->
     <a
       href="/buyer/notifications.html"
-      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      aria-label="View notifications"
+      class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328]"
       title="Notifications"
     >
-      <span class="material-symbols-outlined text-[20px] sm:text-[22px]">notifications</span>
+      <span class="material-symbols-outlined text-[20px] sm:text-[22px]" aria-hidden="true">notifications</span>
       <span id="nav-notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
       <span id="nav-notif-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
     </a>
@@ -295,8 +307,39 @@
     </div>
   </section>
 
+  <!-- PROMINENT FRONT-DOOR SEARCH BAR (Guideline #241, #338, #340) -->
+  <section class="relative -mt-6 sm:-mt-8 z-30 px-4 md:px-6 lg:px-8 max-w-3xl mx-auto">
+    <form
+      action="/buyer/search.html"
+      method="GET"
+      class="bg-white rounded-full shadow-lg border-2 border-[#1A3A32]/40 hover:border-[#1A3A32] focus-within:border-[#1A3A32] focus-within:ring-2 focus-within:ring-[#1A3A32]/20 transition-all p-1.5 sm:p-2 flex items-center gap-2"
+    >
+      <input type="hidden" name="mode" value="results" />
+      <div class="flex items-center pl-3 text-[#1A3A32]/70">
+        <span class="material-symbols-outlined text-[22px] sm:text-[24px]" aria-hidden="true">search</span>
+      </div>
+      <label for="homepage-hero-search-input" class="sr-only">Search the handcrafted marketplace</label>
+      <input
+        type="search"
+        id="homepage-hero-search-input"
+        name="q"
+        placeholder="Search for an occasion like 'Anniversary' or a material like 'Teak'"
+        class="flex-grow bg-transparent text-[#1C1C1A] text-xs sm:text-sm font-['DM_Sans'] placeholder-[#7a7a6e] px-2 py-1.5 focus:outline-none"
+        autocomplete="off"
+      />
+      <button
+        type="submit"
+        aria-label="Search the marketplace"
+        class="bg-[#C85A32] hover:bg-[#b04b27] text-white px-5 sm:px-7 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-semibold tracking-wide transition-all active:scale-95 flex items-center gap-1.5 shadow-sm flex-shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C85A32] focus-visible:ring-offset-2"
+      >
+        <span>Search</span>
+        <span class="material-symbols-outlined text-[16px] hidden sm:inline" aria-hidden="true">arrow_forward</span>
+      </button>
+    </form>
+  </section>
+
   <!-- 2. OCCASION-BASED QUICK LINKS (Round & Horizontally Scrollable) -->
-  <section class="mt-5 md:mt-8 px-3 sm:px-6 md:px-8 lg:px-12 max-w-[1440px] mx-auto">
+  <section class="mt-6 md:mt-10 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
     <div class="flex items-end justify-between mb-3 sm:mb-5">
       <div>
         <h3
@@ -310,23 +353,23 @@
         </p>
       </div>
 
-      <!-- Left / Right scroll navigation arrows -->
+      <!-- Left / Right scroll navigation arrows (Min 44x44px per Guideline #957) -->
       <div class="hidden sm:flex items-center gap-2">
         <button
           type="button"
           id="occasions-scroll-left"
-          class="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-[#14381F]/20 bg-white/80 hover:bg-[#14381F] text-[#14381F] hover:text-[#FAF6EE] flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer"
+          class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-[#14381F]/20 bg-white/80 hover:bg-[#14381F] text-[#14381F] hover:text-[#FAF6EE] flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3A32]"
           aria-label="Scroll occasions left"
         >
-          <span class="material-symbols-outlined text-[18px] sm:text-[20px]">chevron_left</span>
+          <span class="material-symbols-outlined text-[20px]">chevron_left</span>
         </button>
         <button
           type="button"
           id="occasions-scroll-right"
-          class="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-[#14381F]/20 bg-white/80 hover:bg-[#14381F] text-[#14381F] hover:text-[#FAF6EE] flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer"
+          class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-[#14381F]/20 bg-white/80 hover:bg-[#14381F] text-[#14381F] hover:text-[#FAF6EE] flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3A32]"
           aria-label="Scroll occasions right"
         >
-          <span class="material-symbols-outlined text-[18px] sm:text-[20px]">chevron_right</span>
+          <span class="material-symbols-outlined text-[20px]">chevron_right</span>
         </button>
       </div>
     </div>
@@ -584,19 +627,69 @@
 
 
   <!-- Seasonal Banner Section (Optional from Admin UI Settings) -->
-  <section id="seasonal-banner-container" class="px-4 md:px-8 lg:px-12 max-w-[1440px] mx-auto mt-8 hidden">
+  <section id="seasonal-banner-container" class="px-4 md:px-6 lg:px-8 max-w-7xl mx-auto mt-8 hidden">
     <div class="relative rounded-2xl overflow-hidden shadow-md border border-[#14381F]/20 bg-[#FAF6EE] flex flex-col md:flex-row items-center">
       <img id="seasonal-banner-image" class="w-full md:w-2/3 h-[200px] md:h-[280px] object-cover" src="" alt="Seasonal Banner">
       <div class="p-6 md:p-8 flex flex-col justify-center items-start w-full md:w-1/3">
         <span class="text-xs font-mono font-bold uppercase tracking-wider text-[#14381F] bg-[#14381F]/10 px-3 py-1 rounded-full mb-3">Seasonal Highlight</span>
         <h3 id="seasonal-banner-label" class="font-['Playfair_Display'] text-2xl md:text-3xl font-bold text-[#14381F] mb-4"></h3>
-        <button onclick="document.getElementById('for-you-section')?.scrollIntoView({ behavior: 'smooth' })" class="bg-[#14381F] text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-all">Explore Collection</button>
+        <button onclick="document.getElementById('for-you-section')?.scrollIntoView({ behavior: 'smooth' })" class="bg-[#14381F] text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-all cursor-pointer">Explore Collection</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. BEST SELLERS SHOWCASE SECTION (Guideline #1666) -->
+  <section id="bestsellers-section" class="mt-8 md:mt-12 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
+    <div class="flex justify-between items-end mb-3 sm:mb-5">
+      <div>
+        <h3
+          class="font-semibold flex items-center gap-1.5 sm:gap-2 text-[#14381F]"
+          style="font-family: 'Playfair Display', serif; font-size: clamp(17px, 2.5vw, 24px);"
+        >
+          <span class="material-symbols-outlined text-[20px] text-[#C85A32]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+          <span>Best Sellers</span>
+        </h3>
+        <p class="text-xs sm:text-sm mt-0.5 text-[#7a7a6e]" style="font-family: 'DM Sans', sans-serif;">
+          The most cherished handcrafted creations from across India
+        </p>
+      </div>
+      <a
+        href="/buyer/category.html?slug=best-sellers"
+        class="text-xs sm:text-sm font-semibold text-[#14381F] hover:text-[#C85A32] transition-colors flex items-center gap-1 no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3A32] rounded"
+      >
+        <span>View All</span>
+        <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+      </a>
+    </div>
+
+    <!-- Best Sellers Carousel / Grid -->
+    <div id="bestsellers-product-grid" class="flex gap-2.5 sm:gap-4 lg:gap-5 overflow-x-auto no-scrollbar pb-2 relative snap-x snap-mandatory">
+      <div class="w-[230px] sm:w-[260px] shrink-0 rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-2.5 sm:p-3 md:p-4 flex flex-col justify-between min-h-[260px] sm:min-h-[300px]">
+        <div class="aspect-square rounded-lg shimmer mb-2 sm:mb-3 w-full"></div>
+        <div class="h-3.5 w-1/3 shimmer mb-1.5 rounded"></div>
+        <div class="h-4 w-3/4 shimmer mb-1 rounded"></div>
+        <div class="h-3.5 w-1/2 shimmer mb-2 rounded"></div>
+        <div class="h-7 sm:h-8 w-full shimmer rounded-lg"></div>
+      </div>
+      <div class="w-[230px] sm:w-[260px] shrink-0 rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-2.5 sm:p-3 md:p-4 flex flex-col justify-between min-h-[260px] sm:min-h-[300px]">
+        <div class="aspect-square rounded-lg shimmer mb-2 sm:mb-3 w-full"></div>
+        <div class="h-3.5 w-1/3 shimmer mb-1.5 rounded"></div>
+        <div class="h-4 w-3/4 shimmer mb-1 rounded"></div>
+        <div class="h-3.5 w-1/2 shimmer mb-2 rounded"></div>
+        <div class="h-7 sm:h-8 w-full shimmer rounded-lg"></div>
+      </div>
+      <div class="w-[230px] sm:w-[260px] shrink-0 rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-2.5 sm:p-3 md:p-4 flex flex-col justify-between min-h-[260px] sm:min-h-[300px]">
+        <div class="aspect-square rounded-lg shimmer mb-2 sm:mb-3 w-full"></div>
+        <div class="h-3.5 w-1/3 shimmer mb-1.5 rounded"></div>
+        <div class="h-4 w-3/4 shimmer mb-1 rounded"></div>
+        <div class="h-3.5 w-1/2 shimmer mb-2 rounded"></div>
+        <div class="h-7 sm:h-8 w-full shimmer rounded-lg"></div>
       </div>
     </div>
   </section>
 
   <!-- 7. SPONSORED SECTION -->
-  <section id="sponsored-section" class="mt-8 md:mt-12 px-3 sm:px-6 md:px-8 lg:px-12 max-w-[1440px] mx-auto">
+  <section id="sponsored-section" class="mt-8 md:mt-12 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
     <div
       class="rounded-2xl border p-3.5 sm:p-5 md:p-6"
       style="background-color: #FAF6EE; border-color: rgba(20,56,31,0.15);"
@@ -650,10 +743,8 @@
     </div>
   </section>
 
-
-
-  <!-- 7. FOR YOU SECTION -->
-  <section id="for-you-section" class="mt-8 md:mt-12 px-3 sm:px-6 md:px-8 lg:px-12 max-w-[1440px] mx-auto">
+  <!-- 8. FOR YOU SECTION -->
+  <section id="for-you-section" class="mt-8 md:mt-12 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
     <div class="flex justify-between items-end mb-3 sm:mb-5">
       <div>
         <h3
@@ -706,8 +797,8 @@
     </div>
   </section>
 
-  <!-- 8. CATEGORY ROWS SECTION -->
-  <section class="mt-8 md:mt-12 px-3 sm:px-6 md:px-8 lg:px-12 max-w-[1440px] mx-auto">
+  <!-- 9. CATEGORY ROWS SECTION -->
+  <section class="mt-8 md:mt-12 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
     <div id="category-rows-container" class="flex flex-col gap-8 md:gap-12">
       <!-- Dynamic category strips will load here -->
     </div>
@@ -738,7 +829,7 @@
   function isProductOwned(sellerId) {
     try {
       const user = JSON.parse(sessionStorage.getItem('tohfa_user'));
-      return user && Number(user.id) === Number(sellerId);
+      return user && String(user.id) === String(sellerId);
     } catch (e) {
       return false;
     }
@@ -797,7 +888,7 @@
 
     try {
       const res = await apiClient.post('/requests', {
-        listing_id: Number(productId),
+        listing_id: String(productId).trim(),
         request_type: 'customization',
         quantity: 1
       });
@@ -809,7 +900,6 @@
       }
     } catch (err) {
       console.error("Failed to start customization request:", err);
-      window.Toast?.show("Failed to start chat. Please try again.", "error");
       btn.disabled = false;
       btn.innerText = originalText;
     }
@@ -825,7 +915,7 @@
     }
 
     try {
-      const res = await apiClient.post('/cart/items', { product_id: Number(productId), quantity: 1 });
+      const res = await apiClient.post('/cart/items', { product_id: String(productId).trim(), quantity: 1 });
       if (res.data && res.data.success) {
         window.Toast?.show("Added to cart successfully!", "success");
         await updateCartBadge();
@@ -1384,6 +1474,41 @@
     }
   }
 
+  // --- Best Sellers Carousel (Guideline #1666) ---
+  async function loadBestSellers() {
+    const bestsellersGrid = document.getElementById('bestsellers-product-grid');
+    if (!bestsellersGrid) return;
+
+    try {
+      let products = [];
+      try {
+        const response = await apiClient.get('/products?limit=12&sort=most_popular');
+        products = response.data?.data?.products || response.data?.products || [];
+      } catch (err) {
+        console.warn('Best sellers endpoint error, falling back to feed:', err);
+      }
+
+      if (!products || products.length === 0) {
+        const fallbackRes = await apiClient.get('/products/feed?page=1&limit=12');
+        products = fallbackRes.data?.data?.products || fallbackRes.data?.products || [];
+      }
+
+      bestsellersGrid.innerHTML = '';
+      if (products.length > 0) {
+        products.forEach(product => {
+          const card = createProductCard(
+            { ...product, is_bestseller: true },
+            'w-[230px] sm:w-[260px] shrink-0 snap-start'
+          );
+          bestsellersGrid.appendChild(card);
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load best sellers:', error);
+      bestsellersGrid.innerHTML = '';
+    }
+  }
+
   function initOccasionsScroller() {
     const container = document.getElementById('occasions-scroll-container');
     const leftBtn = document.getElementById('occasions-scroll-left');
@@ -1401,6 +1526,20 @@
         container.scrollBy({ left: 260, behavior: 'smooth' });
       });
     }
+
+    // Touch swipe gesture support for mobile (Guideline #957)
+    let touchStartX = 0;
+    let touchScrollLeft = 0;
+    container.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].pageX;
+      touchScrollLeft = container.scrollLeft;
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e) => {
+      const touchX = e.touches[0].pageX;
+      const walk = (touchX - touchStartX) * 1.2;
+      container.scrollLeft = touchScrollLeft - walk;
+    }, { passive: true });
 
     // Drag to scroll for desktop mouse users
     let isDown = false;
@@ -1435,6 +1574,7 @@
 
   // --- Initial Invocations ---
   loadSeasonalBanner();
+  loadBestSellers();
   loadSponsoredProducts();
   loadForYouProducts();
   loadCategoryRows();

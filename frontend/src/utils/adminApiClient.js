@@ -23,10 +23,8 @@ adminApiClient.interceptors.request.use((config) => {
   }
   const token = sessionStorage.getItem('tohfa_admin_token') ||
                 localStorage.getItem('tohfa_admin_token') ||
-                sessionStorage.getItem('tohfa_access_token') ||
-                localStorage.getItem('tohfa_access_token') ||
-                sessionStorage.getItem('auth_token') ||
-                localStorage.getItem('auth_token');
+                sessionStorage.getItem('tohfa_admin_access_token') ||
+                localStorage.getItem('tohfa_admin_access_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -94,9 +92,7 @@ adminApiClient.interceptors.response.use(
       isRefreshing = true;
 
       const refreshToken = sessionStorage.getItem('tohfa_admin_refresh_token') ||
-                           localStorage.getItem('tohfa_admin_refresh_token') ||
-                           sessionStorage.getItem('tohfa_refresh_token') ||
-                           localStorage.getItem('tohfa_refresh_token');
+                           localStorage.getItem('tohfa_admin_refresh_token');
       if (refreshToken) {
         try {
           let res;
@@ -119,14 +115,12 @@ adminApiClient.interceptors.response.use(
             if (newAccess) {
               sessionStorage.setItem('tohfa_admin_token', newAccess);
               localStorage.setItem('tohfa_admin_token', newAccess);
-              sessionStorage.setItem('tohfa_access_token', newAccess);
-              localStorage.setItem('tohfa_access_token', newAccess);
+              sessionStorage.setItem('tohfa_admin_access_token', newAccess);
+              localStorage.setItem('tohfa_admin_access_token', newAccess);
             }
             if (newRefresh) {
               sessionStorage.setItem('tohfa_admin_refresh_token', newRefresh);
               localStorage.setItem('tohfa_admin_refresh_token', newRefresh);
-              sessionStorage.setItem('tohfa_refresh_token', newRefresh);
-              localStorage.setItem('tohfa_refresh_token', newRefresh);
             }
             
             // Sync session across tabs
@@ -142,6 +136,8 @@ adminApiClient.interceptors.response.use(
           isRefreshing = false;
           sessionStorage.removeItem('tohfa_admin_token');
           localStorage.removeItem('tohfa_admin_token');
+          sessionStorage.removeItem('tohfa_admin_access_token');
+          localStorage.removeItem('tohfa_admin_access_token');
           sessionStorage.removeItem('tohfa_admin_refresh_token');
           localStorage.removeItem('tohfa_admin_refresh_token');
           window.location.href = '/admin/login.html';
@@ -151,6 +147,8 @@ adminApiClient.interceptors.response.use(
         isRefreshing = false;
         sessionStorage.removeItem('tohfa_admin_token');
         localStorage.removeItem('tohfa_admin_token');
+        sessionStorage.removeItem('tohfa_admin_access_token');
+        localStorage.removeItem('tohfa_admin_access_token');
         sessionStorage.removeItem('tohfa_admin_refresh_token');
         localStorage.removeItem('tohfa_admin_refresh_token');
         window.location.href = '/admin/login.html';

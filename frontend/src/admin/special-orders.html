@@ -235,7 +235,8 @@
           showTableError('Your session could not be verified. Redirecting to login…', true);
           setTimeout(() => { window.location.href = '/admin/login.html'; }, 2000);
         } else {
-          showTableError('Network error — could not reach the server. Please check your connection and try again.', false);
+          const errorMessage = err?.response?.data?.message || (err?.response?.status ? `Server error (${err.response.status})` : 'Server error (500)');
+          showTableError(errorMessage, false);
         }
       }
     }

@@ -325,7 +325,7 @@ export async function handleAddToCartWithCustomization(prodId, payload) {
   }
 
   const cartPayload = {
-    product_id: Number(targetId),
+    product_id: String(targetId).trim(),
     quantity: 1,
     customization_data: cartCustomizationMeta
   };

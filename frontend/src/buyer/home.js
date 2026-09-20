@@ -100,19 +100,52 @@ async function loadBanners() {
       </div>
     `;
 
-    // Auto-rotate
+    // Static Rendering by default per Guideline #957 (Auto-rotating carousels prohibited)
     let current = 0;
     const slides = slider.querySelectorAll('.hero__slide');
     const dots = slider.querySelectorAll('.hero__dot');
-    if (slides.length > 1) {
-      setInterval(() => {
-        slides[current]?.classList.remove('active');
-        dots[current]?.classList.remove('active');
-        current = (current + 1) % slides.length;
-        slides[current]?.classList.add('active');
-        dots[current]?.classList.add('active');
-      }, 5000);
+
+    function goToSlide(index) {
+      if (index < 0) index = slides.length - 1;
+      if (index >= slides.length) index = 0;
+      slides[current]?.classList.remove('active');
+      dots[current]?.classList.remove('active');
+      current = index;
+      slides[current]?.classList.add('active');
+      dots[current]?.classList.add('active');
     }
+
+    // 44x44px touch targets and click support on navigation dots
+    dots.forEach((dot, idx) => {
+      dot.style.minWidth = '44px';
+      dot.style.minHeight = '44px';
+      dot.style.display = 'inline-flex';
+      dot.style.alignItems = 'center';
+      dot.style.justifyContent = 'center';
+      dot.style.cursor = 'pointer';
+      dot.setAttribute('role', 'button');
+      dot.setAttribute('aria-label', `Go to slide ${idx + 1}`);
+      dot.addEventListener('click', () => goToSlide(idx));
+    });
+
+    // Native touch-gesture swipe support for mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+    slider.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    slider.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      const swipeDistance = touchEndX - touchStartX;
+      if (Math.abs(swipeDistance) > 40) {
+        if (swipeDistance < 0) {
+          goToSlide(current + 1); // Swipe left -> next slide
+        } else {
+          goToSlide(current - 1); // Swipe right -> previous slide
+        }
+      }
+    }, { passive: true });
   } catch { /* empty */ }
 }
 

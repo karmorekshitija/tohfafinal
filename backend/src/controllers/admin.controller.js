@@ -24,10 +24,10 @@ async function getPlatformStats(req, res, next) {
         COALESCE(SUM(COALESCE(o.total_paise / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0)), 0) AS total_gmv,
         COALESCE(SUM(CASE WHEN LOWER(o.status) = 'delivered' THEN COALESCE(o.total_paise / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0) * 0.10 ELSE 0 END), 0) AS net_platform_revenue,
         (SELECT COUNT(*) FROM users WHERE role = 'buyer') AS total_buyers,
-        (SELECT COUNT(*) FROM seller_profiles WHERE is_approved = TRUE OR is_approved = 1 OR verification_status = 'verified') AS active_artisans,
-        (SELECT COUNT(*) FROM seller_profiles WHERE (is_approved = FALSE OR is_approved = 0 OR is_approved IS NULL) AND rejection_reason IS NULL) AS pending_kyc_count,
+        (SELECT COUNT(*) FROM seller_profiles WHERE is_approved::text IN ('true', 't', '1') OR verification_status = 'verified') AS active_artisans,
+        (SELECT COUNT(*) FROM seller_profiles WHERE (is_approved IS NULL OR is_approved::text IN ('false', 'f', '0')) AND rejection_reason IS NULL) AS pending_kyc_count,
         (SELECT COUNT(*) FROM orders WHERE LOWER(COALESCE(payment_status, '')) = 'paid' AND LOWER(COALESCE(status, '')) NOT IN ('delivered', 'cancelled', 'refunded')) AS active_orders_in_fulfillment,
-        (SELECT COUNT(*) FROM seller_profiles WHERE is_admin_managed = TRUE OR is_admin_managed = 1) AS tohfa_specials_count
+        (SELECT COUNT(*) FROM seller_profiles WHERE is_admin_managed::text IN ('true', 't', '1')) AS tohfa_specials_count
       FROM orders o
       WHERE LOWER(COALESCE(o.payment_status, '')) = 'paid'
     `);
@@ -70,11 +70,11 @@ async function listSellers(req, res, next) {
     const params = [];
 
     if (status === 'pending') {
-      baseSql += ` AND (COALESCE(sp.is_approved, s.is_approved, 0) = 0 AND sp.rejection_reason IS NULL AND s.rejection_reason IS NULL AND u.is_active = TRUE)`;
+      baseSql += ` AND ((COALESCE(sp.is_approved::text, s.is_approved::text, 'false') IN ('false', 'f', '0')) AND sp.rejection_reason IS NULL AND s.rejection_reason IS NULL AND u.is_active = TRUE)`;
     } else if (status === 'active' || status === 'verified' || status === 'approved') {
-      baseSql += ` AND ((COALESCE(sp.is_approved, s.is_approved, 0) = 1 OR COALESCE(sp.verification_status, s.verification_status) = 'verified') AND u.is_active = TRUE)`;
+      baseSql += ` AND ((COALESCE(sp.is_approved::text, s.is_approved::text, 'false') IN ('true', 't', '1') OR COALESCE(sp.verification_status, s.verification_status) = 'verified') AND u.is_active = TRUE)`;
     } else if (status === 'rejected') {
-      baseSql += ` AND (COALESCE(sp.is_approved, s.is_approved, 0) = 0 AND (sp.rejection_reason IS NOT NULL OR s.rejection_reason IS NOT NULL))`;
+      baseSql += ` AND ((COALESCE(sp.is_approved::text, s.is_approved::text, 'false') IN ('false', 'f', '0')) AND (sp.rejection_reason IS NOT NULL OR s.rejection_reason IS NOT NULL))`;
     } else if (status === 'banned') {
       baseSql += ` AND u.is_active = FALSE`;
     }
@@ -92,7 +92,7 @@ async function listSellers(req, res, next) {
              COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
              COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS shop_name,
              COALESCE(sp.seller_type, 'Artisan') AS seller_type,
-             COALESCE(sp.is_approved, s.is_approved, 0) AS is_approved,
+             (COALESCE(sp.is_approved::text, s.is_approved::text, 'false') IN ('true', 't', '1')) AS is_approved,
              COALESCE(sp.pickup_address, s.pickup_address, '{}'::jsonb) AS pickup_address,
              COALESCE(sp.bank_details, s.bank_details, '{}'::jsonb) AS bank_details,
              COALESCE(sp.onboarding_completed, s.onboarding_completed, FALSE) AS onboarding_completed,
@@ -103,12 +103,12 @@ async function listSellers(req, res, next) {
              COALESCE(sp.pan_number, s.pan_number) AS pan_number,
              COALESCE(sp.gst_number, s.gst_number) AS gst_number,
              COALESCE(sp.portfolio_images, s.portfolio_images, '{}'::text[]) AS portfolio_images,
-             COALESCE(sp.verification_status, s.verification_status, CASE WHEN sp.is_approved = 1 OR s.is_approved = 1 THEN 'verified' WHEN sp.rejection_reason IS NOT NULL OR s.rejection_reason IS NOT NULL THEN 'rejected' ELSE 'pending_verification' END) AS verification_status,
+             COALESCE(sp.verification_status, s.verification_status, CASE WHEN sp.is_approved::text IN ('true', 't', '1') OR s.is_approved::text IN ('true', 't', '1') THEN 'verified' WHEN sp.rejection_reason IS NOT NULL OR s.rejection_reason IS NOT NULL THEN 'rejected' ELSE 'pending_verification' END) AS verification_status,
              COALESCE(sp.commission_rate, s.commission_rate, 10.00) AS commission_rate,
              COALESCE(sp.applied_at, s.applied_at, u.created_at) AS applied_at,
              COALESCE(sp.approved_at, s.approved_at) AS approved_at,
              COALESCE(sp.rejection_reason, s.rejection_reason) AS rejection_reason,
-             COALESCE(sp.is_admin_managed, s.is_admin_managed, 0) AS is_admin_managed,
+             (COALESCE(sp.is_admin_managed::text, s.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
              (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status != 'deleted') AS product_count,
              (SELECT COALESCE(SUM(o.total_amount), 0) FROM orders o WHERE o.seller_id = u.id AND o.payment_status = 'paid') AS total_revenue,
              (SELECT MAX(o2.created_at) FROM orders o2 WHERE o2.seller_id = u.id AND o2.payment_status = 'paid') AS last_order_at
@@ -143,8 +143,8 @@ async function getSellerDetail(req, res, next) {
               COALESCE(sp.bio, s.bio, '') AS bio,
               COALESCE(sp.whatsapp_number, s.whatsapp_number, u.phone) AS whatsapp_number,
               COALESCE(sp.seller_type, 'Artisan') AS seller_type,
-              COALESCE(sp.is_approved, s.is_approved, 0) AS is_approved,
-              COALESCE(sp.is_admin_managed, s.is_admin_managed, 0) AS is_admin_managed,
+              (COALESCE(sp.is_approved::text, s.is_approved::text, 'false') IN ('true', 't', '1')) AS is_approved,
+              (COALESCE(sp.is_admin_managed::text, s.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
               COALESCE(sp.pickup_address, s.pickup_address, '{}'::jsonb) AS pickup_address,
               COALESCE(sp.bank_details, s.bank_details, '{}'::jsonb) AS bank_details,
               COALESCE(sp.onboarding_completed, s.onboarding_completed, FALSE) AS onboarding_completed,
@@ -155,7 +155,7 @@ async function getSellerDetail(req, res, next) {
               COALESCE(sp.pan_number, s.pan_number) AS pan_number,
               COALESCE(sp.gst_number, s.gst_number) AS gst_number,
               COALESCE(sp.portfolio_images, s.portfolio_images, '{}'::text[]) AS portfolio_images,
-              COALESCE(sp.verification_status, s.verification_status, CASE WHEN sp.is_approved = 1 OR s.is_approved = 1 THEN 'verified' WHEN sp.rejection_reason IS NOT NULL OR s.rejection_reason IS NOT NULL THEN 'rejected' ELSE 'pending_verification' END) AS verification_status,
+              COALESCE(sp.verification_status, s.verification_status, CASE WHEN sp.is_approved::text IN ('true', 't', '1') OR s.is_approved::text IN ('true', 't', '1') THEN 'verified' WHEN sp.rejection_reason IS NOT NULL OR s.rejection_reason IS NOT NULL THEN 'rejected' ELSE 'pending_verification' END) AS verification_status,
               COALESCE(sp.commission_rate, s.commission_rate, 10.00) AS commission_rate,
               COALESCE(sp.applied_at, s.applied_at, u.created_at) AS applied_at,
               COALESCE(sp.approved_at, s.approved_at) AS approved_at,
@@ -1773,7 +1773,7 @@ async function listSpecialShops(req, res, next) {
       FROM users u
       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
       LEFT JOIN sellers s ON s.user_id = u.id
-      WHERE sp.is_admin_managed = 1 OR s.is_admin_managed = 1
+      WHERE sp.is_admin_managed::text IN ('true', 't', '1') OR s.is_admin_managed::text IN ('true', 't', '1')
       ORDER BY u.id ASC
     `);
     return res.json({ success: true, data: rows });
@@ -1827,8 +1827,8 @@ async function createSpecialShop(req, res, next) {
          slug = EXCLUDED.slug,
          bio = EXCLUDED.bio,
          pickup_address = EXCLUDED.pickup_address,
-         is_admin_managed = 1,
-         is_approved = 1,
+         is_admin_managed = TRUE,
+         is_approved = TRUE,
          verification_status = 'verified',
          is_active = 1`,
       [userId, store_name, cleanSlug, bio || '', pickupAddressJson]
@@ -1842,8 +1842,8 @@ async function createSpecialShop(req, res, next) {
          slug = EXCLUDED.slug,
          bio = EXCLUDED.bio,
          pickup_address = EXCLUDED.pickup_address,
-         is_admin_managed = 1,
-         is_approved = 1,
+         is_admin_managed = TRUE,
+         is_approved = TRUE,
          verification_status = 'verified',
          is_active = 1,
          seller_type = 'special',
@@ -1909,7 +1909,7 @@ async function updateSpecialShop(req, res, next) {
        LEFT JOIN seller_profiles sp ON sp.user_id = u.id
        LEFT JOIN sellers s ON s.user_id = u.id
        WHERE (u.id::text = $1 OR sp.id::text = $1 OR s.id::text = $1 OR sp.slug = $1 OR s.slug = $1)
-         AND (sp.is_admin_managed = 1 OR sp.is_admin_managed = TRUE OR s.is_admin_managed = 1 OR s.is_admin_managed = TRUE)
+         AND (sp.is_admin_managed::text IN ('true', 't', '1') OR s.is_admin_managed::text IN ('true', 't', '1'))
        ORDER BY CASE 
          WHEN sp.slug = $1 OR s.slug = $1 THEN 1
          WHEN u.id::text = $1 AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 2
@@ -2010,7 +2010,7 @@ async function switchSessionToSpecialShop(req, res, next) {
        LEFT JOIN seller_profiles sp ON sp.user_id = u.id
        LEFT JOIN sellers s ON s.user_id = u.id
        WHERE (u.id::text = $1 OR sp.id::text = $1 OR s.id::text = $1 OR sp.slug = $1 OR s.slug = $1)
-         AND (sp.is_admin_managed = 1 OR sp.is_admin_managed = TRUE OR s.is_admin_managed = 1 OR s.is_admin_managed = TRUE)
+         AND (sp.is_admin_managed::text IN ('true', 't', '1') OR s.is_admin_managed::text IN ('true', 't', '1'))
        ORDER BY CASE 
          WHEN sp.slug = $1 OR s.slug = $1 THEN 1
          WHEN u.id::text = $1 AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 2
@@ -2083,10 +2083,10 @@ async function getRevenueBreakdown(req, res, next) {
   try {
     const { rows } = await query(`
       SELECT 
-        COALESCE(SUM(CASE WHEN sp.is_admin_managed = TRUE THEN o.total_amount ELSE 0 END), 0) AS tofa_special_revenue,
-        COALESCE(SUM(CASE WHEN sp.is_admin_managed = FALSE OR sp.is_admin_managed IS NULL THEN o.total_amount ELSE 0 END), 0) AS marketplace_revenue,
-        COUNT(CASE WHEN sp.is_admin_managed = TRUE THEN 1 END) AS tofa_special_orders,
-        COUNT(CASE WHEN sp.is_admin_managed = FALSE OR sp.is_admin_managed IS NULL THEN 1 END) AS marketplace_orders,
+        COALESCE(SUM(CASE WHEN sp.is_admin_managed::text IN ('true', 't', '1') THEN o.total_amount ELSE 0 END), 0) AS tofa_special_revenue,
+        COALESCE(SUM(CASE WHEN (sp.is_admin_managed IS NULL OR sp.is_admin_managed::text IN ('false', 'f', '0')) THEN o.total_amount ELSE 0 END), 0) AS marketplace_revenue,
+        COUNT(CASE WHEN sp.is_admin_managed::text IN ('true', 't', '1') THEN 1 END) AS tofa_special_orders,
+        COUNT(CASE WHEN (sp.is_admin_managed IS NULL OR sp.is_admin_managed::text IN ('false', 'f', '0')) THEN 1 END) AS marketplace_orders,
         COALESCE(SUM(o.total_amount), 0) AS total_gmv
       FROM orders o
       LEFT JOIN seller_profiles sp ON sp.user_id = o.seller_id

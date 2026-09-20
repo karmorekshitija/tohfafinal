@@ -143,31 +143,38 @@
     </div>
 
     <!-- Desktop Navigation Links -->
-    <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+    <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full" aria-label="Main Navigation">
       <a
         href="/buyer/home.html"
-        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
       >
         <span class="material-symbols-outlined text-[20px]">home</span>
         <span>Home</span>
       </a>
       <a
         href="/buyer/categories.html"
-        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE] border-b-2 border-[#FAF6EE] transition-colors no-underline font-medium"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE] border-b-2 border-[#FAF6EE] transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
       >
         <span class="material-symbols-outlined text-[20px]">category</span>
         <span>Category</span>
       </a>
       <a
+        href="/buyer/category.html?slug=best-sellers"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
+      >
+        <span class="material-symbols-outlined text-[20px]">military_tech</span>
+        <span>Best Sellers</span>
+      </a>
+      <a
         href="/buyer/zip-gift.html"
-        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
       >
         <span class="material-symbols-outlined text-[20px]">bolt</span>
         <span>ZipGift</span>
       </a>
       <a
         href="/buyer/profile.html"
-        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
       >
         <span class="material-symbols-outlined text-[20px]">person</span>
         <span>Profile</span>
@@ -180,8 +187,9 @@
       <a
         href="/buyer/search.html?focus=true"
         id="header-search-btn"
-        class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+        class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
         title="Search"
+        aria-label="Search the marketplace"
       >
         <span class="material-symbols-outlined text-[20px] sm:text-[22px]">search</span>
       </a>
@@ -189,8 +197,9 @@
       <!-- Wishlist Button -->
       <a
         href="/buyer/wishlist.html"
-        class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+        class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
         title="Saved Makes"
+        aria-label="Saved Makes"
       >
         <span class="material-symbols-outlined text-[20px] sm:text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
         <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
@@ -199,8 +208,9 @@
       <!-- Cart Button -->
       <a
         href="/buyer/cart.html"
-        class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+        class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
         title="Shopping Cart"
+        aria-label="Shopping Cart"
       >
         <span class="material-symbols-outlined text-[20px] sm:text-[22px]">shopping_bag</span>
         <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
@@ -209,8 +219,9 @@
       <!-- Notifications Button -->
       <a
         href="/buyer/notifications.html"
-        class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+        class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
         title="Notifications"
+        aria-label="Notifications"
       >
         <span class="material-symbols-outlined text-[20px] sm:text-[22px]">notifications</span>
         <span id="nav-notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
@@ -444,7 +455,24 @@
             return;
           }
 
-          let html = '';
+          const bestSellersCard = `
+            <a href="/buyer/category.html?slug=best-sellers" class="category-card-editorial aspect-square relative cursor-pointer rounded-2xl overflow-hidden shadow-xs hover:-translate-y-1 transition-all duration-300 group block no-underline text-inherit border-2 border-[#C85A32]/50" data-category-name="best sellers popular trending top rated" data-subcategories="bestsellers popular top rated">
+              <img class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="/img/categories/artisan_showcase.jpg" alt="Best Sellers" loading="lazy">
+              <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
+              <div class="absolute top-2.5 left-2.5 z-20">
+                <span class="px-2.5 py-1 rounded-full bg-[#C85A32] text-white font-['Space_Mono'] text-[10px] font-bold tracking-wider uppercase shadow-xs flex items-center gap-1">
+                  <span class="material-symbols-outlined text-xs">military_tech</span>
+                  <span>Best Sellers</span>
+                </span>
+              </div>
+              <div class="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white z-10">
+                <h3 class="font-['Playfair_Display'] text-sm sm:text-base md:text-lg italic font-bold leading-tight mb-0.5">Best Sellers Showcase</h3>
+                <span class="font-['Space_Mono'] text-[9px] sm:text-[10px] text-white/80 uppercase tracking-wider block">Most loved handcrafted treasures</span>
+              </div>
+            </a>
+          `;
+
+          let html = bestSellersCard;
 
           categories.forEach(cat => {
             const displayName = cat.display_name || cat.name;
@@ -471,10 +499,13 @@
             let imageToUse = cat.image_url || SLUG_IMAGE_MAP[cat.slug] || FALLBACK_IMAGE;
 
             const subs = cat.subcategories || [];
+            const displaySubs = subs.slice(0, 10);
+            const hasMoreSubs = subs.length > 10;
             let subsHtml = '';
             if (subs.length > 0) {
               subsHtml = `<div class="flex flex-nowrap overflow-x-auto gap-1 pt-1.5 max-w-full no-scrollbar" style="-webkit-overflow-scrolling:touch; scrollbar-width:none;" onclick="event.stopPropagation()">
-                ${subs.map(s => `<a href="category.html?slug=${cat.slug}&subcategory_ids=${s.id}" class="flex-shrink-0 whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] bg-white/20 hover:bg-white/35 text-white backdrop-blur-xs transition-all">${s.name}</a>`).join('')}
+                ${displaySubs.map(s => `<a href="category.html?slug=${cat.slug}&subcategory_ids=${s.id}" class="flex-shrink-0 whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] bg-white/20 hover:bg-white/35 text-white backdrop-blur-xs transition-all no-underline">${s.name}</a>`).join('')}
+                ${hasMoreSubs ? `<a href="category.html?slug=${cat.slug}" class="flex-shrink-0 whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] bg-[#C85A32]/85 hover:bg-[#C85A32] text-white backdrop-blur-xs transition-all font-semibold no-underline">+${subs.length - 10} more</a>` : ''}
               </div>`;
             }
 

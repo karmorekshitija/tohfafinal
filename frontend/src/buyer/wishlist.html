@@ -34,31 +34,38 @@
   </div>
 
   <!-- Desktop Navigation Links -->
-  <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+  <nav class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full" aria-label="Main Navigation">
     <a
       href="/buyer/home.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
     >
       <span class="material-symbols-outlined text-[20px]">home</span>
       <span>Home</span>
     </a>
     <a
       href="/buyer/categories.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
     >
       <span class="material-symbols-outlined text-[20px]">category</span>
       <span>Category</span>
     </a>
     <a
+      href="/buyer/category.html?slug=best-sellers"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
+    >
+      <span class="material-symbols-outlined text-[20px]">military_tech</span>
+      <span>Best Sellers</span>
+    </a>
+    <a
       href="/buyer/zip-gift.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
     >
       <span class="material-symbols-outlined text-[20px]">bolt</span>
       <span>ZipGift</span>
     </a>
     <a
       href="/buyer/profile.html"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
     >
       <span class="material-symbols-outlined text-[20px]">person</span>
       <span>Profile</span>
@@ -71,8 +78,9 @@
     <a
       href="/buyer/search.html?focus=true"
       id="header-search-btn"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Search"
+      aria-label="Search the marketplace"
     >
       <span class="material-symbols-outlined text-[22px]">search</span>
     </a>
@@ -80,8 +88,9 @@
     <!-- Wishlist Button -->
     <a
       href="/buyer/wishlist.html"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Saved Makes"
+      aria-label="Saved Makes"
     >
       <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
       <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
@@ -90,8 +99,9 @@
     <!-- Cart Button -->
     <a
       href="/buyer/cart.html"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Shopping Cart"
+      aria-label="Shopping Cart"
     >
       <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
       <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
@@ -100,8 +110,9 @@
     <!-- Notifications Button -->
     <a
       href="/buyer/notifications.html"
-      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Notifications"
+      aria-label="Notifications"
     >
       <span class="material-symbols-outlined text-[22px]">notifications</span>
       <span id="nav-notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
@@ -115,13 +126,13 @@
 
 <main class="flex-grow bg-[#FFF8E7]">
   <!-- Page Heading -->
-  <section class="relative pt-xl pb-lg px-margin-desktop max-w-[1440px] mx-auto overflow-hidden">
+  <section class="relative pt-xl pb-lg px-4 md:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
     <!-- Dried Bouquet Watermark -->
     <div class="absolute right-0 top-0 opacity-[0.09] pointer-events-none transform translate-x-1/4 -translate-y-1/4">
       <img class="w-96 grayscale" src="/img/textures/natural-paper.png" alt="watermark" loading="lazy">
     </div>
     <div class="relative z-10">
-      <p class="font-label-caps text-label-caps text-secondary mb-xs">YOUR COLLECTION ?</p>
+      <p class="font-label-caps text-label-caps text-secondary mb-xs">YOUR COLLECTION ✨</p>
       <div class="flex items-baseline gap-sm select-none">
         <h1 class="font-headline-lg text-headline-lg text-primary flex items-center gap-xs">
           <span>Wishlist</span>
@@ -133,7 +144,7 @@
   </section>
 
   <!-- Product Grid with Wax-Tape Watermark Layer -->
-  <section class="relative px-margin-desktop py-xl max-w-[1440px] mx-auto hidden" id="makes-grid-section">
+  <section class="relative px-4 md:px-6 lg:px-8 py-xl max-w-7xl mx-auto hidden" id="makes-grid-section">
     <!-- Subtle Ink-Sketch / Wax-Tape Watermark -->
     <div class="absolute inset-0 ink-sketch-overlay wax-tape pointer-events-none opacity-50"></div>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-xl relative z-10" id="makes-grid">
@@ -142,7 +153,7 @@
   </section>
 
   <!-- Empty State Section -->
-  <section class="py-xl px-margin-desktop max-w-[1440px] mx-auto text-center hidden" id="empty-state">
+  <section class="py-xl px-4 md:px-6 lg:px-8 max-w-7xl mx-auto text-center hidden" id="empty-state">
     <div class="border-t border-outline-variant/40 pt-xl flex flex-col items-center">
       <div class="relative mb-lg">
         <div class="w-32 h-32 rounded-full flex items-center justify-center relative bg-[rgba(20,56,31,0.06)] border border-[#14381F]/15">
@@ -152,14 +163,28 @@
           </div>
         </div>
       </div>
-      <h2 class="font-lora text-headline-lg italic text-primary mb-sm text-3xl">Your Wishlist is Empty</h2>
+      <h2 class="font-lora text-headline-lg italic text-primary mb-sm text-3xl">No keepsakes saved just yet</h2>
       <p class="font-body-md text-body-md text-on-surface-variant max-w-md mb-lg">
-        Explore authentic handcrafted gifts from master artisans across India and save your favorites here.
+        Every treasure tells a tale of devotion. Explore authentic creations crafted by master Indian artisans and save the pieces that speak to your heart.
       </p>
       <a href="/buyer/categories.html" class="bg-[#14381F] text-white font-body-md text-sm font-semibold px-8 py-3.5 rounded-full hover:bg-[#0D2614] transition-all active:scale-95 shadow-md no-underline inline-flex items-center gap-2">
         <span class="material-symbols-outlined text-[18px]">explore</span>
         <span>Browse Categories</span>
       </a>
+
+      <!-- Recommendations in Empty State -->
+      <div class="mt-12 pt-8 border-t border-[#14381F]/15 w-full text-left" id="wishlist-recommendations-section">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[#C85A32] text-xl">auto_awesome</span>
+            <h3 class="font-['Playfair_Display'] italic text-xl font-bold text-[#14381F]">Treasures You May Cherish</h3>
+          </div>
+          <a href="/buyer/category.html?slug=best-sellers" class="text-xs font-semibold text-[#14381F] hover:underline no-underline">Browse Best Sellers →</a>
+        </div>
+        <div id="wishlist-recommendations-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+          <!-- Dynamic recommendations injected here -->
+        </div>
+      </div>
     </div>
   </section>
 </main>
@@ -181,7 +206,7 @@
     function isProductOwned(sellerId) {
         try {
             const user = JSON.parse(sessionStorage.getItem('tohfa_user'));
-            return user && Number(user.id) === Number(sellerId);
+            return user && String(user.id) === String(sellerId);
         } catch (e) {
             return false;
         }
@@ -279,7 +304,7 @@
 
         try {
             const res = await apiClient.post('/requests', {
-                listing_id: Number(productId),
+                listing_id: String(productId).trim(),
                 request_type: 'customization',
                 quantity: 1
             });
@@ -291,7 +316,6 @@
             }
         } catch (err) {
             console.error("Failed to start customization request:", err);
-            Toast.show("Failed to start chat. Please try again.", "error");
             btn.disabled = false;
             btn.innerText = originalText;
         }
@@ -329,6 +353,7 @@
                 if (items.length === 0) {
                     if (gridSection) gridSection.classList.add('hidden');
                     if (emptyState) emptyState.classList.remove('hidden');
+                    loadWishlistRecommendations();
                     return;
                 }
 
@@ -417,7 +442,7 @@
                         try {
                             btn.disabled = true;
                             btn.innerText = 'Adding...';
-                            await apiClient.post('/cart/items', { product_id: Number(id), quantity: 1 });
+                            await apiClient.post('/cart/items', { product_id: String(id).trim(), quantity: 1 });
                             Toast.show('Added to cart successfully!', 'success');
                             btn.innerText = 'Added ✓';
                             btn.classList.add('bg-secondary', 'text-white', 'border-transparent', 'cursor-default', 'font-semibold');
@@ -465,6 +490,43 @@
             errBox.classList.remove('hidden');
         }
     };
+
+    async function loadWishlistRecommendations() {
+        const grid = document.getElementById('wishlist-recommendations-grid');
+        if (!grid) return;
+        try {
+            const res = await apiClient.get('/products/trending?limit=4');
+            const products = res.data?.data?.products || res.data?.products || [];
+            if (!products || products.length === 0) {
+                document.getElementById('wishlist-recommendations-section')?.classList.add('hidden');
+                return;
+            }
+            grid.innerHTML = products.slice(0, 4).map(p => {
+                const img = p.image_url || (Array.isArray(p.images) && p.images[0]?.url ? p.images[0].url : '/img/categories/artisan_showcase.jpg');
+                const pricePaise = p.price_paise !== undefined ? p.price_paise : (p.base_price ? Math.round(p.base_price * 100) : 0);
+                return `
+                    <a href="/buyer/product.html?id=${p.id}" class="bg-[#FFF8E7] p-3 rounded-xl border border-outline-variant hover:shadow-md transition-all group flex flex-col justify-between no-underline text-inherit block">
+                        <div>
+                            <div class="relative aspect-square overflow-hidden rounded-lg mb-2 bg-white/60">
+                                <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="${img}" alt="${p.name}" loading="lazy">
+                            </div>
+                            <div class="flex flex-col gap-0.5 mb-2">
+                                <span class="text-[10px] text-[#587A5B] font-medium truncate">${p.seller_name || 'Artisan Studio'}</span>
+                                <h4 class="font-lora font-semibold text-xs sm:text-sm text-on-background line-clamp-1">${p.name}</h4>
+                                <p class="font-data-price font-bold text-xs sm:text-sm text-[#14381F] mt-0.5">₹${(pricePaise / 100).toLocaleString('en-IN')}</p>
+                            </div>
+                        </div>
+                        <span class="w-full py-1 text-center rounded-lg bg-[#14381F] text-white text-[11px] font-semibold group-hover:bg-[#285C3A] transition-colors">
+                            Explore Craft
+                        </span>
+                    </a>
+                `;
+            }).join('');
+        } catch (err) {
+            console.error("Failed to load wishlist recommendations:", err);
+            document.getElementById('wishlist-recommendations-section')?.classList.add('hidden');
+        }
+    }
 
     window.addEventListener('DOMContentLoaded', async () => {
         await checkAuthState();

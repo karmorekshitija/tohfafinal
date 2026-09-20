@@ -16,8 +16,12 @@ const { query, getClient } = require('../config/db');
  */
 async function createOrder(req, res, next) {
   try {
-    const { orderId } = req.body;
+    const orderId = req.body.orderId || req.body.order_id;
     const buyerId = req.user.id;
+
+    if (!orderId) {
+      return res.status(400).json({ success: false, message: 'orderId or order_id is required.' });
+    }
 
     const { rows } = await query(
       'SELECT * FROM orders WHERE id = $1 AND buyer_id = $2',
@@ -51,13 +55,20 @@ async function createOrder(req, res, next) {
     const { rows: userRows } = await query('SELECT name, email, phone FROM users WHERE id = $1', [buyerId]);
     const user = userRows[0] || {};
 
+    const keyId = razorpayOrder.keyId || process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_PRIMARY_KEY_ID || 'rzp_test_placeholder';
+    const amountPaise = razorpayOrder.amount || (order.total_paise ? Number(order.total_paise) : Math.round(Number(order.total_amount) * 100));
+
     return res.json({
       success: true,
       data: {
-        razorpayKeyId: razorpayOrder.keyId || process.env.RAZORPAY_PRIMARY_KEY_ID || process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+        orderId: order.id,
+        order_id: order.id,
+        amount: amountPaise,
+        amount_paise: amountPaise,
+        razorpayKeyId: keyId,
+        key_id: keyId,
         razorpay_order_id: razorpayOrder.id,
         gateway_account: razorpayOrder.gatewayAccount || 'primary',
-        amount: order.total_amount,
         currency: 'INR',
         name: 'Tohfa Gifting',
         description: `Order #${String(order.id).slice(0, 8)}`,
@@ -66,7 +77,6 @@ async function createOrder(req, res, next) {
           email: user.email || '',
           contact: user.phone || '',
         },
-        orderId: order.id,
       },
     });
   } catch (err) {
@@ -82,7 +92,8 @@ async function createOrder(req, res, next) {
 async function verifyPayment(req, res, next) {
   const client = await getClient();
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
+    const orderId = req.body.orderId || req.body.order_id;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
       return res.status(400).json({
@@ -128,6 +139,7 @@ async function verifyPayment(req, res, next) {
         data: {
           message: 'Payment already verified and order confirmed.',
           orderId,
+          order_id: orderId,
           alreadyProcessed: true,
         },
       });
@@ -172,6 +184,7 @@ async function verifyPayment(req, res, next) {
       data: {
         message: 'Payment verified and order confirmed.',
         orderId,
+        order_id: orderId,
         order: confirmedOrder,
       },
     });
