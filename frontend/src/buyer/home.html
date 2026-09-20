@@ -1043,36 +1043,37 @@
     return card;
   }
 
-  // --- For You Products Loader ---
-  const FALLBACK_FEED = [];
 
+  // --- For You Products Loader ---
   async function loadForYouProducts() {
     if (skeletons) skeletons.style.setProperty('display', 'grid', 'important');
     try {
-      const response = await apiClient.get('/products/feed?page=1&limit=30');
-      const products = response.data?.data?.products || response.data?.products || [];
-      const filteredProducts = products.filter(product => product.type !== 'sponsored' && !product.is_sponsored);
-      const forYouProducts = filteredProducts.length > 0 ? filteredProducts.slice(0, 16) : products.slice(0, 16);
+      let products = [];
+
+      // Primary: personalized feed endpoint
+      try {
+        const response = await apiClient.get('/products/feed');
+        const raw = response.data?.data?.products || response.data?.products || [];
+        products = raw.filter(p => !p.is_sponsored && p.type !== 'sponsored').slice(0, 16);
+        if (products.length === 0) products = raw.slice(0, 16);
+      } catch (feedErr) {
+        console.warn('Feed endpoint unavailable, falling back to catalog:', feedErr);
+      }
+
+      // Fallback: general catalog — always ensures something is shown
+      if (products.length === 0) {
+        const fallback = await apiClient.get('/products?limit=16');
+        const raw = fallback.data?.data?.products || fallback.data?.products || [];
+        products = raw.slice(0, 16);
+      }
 
       grid.innerHTML = '';
-      if (forYouProducts.length > 0) {
-        forYouProducts.forEach(product => {
-          const card = createProductCard(product);
-          grid.appendChild(card);
-        });
-      } else {
-        FALLBACK_FEED.forEach(product => {
-          const card = createProductCard(product);
-          grid.appendChild(card);
-        });
-      }
-    } catch (error) {
-      console.error('Failed to load For You products, using fallbacks:', error);
-      grid.innerHTML = '';
-      FALLBACK_FEED.forEach(product => {
-        const card = createProductCard(product);
-        grid.appendChild(card);
+      products.forEach(product => {
+        grid.appendChild(createProductCard(product));
       });
+    } catch (error) {
+      console.error('Failed to load For You products:', error);
+      grid.innerHTML = '';
     } finally {
       if (skeletons) skeletons.style.setProperty('display', 'none', 'important');
     }

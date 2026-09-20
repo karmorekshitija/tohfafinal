@@ -20,6 +20,8 @@ router.get('/featured', productController.getFeaturedProducts);
 router.get('/categories', productController.listCategories); // Public — used by buyer home/search
 router.get('/categories/:slug', productController.getCategoryBySlug);
 router.get('/feed', (req, res, next) => {
+  // Optional auth: parse token if available
+  const authHeader = req.headers['authorization'];
   if (authHeader && authHeader.startsWith('Bearer ')) {
     return authMiddleware(req, res, next);
   }
