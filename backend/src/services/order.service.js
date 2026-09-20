@@ -12,6 +12,7 @@
 const { query, getClient } = require('../config/db');
 const { createNotification } = require('../controllers/notification.controller');
 const { calculateDiscount, STATIC_COUPONS } = require('../controllers/coupon.controller');
+const { computeOrderTotals } = require('../utils/pricing');
 
 /**
  * Helper to verify coupon in DB or static catalog
@@ -193,13 +194,6 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
   const verifiedCoupon = couponParam ? await verifyAndFetchCoupon(couponParam, cartGrossTotal) : null;
   const totalDiscount = verifiedCoupon ? verifiedCoupon.discount_amount : 0;
 
-  // Buyer pays a 5% platform fee added to the subtotal
-  const buyerPlatformFee = parseFloat((cartGrossTotal * 0.05).toFixed(2));
-
-  // Server-side shipping fee calculation (e.g. Free shipping >= ₹999, else ₹50)
-  const shippingAmount = cartGrossTotal >= 999 ? 0 : 50;
-  const finalParentTotal = parseFloat(Math.max(0, (cartGrossTotal + buyerPlatformFee - totalDiscount + shippingAmount)).toFixed(2));
-
   // 3. Group by seller and check capacity
   const sellerGroups = {};
   for (const item of cartItems) {
@@ -241,6 +235,19 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
     }
   }
 
+  // Centralized pricing calculation: ₹79/distinct seller (capped at ₹250), no hidden buyer fee
+  const {
+    subtotal_paise: subtotalPaise,
+    shipping_paise: shippingPaise,
+    total_paise: totalPaise,
+  } = computeOrderTotals({
+    subtotalPaise: Math.round(cartGrossTotal * 100),
+    discountPaise: Math.round(totalDiscount * 100),
+    sellerCount: Object.keys(sellerGroups).length,
+  });
+  const shippingAmount = shippingPaise / 100;
+  const finalParentTotal = totalPaise / 100;
+
   const client = await getClient();
   const sellerOrdersCreated = [];
   const allOrderItemsCreated = [];
@@ -255,9 +262,6 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
     const sellerIds = Object.keys(sellerGroups);
     const primarySellerId = sellerIds[0] || cartItems[0]?.seller_id || null;
 
-    const totalPaise = Math.round(finalParentTotal * 100);
-    const subtotalPaise = Math.round(cartGrossTotal * 100);
-    const shippingPaise = Math.round(shippingAmount * 100);
     const orderRef = 'TOHFA-' + Math.random().toString(36).substring(2, 10).toUpperCase();
 
     const { rows: parentOrderRows } = await client.query(
@@ -270,7 +274,7 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
         buyerId,
         primarySellerId,
         addressId,
-        Math.round(finalParentTotal),
+        finalParentTotal,
         totalPaise,
         subtotalPaise,
         shippingPaise,

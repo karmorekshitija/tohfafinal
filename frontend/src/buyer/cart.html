@@ -540,7 +540,7 @@
                         onclick="window.location.href='product.html?id=${ci.product_id}'">
                         ${ci.name}
                     </h3>
-                    <p class="text-xs text-[#1A3A32]/70 mt-0.5 hover:underline cursor-pointer font-['DM_Sans']" onclick="window.location.href='/buyer/seller-profile.html?id=${ci.seller_id}'">by ${ci.seller_name}</p>
+                    <p class="text-xs text-[#1A3A32]/70 mt-0.5 hover:underline cursor-pointer font-['DM_Sans']" onclick="window.location.href='/buyer/seller-profile.html?id=${ci.seller_id}'">by ${ci.seller_name || ci.store_name || 'Artisan Studio'}</p>
                     ${ci.variant_name ? `<span class="inline-block mt-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-[#1A3A32]/10 text-[#1A3A32] border border-[#1A3A32]/15 font-['DM_Sans']">${ci.variant_name}</span>` : ''}
                     ${(() => {
                         if (!ci.customization_data) return '';

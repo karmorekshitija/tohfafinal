@@ -9,6 +9,7 @@
 'use strict';
 
 const { query } = require('../config/db');
+const { computeOrderTotals } = require('../utils/pricing');
 
 // ---------------------------------------------------------------------------
 // GET /api/cart
@@ -156,10 +157,14 @@ async function getCart(req, res, next) {
     const totalItems = items.reduce((s, r) => s + r.quantity, 0);
     const subtotal = items.reduce((sum, i) => sum + (i.available ? i.subtotal : 0), 0);
     const subtotalPaise = items.reduce((sum, i) => sum + (i.available ? i.subtotal_paise : 0), 0);
-    const shipping = subtotal > 0 ? (subtotal >= 999 ? 0 : 50) : 0;
-    const shippingPaise = shipping * 100;
-    const totalAmount = parseFloat((subtotal + shipping).toFixed(2));
-    const totalPaise = subtotalPaise + shippingPaise;
+    const availableSellers = new Set(items.filter((i) => i.available && i.seller_id).map((i) => i.seller_id));
+    const { shipping_paise: shippingPaise, total_paise: totalPaise } = computeOrderTotals({
+      subtotalPaise,
+      discountPaise: 0,
+      sellerCount: availableSellers.size,
+    });
+    const shipping = shippingPaise / 100;
+    const totalAmount = totalPaise / 100;
 
     return res.json({
       success: true,
