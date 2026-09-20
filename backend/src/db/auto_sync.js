@@ -92,6 +92,18 @@ async function autoSyncDatabase() {
       console.warn('⚠️ [Auto-Sync Step 2 - Products Notice]:', err.message);
     }
 
+    // 2b. Product pricing columns
+    try {
+      await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS price_paise BIGINT;`);
+      await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_price NUMERIC(10,2) DEFAULT NULL;`);
+      await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS discount_active BOOLEAN DEFAULT FALSE;`);
+      await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS discount_percentage INT DEFAULT NULL;`);
+      await query(`UPDATE products SET price_paise = ROUND(base_price * 100)::BIGINT WHERE price_paise IS NULL AND base_price IS NOT NULL;`);
+      console.log('✅ [Auto-Sync Step 2b] Product pricing columns ensured');
+    } catch (err) {
+      console.warn('⚠️ [Auto-Sync Step 2b - Product Pricing Notice]:', err.message);
+    }
+
     // 3. User & Seller profile photo columns
     try {
       await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo_url TEXT;`);
