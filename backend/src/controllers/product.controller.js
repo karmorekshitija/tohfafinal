@@ -1225,20 +1225,21 @@ async function updateProduct(req, res, next) {
     const isAdmin = req.user?.role === 'admin' || req.user?.role === 'master_admin';
 
     // Retrieve all valid seller identity representations (user_id and sellers.id / seller_profiles.id)
+    // seller_id in products is UUID — collect as UUID strings, not Numbers.
     const { rows: sRows } = await query(
       'SELECT id, user_id FROM sellers WHERE user_id = $1 UNION SELECT id, user_id FROM seller_profiles WHERE user_id = $1',
       [req.user.id]
     );
     const validSellerIds = Array.from(new Set([
-      Number(req.user.id),
-      Number(req.seller?.id),
-      Number(req.seller?.user_id),
-      ...sRows.flatMap(s => [Number(s.id), Number(s.user_id)])
-    ].filter(n => !isNaN(n) && n > 0)));
+      req.user.id,
+      req.seller?.id,
+      req.seller?.user_id,
+      ...sRows.flatMap(s => [s.id, s.user_id])
+    ].filter(v => v != null && String(v).trim() !== '')));
 
     const { rows: existing } = await query(
-      'SELECT id FROM products WHERE id = $1 AND (seller_id = ANY($2::int[]) OR $3 = TRUE)',
-      [id, validSellerIds, isAdmin]
+      'SELECT id FROM products WHERE id::text = $1 AND (seller_id = ANY($2::uuid[]) OR $3 = TRUE)',
+      [String(id), validSellerIds, isAdmin]
     );
     if (!existing.length) {
       return res.status(404).json({ success: false, message: 'Product not found.' });
