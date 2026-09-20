@@ -557,27 +557,6 @@ async function autoSyncDatabase() {
       console.warn('⚠️ [Auto-Sync Step 11 - Sponsored Products Notice]:', err.message);
     }
 
-    // 12. Ensure Handcrafted Figurines & Art products are properly categorized
-    try {
-      await query(`
-        UPDATE products 
-        SET category_id = (SELECT id FROM categories WHERE slug = 'handcrafted-figurines' LIMIT 1)
-        WHERE name IN (
-          'Stacked Puppies Candle',
-          'Golden Retriever Round Candle',
-          'Chess Knight Horse Candle',
-          'Stacked Owls Candle',
-          'Swan Relief Pillar Candle',
-          'Mother & Child Relief Candle',
-          'Madonna Bust Candle',
-          'Enchanted Cottage Candle',
-          'Embracing Couple Candle'
-        )
-      `);
-    } catch (err) {
-      console.warn('⚠️ [Auto-Sync Step 12 - Product Categorization Notice]:', err.message);
-    }
-
     // 13. Ensure Initial Admin Exists
     try {
       const { rows: adminRows } = await query(

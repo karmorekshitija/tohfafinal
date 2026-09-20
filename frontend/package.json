@@ -5,6 +5,8 @@
   "description": "Tohfa v2 — Curated Gift Marketplace Frontend",
   "scripts": {
     "dev": "vite",
+    "check:categories": "node scripts/check_category_links.mjs",
+    "prebuild": "npm run check:categories",
     "build": "vite build",
     "preview": "vite preview"
   },

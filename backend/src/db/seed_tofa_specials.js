@@ -91,8 +91,8 @@ async function getCategoryId(catKey) {
   const def = CATEGORY_DEFINITIONS[catKey] || CATEGORY_DEFINITIONS['keepsakes'];
 
   let { rows } = await query(
-    'SELECT id FROM categories WHERE slug = $1 OR name = $2 OR slug ILIKE $3 LIMIT 1',
-    [def.slug, def.name, `%${catKey}%`]
+    'SELECT id FROM categories WHERE slug = $1 AND is_active = TRUE LIMIT 1',
+    [def.slug]
   );
 
   if (rows.length > 0) {
@@ -101,8 +101,8 @@ async function getCategoryId(catKey) {
   }
 
   const insertRes = await query(
-    'INSERT INTO categories (name, slug, is_active) VALUES ($1, $2, TRUE) RETURNING id',
-    [def.name, def.slug]
+    'INSERT INTO categories (name, slug, display_name, emoji_icon, is_active) VALUES ($1, $2, $1, $3, TRUE) RETURNING id',
+    [def.name, def.slug, def.emoji]
   );
   categoryIdCache[catKey] = insertRes.rows[0].id;
   return insertRes.rows[0].id;

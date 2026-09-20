@@ -601,8 +601,8 @@ async function handleSubmit(e) {
   const payload = {
     name: title,
     description: document.getElementById('prod-description')?.value.trim() || '',
-    category_id: categoryId.startsWith('cat-') ? null : categoryId,
-    subcategory_id: subcategoryId ? parseInt(subcategoryId, 10) : null,
+    category_id: categoryId || null,
+    subcategory_id: subcategoryId || null,
     occasions: Array.from(selectedOccasions),
     base_price: price,
     stock_quantity: parseInt(document.getElementById('prod-stock')?.value || '10', 10),

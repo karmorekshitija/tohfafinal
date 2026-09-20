@@ -600,7 +600,7 @@
             <span class="material-symbols-outlined text-6xl text-error mb-4">error</span>
             <h3 class="font-headline-lg text-headline-lg mb-2">Product Not Found</h3>
             <p class="text-secondary max-w-md mx-auto mb-6">The product you're looking for might have been removed, deactivated, or does not exist.</p>
-            <button onclick="window.location.href='category.html'" class="bg-primary text-background px-8 py-3 rounded-lg font-semibold uppercase tracking-wider">Back to Browse</button>
+            <button onclick="window.location.href='/buyer/categories.html'" class="bg-primary text-background px-8 py-3 rounded-lg font-semibold uppercase tracking-wider">Back to Browse</button>
         </div>
     </main>
 
@@ -837,6 +837,7 @@
         import { formatPaise } from '/src/utils/currency.js';
         import { logout } from '/src/utils/auth.js';
         import { initSearchOverlay } from '/buyer/searchOverlay.js';
+        import { categoryUrl, ALL_CATEGORIES_URL } from '/src/utils/categoryLinks.js';
 
         initSearchOverlay();
 
@@ -1511,12 +1512,14 @@
                     // Breadcrumb
                     const categoryBreadcrumb = document.getElementById('breadcrumb-category');
                     const productBreadcrumb = document.getElementById('breadcrumb-product');
-                    if (product.category) {
-                        categoryBreadcrumb.innerText = product.category.name;
-                        categoryBreadcrumb.href = `category.html?slug=${product.category.slug}`;
+                    const catSlug = product.category_slug || product.category?.slug;
+                    const catName = product.category_name || product.category?.name || product.category?.display_name;
+                    if (catSlug && catName) {
+                        categoryBreadcrumb.innerText = catName;
+                        categoryBreadcrumb.href = categoryUrl(catSlug);
                     } else {
-                        categoryBreadcrumb.innerText = 'Products';
-                        categoryBreadcrumb.href = 'category.html';
+                        categoryBreadcrumb.innerText = 'Collections';
+                        categoryBreadcrumb.href = ALL_CATEGORIES_URL;
                     }
                     productBreadcrumb.innerText = product.name;
 

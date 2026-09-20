@@ -24,23 +24,6 @@
   <meta name="twitter:image" content="https://thetohfa.in/img/botanical-hero.png"/>
   <meta name="twitter:url" content="https://thetohfa.in/buyer/category"/>
 
-  <script>
-    (function() {
-      try {
-        var p = new URLSearchParams(window.location.search);
-        var slug = p.get('slug') || p.get('category');
-        if (slug) {
-          var canonicalUrl = 'https://thetohfa.in/buyer/category?slug=' + encodeURIComponent(slug);
-          var can = document.querySelector('link[rel="canonical"]');
-          if (can) can.setAttribute('href', canonicalUrl);
-          var ogUrl = document.querySelector('meta[property="og:url"]');
-          if (ogUrl) ogUrl.setAttribute('content', canonicalUrl);
-          var twUrl = document.querySelector('meta[name="twitter:url"]');
-          if (twUrl) twUrl.setAttribute('content', canonicalUrl);
-        }
-      } catch(e) {}
-    })();
-  </script>
 
   <!-- Structured Data / JSON-LD -->
   <script type="application/ld+json">
@@ -289,7 +272,7 @@
   </section>
 
   <!-- 3. SORT + SUBCATEGORY FILTER ROW (STICKY) -->
-  <section class="bg-[#FAF6EE]/95 backdrop-blur-md py-2.5 sm:py-3 md:py-4 sticky top-16 md:top-20 z-40 border-b border-[#14381F]/15">
+  <section id="category-filter-bar" class="bg-[#FAF6EE]/95 backdrop-blur-md py-2.5 sm:py-3 md:py-4 sticky top-16 md:top-20 z-40 border-b border-[#14381F]/15">
     <div class="flex flex-col md:flex-row md:items-center gap-2.5 md:gap-3 px-2 sm:px-4 max-w-7xl mx-auto">
       <!-- Row 1 on mobile: Filter button + Sort dropdown side by side -->
       <div class="flex items-center justify-between w-full md:contents">
@@ -573,22 +556,7 @@
     import Toast from '/src/components/Toast.js';
     import { logout } from '/src/utils/auth.js';
     import { initSearchOverlay } from '/buyer/searchOverlay.js';
-
-    // Emoji Catalog Mapping for Categories
-    const CATEGORY_EMOJIS = {
-      'candles-aromatherapy': '🕯️',
-      'floral-bouquets': '💐',
-      'home-decor': '🏡',
-      'nails-beauty': '💅',
-      'hair-accessories': '🎀',
-      'handcrafted-figurines': '🎨',
-      'gifts-keepsakes': '🎁',
-      'jewellery-wearables': '💍',
-      'ceramics-pottery': '🏺',
-      'candles-fragrance': '🕯️',
-      'crochet': '🧶',
-      'jewellery': '💍'
-    };
+    import { categoryUrl, ALL_CATEGORIES_URL } from '/src/utils/categoryLinks.js';
 
     function isProductOwned(sellerId) {
       try {
@@ -600,8 +568,14 @@
     }
 
     const urlParams = new URLSearchParams(window.location.search);
-    let slug = urlParams.get('slug') || urlParams.get('category') || '';
+    const rawSlug = urlParams.get('slug') || urlParams.get('category') || '';
+    let slug = rawSlug.trim().toLowerCase();
     let subParam = urlParams.get('sub') || urlParams.get('subcategory') || urlParams.get('subcategory_ids') || urlParams.get('subcategory_id') || '';
+    subParam = subParam.trim().toLowerCase();
+
+    if (!slug) {
+      window.location.replace(ALL_CATEGORIES_URL);
+    }
 
     let selectedSubcategoryIds = [];
     let currentSort = urlParams.get('sort') || 'relevance';
@@ -618,140 +592,210 @@
     let activeCategory = null;
     let categorySubcategories = [];
 
-    async function initPage() {
-      // 1. Fetch categories
+    function renderNotFound() {
+      document.title = 'Collection not found | Tohfa';
+
+      let metaRobots = document.querySelector('meta[name="robots"]');
+      if (!metaRobots) {
+        metaRobots = document.createElement('meta');
+        metaRobots.setAttribute('name', 'robots');
+        document.head.appendChild(metaRobots);
+      }
+      metaRobots.setAttribute('content', 'noindex');
+
+      document.querySelector('link[rel="canonical"]')?.remove();
+      document.querySelectorAll('meta[property^="og:"], meta[name^="twitter:"]').forEach(el => el.remove());
+
+      const hero = document.getElementById('category-hero-header');
+      if (hero) hero.classList.add('hidden');
+      const filterBar = document.getElementById('category-filter-bar');
+      if (filterBar) filterBar.classList.add('hidden');
+      const sponsoredSection = document.getElementById('sponsored-section');
+      if (sponsoredSection) sponsoredSection.classList.add('hidden');
+      const countTop = document.getElementById('product-count-top');
+      if (countTop) countTop.parentElement?.classList.add('hidden');
+      const countBottom = document.getElementById('product-count-bottom');
+      if (countBottom) countBottom.parentElement?.classList.add('hidden');
+
+      const grid = document.getElementById('product-grid');
+      if (grid) {
+        grid.className = 'w-full';
+        grid.innerHTML = `
+          <div class="flex flex-col items-center justify-center py-20 px-4 text-center max-w-md mx-auto">
+            <div class="w-16 h-16 rounded-full bg-[#14381F]/10 flex items-center justify-center mb-4 text-[#14381F]">
+              <span class="material-symbols-outlined text-3xl">category</span>
+            </div>
+            <h2 class="font-['Playfair_Display',serif] italic font-bold text-2xl sm:text-3xl text-[#14381F] mb-3">We couldn't find that collection</h2>
+            <p class="text-sm text-[#587A5B] mb-6 font-['DM_Sans',sans-serif] leading-relaxed">The collection you're looking for doesn't exist or has moved.</p>
+            <a href="${ALL_CATEGORIES_URL}" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#14381F] text-[#FAF6EE] font-semibold text-sm hover:bg-[#285C3A] active:scale-95 transition-all no-underline shadow-sm">
+              <span>Browse all collections</span>
+              <span class="material-symbols-outlined text-base">arrow_forward</span>
+            </a>
+          </div>
+        `;
+      }
+    }
+
+    function renderError(message) {
+      const grid = document.getElementById('product-grid');
+      if (grid) {
+        grid.className = 'w-full';
+        grid.innerHTML = `
+          <div class="flex flex-col items-center justify-center py-20 px-4 text-center max-w-md mx-auto">
+            <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4 text-red-700">
+              <span class="material-symbols-outlined text-3xl">error_outline</span>
+            </div>
+            <h2 class="font-['Playfair_Display',serif] italic font-bold text-2xl sm:text-3xl text-[#14381F] mb-3">Unable to load collection</h2>
+            <p class="text-sm text-[#587A5B] mb-6 font-['DM_Sans',sans-serif] leading-relaxed">${message || 'Something went wrong while fetching this collection. Please check your connection and try again.'}</p>
+            <button id="retry-init-btn" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#14381F] text-[#FAF6EE] font-semibold text-sm hover:bg-[#285C3A] active:scale-95 transition-all cursor-pointer shadow-sm">
+              <span class="material-symbols-outlined text-base">refresh</span>
+              <span>Try again</span>
+            </button>
+          </div>
+        `;
+        document.getElementById('retry-init-btn')?.addEventListener('click', () => {
+          initPage();
+        });
+      }
+    }
+
+    async function loadCategoriesForDrawer() {
       try {
         const res = await apiClient.get('/products/categories');
         if (res.data && res.data.success) {
-          const categories = res.data.data?.categories || res.data.data || [];
-          allCategoriesList = categories;
-
-          // Find current category
-          let cat = categories.find(c => c.slug === slug || c.id === slug || (c.name && c.name.toLowerCase().replace(/\s+/g, '-') === slug.toLowerCase()));
-          
-          if (!cat && categories.length > 0) {
-            const aliasMap = {
-              'ceramics': 'ceramics-pottery',
-              'pottery': 'ceramics-pottery',
-              'journals': 'journals-stationery',
-              'stationery': 'journals-stationery',
-              'candles': 'candles-fragrance',
-              'fragrance': 'candles-fragrance',
-              'textiles': 'textile-arts',
-              'art': 'art-portraits',
-              'portraits': 'art-portraits',
-              'wedding': 'wedding-rituals'
-            };
-            const targetSlug = aliasMap[slug.toLowerCase()];
-            if (targetSlug) {
-              cat = categories.find(c => c.slug === targetSlug);
-            }
-          }
-
-          if (!cat) {
-            // No matching category — show error and abort (do NOT silently
-            // fall back to categories[0], that's what caused the candles bug)
-            const grid = document.getElementById('product-grid');
-            if (grid) {
-              grid.innerHTML = `
-                <div class="col-span-full flex flex-col items-center justify-center py-24 text-center">
-                  <span class="material-symbols-outlined text-5xl text-[#14381F]/30 mb-4">category</span>
-                  <p class="font-['Playfair_Display'] italic text-lg text-[#14381F] mb-2">Category not found</p>
-                  <p class="text-sm text-[#587A5B] mb-6">The category you're looking for doesn't exist.</p>
-                  <a href="/buyer/categories.html" class="bg-[#14381F] text-[#FAF6EE] px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-[#285C3A] transition-colors no-underline">Browse all categories →</a>
-                </div>`;
-            }
-            return;
-          }
-
-          if (cat) {
-            activeCategory = cat;
-            slug = cat.slug || slug;
-            activeFilters.category_id = cat.id;
-            categorySubcategories = cat.subcategories || [];
-
-            // Populate category header
-            const titleEl = document.getElementById('category-title');
-            if (titleEl) titleEl.innerText = cat.display_name || cat.name;
-            
-            const emojiEl = document.getElementById('category-emoji');
-            if (emojiEl) emojiEl.innerText = cat.emoji_icon || cat.icon_emoji || CATEGORY_EMOJIS[cat.slug] || '🏺';
-
-            const countEl = document.getElementById('category-product-count');
-            if (countEl) countEl.innerText = `${cat.product_count !== undefined ? cat.product_count : (cat.item_count || 0)} active creations`;
-
-            // Dynamic header background
-            const bannerBg = cat.banner_image_url || cat.image_url;
-            const heroHeader = document.getElementById('category-hero-header');
-            if (heroHeader && bannerBg) {
-              heroHeader.style.backgroundImage = `linear-gradient(rgba(250, 246, 238, 0.88), rgba(250, 246, 238, 0.96)), url('${bannerBg}')`;
-              heroHeader.style.backgroundSize = 'cover';
-              heroHeader.style.backgroundPosition = 'center';
-            }
-
-            // Update Dynamic Category SEO Metadata
-            const catName = cat.display_name || cat.name || 'Category';
-            const catDesc = cat.description ? cat.description.substring(0, 160).replace(/\n/g, ' ') : `Explore handcrafted ${catName} and artisanal gifts on Tohfa.`;
-            document.title = `${catName} | Handcrafted Collections | Tohfa`;
-            const metaDescEl = document.querySelector('meta[name="description"]');
-            if (metaDescEl) metaDescEl.content = catDesc;
-            const ogTitleEl = document.querySelector('meta[property="og:title"]');
-            if (ogTitleEl) ogTitleEl.content = `${catName} | Handcrafted Collections | Tohfa`;
-            const ogDescEl = document.querySelector('meta[property="og:description"]');
-            if (ogDescEl) ogDescEl.content = catDesc;
-            const ogUrlEl = document.querySelector('meta[property="og:url"]');
-            if (ogUrlEl) ogUrlEl.content = `https://thetohfa.in/buyer/category?slug=${cat.slug || slug}`;
-            const twitterTitleEl = document.querySelector('meta[name="twitter:title"]');
-            if (twitterTitleEl) twitterTitleEl.content = `${catName} | Handcrafted Collections | Tohfa`;
-            const twitterDescEl = document.querySelector('meta[name="twitter:description"]');
-            if (twitterDescEl) twitterDescEl.content = catDesc;
-            const canonicalEl = document.querySelector('link[rel="canonical"]');
-            if (canonicalEl) canonicalEl.href = `https://thetohfa.in/buyer/category?slug=${cat.slug || slug}`;
-            if (bannerBg) {
-              const ogImgEl = document.querySelector('meta[property="og:image"]');
-              if (ogImgEl) ogImgEl.content = bannerBg;
-              const twImgEl = document.querySelector('meta[name="twitter:image"]');
-              if (twImgEl) twImgEl.content = bannerBg;
-            }
-
-            // Check subcategory param from URL
-            if (subParam && categorySubcategories.length > 0) {
-              const matchedSub = categorySubcategories.find(s => 
-                s.slug === subParam || 
-                s.id === subParam || 
-                s.id === `sub-${subParam}` ||
-                (s.name && s.name.toLowerCase().replace(/\s+/g, '-') === subParam.toLowerCase()) ||
-                (s.name && s.name.toLowerCase() === subParam.toLowerCase())
-              );
-              if (matchedSub) {
-                selectedSubcategoryIds = [matchedSub.id];
-              } else {
-                selectedSubcategoryIds = [subParam];
-              }
-            }
-          }
-
-          // Populate filter category select in drawer
+          allCategoriesList = res.data.data?.categories || res.data.data || [];
           const categorySelect = document.getElementById('filter-category');
           if (categorySelect) {
-            categorySelect.innerHTML = '<option value="">All Categories</option>' + categories.map(c => `
+            categorySelect.innerHTML = '<option value="">All Collections</option>' + allCategoriesList.map(c => `
               <option value="${c.id}" ${activeCategory && String(c.id) === String(activeCategory.id) ? 'selected' : ''}>${c.display_name || c.name}</option>
             `).join('');
           }
         }
+      } catch (e) {
+        console.warn('Could not load categories for filter drawer:', e);
+      }
+    }
+
+    async function initPage() {
+      if (!slug) return;
+
+      try {
+        const res = await apiClient.get('/products/categories/' + encodeURIComponent(slug));
+        if (!res || !res.data || !res.data.success || !res.data.data?.category) {
+          renderNotFound();
+          return;
+        }
+
+        const payload = res.data.data;
+        activeCategory = payload.category;
+        slug = activeCategory.slug;
+        activeFilters.category_id = activeCategory.id;
+        categorySubcategories = activeCategory.subcategories || [];
+
+        // Unhide header, filter bar, count labels if they were hidden
+        const hero = document.getElementById('category-hero-header');
+        if (hero) hero.classList.remove('hidden');
+        const filterBar = document.getElementById('category-filter-bar');
+        if (filterBar) filterBar.classList.remove('hidden');
+        const countTop = document.getElementById('product-count-top');
+        if (countTop) countTop.parentElement?.classList.remove('hidden');
+        const countBottom = document.getElementById('product-count-bottom');
+        if (countBottom) countBottom.parentElement?.classList.remove('hidden');
+
+        // Populate category header
+        const titleEl = document.getElementById('category-title');
+        if (titleEl) titleEl.innerText = activeCategory.display_name || activeCategory.name;
+
+        const emojiEl = document.getElementById('category-emoji');
+        if (emojiEl) emojiEl.innerText = activeCategory.emoji_icon || activeCategory.icon_emoji || '🏺';
+
+        const countEl = document.getElementById('category-product-count');
+        if (countEl) countEl.innerText = `${activeCategory.product_count !== undefined ? activeCategory.product_count : 0} active creations`;
+
+        // Dynamic header background
+        const bannerBg = activeCategory.banner_image_url || activeCategory.image_url;
+        const heroHeader = document.getElementById('category-hero-header');
+        if (heroHeader && bannerBg) {
+          heroHeader.style.backgroundImage = `linear-gradient(rgba(250, 246, 238, 0.88), rgba(250, 246, 238, 0.96)), url('${bannerBg}')`;
+          heroHeader.style.backgroundSize = 'cover';
+          heroHeader.style.backgroundPosition = 'center';
+        }
+
+        // Update Dynamic Category SEO Metadata
+        const catName = activeCategory.display_name || activeCategory.name || 'Category';
+        const catDesc = activeCategory.description ? activeCategory.description.substring(0, 160).replace(/\n/g, ' ') : `Explore handcrafted ${catName} and artisanal gifts on Tohfa.`;
+        document.title = `${catName} | Handcrafted Collections | Tohfa`;
+        const metaDescEl = document.querySelector('meta[name="description"]');
+        if (metaDescEl) metaDescEl.content = catDesc;
+        const ogTitleEl = document.querySelector('meta[property="og:title"]');
+        if (ogTitleEl) ogTitleEl.content = `${catName} | Handcrafted Collections | Tohfa`;
+        const ogDescEl = document.querySelector('meta[property="og:description"]');
+        if (ogDescEl) ogDescEl.content = catDesc;
+        const canonicalUrl = `https://thetohfa.in${categoryUrl(activeCategory)}`;
+        const ogUrlEl = document.querySelector('meta[property="og:url"]');
+        if (ogUrlEl) ogUrlEl.content = canonicalUrl;
+        const twitterTitleEl = document.querySelector('meta[name="twitter:title"]');
+        if (twitterTitleEl) twitterTitleEl.content = `${catName} | Handcrafted Collections | Tohfa`;
+        const twitterDescEl = document.querySelector('meta[name="twitter:description"]');
+        if (twitterDescEl) twitterDescEl.content = catDesc;
+        const canonicalEl = document.querySelector('link[rel="canonical"]');
+        if (canonicalEl) canonicalEl.href = canonicalUrl;
+        if (bannerBg) {
+          const ogImgEl = document.querySelector('meta[property="og:image"]');
+          if (ogImgEl) ogImgEl.content = bannerBg;
+          const twImgEl = document.querySelector('meta[name="twitter:image"]');
+          if (twImgEl) twImgEl.content = bannerBg;
+        }
+
+        // Check subcategory param from URL or backend selected_subcategory
+        if (payload.selected_subcategory) {
+          selectedSubcategoryIds = [payload.selected_subcategory.id];
+        } else if (subParam && categorySubcategories.length > 0) {
+          const matchedSub = categorySubcategories.find(s =>
+            s.slug === subParam ||
+            String(s.id) === subParam ||
+            s.id === `sub-${subParam}` ||
+            (s.name && s.name.toLowerCase().replace(/\s+/g, '-') === subParam) ||
+            (s.name && s.name.toLowerCase() === subParam)
+          );
+          if (matchedSub) {
+            selectedSubcategoryIds = [matchedSub.id];
+          } else {
+            selectedSubcategoryIds = [];
+            const cleanUrl = new URL(window.location.href);
+            cleanUrl.searchParams.delete('sub');
+            cleanUrl.searchParams.delete('subcategory');
+            cleanUrl.searchParams.delete('subcategory_ids');
+            cleanUrl.searchParams.delete('subcategory_id');
+            window.history.replaceState({}, '', cleanUrl.toString());
+          }
+        } else {
+          selectedSubcategoryIds = [];
+        }
+
       } catch (err) {
+        if (err.response?.status === 404 || err.status === 404) {
+          renderNotFound();
+          return;
+        }
         console.error("Failed to load category metadata:", err);
+        renderError("We encountered a problem loading this collection. Please try again.");
+        return;
       }
 
-      // 2. Render subcategory pills
+      // Load all categories for the filter drawer in the background
+      loadCategoriesForDrawer();
+
+      // Render subcategory pills
       renderSubcategoryFilters();
 
-      // 3. Fetch products
+      // Fetch products
       await fetchProducts();
 
-      // 4. Sort listener
+      // Sort listener
       const sortSelect = document.getElementById('sort-select');
-      if (sortSelect) {
+      if (sortSelect && !sortSelect.dataset.wired) {
+        sortSelect.dataset.wired = 'true';
         sortSelect.value = currentSort;
         sortSelect.addEventListener('change', async (e) => {
           currentSort = e.target.value;
@@ -762,7 +806,7 @@
         });
       }
 
-      // 5. Wire Filter Drawer
+      // Wire Filter Drawer
       initFilterDrawer();
     }
 
@@ -914,6 +958,7 @@
     async function fetchProducts() {
       const grid = document.getElementById('product-grid');
       if (!grid) return;
+      if (!activeCategory || !activeCategory.id) return;
 
       grid.innerHTML = `
         <div class="col-span-full flex flex-col items-center justify-center py-24">
@@ -955,21 +1000,6 @@
           }
         } catch (apiErr) {
           console.warn("Falling back for products fetch:", apiErr);
-        }
-
-        // If category filter by subcategory on client side
-        if (selectedSubcategoryIds.length > 0 && products.length > 0) {
-          const subId = selectedSubcategoryIds[0];
-          const subFiltered = products.filter(p => 
-            String(p.category_id) === String(subId) ||
-            p.subcategory_id === subId || 
-            p.subcategory_slug === subId || 
-            (p.category_slug && p.category_slug === subId) ||
-            (p.subcategory_name && p.subcategory_name.toLowerCase() === String(subId).toLowerCase())
-          );
-          if (subFiltered.length > 0) {
-            products = subFiltered;
-          }
         }
 
         // Extract sponsored products
@@ -1261,7 +1291,7 @@
           if (categorySelect && categorySelect.value && activeCategory && String(categorySelect.value) !== String(activeCategory.id)) {
             const chosen = allCategoriesList.find(c => String(c.id) === String(categorySelect.value));
             if (chosen) {
-              window.location.href = `/buyer/category.html?slug=${chosen.slug || chosen.id}`;
+              window.location.href = categoryUrl(chosen);
               return;
             }
           }

@@ -172,24 +172,10 @@
       </div>
 
       <!-- Quick Category Shortcuts -->
-      <div class="pt-6 border-t border-[#285C3A]/15">
+      <div id="popular-categories-section" class="pt-6 border-t border-[#285C3A]/15">
         <span class="text-xs uppercase tracking-widest text-[#587A5B] font-mono block mb-4">Popular Craft Categories</span>
-        <div class="flex flex-wrap items-center justify-center gap-2.5">
-          <a href="/buyer/category.html?slug=ceramics-pottery" class="craft-bubble px-4 py-2 rounded-full border border-[#285C3A]/20 bg-white text-xs font-medium text-[#14381F] no-underline">
-            Ceramics & Pottery
-          </a>
-          <a href="/buyer/category.html?slug=jewellery" class="craft-bubble px-4 py-2 rounded-full border border-[#285C3A]/20 bg-white text-xs font-medium text-[#14381F] no-underline">
-            Handmade Jewellery
-          </a>
-          <a href="/buyer/category.html?slug=candles-fragrance" class="craft-bubble px-4 py-2 rounded-full border border-[#285C3A]/20 bg-white text-xs font-medium text-[#14381F] no-underline">
-            Botanical Candles
-          </a>
-          <a href="/buyer/category.html?slug=art-portraits" class="craft-bubble px-4 py-2 rounded-full border border-[#285C3A]/20 bg-white text-xs font-medium text-[#14381F] no-underline">
-            Custom Portraits
-          </a>
-          <a href="/buyer/category.html?slug=hampers" class="craft-bubble px-4 py-2 rounded-full border border-[#285C3A]/20 bg-white text-xs font-medium text-[#14381F] no-underline">
-            Gift Hampers
-          </a>
+        <div id="popular-categories-container" class="flex flex-wrap items-center justify-center gap-2.5">
+          <!-- Populated dynamically via categoryUrl() -->
         </div>
       </div>
 
@@ -219,7 +205,35 @@
     import apiClient from '/src/utils/apiClient.js';
     import { formatPaise } from '/src/utils/currency.js';
     import { initSearchOverlay } from '/buyer/searchOverlay.js';
+    import { categoryUrl } from '/src/utils/categoryLinks.js';
     initSearchOverlay();
+
+    async function loadPopularCategories() {
+      const section = document.getElementById('popular-categories-section');
+      const container = document.getElementById('popular-categories-container');
+      if (!container || !section) return;
+
+      try {
+        const res = await apiClient.get('/products/categories');
+        const categories = res.data?.data?.categories || res.data?.data || [];
+        if (!Array.isArray(categories) || categories.length === 0) {
+          section.classList.add('hidden');
+          return;
+        }
+
+        const bubbles = categories.slice(0, 6).map(cat => {
+          const name = cat.display_name || cat.name;
+          const url = categoryUrl(cat);
+          return `<a href="${url}" class="craft-bubble px-4 py-2 rounded-full border border-[#285C3A]/20 bg-white text-xs font-medium text-[#14381F] no-underline hover:border-[#14381F]/40 hover:bg-[#FAF6EE] transition-all">${name}</a>`;
+        }).join('');
+
+        container.innerHTML = bubbles;
+      } catch (err) {
+        console.error('Failed to load category bubbles:', err);
+        section.classList.add('hidden');
+      }
+    }
+    loadPopularCategories();
 
     // Check Auth State for Navbar
     function checkAuthState() {

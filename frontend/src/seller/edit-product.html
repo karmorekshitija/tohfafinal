@@ -143,22 +143,6 @@
           </div>
       </section>
 
-      <!-- Video Section -->
-      <section class="border-b border-sage/15 pb-6 space-y-4 relative z-10">
-          <label class="block text-xs font-bold uppercase tracking-wider text-forest">Product Video (Optional)</label>
-          <div id="video-drag-zone" class="border-2 border-dashed border-outline-variant/50 rounded-lg h-32 flex flex-col items-center justify-center relative cursor-pointer hover:border-forest transition-colors bg-parchment/30 overflow-hidden">
-            <input accept="video/*" class="hidden" id="video-file-input" type="file"/>
-            <div id="video-upload-prompt" class="flex flex-col items-center justify-center text-center">
-              <span class="material-symbols-outlined text-outline-variant text-2xl">videocam</span>
-              <span class="text-[10px] text-on-surface-variant mt-1">Upload Video (Max 10s, 20MB)</span>
-            </div>
-            <div id="video-preview-container" class="hidden absolute inset-0 bg-[#FFF8E7] flex items-center justify-center">
-              <video id="video-preview" class="w-full h-full object-cover rounded-lg" autoplay loop muted playsinline></video>
-              <button id="remove-video-btn" type="button" class="absolute top-1 right-1 w-6 h-6 bg-error text-white rounded-full flex items-center justify-center text-xs font-bold" onclick="event.stopPropagation(); removeSelectedVideo();">&times;</button>
-            </div>
-          </div>
-      </section>
-
       <!-- Pricing & Stock -->
       <section class="border-b border-sage/15 pb-6 space-y-6 relative z-10">
           <label class="block text-xs font-bold uppercase tracking-wider text-forest">Pricing & Stock</label>
@@ -384,43 +368,12 @@
                null;
     }
 
-    // Photos state (up to 8 slots)
+    // Photos state (up to 8 slots, plus extra photos preserved beyond slot 8)
     let photoFiles = [null, null, null, null, null, null, null, null];
     let photoUrls = ['', '', '', '', '', '', '', ''];
-    let selectedVideoFile = null;
-    let videoUrl = '';
+    let extraPhotoUrls = [];
 
     document.addEventListener('DOMContentLoaded', () => {
-        const videoInput = document.getElementById('video-file-input');
-        const videoDragZone = document.getElementById('video-drag-zone');
-
-        if (videoDragZone && videoInput) {
-            videoDragZone.addEventListener('click', () => videoInput.click());
-            
-            videoDragZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                videoDragZone.classList.add('bg-sage/10');
-            });
-            videoDragZone.addEventListener('dragleave', () => {
-                videoDragZone.classList.remove('bg-sage/10');
-            });
-            videoDragZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                videoDragZone.classList.remove('bg-sage/10');
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    handleVideoSelect(files[0]);
-                }
-            });
-
-            videoInput.addEventListener('change', (e) => {
-                const files = e.target.files;
-                if (files.length > 0) {
-                    handleVideoSelect(files[0]);
-                }
-            });
-        }
-
         // Customization modular toggle listeners
         document.getElementById('edit-custom-enabled')?.addEventListener('change', (e) => {
             document.getElementById('edit-custom-panel')?.classList.toggle('hidden', !e.target.checked);
@@ -435,57 +388,6 @@
             document.getElementById('edit-custom-note-settings')?.classList.toggle('hidden', !e.target.checked);
         });
     });
-
-    function handleVideoSelect(file) {
-        if (!file.type.startsWith('video/')) {
-            showToast('Please select a valid video file.', 'error');
-            return;
-        }
-        if (file.size > 20 * 1024 * 1024) {
-            showToast('Video size must not exceed 20MB.', 'error');
-            return;
-        }
-
-        const videoElement = document.createElement('video');
-        videoElement.preload = 'metadata';
-        videoElement.src = URL.createObjectURL(file);
-        videoElement.onloadedmetadata = () => {
-            window.URL.revokeObjectURL(videoElement.src);
-            if (videoElement.duration > 10) {
-                showToast('Video duration must be 10 seconds or less.', 'error');
-            } else {
-                selectedVideoFile = file;
-                videoUrl = URL.createObjectURL(file);
-                renderVideoPreview(videoUrl);
-            }
-        };
-        videoElement.onerror = () => {
-            showToast('Failed to load video metadata.', 'error');
-        };
-    }
-
-    function renderVideoPreview(url) {
-        const preview = document.getElementById('video-preview');
-        const container = document.getElementById('video-preview-container');
-        const prompt = document.getElementById('video-upload-prompt');
-        
-        if (url) {
-            preview.src = url;
-            container.classList.remove('hidden');
-            prompt.classList.add('hidden');
-        } else {
-            preview.src = '';
-            container.classList.add('hidden');
-            prompt.classList.remove('hidden');
-        }
-    }
-
-    window.removeSelectedVideo = function() {
-        selectedVideoFile = null;
-        videoUrl = '';
-        renderVideoPreview(null);
-        if (videoInput) videoInput.value = '';
-    };
 
     function getQueryParam(param) {
         const urlParams = new URLSearchParams(window.location.search);
@@ -637,12 +539,16 @@
                     </div>
                 `;
                 document.getElementById('locked-product-name').textContent = data.title || data.name || '';
-                document.getElementById('locked-product-category').textContent = catName || '';
 
+                let displayCatName = catName;
                 let matchedCatId = data.parent_category_id || data.category_id;
-                if (data.parent_category_id && data.category_id) {
-                    if (!selectedSubcategoryIds.includes(data.category_id)) {
-                        selectedSubcategoryIds.push(data.category_id);
+                if (data.parent_category_id) {
+                    const parentCat = categoriesList.find(c => String(c.id) === String(data.parent_category_id));
+                    if (parentCat) {
+                        displayCatName = parentCat.display_name || parentCat.name;
+                    }
+                    if (data.category_id && !selectedSubcategoryIds.some(id => String(id) === String(data.category_id))) {
+                        selectedSubcategoryIds.push(Number(data.category_id));
                     }
                 }
                 if (!matchedCatId && catName) {
@@ -652,10 +558,11 @@
                     });
                     if (catObj) matchedCatId = catObj.id;
                 }
+                document.getElementById('locked-product-category').textContent = displayCatName || catName || '—';
                 renderSubcategories(matchedCatId || '');
 
                 if (Array.isArray(data.occasions)) {
-                    selectedOccasions = new Set(data.occasions);
+                    selectedOccasions = new Set(data.occasions.map(o => typeof o === 'string' ? o.toLowerCase().trim() : (o.slug || o.name || '')));
                 }
                 renderOccasionChips();
             }
@@ -681,6 +588,10 @@
             }
 
             // Photos
+            extraPhotoUrls = [];
+            photoFiles = [null, null, null, null, null, null, null, null];
+            photoUrls = ['', '', '', '', '', '', '', ''];
+
             const allPhotos = (data.photos && data.photos.length > 0)
               ? data.photos
               : (Array.isArray(data.images) ? data.images.map((img, i) => ({ url: img.url || img, sort_order: i })) : []);
@@ -688,10 +599,14 @@
             const imagePhotos = allPhotos;
             
             imagePhotos.forEach((photo, index) => {
+                const u = (photo && typeof photo === 'object' ? (photo.url || photo.img_url || photo.image_url) : photo) || '';
+                if (!u) return;
                 if (index < 8) {
-                    const u = photo.url || photo;
                     photoUrls[index] = u;
+                    photoFiles[index] = null;
                     updatePhotoSlotUI(index, u);
+                } else {
+                    extraPhotoUrls.push(u);
                 }
             });
 
@@ -864,7 +779,46 @@
 
     // Save changes (PATCH API)
     async function handleSaveClick() {
-        const price = parseFloat(document.getElementById('listing-price').value) || 0.0;
+        const saveBtn = document.getElementById('save-btn');
+        if (!saveBtn || saveBtn.disabled) return;
+        const originalSaveHtml = saveBtn.innerHTML;
+
+        function setSaveLoading(isLoading) {
+            if (!saveBtn) return;
+            saveBtn.disabled = isLoading;
+            if (isLoading) {
+                saveBtn.classList.add('opacity-60', 'cursor-not-allowed');
+                saveBtn.innerHTML = `<span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span> Saving...`;
+            } else {
+                saveBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+                saveBtn.innerHTML = originalSaveHtml;
+            }
+        }
+
+        // Blank price safety: validate price > 0
+        const priceInputStr = document.getElementById('listing-price')?.value?.trim();
+        const priceNum = parseFloat(priceInputStr);
+        if (!priceInputStr || isNaN(priceNum) || priceNum <= 0) {
+            showToast('Please enter a valid price greater than ₹0.', 'error');
+            return;
+        }
+        const price = priceNum;
+
+        // Check that at least one photo exists before uploading
+        const hasAnyPhoto = photoUrls.some((u, i) => (u && !u.startsWith('blob:')) || Boolean(photoFiles[i])) || extraPhotoUrls.length > 0;
+        if (!hasAnyPhoto) {
+            showToast('Please keep at least one photo.', 'error');
+            return;
+        }
+
+        const token = getAuthToken();
+        if (!token) {
+            showToast('Please log in to save changes.', 'error');
+            return;
+        }
+
+        setSaveLoading(true);
+
         const stock = parseInt(document.getElementById('stock-count').value) || 0;
         const prebook_limit = parseInt(document.getElementById('prebook-limit').value) || null;
 
@@ -875,76 +829,75 @@
         const dimensions_weight = parseFloat(document.getElementById('dim-weight').value) || null;
         const bio = document.getElementById('product-bio').value.trim() || null;
 
-        const token = getAuthToken();
-
-        // Video upload first if selected
-        if (selectedVideoFile) {
-            const formData = new FormData();
-            formData.append('images', selectedVideoFile);
-            formData.append('sort_order', '0');
-            
-            try {
-                const uploadRes = await fetch(`${API_BASE}/api/seller/listings/${productId}/photos`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
-                });
-                if (uploadRes.ok) {
-                    const resp = await uploadRes.json();
-                    const videoData = resp.data?.images?.[0] || resp.data || resp;
-                    videoUrl = videoData?.url || videoData;
-                    selectedVideoFile = null;
-                }
-            } catch (err) {
-                console.error('Video upload error:', err);
-            }
-        }
-
         // Upload any newly chosen local photo files (with lossless pre-compression)
         for (let idx = 0; idx < 8; idx++) {
             if (photoFiles[idx]) {
-                const compressed = window.compressImage ? await window.compressImage(photoFiles[idx]) : photoFiles[idx];
-                const formData = new FormData();
-                formData.append('images', compressed);
-                formData.append('sort_order', String(idx));
                 try {
+                    const compressed = window.compressImage ? await window.compressImage(photoFiles[idx]) : photoFiles[idx];
+                    const formData = new FormData();
+                    formData.append('images', compressed);
+                    formData.append('sort_order', String(idx));
+
                     const uploadRes = await fetch(`${API_BASE}/api/products/${productId}/images`, {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${token}` },
                         body: formData
                     });
-                    if (uploadRes.ok) {
-                        const uploadJson = await uploadRes.json();
-                        const uploadedImgs = uploadJson.data?.images || uploadJson.images || [];
-                        if (uploadedImgs.length > 0) {
-                            photoUrls[idx] = uploadedImgs[0].url;
-                            photoFiles[idx] = null;
-                        }
+                    if (!uploadRes.ok) {
+                        let errMsg = `Upload failed (status ${uploadRes.status})`;
+                        try {
+                            const errJson = await uploadRes.json();
+                            errMsg = errJson.message || errJson.detail || errMsg;
+                        } catch {}
+                        throw new Error(errMsg);
                     }
+                    const uploadJson = await uploadRes.json();
+                    if (uploadJson.success === false) {
+                        throw new Error(uploadJson.message || 'Upload failed');
+                    }
+                    const uploadedImgs = uploadJson.data?.images || uploadJson.images || [];
+                    if (!uploadedImgs.length || !uploadedImgs[0]?.url) {
+                        throw new Error('Server returned no image URL');
+                    }
+                    photoUrls[idx] = uploadedImgs[0].url;
+                    photoFiles[idx] = null; // Mark slot as saved
                 } catch (err) {
-                    console.error('Photo upload error for slot ' + idx, err);
+                    console.error('Photo upload error for slot ' + (idx + 1), err);
+                    const slotLabel = idx === 0 ? 'Cover Photo (Slot 1)' : `Photo Slot ${idx + 1}`;
+                    showToast(`${slotLabel}: ${err.message || 'Upload failed'}`, 'error');
+                    setSaveLoading(false);
+                    return; // ABORT: Do not send PATCH, keep local state
                 }
             }
         }
 
-        // Photo payloads
+        // Build photos payload from saved slots in slot order (0->7), then append extra photos beyond slot 8
         const photosPayload = [];
-        photoUrls.forEach((url, idx) => {
-            if (url && !url.startsWith('data:image')) {
+        for (let idx = 0; idx < 8; idx++) {
+            const url = photoUrls[idx];
+            // Only saved slots (not empty, not pending local file, not blob preview)
+            if (url && !photoFiles[idx] && !url.startsWith('blob:')) {
                 photosPayload.push({
                     url: url,
-                    sort_order: idx,
-                    is_cover: idx === 0
+                    sort_order: photosPayload.length,
+                    is_cover: photosPayload.length === 0
+                });
+            }
+        }
+        extraPhotoUrls.forEach(url => {
+            if (url && !url.startsWith('blob:')) {
+                photosPayload.push({
+                    url: url,
+                    sort_order: photosPayload.length,
+                    is_cover: false
                 });
             }
         });
 
-        if (videoUrl) {
-            photosPayload.push({
-                url: videoUrl,
-                sort_order: 99,
-                is_cover: false
-            });
+        if (photosPayload.length === 0) {
+            showToast('Please keep at least one photo.', 'error');
+            setSaveLoading(false);
+            return;
         }
 
         const patchBody = {
@@ -1057,7 +1010,6 @@
         patchBody.customization_mode = isCustomizable ? 'fixed' : 'none';
         patchBody.customization_schema = finalCustomSchema;
 
-        const token = getAuthToken();
         try {
             const res = await fetch(`${API_BASE}/api/seller/listings/${productId}`, {
                 method: 'PATCH',
@@ -1076,10 +1028,12 @@
             } else {
                 const err = await res.json();
                 showToast(err.message || err.detail || 'Failed to save changes.', 'error');
+                setSaveLoading(false);
             }
         } catch (err) {
             console.error(err);
             showToast('Studio backend server connection error.', 'error');
+            setSaveLoading(false);
         }
     }
 
@@ -1262,7 +1216,7 @@
                 cb.type = 'checkbox';
                 cb.value = sub.id;
                 cb.className = 'rounded border-sage text-forest focus:ring-forest';
-                if (selectedSubcategoryIds.includes(sub.id)) {
+                if (selectedSubcategoryIds.some(id => String(id) === String(sub.id))) {
                     cb.checked = true;
                 }
                 

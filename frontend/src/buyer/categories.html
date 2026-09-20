@@ -396,6 +396,7 @@
     import apiClient from '/src/utils/apiClient.js';
     import { logout } from '/src/utils/auth.js';
     import { initSearchOverlay } from '/buyer/searchOverlay.js';
+    import { categoryUrl } from '/src/utils/categoryLinks.js';
 
     const FALLBACK_IMAGE = '/img/categories/artisan_showcase.jpg';
 
@@ -454,25 +455,7 @@
             const displayName = cat.display_name || cat.name;
             const count = cat.product_count !== undefined ? cat.product_count : (cat.item_count || 0);
 
-            const SLUG_IMAGE_MAP = {
-              'floral-bouquets': '/img/products/meesho_tohfa/bouquet/1.jpeg',
-              'floral-botanicals': '/img/products/meesho_tohfa/bouquet/1.jpeg',
-              'candles-aromatherapy': '/img/products/meesho_tohfa/round-candle/1.jpeg',
-              'candles': '/img/products/meesho_tohfa/round-candle/1.jpeg',
-              'couples': '/img/products/meesho_tohfa/pink-couple/1.jpeg',
-              'couples-keepsakes': '/img/products/meesho_tohfa/pink-couple/1.jpeg',
-              'nails-beauty': '/img/products/meesho_tohfa/nails/1.jpeg',
-              'nails': '/img/products/meesho_tohfa/nails/1.jpeg',
-              'hair-accessories': '/img/products/meesho_tohfa/mix-clips/1.jpeg',
-              'handcrafted-figurines': '/img/products/meesho_tohfa/dog/1.jpeg',
-              'handcrafted': '/img/products/meesho_tohfa/dog/1.jpeg',
-              'home-decor': '/img/products/meesho_tohfa/evileye-pot/1.jpeg',
-              'jewellery-wearables': '/img/categories/jewellery.jpg',
-              'jewellery': '/img/categories/jewellery.jpg',
-              'ceramics-pottery': '/img/categories/ceramics.jpg',
-              'customized-gifts': '/img/categories/custom_portraits.jpg',
-            };
-            let imageToUse = cat.image_url || SLUG_IMAGE_MAP[cat.slug] || FALLBACK_IMAGE;
+            const imageToUse = cat.image_url || FALLBACK_IMAGE;
 
             const subs = cat.subcategories || [];
             const displaySubs = subs.slice(0, 10);
@@ -480,13 +463,13 @@
             let subsHtml = '';
             if (subs.length > 0) {
               subsHtml = `<div class="flex flex-nowrap overflow-x-auto gap-1 pt-1.5 max-w-full no-scrollbar" style="-webkit-overflow-scrolling:touch; scrollbar-width:none;" onclick="event.stopPropagation()">
-              ${displaySubs.map(s => `<a href="/buyer/category.html?slug=${cat.slug}&subcategory_ids=${s.id}" class="flex-shrink-0 whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] bg-white/20 hover:bg-white/35 text-white backdrop-blur-xs transition-all no-underline">${s.name}</a>`).join('')}
-                ${hasMoreSubs ? `<a href="/buyer/category.html?slug=${cat.slug}" class="flex-shrink-0 whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] bg-[#C85A32]/85 hover:bg-[#C85A32] text-white backdrop-blur-xs transition-all font-semibold no-underline">+${subs.length - 10} more</a>` : ''}
+              ${displaySubs.map(s => `<a href="${categoryUrl(cat, s.slug || s.id)}" class="flex-shrink-0 whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] bg-white/20 hover:bg-white/35 text-white backdrop-blur-xs transition-all no-underline">${s.name}</a>`).join('')}
+                ${hasMoreSubs ? `<a href="${categoryUrl(cat)}" class="flex-shrink-0 whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] bg-[#C85A32]/85 hover:bg-[#C85A32] text-white backdrop-blur-xs transition-all font-semibold no-underline">+${subs.length - 10} more</a>` : ''}
               </div>`;
             }
 
             html += `
-              <a href="/buyer/category.html?slug=${cat.slug}" class="category-card-editorial aspect-square relative cursor-pointer rounded-2xl overflow-hidden shadow-xs hover:-translate-y-1 transition-all duration-300 group block no-underline text-inherit" data-category-name="${displayName.toLowerCase()}" data-subcategories="${subs.map(s => s.name.toLowerCase()).join(' ')}">
+              <a href="${categoryUrl(cat)}" class="category-card-editorial aspect-square relative cursor-pointer rounded-2xl overflow-hidden shadow-xs hover:-translate-y-1 transition-all duration-300 group block no-underline text-inherit" data-category-name="${displayName.toLowerCase()}" data-subcategories="${subs.map(s => s.name.toLowerCase()).join(' ')}">
                 <img class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${imageToUse}" alt="${displayName}" loading="lazy" onerror="this.onerror=null; this.src='/img/categories/artisan_showcase.jpg';">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent"></div>
                 <div class="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white z-10">

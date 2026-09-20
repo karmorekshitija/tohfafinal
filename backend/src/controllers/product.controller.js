@@ -150,38 +150,34 @@ function dedupeAlternateFormatImages(list) {
 
 // Helper to safely resolve category from ID, slug, or name (Bug Audit Phase 1 & 2)
 async function resolveCategoryId(rawCategory) {
-  if (rawCategory === undefined || rawCategory === null || rawCategory === '') {
+  if (rawCategory === undefined || rawCategory === null) {
     return null;
   }
 
-  const numId = parseInt(rawCategory, 10);
-  if (!isNaN(numId) && String(numId) === String(rawCategory).trim()) {
-    const { rows } = await query('SELECT id FROM categories WHERE id = $1', [numId]);
-    if (rows.length > 0) return rows[0].id;
-  }
-
   const cleanStr = String(rawCategory).trim();
-  const slugified = cleanStr.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  if (!cleanStr) return null;
 
+  // 1. Exact match on id::text
+  const { rows: idRows } = await query(
+    'SELECT id FROM categories WHERE id::text = $1 AND is_active = TRUE LIMIT 1',
+    [cleanStr]
+  );
+  if (idRows.length > 0) return idRows[0].id;
+
+  // 2. Exact match on slug (lowercased)
+  const lowerStr = cleanStr.toLowerCase();
   const { rows: slugRows } = await query(
-    'SELECT id FROM categories WHERE slug = $1 OR slug = $2 LIMIT 1',
-    [cleanStr, slugified]
+    'SELECT id FROM categories WHERE slug = $1 AND is_active = TRUE LIMIT 1',
+    [lowerStr]
   );
   if (slugRows.length > 0) return slugRows[0].id;
 
+  // 3. Exact match on lower(name) or lower(display_name)
   const { rows: nameRows } = await query(
-    'SELECT id FROM categories WHERE name ILIKE $1 OR display_name ILIKE $1 LIMIT 1',
-    [cleanStr]
+    'SELECT id FROM categories WHERE (LOWER(name) = $1 OR LOWER(display_name) = $1) AND is_active = TRUE LIMIT 1',
+    [lowerStr]
   );
   if (nameRows.length > 0) return nameRows[0].id;
-
-  const { rows: partialRows } = await query(
-    `SELECT id FROM categories 
-     WHERE slug ILIKE $1 OR name ILIKE $1 OR display_name ILIKE $1 
-     ORDER BY sort_order ASC, id ASC LIMIT 1`,
-    [`%${cleanStr.slice(0, 8)}%`]
-  );
-  if (partialRows.length > 0) return partialRows[0].id;
 
   return null;
 }
@@ -192,8 +188,13 @@ async function resolveCategoryId(rawCategory) {
 async function listCategories(req, res, next) {
   try {
     const { rows } = await query(
-      `SELECT c.id, c.name, c.slug, c.image_url, c.parent_id, c.sort_order,
-              (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id AND p.status = 'active') AS product_count
+      `SELECT c.id, c.name, c.display_name, c.slug, c.emoji_icon, c.icon_emoji,
+              c.description, c.image_url, c.banner_image_url, c.is_featured,
+              c.parent_id, c.sort_order,
+              (SELECT COUNT(*) FROM products p 
+               WHERE (p.category_id = c.id OR p.category_id IN (SELECT id FROM categories WHERE parent_id = c.id AND is_active = TRUE))
+                 AND p.status = 'active' AND (p.is_active IS NULL OR p.is_active = TRUE)
+              ) AS product_count
        FROM categories c
        WHERE c.is_active = TRUE
        ORDER BY c.sort_order ASC, c.id ASC`
@@ -203,40 +204,10 @@ async function listCategories(req, res, next) {
       const rootCategories = [];
       const categoriesMap = {};
 
-      function resolveCategoryImage(slug = '', name = '', currentImg = null) {
-        if (currentImg && !currentImg.includes('undefined') && currentImg !== 'null' && !currentImg.includes('candles.jpg')) {
-          return currentImg;
-        }
-        const s = `${slug} ${name}`.toLowerCase();
-        if (s.includes('candle') || s.includes('aroma') || s.includes('fragrance')) return '/img/categories/candles.jpg';
-        if (s.includes('floral') || s.includes('bouquet') || s.includes('flower') || s.includes('botanical')) return '/img/categories/dried_florals.jpg';
-        if (s.includes('decor') || s.includes('ceramic') || s.includes('pottery') || s.includes('living')) return '/img/categories/ceramics.jpg';
-        if (s.includes('nail') || s.includes('beauty') || s.includes('portrait')) return '/img/categories/custom_portraits.jpg';
-        if (s.includes('hair') || s.includes('clip') || s.includes('journal') || s.includes('stationery')) return '/img/categories/journals.jpg';
-        if (s.includes('figurine') || s.includes('art') || s.includes('painting') || s.includes('handcrafted')) return '/img/categories/art_prints.jpg';
-        if (s.includes('gift') || s.includes('keepsake') || s.includes('hamper') || s.includes('skincare')) return '/img/categories/skincare.jpg';
-        if (s.includes('jewel') || s.includes('wearable') || s.includes('ring') || s.includes('necklace')) return '/img/categories/jewellery.jpg';
-        return '/img/categories/ceramics.jpg';
-      }
-
-      function resolveCategoryEmoji(slug = '', name = '', currentEmoji = null) {
-        if (currentEmoji && currentEmoji !== '🏷️' && currentEmoji !== '🎁') return currentEmoji;
-        const s = `${slug} ${name}`.toLowerCase();
-        if (s.includes('candle')) return '🕯️';
-        if (s.includes('floral') || s.includes('bouquet')) return '💐';
-        if (s.includes('decor') || s.includes('ceramic')) return '🏡';
-        if (s.includes('nail') || s.includes('beauty')) return '💅';
-        if (s.includes('hair')) return '🎀';
-        if (s.includes('figurine') || s.includes('art') || s.includes('handcrafted')) return '🎨';
-        if (s.includes('gift') || s.includes('keepsake')) return '🎁';
-        if (s.includes('jewel')) return '💍';
-        return '🎁';
-      }
-
       rows.forEach(row => {
         if (!row.parent_id) {
-          const img = resolveCategoryImage(row.slug, row.display_name || row.name, row.image_url);
-          const emoji = resolveCategoryEmoji(row.slug, row.display_name || row.name, row.emoji_icon || row.icon_emoji);
+          const img = row.image_url || '/img/categories/artisan_showcase.jpg';
+          const emoji = row.emoji_icon || row.icon_emoji || '🏺';
           categoriesMap[row.id] = {
             id: row.id,
             name: row.name,
@@ -248,6 +219,8 @@ async function listCategories(req, res, next) {
             product_count: parseInt(row.product_count || 0, 10),
             image_url: img,
             banner_image_url: row.banner_image_url || img,
+            is_featured: !!row.is_featured,
+            sort_order: row.sort_order,
             subcategories: []
           };
           rootCategories.push(categoriesMap[row.id]);
@@ -259,7 +232,9 @@ async function listCategories(req, res, next) {
           categoriesMap[row.parent_id].subcategories.push({
             id: row.id,
             name: row.name,
+            display_name: row.display_name || row.name,
             slug: row.slug,
+            sort_order: row.sort_order,
             product_count: parseInt(row.product_count || 0, 10)
           });
         }
@@ -269,6 +244,131 @@ async function listCategories(req, res, next) {
     }
 
     return res.json({ success: true, data: { categories: [] } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/products/categories/:slug (PUBLIC — strict slug resolver)
+// ---------------------------------------------------------------------------
+async function getCategoryBySlug(req, res, next) {
+  try {
+    const rawSlug = req.params.slug;
+    const slug = (rawSlug ? String(rawSlug) : '').trim().toLowerCase();
+    if (!slug) {
+      return res.status(404).json({
+        success: false,
+        code: 'CATEGORY_NOT_FOUND',
+        message: 'This collection is not available.'
+      });
+    }
+
+    // Look up category by exact slug with is_active = TRUE
+    const { rows } = await query(
+      `SELECT id, name, display_name, slug, description, emoji_icon, icon_emoji,
+              image_url, banner_image_url, parent_id, sort_order, is_active
+       FROM categories
+       WHERE slug = $1 AND is_active = TRUE`,
+      [slug]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({
+        success: false,
+        code: 'CATEGORY_NOT_FOUND',
+        message: 'This collection is not available.'
+      });
+    }
+
+    const matchedRow = rows[0];
+    let rootCategoryRow = matchedRow;
+    let selectedSubcategory = null;
+
+    if (matchedRow.parent_id !== null) {
+      // Subcategory requested: load its active parent
+      const { rows: parentRows } = await query(
+        `SELECT id, name, display_name, slug, description, emoji_icon, icon_emoji,
+                image_url, banner_image_url, parent_id, sort_order, is_active
+         FROM categories
+         WHERE id = $1 AND is_active = TRUE`,
+        [matchedRow.parent_id]
+      );
+
+      if (!parentRows.length) {
+        return res.status(404).json({
+          success: false,
+          code: 'CATEGORY_NOT_FOUND',
+          message: 'This collection is not available.'
+        });
+      }
+
+      rootCategoryRow = parentRows[0];
+    }
+
+    // Load active children of the root category ordered by sort_order, name
+    const { rows: subRows } = await query(
+      `SELECT c.id, c.name, c.display_name, c.slug, c.sort_order,
+              (SELECT COUNT(*) FROM products p 
+               WHERE p.category_id = c.id AND p.status = 'active' AND (p.is_active IS NULL OR p.is_active = TRUE)
+              ) AS product_count
+       FROM categories c
+       WHERE c.parent_id = $1 AND c.is_active = TRUE
+       ORDER BY c.sort_order ASC, c.name ASC`,
+      [rootCategoryRow.id]
+    );
+
+    const subcategories = subRows.map(s => ({
+      id: s.id,
+      name: s.name,
+      slug: s.slug,
+      product_count: parseInt(s.product_count || 0, 10)
+    }));
+
+    if (matchedRow.parent_id !== null) {
+      const matchedInSubs = subcategories.find(s => s.id === matchedRow.id);
+      selectedSubcategory = {
+        id: matchedRow.id,
+        name: matchedRow.name,
+        slug: matchedRow.slug,
+        product_count: matchedInSubs ? matchedInSubs.product_count : 0
+      };
+    }
+
+    // product_count = active products in the category or its active subcategories (same subtree rule listProducts uses)
+    const { rows: countRows } = await query(
+      `SELECT COUNT(*) AS total_count FROM products p
+       WHERE p.status = 'active' AND (p.is_active IS NULL OR p.is_active = TRUE)
+         AND (
+           p.category_id = $1 
+           OR p.category_id IN (SELECT id FROM categories WHERE parent_id = $1 AND is_active = TRUE)
+         )`,
+      [rootCategoryRow.id]
+    );
+    const rootProductCount = parseInt(countRows[0]?.total_count || 0, 10);
+
+    const emoji = rootCategoryRow.emoji_icon || rootCategoryRow.icon_emoji || '🏺';
+    const img = rootCategoryRow.image_url || '/img/categories/artisan_showcase.jpg';
+    const banner = rootCategoryRow.banner_image_url || img;
+
+    return res.json({
+      success: true,
+      data: {
+        category: {
+          id: rootCategoryRow.id,
+          name: rootCategoryRow.name,
+          display_name: rootCategoryRow.display_name || rootCategoryRow.name,
+          slug: rootCategoryRow.slug,
+          description: rootCategoryRow.description || '',
+          emoji_icon: emoji,
+          image_url: img,
+          banner_image_url: banner,
+          product_count: rootProductCount,
+          subcategories
+        },
+        selected_subcategory: selectedSubcategory
+      }
+    });
   } catch (err) {
     next(err);
   }
@@ -977,8 +1077,37 @@ async function createProduct(req, res, next) {
     const priceVal = Number(base_price);
     const pricePaise = Math.round(priceVal * 100);
 
-    const rawCat = req.body.subcategory_id || req.body.category_id || req.body.category;
-    const finalCategoryId = await resolveCategoryId(rawCat);
+    const rawCategory = req.body.category_id !== undefined ? req.body.category_id : req.body.category;
+    const rawSubcategory = req.body.subcategory_id;
+
+    let resolvedCatId = null;
+    let resolvedSubId = null;
+
+    if (rawCategory !== undefined && rawCategory !== null && String(rawCategory).trim() !== '') {
+      resolvedCatId = await resolveCategoryId(rawCategory);
+      if (!resolvedCatId) {
+        return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'Selected category does not exist or is inactive.' });
+      }
+    }
+
+    if (rawSubcategory !== undefined && rawSubcategory !== null && String(rawSubcategory).trim() !== '') {
+      resolvedSubId = await resolveCategoryId(rawSubcategory);
+      if (!resolvedSubId) {
+        return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'Selected category does not exist or is inactive.' });
+      }
+    }
+
+    if (resolvedCatId && resolvedSubId) {
+      const { rows: subRows } = await query('SELECT parent_id FROM categories WHERE id = $1', [resolvedSubId]);
+      if (!subRows.length || String(subRows[0].parent_id) !== String(resolvedCatId)) {
+        return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'Selected subcategory does not belong to the selected category.' });
+      }
+    }
+
+    const finalCategoryId = resolvedSubId || resolvedCatId;
+    if ((rawCategory || rawSubcategory) && !finalCategoryId) {
+      return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'Selected category does not exist or is inactive.' });
+    }
 
     const { rows } = await query(
       `INSERT INTO products
@@ -1171,11 +1300,52 @@ async function updateProduct(req, res, next) {
     const updatedPrice = base_price !== undefined ? Number(base_price) : (req.body.price !== undefined ? Number(req.body.price) : null);
     const updatedPaise = updatedPrice !== null ? Math.round(updatedPrice * 100) : (req.body.price_paise ? Number(req.body.price_paise) : null);
     
-    const rawCat = subcategory_id !== undefined ? subcategory_id : (category_id !== undefined ? category_id : req.body.category);
+    const rawCategory = category_id !== undefined ? category_id : req.body.category;
+    const rawSubcategory = subcategory_id;
+
     let resolvedCatId = null;
-    if (rawCat !== undefined && rawCat !== null && String(rawCat).trim() !== '') {
-      resolvedCatId = await resolveCategoryId(rawCat);
+    let resolvedSubId = null;
+
+    if (rawCategory !== undefined && rawCategory !== null && String(rawCategory).trim() !== '') {
+      resolvedCatId = await resolveCategoryId(rawCategory);
+      if (!resolvedCatId) {
+        return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'Selected category does not exist or is inactive.' });
+      }
     }
+
+    if (rawSubcategory !== undefined && rawSubcategory !== null && String(rawSubcategory).trim() !== '') {
+      resolvedSubId = await resolveCategoryId(rawSubcategory);
+      if (!resolvedSubId) {
+        return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'Selected category does not exist or is inactive.' });
+      }
+    }
+
+    if (resolvedCatId && resolvedSubId) {
+      const { rows: subRows } = await query('SELECT parent_id FROM categories WHERE id = $1', [resolvedSubId]);
+      if (!subRows.length || String(subRows[0].parent_id) !== String(resolvedCatId)) {
+        return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'Selected subcategory does not belong to the selected category.' });
+      }
+    }
+
+    const finalUpdatedCatId = (rawCategory !== undefined || rawSubcategory !== undefined)
+      ? (resolvedSubId || resolvedCatId)
+      : null;
+
+    // Defensive numeric parsing: treat null, '', and NaN as null (no change via COALESCE)
+    const parsedLowStock = (low_stock_threshold !== undefined && low_stock_threshold !== null && String(low_stock_threshold).trim() !== '')
+      ? Number(low_stock_threshold)
+      : null;
+    const resolvedLowStock = (parsedLowStock !== null && !isNaN(parsedLowStock)) ? Math.max(0, parsedLowStock) : null;
+
+    const parsedPrepDays = (preparation_days !== undefined && preparation_days !== null && String(preparation_days).trim() !== '')
+      ? parseInt(preparation_days, 10)
+      : null;
+    const resolvedPrepDays = (parsedPrepDays !== null && !isNaN(parsedPrepDays)) ? Math.max(0, parsedPrepDays) : null;
+
+    const parsedWeight = (weight_grams !== undefined && weight_grams !== null && String(weight_grams).trim() !== '')
+      ? parseInt(weight_grams, 10)
+      : null;
+    const resolvedWeight = (parsedWeight !== null && !isNaN(parsedWeight)) ? Math.max(1, parsedWeight) : null;
 
     const { rows } = await query(
       `UPDATE products
@@ -1184,6 +1354,11 @@ async function updateProduct(req, res, next) {
            category_id = COALESCE($3, category_id),
            base_price = COALESCE($4, base_price),
            price_paise = COALESCE($5, price_paise),
+           sale_price = CASE
+             WHEN $4 IS NOT NULL AND (discount_active = TRUE OR discount_active IS TRUE) AND discount_percentage IS NOT NULL
+               THEN ROUND(($4::numeric * (100 - discount_percentage::numeric) / 100.0), 2)
+             ELSE sale_price
+           END,
            stock_quantity = COALESCE($6, stock_quantity),
            low_stock_threshold = COALESCE($7, low_stock_threshold),
            preparation_days = COALESCE($8, preparation_days),
@@ -1193,18 +1368,19 @@ async function updateProduct(req, res, next) {
            customization_schema = COALESCE($12, customization_schema),
            updated_at = NOW()
        WHERE id = $13
-       RETURNING id, name, description, category_id, base_price, stock_quantity, low_stock_threshold,
-                 preparation_days, weight_grams, customization_mode, is_customizable, customization_schema, status, updated_at`,
+       RETURNING id, name, description, category_id, base_price, sale_price, discount_active, discount_percentage,
+                 stock_quantity, low_stock_threshold, preparation_days, weight_grams,
+                 customization_mode, is_customizable, customization_schema, status, updated_at`,
       [
         resolvedName || null,
         description || null,
-        resolvedCatId || null,
+        finalUpdatedCatId || null,
         updatedPrice,
         updatedPaise,
         resolvedStock !== null && !isNaN(resolvedStock) ? resolvedStock : null,
-        low_stock_threshold !== undefined ? Number(low_stock_threshold) : null,
-        preparation_days !== undefined ? Math.max(0, parseInt(preparation_days, 10)) : null,
-        weight_grams !== undefined ? Math.max(1, parseInt(weight_grams, 10)) : null,
+        resolvedLowStock,
+        resolvedPrepDays,
+        resolvedWeight,
         finalMode || null,
         finalIsCustomizable !== null && finalIsCustomizable !== undefined ? (finalIsCustomizable ? 1 : 0) : null,
         schemaJson,
@@ -1238,25 +1414,32 @@ async function updateProduct(req, res, next) {
     )));
     if (Array.isArray(photoList)) {
       await query('DELETE FROM product_images WHERE product_id = $1', [id]);
+      // Order by provided sort_order when present (stable, otherwise array order)
+      const sortedPhotos = [...photoList].sort((a, b) => {
+        const orderA = (a && typeof a === 'object' && typeof a.sort_order === 'number' && !isNaN(a.sort_order))
+          ? a.sort_order
+          : Infinity;
+        const orderB = (b && typeof b === 'object' && typeof b.sort_order === 'number' && !isNaN(b.sort_order))
+          ? b.sort_order
+          : Infinity;
+        return orderA - orderB;
+      });
+
       let sortOrder = 0;
       const seenImageKeys = new Set();
-      for (const image of photoList) {
+      for (const image of sortedPhotos) {
         const url = uniqueImageUrls([image])[0];
-        const imageKey = url
-          ? url.split('?')[0].replace(/\.(jpe?g|png|webp)$/i, '').toLowerCase()
-          : null;
-        if (!url || !imageKey || seenImageKeys.has(imageKey)) continue;
+        if (!url || typeof url !== 'string' || url.startsWith('blob:')) continue;
+        const imageKey = url.split('?')[0].replace(/\.(jpe?g|png|webp)$/i, '').toLowerCase();
+        if (!imageKey || seenImageKeys.has(imageKey)) continue;
         seenImageKeys.add(imageKey);
-        if (url) {
-          const order = (image && typeof image === 'object' && image.sort_order !== undefined)
-            ? image.sort_order
-            : sortOrder++;
-          await query(
-            `INSERT INTO product_images (product_id, url, sort_order)
-             VALUES ($1, $2, $3)`,
-            [id, url, order]
-          );
-        }
+
+        const assignedOrder = sortOrder++;
+        await query(
+          `INSERT INTO product_images (product_id, url, sort_order)
+           VALUES ($1, $2, $3)`,
+          [id, url, assignedOrder]
+        );
       }
     }
 
@@ -1673,6 +1856,7 @@ async function getRecommendations(req, res, next) {
 
 module.exports = {
   listCategories,
+  getCategoryBySlug,
   listProducts,
   getFeaturedProducts,
   forYouFeed,

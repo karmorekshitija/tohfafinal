@@ -13,6 +13,7 @@ const paymentService = require('../services/payment.service');
 const bestsellerService = require('../services/bestseller.service');
 const { logAdminAction } = require('../services/audit.service');
 const { createNotification } = require('./notification.controller');
+const { slugify, isReservedSlug } = require('../utils/slug');
 
 // ---------------------------------------------------------------------------
 // 1. DASHBOARD & LIVE PLATFORM STATS
@@ -1392,16 +1393,30 @@ async function listCategories(req, res, next) {
 async function createCategory(req, res, next) {
   try {
     const rawName = req.body.display_name || req.body.name;
-    const { parent_id = null, sort_order = 0, description = '', emoji_icon, icon_emoji, image_url, banner_image_url, is_active = true } = req.body;
+    const { parent_id = null, sort_order, description = '', emoji_icon, icon_emoji, image_url, banner_image_url, is_active = true } = req.body;
 
-    if (!rawName) return res.status(400).json({ success: false, message: 'Category name is required.' });
+    if (!rawName || !rawName.trim()) {
+      return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'Category name is required.' });
+    }
 
     const name = rawName.trim();
-    const slug = req.body.slug
-      ? req.body.slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-      : name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const candidateSlug = slugify(req.body.slug || name);
+    if (!candidateSlug || isReservedSlug(candidateSlug)) {
+      return res.status(400).json({ success: false, code: 'INVALID_SLUG', message: 'Category slug is invalid or reserved.' });
+    }
 
-    const emoji = emoji_icon || icon_emoji || 'ðŸº';
+    const { rows: existingSlug } = await query('SELECT id FROM categories WHERE slug = $1', [candidateSlug]);
+    if (existingSlug.length > 0) {
+      return res.status(409).json({ success: false, code: 'SLUG_TAKEN', message: 'A category or subcategory with this slug already exists.' });
+    }
+
+    let finalSortOrder = (sort_order !== undefined && sort_order !== null && sort_order !== '') ? parseInt(sort_order, 10) : null;
+    if (finalSortOrder === null || isNaN(finalSortOrder)) {
+      const { rows: maxOrderRows } = await query('SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_order FROM categories WHERE parent_id IS NULL');
+      finalSortOrder = parseInt(maxOrderRows[0]?.next_order || 1, 10);
+    }
+
+    const emoji = emoji_icon || icon_emoji || '🏺';
     const uploadedUrl = req.file ? req.file.path : null;
     const imgUrl = uploadedUrl || req.body.fallback_image_url || image_url || banner_image_url || null;
 
@@ -1409,7 +1424,7 @@ async function createCategory(req, res, next) {
       `INSERT INTO categories (name, display_name, slug, description, emoji_icon, icon_emoji, image_url, banner_image_url, parent_id, sort_order, is_active)
        VALUES ($1, $2, $3, $4, $5, $5, $6, $6, $7, $8, $9)
        RETURNING *`,
-      [name, name, slug, description, emoji, imgUrl, parent_id || null, parseInt(sort_order, 10) || 0, is_active !== false]
+      [name, name, candidateSlug, description, emoji, imgUrl, parent_id || null, finalSortOrder, is_active !== false]
     );
 
     await logAdminAction({
@@ -1417,7 +1432,7 @@ async function createCategory(req, res, next) {
       actionType: 'CATEGORY_CREATED',
       targetEntity: 'categories',
       targetId: rows[0].id,
-      details: { name, slug },
+      details: { name, slug: candidateSlug },
       ipAddress: req.ip
     });
 
@@ -1434,11 +1449,7 @@ async function updateCategory(req, res, next) {
     const { parent_id = null, sort_order, is_active, description, emoji_icon, icon_emoji, image_url, banner_image_url } = req.body;
 
     const name = rawName ? rawName.trim() : null;
-    const slug = name
-      ? (req.body.slug
-          ? req.body.slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-          : name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))
-      : (req.body.slug ? req.body.slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : null);
+    // Decision 1: Category slugs are immutable after creation. Ignore any req.body.slug.
 
     let activeVal = null;
     if (is_active !== undefined && is_active !== null && is_active !== '') {
@@ -1452,19 +1463,28 @@ async function updateCategory(req, res, next) {
       `UPDATE categories
        SET name             = COALESCE($1, name),
            display_name     = COALESCE($1, display_name, name),
-           slug             = COALESCE($2, slug),
-           parent_id        = CASE WHEN $3::boolean THEN $10 ELSE parent_id END,
-           sort_order       = COALESCE($4, sort_order),
-           is_active        = COALESCE($5, is_active),
-           description      = COALESCE($6, description),
-           emoji_icon       = COALESCE($7, emoji_icon),
-           icon_emoji       = COALESCE($7, icon_emoji),
-           image_url        = COALESCE($8, image_url),
-           banner_image_url = COALESCE($8, banner_image_url),
+           parent_id        = CASE WHEN $2::boolean THEN $9 ELSE parent_id END,
+           sort_order       = COALESCE($3, sort_order),
+           is_active        = COALESCE($4, is_active),
+           description      = COALESCE($5, description),
+           emoji_icon       = COALESCE($6, emoji_icon),
+           icon_emoji       = COALESCE($6, icon_emoji),
+           image_url        = COALESCE($7, image_url),
+           banner_image_url = COALESCE($7, banner_image_url),
            updated_at       = NOW()
-       WHERE id = $9
+       WHERE id = $8
        RETURNING *`,
-      [name, slug, req.body.parent_id !== undefined, sort_order ? parseInt(sort_order, 10) : null, activeVal, description !== undefined ? description : null, emoji, imgUrl, id, parent_id || null]
+      [
+        name,
+        req.body.parent_id !== undefined,
+        (sort_order !== undefined && sort_order !== null && sort_order !== '') ? parseInt(sort_order, 10) : null,
+        activeVal,
+        description !== undefined ? description : null,
+        emoji,
+        imgUrl,
+        id,
+        parent_id || null
+      ]
     );
 
     if (!rows.length) return res.status(404).json({ success: false, message: 'Category not found.' });
@@ -1529,18 +1549,38 @@ async function deleteCategory(req, res, next) {
 
 async function createSubcategory(req, res, next) {
   try {
-    const { category_id, name, slug: rawSlug } = req.body;
-    if (!category_id || !name) return res.status(400).json({ success: false, message: 'category_id and name are required.' });
+    const { category_id, name, slug: rawSlug, sort_order } = req.body;
+    if (!category_id || !name || !name.trim()) {
+      return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'category_id and name are required.' });
+    }
+
+    const { rows: parentRows } = await query('SELECT id FROM categories WHERE id = $1 AND is_active = TRUE', [category_id]);
+    if (!parentRows.length) {
+      return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'Parent category does not exist or is inactive.' });
+    }
+
     const trimmedName = name.trim();
-    const slug = rawSlug
-      ? rawSlug.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-      : trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const candidateSlug = slugify(rawSlug || trimmedName);
+    if (!candidateSlug || isReservedSlug(candidateSlug)) {
+      return res.status(400).json({ success: false, code: 'INVALID_SLUG', message: 'Subcategory slug is invalid or reserved.' });
+    }
+
+    const { rows: existingSlug } = await query('SELECT id FROM categories WHERE slug = $1', [candidateSlug]);
+    if (existingSlug.length > 0) {
+      return res.status(409).json({ success: false, code: 'SLUG_TAKEN', message: 'A category or subcategory with this slug already exists.' });
+    }
+
+    let finalSortOrder = (sort_order !== undefined && sort_order !== null && sort_order !== '') ? parseInt(sort_order, 10) : null;
+    if (finalSortOrder === null || isNaN(finalSortOrder)) {
+      const { rows: maxOrderRows } = await query('SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_order FROM categories WHERE parent_id = $1', [category_id]);
+      finalSortOrder = parseInt(maxOrderRows[0]?.next_order || 1, 10);
+    }
 
     const { rows } = await query(
       `INSERT INTO categories (name, display_name, slug, parent_id, sort_order, is_active)
-       VALUES ($1, $1, $2, $3, 0, TRUE)
+       VALUES ($1, $1, $2, $3, $4, TRUE)
        RETURNING *`,
-      [trimmedName, slug, category_id]
+      [trimmedName, candidateSlug, category_id, finalSortOrder]
     );
 
     return res.status(201).json({ success: true, data: { ...rows[0], display_name: rows[0].name } });
