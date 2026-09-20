@@ -444,10 +444,44 @@ async function autoSyncDatabase() {
       await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS instagram_handle TEXT DEFAULT NULL;`);
       await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS instagram_followers TEXT DEFAULT NULL;`);
 
+      // Addresses alias columns synchronization (tag, label, address_type, full_name, name, line1, etc.)
+      await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS tag TEXT DEFAULT 'Home';`);
+      await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS label TEXT DEFAULT 'Home';`);
+      await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS address_type TEXT DEFAULT 'Home';`);
       await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS name TEXT;`);
+      await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS full_name TEXT;`);
       await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS recipient_name TEXT;`);
-      await query(`UPDATE addresses SET name = full_name WHERE name IS NULL AND full_name IS NOT NULL;`);
-      await query(`UPDATE addresses SET recipient_name = full_name WHERE recipient_name IS NULL AND full_name IS NOT NULL;`);
+      await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS line1 TEXT;`);
+      await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS address_line1 TEXT;`);
+      await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS line2 TEXT;`);
+      await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS address_line2 TEXT;`);
+      await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS landmark TEXT;`);
+      await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS is_default BOOLEAN DEFAULT FALSE;`);
+
+      await query(`UPDATE addresses SET tag = COALESCE(tag, label, address_type, 'Home') WHERE tag IS NULL;`);
+      await query(`UPDATE addresses SET label = COALESCE(label, tag, address_type, 'Home') WHERE label IS NULL;`);
+      await query(`UPDATE addresses SET address_type = COALESCE(address_type, label, tag, 'Home') WHERE address_type IS NULL;`);
+      await query(`UPDATE addresses SET name = COALESCE(name, full_name, recipient_name) WHERE name IS NULL;`);
+      await query(`UPDATE addresses SET full_name = COALESCE(full_name, name, recipient_name) WHERE full_name IS NULL;`);
+      await query(`UPDATE addresses SET recipient_name = COALESCE(recipient_name, full_name, name) WHERE recipient_name IS NULL;`);
+      await query(`UPDATE addresses SET line1 = COALESCE(line1, address_line1) WHERE line1 IS NULL;`);
+      await query(`UPDATE addresses SET address_line1 = COALESCE(address_line1, line1) WHERE address_line1 IS NULL;`);
+      // Normalize is_default column type to BOOLEAN if it was created as INTEGER
+      await query(`
+        DO $$
+        BEGIN
+          IF EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name = 'addresses' AND column_name = 'is_default' AND data_type != 'boolean'
+          ) THEN
+            DROP VIEW IF EXISTS user_addresses;
+            ALTER TABLE addresses ALTER COLUMN is_default DROP DEFAULT;
+            ALTER TABLE addresses ALTER COLUMN is_default TYPE BOOLEAN USING (CASE WHEN is_default IS NULL THEN FALSE WHEN is_default::text = '0' THEN FALSE ELSE TRUE END);
+            ALTER TABLE addresses ALTER COLUMN is_default SET DEFAULT FALSE;
+          END IF;
+        END $$;
+      `);
+
       await query(`CREATE OR REPLACE VIEW user_addresses AS SELECT * FROM addresses;`);
 
       // Orders missing columns (Bug 2 & Bug 3)

@@ -13,6 +13,73 @@ const { query } = require('../config/db');
 // ADDRESSES
 // ===========================================================================
 
+let addressTableColumns = null;
+
+/**
+ * Introspect and cache available columns and data types in the 'addresses' table
+ */
+async function getAddressesColumns() {
+  if (addressTableColumns) return addressTableColumns;
+  try {
+    const { rows } = await query(
+      "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'addresses'"
+    );
+    if (rows && rows.length > 0) {
+      const colMap = new Map();
+      rows.forEach(r => colMap.set(r.column_name, r.data_type));
+      addressTableColumns = colMap;
+      return addressTableColumns;
+    }
+  } catch (err) {
+    console.warn('[Buyer Controller] Failed to introspect addresses columns:', err.message);
+  }
+  return new Map([
+    ['id', 'uuid'],
+    ['user_id', 'uuid'],
+    ['label', 'text'],
+    ['tag', 'text'],
+    ['address_type', 'text'],
+    ['name', 'text'],
+    ['full_name', 'text'],
+    ['recipient_name', 'text'],
+    ['phone', 'text'],
+    ['line1', 'text'],
+    ['address_line1', 'text'],
+    ['line2', 'text'],
+    ['address_line2', 'text'],
+    ['landmark', 'text'],
+    ['city', 'text'],
+    ['state', 'text'],
+    ['pincode', 'text'],
+    ['is_default', 'boolean'],
+    ['created_at', 'timestamp with time zone']
+  ]);
+}
+
+/**
+ * Format is_default value according to the column's data type (integer vs boolean)
+ */
+function formatDefaultVal(val, availableCols) {
+  const type = availableCols.get('is_default');
+  if (type === 'integer' || type === 'smallint' || type === 'bigint') {
+    return val ? 1 : 0;
+  }
+  return Boolean(val);
+}
+
+/**
+ * Reset default address flag safely across both integer and boolean column types
+ */
+async function clearDefaultAddress(userId, availableCols) {
+  const type = availableCols.get('is_default');
+  const isInt = type === 'integer' || type === 'smallint' || type === 'bigint';
+  if (isInt) {
+    await query('UPDATE addresses SET is_default = 0 WHERE user_id::text = $1', [String(userId)]).catch(() => {});
+  } else {
+    await query('UPDATE addresses SET is_default = false WHERE user_id::text = $1', [String(userId)]).catch(() => {});
+  }
+}
+
 /**
  * Format address object to provide all frontend-compatible aliases
  */
@@ -107,30 +174,73 @@ async function createAddress(req, res, next) {
     const addressLandmark = landmark || null;
     const addressType = address_type || addressLabel || 'Home';
 
+    const availableCols = await getAddressesColumns();
+
     // If first address, make it default
     const { rows: existing } = await query(
-      'SELECT COUNT(*) AS cnt FROM addresses WHERE user_id = $1',
-      [userId]
+      'SELECT COUNT(*) AS cnt FROM addresses WHERE user_id::text = $1',
+      [String(userId)]
     );
     const isFirst = parseInt(existing[0]?.cnt || 0, 10) === 0;
-    const defaultFlag = (is_default !== undefined ? Boolean(is_default) : isFirst) ? 1 : 0;
+    const isDefaultSelected = (is_default !== undefined ? Boolean(is_default) : isFirst);
 
-    if (defaultFlag === 1) {
-      await query('UPDATE addresses SET is_default = 0 WHERE user_id = $1', [userId]).catch(() => {});
+    if (isDefaultSelected) {
+      await clearDefaultAddress(userId, availableCols);
+    }
+
+    // Map all candidate fields and only insert into columns that actually exist in the active table
+    const candidateFields = {
+      user_id: userId,
+      phone: phone,
+      city: city,
+      state: state,
+      pincode: pincode,
+      is_default: formatDefaultVal(isDefaultSelected, availableCols),
+      // Label / category aliases
+      label: addressLabel,
+      tag: addressLabel,
+      address_type: addressType,
+      // Recipient name aliases
+      name: addressName,
+      full_name: addressName,
+      recipient_name: addressName,
+      // Address line aliases
+      line1: addressLine1,
+      address_line1: addressLine1,
+      line2: addressLine2,
+      address_line2: addressLine2,
+      landmark: addressLandmark,
+    };
+
+    const insertCols = [];
+    const insertPlaceholders = [];
+    const insertValues = [];
+
+    for (const [col, val] of Object.entries(candidateFields)) {
+      if (availableCols.has(col) && val !== undefined) {
+        insertCols.push(col);
+        insertValues.push(val);
+        insertPlaceholders.push(`$${insertValues.length}`);
+      }
     }
 
     const { rows } = await query(
-      `INSERT INTO addresses (user_id, tag, full_name, phone, line1, line2, city, state, pincode, is_default)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `INSERT INTO addresses (${insertCols.join(', ')})
+       VALUES (${insertPlaceholders.join(', ')})
        RETURNING *`,
-      [userId, addressLabel, addressName, phone, addressLine1, addressLine2, city, state, pincode, defaultFlag]
+      insertValues
     );
     const createdRow = rows[0];
+    const formatted = formatAddress(createdRow);
 
     return res.status(201).json({
       success: true,
       message: 'Delivery address saved successfully.',
-      data: { address: formatAddress(createdRow) },
+      data: {
+        address: formatted,
+        id: createdRow.id,
+        ...formatted,
+      },
     });
   } catch (err) {
     next(err);
@@ -150,6 +260,7 @@ async function updateAddress(req, res, next) {
       phone,
       line1, address_line1,
       line2, address_line2,
+      landmark,
       city,
       state,
       pincode,
@@ -159,28 +270,90 @@ async function updateAddress(req, res, next) {
     const addressLabel = label || tag || address_type || null;
     const addressName = name || recipient_name || full_name || null;
     const addressLine1 = line1 || address_line1 || req.body.address_line || null;
-    const addressLine2 = line2 !== undefined ? (line2 || address_line2 || null) : null;
-    const defaultVal = is_default !== undefined ? (is_default ? 1 : 0) : null;
+    const addressLine2 = line2 !== undefined ? (line2 || address_line2 || null) : (address_line2 !== undefined ? address_line2 : null);
+    const addressLandmark = landmark !== undefined ? landmark : null;
+    const availableCols = await getAddressesColumns();
+    const defaultVal = is_default !== undefined ? Boolean(is_default) : null;
 
-    if (defaultVal === 1) {
-      await query('UPDATE addresses SET is_default = 0 WHERE user_id = $1', [userId]).catch(() => {});
+    if (defaultVal === true) {
+      await clearDefaultAddress(userId, availableCols);
     }
 
+    const candidateUpdates = {};
+    if (addressLabel !== null) {
+      candidateUpdates.label = addressLabel;
+      candidateUpdates.tag = addressLabel;
+      candidateUpdates.address_type = addressLabel;
+    }
+    if (addressName !== null) {
+      candidateUpdates.name = addressName;
+      candidateUpdates.full_name = addressName;
+      candidateUpdates.recipient_name = addressName;
+    }
+    if (phone !== undefined) {
+      candidateUpdates.phone = phone || null;
+    }
+    if (addressLine1 !== null) {
+      candidateUpdates.line1 = addressLine1;
+      candidateUpdates.address_line1 = addressLine1;
+    }
+    if (line2 !== undefined || address_line2 !== undefined) {
+      candidateUpdates.line2 = addressLine2;
+      candidateUpdates.address_line2 = addressLine2;
+    }
+    if (landmark !== undefined) {
+      candidateUpdates.landmark = addressLandmark;
+    }
+    if (city !== undefined) {
+      candidateUpdates.city = city || null;
+    }
+    if (state !== undefined) {
+      candidateUpdates.state = state || null;
+    }
+    if (pincode !== undefined) {
+      candidateUpdates.pincode = pincode || null;
+    }
+    if (defaultVal !== null) {
+      candidateUpdates.is_default = formatDefaultVal(defaultVal, availableCols);
+    }
+
+    const setClauses = [];
+    const updateValues = [];
+
+    for (const [col, val] of Object.entries(candidateUpdates)) {
+      if (availableCols.has(col)) {
+        updateValues.push(val);
+        setClauses.push(`${col} = $${updateValues.length}`);
+      }
+    }
+
+    if (setClauses.length === 0) {
+      const { rows } = await query(
+        'SELECT * FROM addresses WHERE id = $1 AND user_id::text = $2',
+        [id, String(userId)]
+      );
+      if (!rows.length) {
+        return res.status(404).json({ success: false, message: 'Address not found.' });
+      }
+      const formatted = formatAddress(rows[0]);
+      return res.json({
+        success: true,
+        message: 'Address unchanged.',
+        data: {
+          address: formatted,
+          id: rows[0].id,
+          ...formatted,
+        },
+      });
+    }
+
+    updateValues.push(id, String(userId));
     const { rows } = await query(
       `UPDATE addresses
-       SET tag        = COALESCE($1, tag),
-           full_name  = COALESCE($2, full_name),
-           phone      = COALESCE($3, phone),
-           line1      = COALESCE($4, line1),
-           line2      = COALESCE($5, line2),
-           city       = COALESCE($6, city),
-           state      = COALESCE($7, state),
-           pincode    = COALESCE($8, pincode),
-           is_default = COALESCE($9, is_default)
-       WHERE id = $10 AND user_id = $11
+       SET ${setClauses.join(', ')}
+       WHERE id = $${updateValues.length - 1} AND user_id::text = $${updateValues.length}
        RETURNING *`,
-      [addressLabel, addressName, phone || null, addressLine1, addressLine2,
-       city || null, state || null, pincode || null, defaultVal, id, userId]
+      updateValues
     );
     const updatedRow = rows[0];
 
@@ -188,10 +361,15 @@ async function updateAddress(req, res, next) {
       return res.status(404).json({ success: false, message: 'Address not found.' });
     }
 
+    const formatted = formatAddress(updatedRow);
     return res.json({
       success: true,
       message: 'Address updated successfully.',
-      data: { address: formatAddress(updatedRow) },
+      data: {
+        address: formatted,
+        id: updatedRow.id,
+        ...formatted,
+      },
     });
   } catch (err) {
     next(err);
@@ -207,8 +385,8 @@ async function deleteAddress(req, res, next) {
     const userId = req.user.id;
 
     const { rowCount } = await query(
-      'DELETE FROM addresses WHERE id = $1 AND user_id = $2',
-      [id, userId]
+      'DELETE FROM addresses WHERE id = $1 AND user_id::text = $2',
+      [id, String(userId)]
     );
 
     if (!rowCount) {
@@ -230,28 +408,35 @@ async function setDefaultAddress(req, res, next) {
     const userId = req.user.id;
 
     const { rows: check } = await query(
-      'SELECT id FROM addresses WHERE id = $1 AND user_id = $2',
-      [id, userId]
+      'SELECT id FROM addresses WHERE id = $1 AND user_id::text = $2',
+      [id, String(userId)]
     );
     if (!check.length) {
       return res.status(404).json({ success: false, message: 'Address not found.' });
     }
 
-    await query(
-      'UPDATE addresses SET is_default = false WHERE user_id = $1',
-      [userId]
-    );
+    const availableCols = await getAddressesColumns();
+    await clearDefaultAddress(userId, availableCols);
+
+    const type = availableCols.get('is_default');
+    const isInt = type === 'integer' || type === 'smallint' || type === 'bigint';
 
     const { rows } = await query(
-      `UPDATE addresses SET is_default = true
-       WHERE id = $1 AND user_id = $2
+      `UPDATE addresses SET is_default = ${isInt ? '1' : 'true'}
+       WHERE id = $1 AND user_id::text = $2
        RETURNING *`,
-      [id, userId]
+      [id, String(userId)]
     );
 
+    const formatted = formatAddress(rows[0]);
     return res.json({
       success: true,
-      data: { message: 'Default address updated.', address: formatAddress(rows[0]) },
+      data: {
+        message: 'Default address updated.',
+        address: formatted,
+        id: rows[0].id,
+        ...formatted,
+      },
     });
   } catch (err) {
     next(err);

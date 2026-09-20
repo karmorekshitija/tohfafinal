@@ -458,6 +458,8 @@
       const token = sessionStorage.getItem('tohfa_access_token');
       const id = document.getElementById('form-address-id').value;
 
+      const isDefault = document.getElementById('form-default').checked;
+
       const payload = {
         label: document.getElementById('form-label').value.trim(),
         name: document.getElementById('form-name').value.trim(),
@@ -466,10 +468,9 @@
         line2: document.getElementById('form-line2').value.trim(),
         city: document.getElementById('form-city').value.trim(),
         state: document.getElementById('form-state').value.trim(),
-        pincode: document.getElementById('form-pincode').value.trim()
+        pincode: document.getElementById('form-pincode').value.trim(),
+        is_default: isDefault
       };
-
-      const isDefault = document.getElementById('form-default').checked;
 
       try {
         const url = id ? `/api/buyer/addresses/${id}` : '/api/buyer/addresses';
@@ -486,12 +487,12 @@
         const json = await res.json();
 
         if (json.success) {
-          const savedId = id || (json.data && json.data.id);
+          const savedId = id || (json.data && (json.data.id || json.data.address?.id));
           if (isDefault && savedId) {
             await fetch(`/api/buyer/addresses/${savedId}/default`, {
               method: 'PATCH',
               headers: { 'Authorization': `Bearer ${token}` }
-            });
+            }).catch(() => {});
           }
           closeAddressModal();
           loadAddresses();
