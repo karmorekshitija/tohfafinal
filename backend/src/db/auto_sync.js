@@ -562,6 +562,17 @@ async function autoSyncDatabase() {
       console.warn('⚠️ [Auto-Sync Step 9d - Orders Notes Notice]:', err.message);
     }
 
+    // 9e. Checkout columns
+    try {
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS subtotal_paise BIGINT;`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_paise BIGINT;`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS razorpay_payment_id TEXT;`);
+      await query(`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS sub_order_id UUID;`);
+      console.log('✅ [Auto-Sync Step 9e] Checkout columns ensured');
+    } catch (err) {
+      console.warn('⚠️ [Auto-Sync Step 9e - Checkout Columns Notice]:', err.message);
+    }
+
     // 10. Curate Categories Data (Clean display names, unique icons, and specific artisan images)
     try {
       const categoryCurations = [
