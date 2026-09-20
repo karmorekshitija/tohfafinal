@@ -294,7 +294,9 @@ async function getPublicSellerProfile(req, res, next) {
               COALESCE(sp.slug, s.slug) AS slug,
               COALESCE(sp.bio, s.bio) AS bio,
               sp.banner_url, sp.about_image_url,
-              sp.whatsapp_number, sp.pickup_address, sp.created_at,
+              sp.pickup_address, sp.created_at,
+              sp.verification_status AS sp_verification_status, sp.is_approved AS sp_is_approved,
+              s.verification_status AS s_verification_status, s.is_approved AS s_is_approved,
               (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status = 'active') AS product_count,
               (SELECT COALESCE(AVG(r.rating), 5.0) FROM reviews r WHERE r.seller_id = u.id) AS avg_rating,
               (SELECT COUNT(*) FROM reviews r WHERE r.seller_id = u.id) AS review_count
@@ -341,6 +343,13 @@ async function getPublicSellerProfile(req, res, next) {
       if (parts.length > 0) locationStr = parts.join(', ');
     }
 
+    const isVerified = (
+      row.sp_verification_status === 'verified' ||
+      row.sp_is_approved === true ||
+      row.s_verification_status === 'verified' ||
+      row.s_is_approved === true
+    );
+
     const normalized = {
       id: row.user_id,
       user_id: row.user_id,
@@ -353,23 +362,19 @@ async function getPublicSellerProfile(req, res, next) {
       bio: row.bio || 'Curating beautiful handcrafted creations with intention.',
       artisan_story: row.bio || '',
       about_headline: `Our Story: ${storeName}`,
-      about_image_url: row.about_image_url || '/img/categories/artisan_showcase.jpg',
+      about_image_url: row.about_image_url || null,
       avg_rating: parseFloat(row.avg_rating || 5.0),
       review_count: parseInt(row.review_count || 0, 10),
       product_count: parseInt(row.product_count || 0, 10),
+      is_verified: isVerified,
       avatar_url: avatarUrl,
       profile_photo_url: avatarUrl,
       profile_photo: avatarUrl,
       cover_photo_url: coverPhotoUrl,
       cover_photo: coverPhotoUrl,
       banner_url: coverPhotoUrl,
-      whatsapp_number: row.whatsapp_number || row.phone || null,
       created_at: row.created_at,
-      workspace_photos: [
-        { photo_url: '/img/ceramic_bowls.jpg', caption: 'Centering clay' },
-        { photo_url: '/img/linen_journal.jpg', caption: 'Artisan craft materials' },
-        { photo_url: '/img/categories/artisan_showcase.jpg', caption: 'Artisan studio space' }
-      ]
+      workspace_photos: []
     };
 
     return res.json({

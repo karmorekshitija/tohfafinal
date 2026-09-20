@@ -224,6 +224,7 @@ app.get('/api/ui-settings/public', adminController.listBanners);
 app.get('/api/sellers/:id', sellerController.getPublicSellerProfile);
 app.get('/api/sellers/:id/products', (req, res, next) => {
   req.query.seller_id = req.params.id;
+  req.query.include_ratings = 'true';
   return productController.listProducts(req, res, next);
 });
 app.get('/api/products/seller/:id', (req, res, next) => {
@@ -251,6 +252,7 @@ app.post('/api/messages/:id', _notImplemented);
 // CRON TRIGGER ROUTE (Vercel Crons & External Schedulers)
 // ---------------------------------------------------------------------------
 const { startOccasionCron, processOccasionReminders } = require('./src/services/occasion.service');
+const bestsellerService = require('./src/services/bestseller.service');
 
 app.get('/api/cron/reminders', async (req, res) => {
   const cronSecret = process.env.CRON_SECRET;
@@ -261,6 +263,29 @@ app.get('/api/cron/reminders', async (req, res) => {
   try {
     await processOccasionReminders();
     res.json({ success: true, message: 'Occasion reminder scan completed.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/cron/bestsellers', async (req, res) => {
+  const cronSecret = process.env.CRON_SECRET;
+  const authHeader = req.headers['authorization'] || '';
+  const isVercelCron = req.headers['x-vercel-cron'] === '1';
+  const isDev = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
+
+  const isAuthorized =
+    (cronSecret && authHeader === `Bearer ${cronSecret}`) ||
+    isVercelCron ||
+    (isDev && !cronSecret);
+
+  if (!isAuthorized) {
+    return res.status(401).json({ success: false, message: 'Unauthorized cron request.' });
+  }
+
+  try {
+    const results = await bestsellerService.recomputeAll();
+    res.json({ success: true, message: 'Bestseller computation completed successfully.', data: results });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -279,11 +304,12 @@ app.use('/api/*', (req, res) => {
 app.use(errorHandler);
 
 // ---------------------------------------------------------------------------
-// CRON SCHEDULER — WhatsApp occasion reminders
+// CRON SCHEDULER — Occasion reminders & Bestseller recomputation
 // Only initialize persistent node-cron in traditional server environments (not Vercel)
 // ---------------------------------------------------------------------------
 if (!process.env.VERCEL && process.env.ENABLE_CRON !== 'false') {
   startOccasionCron();
+  bestsellerService.startBestsellerCron();
 }
 
 // ---------------------------------------------------------------------------

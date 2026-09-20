@@ -206,14 +206,6 @@
       <span>Category</span>
     </a>
     <a
-      href="/buyer/category.html?slug=best-sellers"
-      id="nav-link-bestsellers"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328] rounded"
-    >
-      <span class="material-symbols-outlined text-[20px] text-[#E29578]">local_fire_department</span>
-      <span>Best Sellers</span>
-    </a>
-    <a
       href="/buyer/zip-gift.html"
       class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328] rounded"
     >
@@ -638,55 +630,6 @@
     </div>
   </section>
 
-  <!-- 6. BEST SELLERS SHOWCASE SECTION (Guideline #1666) -->
-  <section id="bestsellers-section" class="mt-8 md:mt-12 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
-    <div class="flex justify-between items-end mb-3 sm:mb-5">
-      <div>
-        <h3
-          class="font-semibold flex items-center gap-1.5 sm:gap-2 text-[#14381F]"
-          style="font-family: 'Playfair Display', serif; font-size: clamp(17px, 2.5vw, 24px);"
-        >
-          <span class="material-symbols-outlined text-[20px] text-[#C85A32]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
-          <span>Best Sellers</span>
-        </h3>
-        <p class="text-xs sm:text-sm mt-0.5 text-[#7a7a6e]" style="font-family: 'DM Sans', sans-serif;">
-          The most cherished handcrafted creations from across India
-        </p>
-      </div>
-      <a
-        href="/buyer/category.html?slug=best-sellers"
-        class="text-xs sm:text-sm font-semibold text-[#14381F] hover:text-[#C85A32] transition-colors flex items-center gap-1 no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3A32] rounded"
-      >
-        <span>View All</span>
-        <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
-      </a>
-    </div>
-
-    <!-- Best Sellers Carousel / Grid -->
-    <div id="bestsellers-product-grid" class="flex gap-2.5 sm:gap-4 lg:gap-5 overflow-x-auto no-scrollbar pb-2 relative snap-x snap-mandatory">
-      <div class="w-[230px] sm:w-[260px] shrink-0 rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-2.5 sm:p-3 md:p-4 flex flex-col justify-between min-h-[260px] sm:min-h-[300px]">
-        <div class="aspect-square rounded-lg shimmer mb-2 sm:mb-3 w-full"></div>
-        <div class="h-3.5 w-1/3 shimmer mb-1.5 rounded"></div>
-        <div class="h-4 w-3/4 shimmer mb-1 rounded"></div>
-        <div class="h-3.5 w-1/2 shimmer mb-2 rounded"></div>
-        <div class="h-7 sm:h-8 w-full shimmer rounded-lg"></div>
-      </div>
-      <div class="w-[230px] sm:w-[260px] shrink-0 rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-2.5 sm:p-3 md:p-4 flex flex-col justify-between min-h-[260px] sm:min-h-[300px]">
-        <div class="aspect-square rounded-lg shimmer mb-2 sm:mb-3 w-full"></div>
-        <div class="h-3.5 w-1/3 shimmer mb-1.5 rounded"></div>
-        <div class="h-4 w-3/4 shimmer mb-1 rounded"></div>
-        <div class="h-3.5 w-1/2 shimmer mb-2 rounded"></div>
-        <div class="h-7 sm:h-8 w-full shimmer rounded-lg"></div>
-      </div>
-      <div class="w-[230px] sm:w-[260px] shrink-0 rounded-xl border border-[rgba(20,56,31,0.15)] bg-[#FAF6EE] p-2.5 sm:p-3 md:p-4 flex flex-col justify-between min-h-[260px] sm:min-h-[300px]">
-        <div class="aspect-square rounded-lg shimmer mb-2 sm:mb-3 w-full"></div>
-        <div class="h-3.5 w-1/3 shimmer mb-1.5 rounded"></div>
-        <div class="h-4 w-3/4 shimmer mb-1 rounded"></div>
-        <div class="h-3.5 w-1/2 shimmer mb-2 rounded"></div>
-        <div class="h-7 sm:h-8 w-full shimmer rounded-lg"></div>
-      </div>
-    </div>
-  </section>
 
   <!-- 7. SPONSORED SECTION -->
   <section id="sponsored-section" class="mt-8 md:mt-12 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -1474,40 +1417,6 @@
     }
   }
 
-  // --- Best Sellers Carousel (Guideline #1666) ---
-  async function loadBestSellers() {
-    const bestsellersGrid = document.getElementById('bestsellers-product-grid');
-    if (!bestsellersGrid) return;
-
-    try {
-      let products = [];
-      try {
-        const response = await apiClient.get('/products?limit=12&sort=most_popular');
-        products = response.data?.data?.products || response.data?.products || [];
-      } catch (err) {
-        console.warn('Best sellers endpoint error, falling back to feed:', err);
-      }
-
-      if (!products || products.length === 0) {
-        const fallbackRes = await apiClient.get('/products/feed?page=1&limit=12');
-        products = fallbackRes.data?.data?.products || fallbackRes.data?.products || [];
-      }
-
-      bestsellersGrid.innerHTML = '';
-      if (products.length > 0) {
-        products.forEach(product => {
-          const card = createProductCard(
-            { ...product, is_bestseller: true },
-            'w-[230px] sm:w-[260px] shrink-0 snap-start'
-          );
-          bestsellersGrid.appendChild(card);
-        });
-      }
-    } catch (error) {
-      console.error('Failed to load best sellers:', error);
-      bestsellersGrid.innerHTML = '';
-    }
-  }
 
   function initOccasionsScroller() {
     const container = document.getElementById('occasions-scroll-container');
@@ -1574,7 +1483,6 @@
 
   // --- Initial Invocations ---
   loadSeasonalBanner();
-  loadBestSellers();
   loadSponsoredProducts();
   loadForYouProducts();
   loadCategoryRows();

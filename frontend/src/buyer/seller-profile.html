@@ -77,24 +77,33 @@
     }
     </script>
     
-    <!-- Material Symbols -->
-      <!-- Google Fonts: EB Garamond & Hanken Grotesk -->
-    
+    <!-- Material Symbols & Fonts -->
     <!-- Tailwind CSS -->
-      <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/src/tailwind.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/tailwind.css">
 
     <style>
-        .font-display-lg { font-family: 'EB Garamond', serif; }
-        .font-headline-md { font-family: 'EB Garamond', serif; }
-        .font-headline-sm { font-family: 'EB Garamond', serif; }
-        .font-body-lg { font-family: 'Hanken Grotesk', sans-serif; }
-        .font-body-md { font-family: 'Hanken Grotesk', sans-serif; }
-        .font-label-md { font-family: 'Hanken Grotesk', sans-serif; }
-        .font-label-sm { font-family: 'Hanken Grotesk', sans-serif; }
+        .font-display-lg { font-family: 'Playfair Display', Georgia, serif; }
+        .font-headline-lg { font-family: 'Playfair Display', Georgia, serif; }
+        .font-headline-md { font-family: 'Playfair Display', Georgia, serif; }
+        .font-headline-sm { font-family: 'Playfair Display', Georgia, serif; }
+        .font-title-serif { font-family: 'Playfair Display', Georgia, serif; }
+        .font-body-lg { font-family: 'DM Sans', system-ui, sans-serif; }
+        .font-body-md { font-family: 'DM Sans', system-ui, sans-serif; }
+        .font-label-md { font-family: 'DM Sans', system-ui, sans-serif; }
+        .font-label-sm { font-family: 'DM Sans', system-ui, sans-serif; }
+        .font-label-caps { font-family: 'Space Mono', monospace; }
+
+        .scrollbar-hide {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
 
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
@@ -285,13 +294,6 @@
       <span>Category</span>
     </a>
     <a
-      href="/buyer/category.html?slug=best-sellers"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
-    >
-      <span class="material-symbols-outlined text-[20px]">military_tech</span>
-      <span>Best Sellers</span>
-    </a>
-    <a
       href="/buyer/zip-gift.html"
       class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
     >
@@ -357,10 +359,10 @@
   </div>
 </header>
 
-    <main class="flex-grow max-w-container-max w-full mx-auto px-margin-mobile md:px-margin-desktop py-4 sm:py-8">
+    <main class="flex-grow max-w-[1280px] w-full mx-auto px-4 md:px-8 py-4 sm:py-8">
         
         <!-- Cover Photo / Banner -->
-        <div class="w-full h-36 sm:h-48 md:h-64 rounded-xl overflow-hidden relative shadow-xs mb-6 sm:mb-8 bg-[#273328] flex items-center justify-center">
+        <div class="w-full h-32 sm:h-48 md:h-64 rounded-xl overflow-hidden relative shadow-sm mb-0 bg-[#273328] flex items-center justify-center">
             <img id="seller-cover" class="w-full h-full object-cover" src="/img/default-seller-banner.png" alt="Artisan Banner" loading="lazy" onerror="this.onerror=null; this.src='/img/default-seller-banner.png';">
             <!-- Cozy fallback decor if no cover image -->
             <div id="cover-fallback" class="absolute inset-0 bg-cover bg-center hidden" style="background-image: url('/img/default-seller-banner.png');"></div>
@@ -369,15 +371,15 @@
         </div>
 
         <!-- Profile Hero Section -->
-        <section class="bg-surface-container-low rounded-xl p-4 sm:p-6 md:p-8 flex flex-col lg:flex-row gap-5 sm:gap-8 items-center lg:items-start justify-between shadow-ambient relative z-10 -mt-14 sm:-mt-20 mx-2 sm:mx-4 border border-outline-variant/30">
+        <section class="bg-[#FAF6EE] rounded-xl p-4 sm:p-6 md:p-8 flex flex-col lg:flex-row gap-5 sm:gap-8 items-center lg:items-start justify-between shadow-ambient relative z-10 mt-0 mx-0 border border-[#c3c8c1]/40">
             <div class="flex flex-col md:flex-row items-center gap-4 sm:gap-6 text-center md:text-left">
                 <!-- Avatar image / Initial placeholder -->
-                <div class="relative shrink-0">
-                    <div id="seller-avatar" class="w-18 h-18 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-3 sm:border-4 border-white shadow-md bg-[#14381F] flex items-center justify-center text-white text-2xl sm:text-4xl font-display-lg select-none">
+                <div class="relative shrink-0 -mt-9 sm:-mt-12 md:-mt-14">
+                    <div id="seller-avatar" class="w-[72px] h-[72px] sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-[3px] sm:border-4 border-[#FFF8E7] shadow-md bg-[#14381F] flex items-center justify-center text-white text-2xl sm:text-4xl font-display-lg select-none">
                         <!-- Loaded dynamically -->
                     </div>
-                    <div class="absolute bottom-0 right-0 bg-[#FFF8E7] p-0.5 rounded-full border border-outline-variant">
-                        <span class="material-symbols-outlined text-primary text-[16px] sm:text-[18px] fill-icon">verified</span>
+                    <div id="verified-tick" class="absolute bottom-0 right-0 bg-[#FFF8E7] p-0.5 rounded-full border border-[#c3c8c1] hidden">
+                        <span class="material-symbols-outlined text-[#14381F] text-[16px] sm:text-[18px] fill-icon">verified</span>
                     </div>
                 </div>
                 <!-- Profile details -->
@@ -386,72 +388,60 @@
                         <h1 id="seller-name" class="font-headline-sm text-xl sm:text-2xl md:text-3xl text-primary font-bold leading-tight">Artisan Shop</h1>
                         <p id="seller-handle" class="font-body-md text-secondary text-xs sm:text-sm">@handle</p>
                     </div>
-                    <p id="seller-city" class="text-[11px] sm:text-xs text-on-surface-variant font-label-md uppercase tracking-wider flex items-center justify-center md:justify-start gap-1">
+                    <p id="seller-city" class="text-[11px] sm:text-xs text-[#587A5B] font-label-md uppercase tracking-wider flex items-center justify-center md:justify-start gap-1">
                         <span class="material-symbols-outlined text-xs sm:text-sm">location_on</span>
                         <span>Location</span>
                     </p>
-                    <p id="seller-bio" class="max-w-md font-body-md text-on-surface-variant leading-relaxed text-xs sm:text-sm pt-0.5">
-                        Curating beautiful handcrafted creations with intention.
-                    </p>
+                    <div class="max-w-md font-body-md text-on-surface-variant leading-relaxed text-xs sm:text-sm pt-0.5">
+                        <p id="seller-bio" class="line-clamp-3">Curating beautiful handcrafted creations with intention.</p>
+                        <button id="bio-toggle-btn" class="text-[11px] text-primary font-semibold hover:underline hidden mt-0.5">Read more</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Profile Stats Box -->
-            <div class="flex items-center justify-center gap-6 sm:gap-8 py-2.5 px-4 sm:px-6 border-y md:border-y-0 md:border-x border-outline-variant/30 w-full lg:w-auto my-2 lg:my-0">
-                <div class="flex flex-col items-center justify-center text-center">
+            <!-- Profile Stats Box: Rating · Reviews · Products -->
+            <div class="flex items-center justify-center gap-4 sm:gap-6 md:gap-8 py-2.5 px-4 sm:px-6 border-y md:border-y-0 md:border-x border-outline-variant/30 w-full lg:w-auto my-2 lg:my-0">
+                <div class="flex flex-col items-center justify-center text-center flex-1 sm:flex-none">
                     <span id="stat-rating" class="text-lg sm:text-2xl font-headline-sm text-primary font-bold leading-none">0.0</span>
                     <span class="text-[10px] font-label-md text-secondary uppercase tracking-wider mt-1 block">Rating</span>
                 </div>
                 <div class="w-px h-6 bg-outline-variant/30"></div>
-                <div class="flex flex-col items-center justify-center text-center">
+                <div class="flex flex-col items-center justify-center text-center flex-1 sm:flex-none">
                     <span id="stat-reviews" class="text-lg sm:text-2xl font-headline-sm text-primary font-bold leading-none">0</span>
                     <span class="text-[10px] font-label-md text-secondary uppercase tracking-wider mt-1 block">Reviews</span>
+                </div>
+                <div class="w-px h-6 bg-outline-variant/30"></div>
+                <div class="flex flex-col items-center justify-center text-center flex-1 sm:flex-none">
+                    <span id="stat-products" class="text-lg sm:text-2xl font-headline-sm text-primary font-bold leading-none">0</span>
+                    <span class="text-[10px] font-label-md text-secondary uppercase tracking-wider mt-1 block">Products</span>
                 </div>
             </div>
 
             <div class="flex flex-row lg:flex-col gap-2.5 sm:gap-3 shrink-0 w-full lg:w-auto justify-center">
-                <button id="chat-concierge-btn" onclick="handleConciergeChatClick()" class="talk-to-seller-btn flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg bg-[#14381F] text-white hover:opacity-90 transition-all font-label-md text-xs sm:text-sm shadow-xs cursor-pointer active:scale-95 duration-200">
-                    <span class="material-symbols-outlined text-[16px] sm:text-[18px]">chat</span>
-                    <span>Customise / Chat</span>
+                <button id="hero-custom-btn" onclick="goToCustomisedTab()" class="hidden flex-1 lg:flex-none items-center justify-center gap-1.5 px-4 sm:px-6 py-2.5 rounded-lg bg-[#14381F] text-white hover:bg-[#285C3A] transition-all font-label-md text-xs sm:text-sm shadow-sm cursor-pointer active:scale-95 duration-200">
+                    <span class="material-symbols-outlined text-[16px] sm:text-[18px]">auto_awesome</span>
+                    <span>Customised Gifts</span>
                 </button>
-                <button onclick="openShareModal()" class="flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg border border-outline hover:bg-surface-container-high transition-all font-label-md text-xs sm:text-sm text-on-surface cursor-pointer active:scale-95 duration-200">
+                <button id="hero-share-btn" onclick="handleShareClick()" class="flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 sm:px-6 py-2.5 rounded-lg border border-[rgba(20,56,31,0.3)] hover:bg-[#F7F1E1] transition-all font-label-md text-xs sm:text-sm text-on-surface cursor-pointer active:scale-95 duration-200">
                     <span class="material-symbols-outlined text-[16px] sm:text-[18px]">share</span>
                     <span>Share</span>
                 </button>
             </div>
         </section>
 
-        <!-- Stats Credibility Badges -->
-        <div class="mt-8 flex flex-wrap items-center justify-center gap-6 md:gap-12 py-4 bg-surface-container-lowest border-y border-outline-variant/30">
-            <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary fill-icon">military_tech</span>
-                <span class="font-label-md text-xs md:text-sm text-on-surface-variant">Top Seller</span>
-            </div>
-            <div class="w-px h-4 bg-outline-variant/40 hidden md:block"></div>
-            <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary fill-icon">package_2</span>
-                <span class="font-label-md text-xs md:text-sm text-on-surface-variant">Verified Crafts</span>
-            </div>
-            <div class="w-px h-4 bg-outline-variant/40 hidden md:block"></div>
-            <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary fill-icon">rocket_launch</span>
-                <span class="font-label-md text-xs md:text-sm text-on-surface-variant">Fast Shipments</span>
-            </div>
-        </div>
-
         <!-- Tabbed Navigation Bar -->
-        <div class="mt-12 border-b border-outline-variant flex gap-8 md:gap-12 overflow-x-auto scrollbar-hide select-none">
-            <button id="tab-catalog" onclick="switchTab('catalog')" class="pb-4 px-4 border-b-2 font-label-md text-sm whitespace-nowrap transition-all border-primary text-primary font-bold">Catalog</button>
-            <button id="tab-customised" onclick="switchTab('customised')" class="pb-4 px-4 border-b-2 font-label-md text-sm whitespace-nowrap transition-all border-transparent text-on-surface-variant hover:text-primary">Customised</button>
+        <div class="mt-8 sm:mt-12 border-b border-outline-variant flex gap-6 sm:gap-8 md:gap-12 overflow-x-auto scrollbar-hide select-none min-h-[44px]">
+            <button id="tab-catalog" onclick="switchTab('catalog')" class="pb-3 sm:pb-4 px-3 sm:px-4 border-b-2 font-label-md text-sm whitespace-nowrap transition-all border-primary text-primary font-bold min-h-[44px] flex items-center">Catalog</button>
+            <button id="tab-customised" onclick="switchTab('customised')" class="pb-3 sm:pb-4 px-3 sm:px-4 border-b-2 font-label-md text-sm whitespace-nowrap transition-all border-transparent text-on-surface-variant hover:text-primary min-h-[44px] flex items-center">Customised</button>
             
-            <button id="tab-reviews" onclick="switchTab('reviews')" class="pb-4 px-4 border-b-2 font-label-md text-sm whitespace-nowrap transition-all border-transparent text-on-surface-variant hover:text-primary">Reviews</button>
-            <button id="tab-about" onclick="switchTab('about')" class="pb-4 px-4 border-b-2 font-label-md text-sm whitespace-nowrap transition-all border-transparent text-on-surface-variant hover:text-primary">About</button>
+            <button id="tab-reviews" onclick="switchTab('reviews')" class="pb-3 sm:pb-4 px-3 sm:px-4 border-b-2 font-label-md text-sm whitespace-nowrap transition-all border-transparent text-on-surface-variant hover:text-primary min-h-[44px] flex items-center">Reviews</button>
+            <button id="tab-about" onclick="switchTab('about')" class="pb-3 sm:pb-4 px-3 sm:px-4 border-b-2 font-label-md text-sm whitespace-nowrap transition-all border-transparent text-on-surface-variant hover:text-primary min-h-[44px] flex items-center">About</button>
         </div>
 
         <!-- Loader Spinner -->
         <div id="tab-loader" class="py-16 flex flex-col items-center justify-center gap-2">
             <span class="material-symbols-outlined animate-spin text-primary text-4xl">sync</span>
-            <span class="font-label-md text-xs text-outline">Loading artisan shop...</span>
+            <span class="font-label-md text-xs text-[#587A5B]">Loading artisan shop...</span>
         </div>
 
         <!-- Panels Container -->
@@ -496,7 +486,7 @@
             <div id="panel-reviews" class="tab-panel animate-fade-in hidden">
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter items-start">
                     <!-- Left: Star Stats Breakdown -->
-                    <aside class="md:col-span-4 sticky top-28 space-y-4">
+                    <aside class="md:col-span-4 md:sticky md:top-24 space-y-4">
                         <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant shadow-sm">
                             <div class="flex items-center gap-4 mb-6">
                                 <div id="review-avg" class="text-5xl font-headline-md text-primary font-bold">0.0</div>
@@ -540,88 +530,24 @@
             <div id="panel-about" class="tab-panel animate-fade-in hidden">
                 <!-- Our Story Row -->
                 <section class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-center mb-12">
-                    <div class="lg:col-span-7 space-y-4 pr-0 lg:pr-8">
+                    <div id="about-text-col" class="lg:col-span-7 space-y-4 pr-0 lg:pr-8">
                         <h2 class="font-headline-md text-3xl text-primary mb-6" id="about-headline">Our Story: Crafted with Intention</h2>
                         <div class="font-body-lg text-on-surface leading-relaxed space-y-4" id="about-story-text">
                             <!-- Loaded dynamically -->
                         </div>
                     </div>
-                    <div class="lg:col-span-5 relative mt-6 lg:mt-0">
+                    <div id="about-img-col" class="lg:col-span-5 relative mt-6 lg:mt-0 hidden">
                         <div class="rounded-xl overflow-hidden shadow-2xl rotate-3 image-reveal-hover">
-                            <img id="about-story-img" class="w-full h-80 lg:h-[450px] object-cover rounded-xl" src="https://images.unsplash.com/photo-1565192647048-f997ded879f0?q=80&w=600&auto=format&fit=crop" alt="Working on potter's wheel" loading="lazy">
+                            <img id="about-story-img" class="w-full h-80 lg:h-[450px] object-cover rounded-xl" src="" alt="Artisan story photo" loading="lazy">
                         </div>
                     </div>
                 </section>
 
                 <!-- Workspace Visuals Bento Grid -->
-                <section class="py-8 border-t border-outline-variant/20 mb-8" id="about-workspace-section">
+                <section class="py-8 border-t border-outline-variant/20 mb-8 hidden" id="about-workspace-section">
                     <h3 class="font-headline-md text-2xl mb-6 text-center">Inside the Studio</h3>
                     <div id="workspace-bento" class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         <!-- Loaded dynamically -->
-                    </div>
-                </section>
-
-                <!-- Creative Cycle -->
-                <section class="py-8 border-t border-outline-variant/20">
-                    <h3 class="font-headline-md text-2xl mb-8 text-center">The Creative Cycle</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-surface-container-low p-6 rounded-xl flex flex-col items-center text-center group hover:bg-surface-container transition-colors duration-300">
-                            <div class="w-16 h-16 bg-primary-container rounded-full flex items-center justify-center text-on-primary-container mb-4">
-                                <span class="material-symbols-outlined text-3xl">gesture</span>
-                            </div>
-                            <h4 class="font-headline-sm text-lg mb-2">Conceptualization</h4>
-                            <p class="font-body-md text-sm text-on-surface-variant">Every design starts as a sketch in the artisan's journal, inspired by raw organic elements.</p>
-                        </div>
-                        <div class="bg-surface-container-low p-6 rounded-xl flex flex-col items-center text-center group hover:bg-surface-container transition-colors duration-300">
-                            <div class="w-16 h-16 bg-primary-container rounded-full flex items-center justify-center text-on-primary-container mb-4">
-                                <span class="material-symbols-outlined text-3xl">waves</span>
-                            </div>
-                            <h4 class="font-headline-sm text-lg mb-2">Hand-Crafting</h4>
-                            <p class="font-body-md text-sm text-on-surface-variant">Centered and shaped by hand, a slow process where raw components transform through touch.</p>
-                        </div>
-                        <div class="bg-surface-container-low p-6 rounded-xl flex flex-col items-center text-center group hover:bg-surface-container transition-colors duration-300">
-                            <div class="w-16 h-16 bg-primary-container rounded-full flex items-center justify-center text-on-primary-container mb-4">
-                                <span class="material-symbols-outlined text-3xl">local_fire_department</span>
-                            </div>
-                            <h4 class="font-headline-sm text-lg mb-2">Firing & Finish</h4>
-                            <p class="font-body-md text-sm text-on-surface-variant">Vitrified at high temperatures in regional kilns, creating a durable heirloom that lasts generations.</p>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Sustainability Row -->
-                <section class="bg-primary-container text-on-primary-container rounded-xl p-8 mt-12 overflow-hidden relative">
-                    <div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                        <div class="space-y-6">
-                            <h2 class="font-display-lg text-3xl text-white">Rooted in Responsibility</h2>
-                            <p class="font-body-lg text-sm opacity-90">We believe that beautiful things shouldn't cost the earth. Our commitment to sustainability isn't a trend; it's the core of our craft.</p>
-                            <div class="space-y-4 text-white">
-                                <div class="flex gap-3 items-start">
-                                    <span class="material-symbols-outlined text-2xl text-primary-fixed">eco</span>
-                                    <div>
-                                        <h4 class="font-label-md text-sm font-bold uppercase tracking-widest mb-0.5">Plastic-Free Packaging</h4>
-                                        <p class="font-body-md text-xs opacity-80">Wrapped in honeycomb paper and shipped in recycled boxes with water-activated tape.</p>
-                                    </div>
-                                </div>
-                                <div class="flex gap-3 items-start">
-                                    <span class="material-symbols-outlined text-2xl text-primary-fixed">water_drop</span>
-                                    <div>
-                                        <h4 class="font-label-md text-sm font-bold uppercase tracking-widest mb-0.5">Water Reclamation</h4>
-                                        <p class="font-body-md text-xs opacity-80">We recycle up to 90% of water in our workshops using localized filtration tanks.</p>
-                                    </div>
-                                </div>
-                                <div class="flex gap-3 items-start">
-                                    <span class="material-symbols-outlined text-2xl text-primary-fixed">public</span>
-                                    <div>
-                                        <h4 class="font-label-md text-sm font-bold uppercase tracking-widest mb-0.5">Ethical Sourcing</h4>
-                                        <p class="font-body-md text-xs opacity-80">We source raw clay and earth minerals locally to support regional geologies and reduce emissions.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="relative h-[250px] md:h-[350px] rounded-xl overflow-hidden shadow-2xl">
-                            <img class="w-full h-full object-cover rounded-xl" src="/img/linen_journal.jpg" alt="Eco wrapping" loading="lazy">
-                        </div>
                     </div>
                 </section>
             </div>
@@ -630,7 +556,7 @@
     </main>
 
   <!-- Compact Footer -->
-  <footer class="relative overflow-hidden mt-10 sm:mt-16 pb-16 md:pb-0" style="background-color: #273328; color: #FAF6EE;">
+  <footer class="relative overflow-hidden mt-10 sm:mt-16" style="background-color: #273328; color: #FAF6EE;">
     <!-- Desktop Footer Grid (>= 768px) -->
     <div class="hidden md:block max-w-[1280px] mx-auto px-6 pt-10 pb-8 relative z-10">
       <div class="grid grid-cols-5 gap-8 mb-10">
@@ -739,7 +665,7 @@
     <div id="filter-drawer-backdrop" class="fixed inset-0 bg-[#1f1b15]/40 backdrop-blur-sm z-50 transition-opacity duration-300 opacity-0 pointer-events-none"></div>
 
     <!-- Filter Drawer Sidebar -->
-    <div id="filter-drawer" class="fixed top-0 left-0 h-full w-[360px] bg-background shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col border-r border-outline-variant/30">
+    <div id="filter-drawer" class="fixed top-0 left-0 h-full w-[88vw] max-w-[360px] bg-background shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col border-r border-outline-variant/30">
         <!-- Header -->
         <div class="p-md flex items-center justify-between border-b border-outline-variant/30">
             <div class="flex items-center gap-sm">
@@ -766,11 +692,11 @@
                 <h4 class="font-label-caps text-xs text-primary tracking-widest uppercase">Price Range</h4>
                 <div class="grid grid-cols-2 gap-sm">
                     <div>
-                        <label class="text-[10px] text-outline font-label-caps block mb-1">Min Price (?)</label>
+                        <label class="text-[10px] text-outline font-label-caps block mb-1">Min Price (₹)</label>
                         <input type="number" id="filter-price-min" min="0" placeholder="0" class="w-full px-md py-sm rounded-lg bg-surface text-on-surface-variant font-body-md text-sm border border-outline-variant/50 focus:ring-1 focus:ring-primary focus:outline-none">
                     </div>
                     <div>
-                        <label class="text-[10px] text-outline font-label-caps block mb-1">Max Price (?)</label>
+                        <label class="text-[10px] text-outline font-label-caps block mb-1">Max Price (₹)</label>
                         <input type="number" id="filter-price-max" min="0" placeholder="10000" class="w-full px-md py-sm rounded-lg bg-surface text-on-surface-variant font-body-md text-sm border border-outline-variant/50 focus:ring-1 focus:ring-primary focus:outline-none">
                     </div>
                 </div>
@@ -786,11 +712,11 @@
                     </label>
                     <label class="flex items-center gap-sm cursor-pointer p-sm rounded-lg hover:bg-surface-container transition-colors">
                         <input type="radio" name="filter-rating" value="4" class="text-primary focus:ring-primary border-outline-variant/50">
-                        <span class="text-sm font-body-md text-on-surface">? 4+ Stars</span>
+                        <span class="text-sm font-body-md text-on-surface">★ 4+ Stars</span>
                     </label>
                     <label class="flex items-center gap-sm cursor-pointer p-sm rounded-lg hover:bg-surface-container transition-colors">
                         <input type="radio" name="filter-rating" value="3" class="text-primary focus:ring-primary border-outline-variant/50">
-                        <span class="text-sm font-body-md text-on-surface">? 3+ Stars</span>
+                        <span class="text-sm font-body-md text-on-surface">★ 3+ Stars</span>
                     </label>
                 </div>
             </div>
@@ -827,10 +753,10 @@
 
     <!-- -- Share Modal Overlay -- -->
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden" id="share-modal" onclick="closeShareModal(event)">
-        <div class="bg-[#FFF8E7] rounded-xl p-8 w-full max-w-md shadow-lg relative mx-4 animate-fade-in" onclick="event.stopPropagation()">
+        <div class="bg-[#FFF8E7] rounded-xl p-5 sm:p-8 w-full max-w-md shadow-lg relative mx-4 animate-fade-in" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="font-headline-sm text-xl text-primary flex items-center gap-2">
-                    Share this Studio <span class="text-primary">?</span>
+                    Share this Studio
                 </h2>
                 <button class="text-on-surface-variant hover:text-primary transition-all cursor-pointer" onclick="closeShareModal(null)">
                     <span class="material-symbols-outlined">close</span>
@@ -861,36 +787,6 @@
         </div>
     </div>
 
-    <!-- -- Customisation Chatbot Modal/Drawer -- -->
-    <div id="intake-chat-modal" class="fixed inset-0 z-[100] flex justify-end bg-black/40 backdrop-blur-sm hidden" onclick="closeIntakeChat(event)">
-        <!-- Slide-out Pane -->
-        <div class="w-full max-w-md bg-background h-full shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-out" id="intake-chat-pane" onclick="event.stopPropagation()">
-            <!-- Header -->
-            <div class="px-6 py-5 bg-primary text-on-primary flex items-center justify-between shadow-sm flex-shrink-0">
-                <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined text-2xl text-white">auto_awesome</span>
-                    <div>
-                        <h3 class="font-headline-sm text-base text-white font-bold" id="intake-title">Customise Creation</h3>
-                        <p class="text-[11px] text-primary-fixed-dim font-body-md" id="intake-subtitle">Bespoke Request Chat</p>
-                    </div>
-                </div>
-                <button onclick="closeIntakeChat(null)" class="text-on-primary hover:opacity-80 transition-opacity cursor-pointer">
-                    <span class="material-symbols-outlined text-2xl">close</span>
-                </button>
-            </div>
-
-            <!-- Chat Messages Scroll Area -->
-            <div class="flex-grow overflow-y-auto p-6 space-y-4 font-body-md bg-surface-container-lowest" id="intake-messages">
-                <!-- Chat bubbles will be appended dynamically -->
-            </div>
-
-            <!-- Pinned Input Area -->
-            <div class="p-6 border-t border-outline-variant/30 bg-surface-container-low flex-shrink-0" id="intake-input-container">
-                <!-- Injected dynamically based on question type -->
-            </div>
-        </div>
-    </div>
-
     <!-- Page Logic Module -->
     <script type="module">
         import apiClient from '/src/utils/apiClient.js';
@@ -900,8 +796,8 @@
         initSearchOverlay();
 
         function escapeHtml(str) {
-            if (!str) return '';
-            return str
+            if (str === null || str === undefined) return '';
+            return String(str)
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;")
@@ -909,17 +805,36 @@
                 .replace(/'/g, "&#039;");
         }
 
+        function safeImageUrl(url, fallback = '/img/ceramic_bowls.jpg') {
+            if (!url || typeof url !== 'string') return fallback;
+            const clean = url.trim();
+            if (/^(https?:\/\/|\/|data:image\/)/i.test(clean)) return clean;
+            return fallback;
+        }
+
+        function formatPrice(paise, basePrice) {
+            if (paise !== undefined && paise !== null && !isNaN(paise) && Number(paise) > 0) {
+                return `₹${(Number(paise) / 100).toLocaleString('en-IN')}`;
+            }
+            if (basePrice !== undefined && basePrice !== null && !isNaN(basePrice)) {
+                return `₹${Number(basePrice).toLocaleString('en-IN')}`;
+            }
+            return '₹0';
+        }
+
         let sellerId = null;
         let sellerProfile = null;
         let activeTab = 'catalog';
         let isLoggedIn = false;
         let currentUser = null;
-        let isWishlistUpdating = {};
-        
+        let wishlistSet = new Set();
+        const isWishlistUpdating = {};
+
         let allSellerProducts = [];
-        let allSellerCustomisations = [];
+        let allSellerReviews = [];
+        let sellerReviewSummary = null;
         let categoriesList = [];
-        let activeFilters = {
+        const activeFilters = {
             category_id: '',
             min_price: '',
             max_price: '',
@@ -927,7 +842,7 @@
             availability: ''
         };
 
-        // Extract Seller ID from Query Param (support both id and seller_id)
+        // Extract Seller ID from Query Param (supports id or seller_id)
         const urlParams = new URLSearchParams(window.location.search);
         sellerId = String(urlParams.get('id') || urlParams.get('seller_id') || '').trim();
 
@@ -939,14 +854,14 @@
                 return;
             }
 
-            document.getElementById('share-link-input').value = window.location.href;
+            const shareLinkInput = document.getElementById('share-link-input');
+            if (shareLinkInput) shareLinkInput.value = window.location.href;
 
             await checkAuthState();
             await loadSellerProfile();
             await updateCartBadge();
-            await updateWishlistBadge();
-            
-            // Load categories list for filters
+
+            // Load categories list for filter dropdown
             try {
                 const catRes = await apiClient.get('/categories');
                 if (catRes.data && catRes.data.success) {
@@ -956,25 +871,25 @@
                 console.error("Failed to load categories for filters:", err);
             }
             initFilterDrawer();
-            
-            const customiseListingId = urlParams.get('customise_listing_id');
-            if (customiseListingId) {
-                const productTypeTag = urlParams.get('product_type_tag');
-                const customiseListingTitle = urlParams.get('customise_listing_title');
-                await switchTab('customised');
-                setTimeout(() => {
-                    window.startCustomisation(customiseListingId, productTypeTag, customiseListingTitle);
-                }, 300);
+            attachGridDelegation('catalog-grid');
+            attachGridDelegation('custom-grid');
+
+            const tabParam = urlParams.get('tab');
+            if (tabParam === 'customised' || tabParam === 'custom' || urlParams.get('customise_listing_id')) {
+                await window.switchTab('customised');
+            } else if (tabParam === 'reviews') {
+                await window.switchTab('reviews');
+            } else if (tabParam === 'about') {
+                await window.switchTab('about');
             } else {
-                // Default load catalog
-                await switchTab('catalog');
+                await window.switchTab('catalog');
             }
         }
 
         async function checkAuthState() {
-            const token = sessionStorage.getItem('tohfa_access_token');
+            const token = localStorage.getItem('tohfa_access_token') || sessionStorage.getItem('tohfa_access_token');
             const authContainer = document.getElementById('auth-buttons-container');
-            
+
             if (token) {
                 isLoggedIn = true;
                 try {
@@ -989,12 +904,24 @@
                         }
                         sessionStorage.setItem('tohfa_user_initials', initial);
                     }
-                    
+
                     if (authContainer) {
                         const finalNavAvatar = avatarUrl || '/img/default-avatar.png';
                         authContainer.innerHTML = `<img src="${finalNavAvatar}" alt="Profile" class="w-10 h-10 rounded-full border border-[rgba(20,56,31,0.2)] object-cover cursor-pointer hover:opacity-85 duration-200" onclick="window.location.href='/buyer/profile.html'" loading="lazy" onerror="this.onerror=null; this.src='/img/default-avatar.png';" />`;
                     }
-                } catch(e) {
+
+                    // Sync wishlist items for current user
+                    try {
+                        const wRes = await apiClient.get('/wishlist');
+                        if (wRes.data && wRes.data.success) {
+                            const items = wRes.data.data.items || wRes.data.data.wishlist || [];
+                            wishlistSet = new Set(items.map(item => Number(item.product_id)));
+                            updateWishlistBadge();
+                        }
+                    } catch (wErr) {
+                        console.warn("Failed to load wishlist:", wErr);
+                    }
+                } catch (e) {
                     console.error("Failed to parse token:", e);
                     logout();
                 }
@@ -1036,6 +963,8 @@
         function updateProfileUI(profile) {
             document.title = `${profile.shop_name} | Tohfa Artisanal Collective`;
             const sellerDesc = profile.bio ? profile.bio.substring(0, 160).replace(/\n/g, ' ') : `Discover handcrafted creations by ${profile.shop_name} on Tohfa.`;
+
+            // Meta tags update
             const ogTitleEl = document.querySelector('meta[property="og:title"]');
             if (ogTitleEl) ogTitleEl.content = `${profile.shop_name} | Tohfa Artisanal Collective`;
             const twitterTitleEl = document.querySelector('meta[name="twitter:title"]');
@@ -1052,153 +981,148 @@
                 if (twitterImgEl) twitterImgEl.content = avatarUrl;
             }
             const canonicalEl = document.querySelector('link[rel="canonical"]');
-            const sellerUrl = `https://thetohfa.in/buyer/seller-profile?id=${profile.id || profile.seller_id}`;
+            const sellerUrl = `https://thetohfa.in/buyer/seller-profile.html?id=${profile.id || profile.seller_id}`;
             if (canonicalEl) canonicalEl.href = sellerUrl;
             const ogUrlEl = document.querySelector('meta[property="og:url"]');
             if (ogUrlEl) ogUrlEl.content = sellerUrl;
             const twitterUrlEl = document.querySelector('meta[name="twitter:url"]');
             if (twitterUrlEl) twitterUrlEl.content = sellerUrl;
 
-            // Update Dynamic Seller JSON-LD Schema
-            const sellerJsonLdEl = document.getElementById('seller-jsonld');
-            if (sellerJsonLdEl) {
-                const sellerGraph = [
-                    {
-                        "@type": "BreadcrumbList",
-                        "@id": `https://thetohfa.in/buyer/seller-profile?id=${profile.id || profile.seller_id}#breadcrumb`,
-                        "itemListElement": [
-                            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thetohfa.in/buyer/home" },
-                            { "@type": "ListItem", "position": 2, "name": "Artisans", "item": "https://thetohfa.in/buyer/categories" },
-                            { "@type": "ListItem", "position": 3, "name": profile.shop_name, "item": `https://thetohfa.in/buyer/seller-profile?id=${profile.id || profile.seller_id}` }
-                        ]
-                    },
-                    {
-                        "@type": "ProfilePage",
-                        "@id": `https://thetohfa.in/buyer/seller-profile?id=${profile.id || profile.seller_id}#profilepage`,
-                        "name": `${profile.shop_name} | Tohfa Artisanal Collective`,
-                        "url": `https://thetohfa.in/buyer/seller-profile?id=${profile.id || profile.seller_id}`,
-                        "mainEntity": {
-                            "@type": "Organization",
-                            "@id": `https://thetohfa.in/buyer/seller-profile?id=${profile.id || profile.seller_id}#artisan`,
-                            "name": profile.shop_name,
-                            "description": sellerDesc,
-                            "image": avatarUrl || "https://thetohfa.in/img/botanical-hero.png",
-                            "address": {
-                                "@type": "PostalAddress",
-                                "addressLocality": profile.location || "India",
-                                "addressCountry": "IN"
-                            }
-                        }
+            // Header & Hero Profile Details
+            document.getElementById('seller-name').innerText = profile.shop_name;
+            document.getElementById('seller-handle').innerText = `@${profile.handle || 'artisan'}`;
+            document.getElementById('seller-city').innerText = profile.location || 'Indian Artisan Studio';
+
+            // Bio clamping & read more toggle
+            const bioEl = document.getElementById('seller-bio');
+            const bioToggleBtn = document.getElementById('bio-toggle-btn');
+            bioEl.innerText = profile.bio || 'Curating beautiful handcrafted creations with intention.';
+            if (profile.bio && profile.bio.length > 140) {
+                bioToggleBtn?.classList.remove('hidden');
+                bioToggleBtn.onclick = () => {
+                    if (bioEl.classList.contains('line-clamp-3')) {
+                        bioEl.classList.remove('line-clamp-3');
+                        bioToggleBtn.innerText = 'Show less';
+                    } else {
+                        bioEl.classList.add('line-clamp-3');
+                        bioToggleBtn.innerText = 'Read more';
                     }
-                ];
-                sellerJsonLdEl.textContent = JSON.stringify({ "@context": "https://schema.org", "@graph": sellerGraph }, null, 2);
+                };
+            } else {
+                bioToggleBtn?.classList.add('hidden');
             }
 
-            document.getElementById('seller-name').innerText = profile.shop_name;
-            document.getElementById('seller-handle').innerText = `@${profile.handle}`;
-            document.getElementById('seller-city').innerText = profile.location || 'Indian Artisan Studio';
-            document.getElementById('seller-bio').innerText = profile.bio || 'Curating beautiful handcrafted creations with intention.';
-            
-            // Set Stats
-            document.getElementById('stat-rating').innerText = profile.review_count > 0 ? profile.avg_rating.toFixed(1) : 'New';
-            document.getElementById('stat-reviews').innerText = profile.review_count;
+            // Verified Badge
+            const verifiedTick = document.getElementById('verified-tick');
+            if (verifiedTick) {
+                if (profile.is_verified) {
+                    verifiedTick.classList.remove('hidden');
+                } else {
+                    verifiedTick.classList.add('hidden');
+                }
+            }
 
+            // Hero Stats Box: Rating · Reviews · Products
+            const ratingVal = parseFloat(profile.avg_rating || 5.0);
+            const reviewCount = parseInt(profile.review_count || 0, 10);
+            document.getElementById('stat-rating').innerText = reviewCount > 0 ? ratingVal.toFixed(1) : 'New';
+            document.getElementById('stat-reviews').innerText = reviewCount;
+            document.getElementById('stat-products').innerText = profile.product_count !== undefined ? profile.product_count : 0;
 
-            // Set Avatar
+            // Avatar Setup
             const avatarEl = document.getElementById('seller-avatar');
             const defaultAvatar = '/img/default-avatar.png';
             const finalAvatar = (profile.avatar_url && !profile.avatar_url.includes('default-avatar.png')) ? profile.avatar_url : defaultAvatar;
-            avatarEl.innerHTML = `<img src="${finalAvatar}" alt="${profile.shop_name}" class="w-full h-full object-cover rounded-full" loading="lazy" onerror="this.onerror=null; this.src='${defaultAvatar}';" />`;
+            avatarEl.innerHTML = `<img src="${finalAvatar}" alt="${escapeHtml(profile.shop_name)}" class="w-full h-full object-cover rounded-full" loading="lazy" onerror="this.onerror=null; this.src='${defaultAvatar}';" />`;
             avatarEl.classList.remove('bg-[#14381F]', 'text-white');
 
-            // Set Cover Banner
+            // Cover Banner Setup
             const coverImg = document.getElementById('seller-cover');
             const coverFallback = document.getElementById('cover-fallback');
             const isLegacyBanner = (url) => !url || url.includes('default-banner.png') || url.includes('artisan_showcase.jpg');
-            const customBanner = (!isLegacyBanner(profile.cover_photo_url)) 
-                ? profile.cover_photo_url 
-                : (!isLegacyBanner(profile.banner_url)) 
-                    ? profile.banner_url 
+            const customBanner = (!isLegacyBanner(profile.cover_photo_url))
+                ? profile.cover_photo_url
+                : (!isLegacyBanner(profile.banner_url))
+                    ? profile.banner_url
                     : '/img/default-seller-banner.png';
 
             coverImg.src = customBanner;
             coverImg.classList.remove('hidden');
             if (coverFallback) coverFallback.classList.add('hidden');
 
-
-
-            // About Story Setup
+            // About Tab: Story setup
             const headlineEl = document.getElementById('about-headline');
             if (headlineEl) headlineEl.innerText = profile.about_headline || `Our Story: ${profile.shop_name}`;
-            
+
             const storyEl = document.getElementById('about-story-text');
             if (storyEl) {
                 const story = profile.artisan_story || profile.bio;
-                storyEl.innerHTML = story 
+                storyEl.innerHTML = story
                     ? story.split('\n').map(p => p.trim() ? `<p>${escapeHtml(p)}</p>` : '').join('')
                     : `<p>Welcome to ${escapeHtml(profile.shop_name)}. Our studio focuses on traditional handmade techniques, crafting unique treasures for slow and intentional living. Each creation is shaped with detail, care, and organic mineral mixtures.</p>`;
             }
 
-            // About Story Image
+            // About Tab: Story Image (conditional)
+            const aboutImgCol = document.getElementById('about-img-col');
+            const aboutTextCol = document.getElementById('about-text-col');
             const aboutStoryImg = document.getElementById('about-story-img');
-            if (aboutStoryImg && profile.about_image_url) {
+            if (profile.about_image_url && aboutStoryImg) {
                 aboutStoryImg.src = profile.about_image_url;
+                aboutImgCol?.classList.remove('hidden');
+                aboutTextCol?.classList.remove('lg:col-span-12');
+                aboutTextCol?.classList.add('lg:col-span-7');
+            } else {
+                aboutImgCol?.classList.add('hidden');
+                aboutTextCol?.classList.remove('lg:col-span-7');
+                aboutTextCol?.classList.add('lg:col-span-12');
             }
 
-            // Bento Workspace Images Setup
+            // About Tab: Studio Workspace Bento Grid (only if workspace_photos exist)
+            const workspaceSection = document.getElementById('about-workspace-section');
             const bento = document.getElementById('workspace-bento');
-            if (bento) {
+            const photos = profile.workspace_photos || [];
+            if (photos.length > 0 && bento && workspaceSection) {
+                workspaceSection.classList.remove('hidden');
                 bento.innerHTML = '';
-                const photos = profile.workspace_photos || [];
-                
-                // Fallbacks if no workspace photos exist
-                const defaultPhotos = [
-                    { photo_url: '/img/ceramic_bowls.jpg', caption: 'Centering clay' },
-                    { photo_url: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500', caption: 'Artisan studio tools' },
-                    { photo_url: '/img/linen_journal.jpg', caption: 'Eco wrapping paper' }
-                ];
-                
-                const list = photos.length > 0 ? photos : defaultPhotos;
-                
-                list.slice(0, 3).forEach((item, index) => {
+                photos.slice(0, 3).forEach((item, index) => {
                     const cell = document.createElement('div');
                     cell.className = `rounded-xl overflow-hidden shadow-sm aspect-square relative group border border-outline-variant/30 ${
                         index === 0 ? 'col-span-2 md:col-span-1 md:aspect-[4/5]' : 'aspect-square'
                     }`;
                     cell.innerHTML = `
-                        <img src="${item.photo_url}" alt="${item.caption || 'Workspace photo'}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                        <img src="${safeImageUrl(item.photo_url)}" alt="${escapeHtml(item.caption || 'Workspace photo')}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                         ${item.caption ? `
                             <div class="absolute inset-x-0 bottom-0 bg-black/60 p-3 text-white text-[10px] font-label-md uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                ${item.caption}
+                                ${escapeHtml(item.caption)}
                             </div>
                         ` : ''}
                     `;
                     bento.appendChild(cell);
                 });
+            } else if (workspaceSection) {
+                workspaceSection.classList.add('hidden');
             }
         }
 
         // Switch Active Tab
         window.switchTab = async function(tabName) {
             activeTab = tabName;
-            
-            // Visual Active States
-            const tabs = ['catalog', 'customised',  'reviews', 'about'];
+
+            const tabs = ['catalog', 'customised', 'reviews', 'about'];
             tabs.forEach(t => {
                 const el = document.getElementById(`tab-${t}`);
                 if (el) {
                     if (t === tabName) {
-                        el.className = "pb-4 px-4 border-b-2 font-label-md text-sm whitespace-nowrap transition-all border-primary text-primary font-bold";
+                        el.className = "pb-3 sm:pb-4 px-3 sm:px-4 border-b-2 font-label-md text-sm whitespace-nowrap transition-all border-primary text-primary font-bold min-h-[44px] flex items-center";
                     } else {
-                        el.className = "pb-4 px-4 border-b-2 font-label-md text-sm whitespace-nowrap transition-all border-transparent text-on-surface-variant hover:text-primary";
+                        el.className = "pb-3 sm:pb-4 px-3 sm:px-4 border-b-2 font-label-md text-sm whitespace-nowrap transition-all border-transparent text-on-surface-variant hover:text-primary min-h-[44px] flex items-center";
                     }
                 }
-                
+
                 const panel = document.getElementById(`panel-${t}`);
                 if (panel) panel.classList.add('hidden');
             });
 
-            // Show Spinner
             const loader = document.getElementById('tab-loader');
             loader.classList.remove('hidden');
 
@@ -1210,10 +1134,9 @@
                 } else if (tabName === 'reviews') {
                     await loadReviews();
                 } else if (tabName === 'about') {
-                    // Static display, info loaded in profile call
+                    // Profile data already loaded in loadSellerProfile
                 }
-                
-                // Show Current Panel
+
                 const panel = document.getElementById(`panel-${tabName}`);
                 if (panel) panel.classList.remove('hidden');
             } catch (err) {
@@ -1223,54 +1146,87 @@
             }
         };
 
+        window.goToCustomisedTab = async function() {
+            await window.switchTab('customised');
+            const tabEl = document.getElementById('tab-customised');
+            if (tabEl) {
+                tabEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        };
+
+        async function ensureProductsLoaded() {
+            if (allSellerProducts.length === 0) {
+                const res = await apiClient.get(`/sellers/${sellerId}/products?limit=250`);
+                if (res.data && res.data.success) {
+                    allSellerProducts = res.data.data.products || [];
+                    updateCustomBtnVisibility();
+                }
+            }
+        }
+
+        function updateCustomBtnVisibility() {
+            const customCount = allSellerProducts.filter(p =>
+                p.listing_type === 'custom' ||
+                p.is_customized ||
+                p.is_customizable ||
+                p.customization_mode === 'fixed' ||
+                p.customization_mode === 'open'
+            ).length;
+            const heroBtn = document.getElementById('hero-custom-btn');
+            if (heroBtn) {
+                if (customCount > 0) {
+                    heroBtn.classList.remove('hidden');
+                    heroBtn.classList.add('flex');
+                } else {
+                    heroBtn.classList.add('hidden');
+                    heroBtn.classList.remove('flex');
+                }
+            }
+        }
+
         // 1. Catalog Products Loader
         async function loadCatalog() {
             const grid = document.getElementById('catalog-grid');
-            const empty = document.getElementById('catalog-empty');
             grid.innerHTML = '';
-            
-            const res = await apiClient.get(`/sellers/${sellerId}/products?limit=250`);
-            if (res.data && res.data.success) {
-                allSellerProducts = res.data.data.products || [];
-                
-                // Load Category Pills
-                const uniqueCatIds = [...new Set(allSellerProducts.map(p => p.category_id))];
-                const sellerCats = categoriesList.filter(c => uniqueCatIds.includes(c.id));
-                
-                // Populate category select options inside filter drawer
-                const categorySelect = document.getElementById('filter-category');
-                if (categorySelect) {
-                    categorySelect.innerHTML = '<option value="">All Crafts</option>' + sellerCats.map(c => `
-                        <option value="${c.id}">${c.display_name || c.name}</option>
-                    `).join('');
-                }
-                
-                renderCategoryPills(sellerCats);
-                applyCatalogFiltersAndRender();
+
+            await ensureProductsLoaded();
+
+            // Category Pills and Filter Select
+            const uniqueCatIds = [...new Set(allSellerProducts.map(p => p.category_id).filter(Boolean))];
+            const sellerCats = categoriesList.filter(c => uniqueCatIds.includes(c.id));
+
+            const categorySelect = document.getElementById('filter-category');
+            if (categorySelect) {
+                categorySelect.innerHTML = '<option value="">All Crafts</option>' + sellerCats.map(c => `
+                    <option value="${c.id}">${escapeHtml(c.display_name || c.name)}</option>
+                `).join('');
             }
+
+            renderCategoryPills(sellerCats);
+            applyCatalogFiltersAndRender();
         }
 
         function renderCategoryPills(sellerCats) {
             const container = document.getElementById('category-pills-container');
             if (!container) return;
-            
+
             const pills = [{ id: '', name: 'All', display_name: 'All' }, ...sellerCats];
             container.innerHTML = pills.map(cat => {
                 const isActive = String(cat.id) === String(activeFilters.category_id);
                 const activeClasses = "bg-primary-container text-white shadow-md font-bold";
                 const inactiveClasses = "bg-[#FFF8E7] border border-outline-variant text-on-surface-variant font-body-md text-sm hover:border-primary hover:text-primary";
                 return `
-                    <button class="flex-shrink-0 whitespace-nowrap px-lg py-sm rounded-full font-body-md text-sm transition-all ${isActive ? activeClasses : inactiveClasses}" data-id="${cat.id}">
-                        ${cat.display_name || cat.name}
+                    <button type="button" class="flex-shrink-0 whitespace-nowrap px-lg py-sm rounded-full font-body-md text-sm transition-all ${isActive ? activeClasses : inactiveClasses}" data-id="${cat.id}">
+                        ${escapeHtml(cat.display_name || cat.name)}
                     </button>
                 `;
             }).join('');
-            
+
             container.querySelectorAll('button').forEach(btn => {
                 btn.addEventListener('click', () => {
                     activeFilters.category_id = btn.getAttribute('data-id');
                     renderCategoryPills(sellerCats);
-                    
+
                     const categorySelect = document.getElementById('filter-category');
                     if (categorySelect) {
                         categorySelect.value = activeFilters.category_id;
@@ -1280,34 +1236,127 @@
             });
         }
 
+        function renderProductCard(p, options = {}) {
+            const isOwner = currentUser && sellerProfile && String(currentUser.id) === String(sellerProfile.id);
+            const priceFormatted = formatPrice(p.price_paise, p.base_price);
+            const stock = p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : 1);
+            const isSoldOut = p.status === 'sold_out' || (stock <= 0 && p.listing_type !== 'custom');
+            const isCustomized = p.listing_type === 'custom' || p.is_customized || p.is_customizable || p.customization_mode === 'fixed' || p.customization_mode === 'open';
+            const isWishlisted = wishlistSet.has(Number(p.id));
+            const reviewCount = parseInt(p.review_count || 0, 10);
+            const avgRating = parseFloat(p.avg_rating || 5.0);
+
+            let ribbonHtml = '';
+            if (p.is_bestseller && isCustomized) {
+                ribbonHtml = `
+                    <div class="ribbon-wrapper">
+                        <div class="ribbon-tag ribbon-bestseller ribbon-bestseller-double">BEST SELLER</div>
+                        <div class="ribbon-tag ribbon-custom ribbon-custom-double">CUSTOM</div>
+                    </div>
+                `;
+            } else if (p.is_bestseller) {
+                ribbonHtml = `
+                    <div class="ribbon-wrapper">
+                        <div class="ribbon-tag ribbon-bestseller">BEST SELLER</div>
+                    </div>
+                `;
+            } else if (isCustomized) {
+                ribbonHtml = `
+                    <div class="ribbon-wrapper">
+                        <div class="ribbon-tag ribbon-custom">CUSTOM</div>
+                    </div>
+                `;
+            }
+
+            const wishlistBtnHtml = isOwner
+                ? `<button type="button" class="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-[rgba(250,246,238,0.85)] opacity-50 cursor-not-allowed flex items-center justify-center z-10 p-0" disabled title="Own Product">
+                       <span class="material-symbols-outlined text-[16px] text-[#14381F]" style="font-variation-settings: 'FILL' 0;">favorite</span>
+                   </button>`
+                : `<button type="button" data-action="wishlist" data-product-id="${p.id}" class="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-[rgba(250,246,238,0.9)] hover:scale-110 active:scale-95 transition-all shadow-xs flex items-center justify-center cursor-pointer z-10 p-0" title="${isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}">
+                       <span class="material-symbols-outlined text-[16px] transition-all ${isWishlisted ? 'fill-icon text-red-500' : 'text-[#14381F]'}" id="wishlist-icon-${p.id}" style="font-variation-settings: 'FILL' ${isWishlisted ? 1 : 0};">favorite</span>
+                   </button>`;
+
+            let actionBtnHtml = '';
+            if (isOwner) {
+                actionBtnHtml = `<button type="button" class="w-full bg-[#14381F]/15 text-[#587A5B] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold opacity-60 cursor-not-allowed text-[11px] sm:text-xs" disabled>Own Product</button>`;
+            } else if (isCustomized) {
+                actionBtnHtml = `<button type="button" data-action="customise" data-product-id="${p.id}" class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs cursor-pointer shadow-xs">Customise</button>`;
+            } else {
+                actionBtnHtml = `<button type="button" data-action="cart" data-product-id="${p.id}" class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs cursor-pointer shadow-xs ${isSoldOut ? 'opacity-50 pointer-events-none' : ''}">${isSoldOut ? 'Sold Out' : 'Add to Cart'}</button>`;
+            }
+
+            const card = document.createElement('div');
+            card.setAttribute('data-href', `/buyer/product.html?id=${p.id}`);
+            card.className = "group bg-[#FAF6EE] border border-[rgba(20,56,31,0.15)] rounded-xl p-2.5 sm:p-3 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between relative cursor-pointer text-inherit";
+
+            card.innerHTML = `
+                <div>
+                    <div class="relative aspect-square overflow-hidden rounded-lg bg-[#FFF8E7] mb-2 sm:mb-2.5">
+                        ${ribbonHtml}
+                        <img src="${safeImageUrl(p.image_url || p.images?.[0])}" alt="${escapeHtml(p.name)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-lg" loading="lazy" onerror="this.onerror=null; this.src='/img/ceramic_bowls.jpg';" />
+                        ${wishlistBtnHtml}
+                        ${isSoldOut ? `
+                            <div class="absolute bottom-2 left-2 bg-red-100 text-red-700 px-2 py-0.5 rounded shadow-xs text-[9px] font-semibold uppercase tracking-wider z-10">
+                                Sold Out
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="flex flex-col gap-0.5 sm:gap-1 mb-2">
+                        <div class="flex items-center justify-between gap-1">
+                            <span class="font-bold text-xs sm:text-sm md:text-[15px] text-[#14381F]" style="font-family: 'DM Sans', sans-serif;">${priceFormatted}</span>
+                            ${reviewCount > 0
+                                ? `<div class="flex items-center gap-0.5 text-[10px] sm:text-xs text-[#587A5B]">
+                                    <span class="text-[#14381F]">★</span>
+                                    <span class="font-semibold text-[#1C1C1A]">${avgRating.toFixed(1)}</span>
+                                    <span class="text-[9px] sm:text-[11px]">(${reviewCount})</span>
+                                  </div>`
+                                : `<span class="bg-[#14381F]/10 text-[#14381F] text-[9px] sm:text-[10px] font-mono font-bold px-1 sm:px-1.5 py-0.5 rounded tracking-wider uppercase">New</span>`}
+                        </div>
+                        <h4 class="font-['Playfair_Display',serif] font-bold text-[#14381F] text-xs sm:text-sm line-clamp-2 min-h-[32px] sm:min-h-[38px] leading-snug">${escapeHtml(p.name)}</h4>
+                        ${options.showLeadTime && p.lead_time_days ? `<span class="text-[10px] sm:text-xs text-[#587A5B] flex items-center gap-0.5 mt-0.5"><span class="material-symbols-outlined text-[13px]">schedule</span> ${p.lead_time_days} days lead time</span>` : ''}
+                    </div>
+                </div>
+                <div class="w-full pt-0 font-['DM_Sans']">
+                    ${actionBtnHtml}
+                </div>
+            `;
+            return card;
+        }
+
         function applyCatalogFiltersAndRender() {
             const grid = document.getElementById('catalog-grid');
             const empty = document.getElementById('catalog-empty');
             grid.innerHTML = '';
-            
+
             let filtered = allSellerProducts.filter(p => {
                 if (activeFilters.category_id && String(p.category_id) !== String(activeFilters.category_id)) {
                     return false;
                 }
+                const pPaise = p.price_paise !== undefined && p.price_paise !== null
+                    ? Number(p.price_paise)
+                    : Math.round(parseFloat(p.base_price || 0) * 100);
+
                 if (activeFilters.min_price !== '') {
-                    const min = Math.round(parseFloat(activeFilters.min_price) * 100);
-                    if (p.price_paise < min) return false;
+                    const minPaise = Math.round(parseFloat(activeFilters.min_price) * 100);
+                    if (pPaise < minPaise) return false;
                 }
                 if (activeFilters.max_price !== '') {
-                    const max = Math.round(parseFloat(activeFilters.max_price) * 100);
-                    if (p.price_paise > max) return false;
+                    const maxPaise = Math.round(parseFloat(activeFilters.max_price) * 100);
+                    if (pPaise > maxPaise) return false;
                 }
                 if (activeFilters.rating !== '') {
-                    if (p.avg_rating < parseFloat(activeFilters.rating)) return false;
+                    const r = parseFloat(p.avg_rating || 5.0);
+                    if (r < parseFloat(activeFilters.rating)) return false;
                 }
+                const stock = p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : 1);
                 if (activeFilters.availability === 'in_stock') {
-                    if (p.stock_qty <= 0) return false;
+                    if (stock <= 0 && p.listing_type !== 'custom') return false;
                 } else if (activeFilters.availability === 'made_to_order') {
-                    if (p.stock_qty > 0) return false;
+                    if (stock > 0 && p.listing_type !== 'custom') return false;
                 }
                 return true;
             });
-            
+
             // Pin bestseller products to the top
             filtered.sort((a, b) => {
                 const aBest = !!a.is_bestseller;
@@ -1316,102 +1365,16 @@
                 if (!aBest && bBest) return 1;
                 return 0;
             });
-            
+
             if (filtered.length === 0) {
                 empty.classList.remove('hidden');
                 updateFilterBadge();
                 return;
             }
             empty.classList.add('hidden');
-            
+
             filtered.forEach(p => {
-                const priceFormatted = `₹${(p.price_paise / 100).toLocaleString('en-IN')}`;
-                const card = document.createElement('a');
-                card.href = `/buyer/product.html?id=${p.id}`;
-                card.className = "group bg-[#FFF8E7] border border-[#c3c8c1] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative no-underline text-inherit";
-                
-                const isWishlisted = !!p.is_wishlisted;
-                const isSoldOut = p.status === 'sold_out' || p.stock_qty === 0;
-
-                let ribbonHtml = '';
-                if (p.is_bestseller && p.listing_type === 'custom') {
-                    ribbonHtml = `
-                        <div class="ribbon-wrapper">
-                            <div class="ribbon-tag ribbon-bestseller ribbon-bestseller-double">BEST SELLER</div>
-                            <div class="ribbon-tag ribbon-custom ribbon-custom-double">CUSTOM</div>
-                        </div>
-                    `;
-                } else if (p.is_bestseller) {
-                    ribbonHtml = `
-                        <div class="ribbon-wrapper">
-                            <div class="ribbon-tag ribbon-bestseller">BEST SELLER</div>
-                        </div>
-                    `;
-                } else if (p.listing_type === 'custom') {
-                    ribbonHtml = `
-                        <div class="ribbon-wrapper">
-                            <div class="ribbon-tag ribbon-custom">CUSTOM</div>
-                        </div>
-                    `;
-                }
-
-                const isOwner = currentUser && sellerProfile && String(currentUser.id) === String(sellerProfile.id);
-
-                const wishlistBtnHtml = isOwner
-                    ? `<button class="absolute top-1.5 right-1.5 w-6 h-6 sm:w-[26px] sm:h-[26px] min-w-0 min-h-0 rounded-full bg-[rgba(250,246,238,0.85)] opacity-50 cursor-not-allowed flex items-center justify-center z-10 p-0 toggle-wishlist-btn" disabled onclick="event.stopPropagation();">
-                           <span class="material-symbols-outlined text-[15px] sm:text-[17px] text-[#14381F]" style="font-variation-settings: 'FILL' 0;">favorite</span>
-                       </button>`
-                    : `<button onclick="toggleWishlist(event, ${p.id})" class="absolute top-1.5 right-1.5 w-6 h-6 sm:w-[26px] sm:h-[26px] min-w-0 min-h-0 rounded-full bg-[rgba(250,246,238,0.9)] hover:scale-110 active:scale-95 transition-all shadow-xs toggle-wishlist-btn flex items-center justify-center cursor-pointer z-10 p-0">
-                           <span class="material-symbols-outlined text-[15px] sm:text-[17px] transition-all ${isWishlisted ? 'fill-icon text-red-500' : 'text-[#14381F]'}" id="wishlist-icon-${p.id}" style="font-variation-settings: 'FILL' ${isWishlisted ? 1 : 0};">favorite</span>
-                       </button>`;
-
-                const isCustomized = p.listing_type === 'custom';
-                const addToCartBtnHtml = isOwner
-                    ? `<button class="w-full bg-[#14381F]/15 text-[#587A5B] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold opacity-60 cursor-not-allowed text-[11px] sm:text-xs" disabled onclick="event.stopPropagation();">
-                           Own Product
-                       </button>`
-                    : isCustomized
-                        ? `<button onclick="talkToSeller(event, ${p.id}, this)" class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs talk-to-seller-btn">
-                               Talk to Seller
-                           </button>`
-                        : `<button onclick="addToCart(event, ${p.id})" class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs add-to-cart-btn ${isSoldOut ? 'opacity-50 pointer-events-none' : ''}">
-                               Add to Cart
-                           </button>`;
-
-                card.className = "group bg-[#FAF6EE] border border-[rgba(20,56,31,0.15)] rounded-xl p-2.5 sm:p-3 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between relative";
-
-                card.innerHTML = `
-                    <div>
-                        <div class="relative aspect-square overflow-hidden rounded-lg bg-[#FAF6EE] mb-2 sm:mb-2.5">
-                            ${ribbonHtml}
-                            <img src="${p.image_url || '/img/ceramic_bowls.jpg'}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-lg" loading="lazy" onerror="this.src='/img/ceramic_bowls.jpg'" />
-                            ${wishlistBtnHtml}
-                            ${isSoldOut ? `
-                                <div class="absolute bottom-2 left-2 bg-red-100 text-red-700 px-2 py-0.5 rounded shadow-xs text-[9px] font-semibold uppercase tracking-wider z-10">
-                                    Sold Out
-                                </div>
-                            ` : ''}
-                        </div>
-                        <div class="flex flex-col gap-0.5 sm:gap-1 mb-2">
-                            <div class="flex items-center justify-between gap-1">
-                                <span class="font-bold text-xs sm:text-sm md:text-[15px] text-[#14381F]" style="font-family: 'DM Sans', sans-serif;">${priceFormatted}</span>
-                                ${parseInt(p.review_count || 0, 10) > 0
-                                    ? `<div class="flex items-center gap-0.5 text-[10px] sm:text-xs text-[#587A5B]">
-                                        <span class="text-[#14381F]">★</span>
-                                        <span class="font-semibold text-[#1C1C1A]">${parseFloat(p.avg_rating || 5).toFixed(1)}</span>
-                                        <span class="text-[9px] sm:text-[11px]">(${parseInt(p.review_count, 10)})</span>
-                                      </div>`
-                                    : `<span class="bg-[#14381F]/10 text-[#14381F] text-[9px] sm:text-[10px] font-mono font-bold px-1 sm:px-1.5 py-0.5 rounded tracking-wider uppercase">New</span>`}
-                            </div>
-                            <h4 class="font-['Playfair_Display',serif] font-bold text-[#14381F] text-xs sm:text-sm line-clamp-2 min-h-[32px] sm:min-h-[38px] leading-snug">${p.name}</h4>
-                            <span class="text-[10px] sm:text-xs text-[#587A5B] hover:text-[#14381F] hover:underline cursor-pointer truncate block" onclick="event.stopPropagation(); window.location.href='/buyer/seller-profile.html?id=${p.seller_id || sellerId}'">By ${sellerProfile.shop_name}</span>
-                        </div>
-                    </div>
-                    <div class="w-full pt-0 font-['DM_Sans']">
-                        ${addToCartBtnHtml}
-                    </div>
-                `;
-                grid.appendChild(card);
+                grid.appendChild(renderProductCard(p));
             });
             updateFilterBadge();
         }
@@ -1425,7 +1388,7 @@
             if (activeFilters.rating !== '') activeCount++;
             if (activeFilters.availability !== '') activeCount++;
             if (activeFilters.category_id !== '') activeCount++;
-            
+
             if (activeCount > 0) {
                 filterBtnText.innerText = `Filter (${activeCount})`;
             } else {
@@ -1444,26 +1407,27 @@
             function openFilterDrawer() {
                 document.getElementById('filter-price-min').value = activeFilters.min_price;
                 document.getElementById('filter-price-max').value = activeFilters.max_price;
-                
+
                 const ratingRadios = document.getElementsByName('filter-rating');
                 ratingRadios.forEach(radio => {
                     radio.checked = radio.value === activeFilters.rating;
                 });
-                
+
                 const availabilityRadios = document.getElementsByName('filter-availability');
                 availabilityRadios.forEach(radio => {
                     radio.checked = radio.value === activeFilters.availability;
                 });
-                
+
                 const categorySelect = document.getElementById('filter-category');
                 if (categorySelect) {
                     categorySelect.value = activeFilters.category_id;
                 }
-                
+
                 filterDrawer.classList.remove('-translate-x-full');
                 filterDrawer.classList.add('translate-x-0');
                 filterBackdrop.classList.remove('opacity-0', 'pointer-events-none');
                 filterBackdrop.classList.add('opacity-100');
+                document.body.style.overflow = 'hidden';
             }
 
             function closeFilterDrawer() {
@@ -1471,6 +1435,7 @@
                 filterDrawer.classList.add('-translate-x-full');
                 filterBackdrop.classList.remove('opacity-100');
                 filterBackdrop.classList.add('opacity-0', 'pointer-events-none');
+                document.body.style.overflow = '';
             }
 
             if (filterBtn) filterBtn.addEventListener('click', openFilterDrawer);
@@ -1481,22 +1446,22 @@
                 filterApplyBtn.addEventListener('click', () => {
                     activeFilters.min_price = document.getElementById('filter-price-min').value;
                     activeFilters.max_price = document.getElementById('filter-price-max').value;
-                    
+
                     const ratingRadios = document.getElementsByName('filter-rating');
                     activeFilters.rating = Array.from(ratingRadios).find(r => r.checked)?.value || '';
-                    
+
                     const availabilityRadios = document.getElementsByName('filter-availability');
                     activeFilters.availability = Array.from(availabilityRadios).find(r => r.checked)?.value || '';
-                    
+
                     const categorySelect = document.getElementById('filter-category');
                     if (categorySelect) {
                         activeFilters.category_id = categorySelect.value;
                     }
-                    
-                    const uniqueCatIds = [...new Set(allSellerProducts.map(p => p.category_id))];
+
+                    const uniqueCatIds = [...new Set(allSellerProducts.map(p => p.category_id).filter(Boolean))];
                     const sellerCats = categoriesList.filter(c => uniqueCatIds.includes(c.id));
                     renderCategoryPills(sellerCats);
-                    
+
                     closeFilterDrawer();
                     applyCatalogFiltersAndRender();
                 });
@@ -1509,303 +1474,244 @@
                     activeFilters.rating = '';
                     activeFilters.availability = '';
                     activeFilters.category_id = '';
-                    
-                    const uniqueCatIds = [...new Set(allSellerProducts.map(p => p.category_id))];
+
+                    const uniqueCatIds = [...new Set(allSellerProducts.map(p => p.category_id).filter(Boolean))];
                     const sellerCats = categoriesList.filter(c => uniqueCatIds.includes(c.id));
                     renderCategoryPills(sellerCats);
-                    
+
                     closeFilterDrawer();
                     applyCatalogFiltersAndRender();
                 });
             }
         }
 
-        // 2. Customised Services Loader
+        // 2. Customised Tab Loader
         async function loadCustomisations() {
             const grid = document.getElementById('custom-grid');
             const empty = document.getElementById('custom-empty');
             grid.innerHTML = '';
-            
-            const res = await apiClient.get(`/sellers/${sellerId}/customizations?limit=50`);
-            if (res.data && res.data.success) {
-                const list = res.data.data.customizations || [];
-                allSellerCustomisations = list;
-                if (list.length === 0) {
-                    empty.classList.remove('hidden');
-                    return;
-                }
-                empty.classList.add('hidden');
-                
-                list.forEach(c => {
-                    const priceFormatted = `Starting from ₹${c.base_price.toLocaleString('en-IN')}`;
-                    const card = document.createElement('div');
-                    card.className = "group bg-[#FFF8E7] border border-[#c3c8c1] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative";
-                    
-                    let ribbonHtml = '';
-                    if (c.is_bestseller) {
-                        ribbonHtml = `
-                            <div class="ribbon-wrapper">
-                                <div class="ribbon-tag ribbon-bestseller ribbon-bestseller-double">BEST SELLER</div>
-                                <div class="ribbon-tag ribbon-custom ribbon-custom-double">CUSTOM</div>
-                            </div>
-                        `;
-                    } else {
-                        ribbonHtml = `
-                            <div class="ribbon-wrapper">
-                                <div class="ribbon-tag ribbon-custom">CUSTOM</div>
-                            </div>
-                        `;
-                    }
-                    
-                    card.innerHTML = `
-                        <div>
-                            <div class="relative aspect-square overflow-hidden rounded-xl bg-surface-container-lowest mb-4">
-                                ${ribbonHtml}
-                                <img src="${c.cover_image_url || 'https://placehold.co/300x300/f6f3f2/061b0e?text=Custom'}" alt="${c.product_name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-xl" loading="lazy" />
-                            </div>
-                            <div class="flex flex-col mb-4">
-                                <div class="flex items-center justify-between gap-2 mb-1">
-                                    <span class="font-bold text-lg text-[#14381F]">${priceFormatted}</span>
-                                    ${parseInt(c.review_count || 0, 10) > 0
-                                        ? `<div class="flex items-center gap-1 text-xs text-[#605e57]">
-                                            <span class="text-[#14381F] font-bold">?</span>
-                                            <span class="font-semibold text-on-surface">${parseFloat(c.avg_rating).toFixed(1)}</span>
-                                            <span>(${parseInt(c.review_count, 10)})</span>
-                                          </div>`
-                                        : `<span class="text-xs text-[#605e57] italic">New</span>`}
-                                </div>
-                                <h4 class="font-headline-lg font-bold text-on-surface line-clamp-1 mb-1" style="font-family: 'Playfair Display', serif;">${c.product_name}</h4>
-                                <span class="text-xs text-[#605e57] hover:underline cursor-pointer" onclick="event.stopPropagation(); window.location.href='seller-profile.html?id=${sellerId}'">By ${sellerProfile.shop_name}</span>
-                                <span class="text-xs text-[#605e57] flex items-center gap-0.5"><span class="material-symbols-outlined text-xs">schedule</span> ${c.lead_time_days} days</span>
-                            </div>
-                        </div>
-                        <div class="w-full font-['DM_Sans']">
-                            <button onclick="startCustomisation(${c.listing_id}, '${c.product_type_tag}', '${c.product_name.replace(/'/g, "\\'")}')" class="w-full bg-[#14381F] text-white py-2 rounded-lg font-semibold hover:opacity-90 active:scale-[0.98] transition-all text-sm">
-                                Request Customisation
-                            </button>
-                        </div>
-                    `;
-                    grid.appendChild(card);
-                });
+
+            await ensureProductsLoaded();
+
+            const customProducts = allSellerProducts.filter(p =>
+                p.listing_type === 'custom' ||
+                p.is_customized ||
+                p.is_customizable ||
+                p.customization_mode === 'fixed' ||
+                p.customization_mode === 'open'
+            );
+
+            if (customProducts.length === 0) {
+                empty.classList.remove('hidden');
+                return;
             }
+            empty.classList.add('hidden');
+
+            customProducts.forEach(p => {
+                grid.appendChild(renderProductCard(p, { showLeadTime: true }));
+            });
         }
 
-        
-
-        // 4. Reviews Loader (With Searching)
+        // 3. Reviews Tab Loader
         async function loadReviews(searchVal = '') {
             const list = document.getElementById('reviews-list-container');
             const empty = document.getElementById('reviews-empty');
             list.innerHTML = '';
-            
-            const res = await apiClient.get(`/sellers/${sellerId}/reviews?search=${encodeURIComponent(searchVal)}`);
-            if (res.data && res.data.success) {
-                const data = res.data.data;
-                const reviews = data.reviews || [];
-                const stats = data.stats || {};
-                
-                // Set overall average & count
-                if (stats.total_reviews === 0) {
-                    document.getElementById('review-avg').innerText = 'No reviews yet';
-                    document.getElementById('review-total-lbl').innerText = 'Be the first to leave a review!';
-                    document.getElementById('review-stars-avg').innerHTML = '';
-                } else {
-                    document.getElementById('review-avg').innerText = stats.avg_rating > 0 ? stats.avg_rating.toFixed(2) : '0.0';
-                    document.getElementById('review-total-lbl').innerText = `${stats.total_reviews} total reviews`;
-                    
-                    // Star Average visual stars
-                    const starAvgContainer = document.getElementById('review-stars-avg');
-                    starAvgContainer.innerHTML = '';
-                    const fullStars = Math.floor(stats.avg_rating);
-                    const hasHalf = stats.avg_rating % 1 >= 0.5;
+
+            if (allSellerReviews.length === 0) {
+                try {
+                    const res = await apiClient.get(`/reviews/seller/${sellerId}?limit=50`);
+                    if (res.data && res.data.success) {
+                        const data = res.data.data;
+                        allSellerReviews = data.reviews || [];
+                        sellerReviewSummary = data.summary || {};
+                    }
+                } catch (err) {
+                    console.error("Failed to load seller reviews:", err);
+                }
+            }
+
+            const total = sellerReviewSummary?.total_reviews !== undefined
+                ? sellerReviewSummary.total_reviews
+                : allSellerReviews.length;
+            const avg = sellerReviewSummary?.avg_rating !== undefined
+                ? Number(sellerReviewSummary.avg_rating)
+                : (sellerProfile?.avg_rating || 5.0);
+
+            const avgEl = document.getElementById('review-avg');
+            const totalLbl = document.getElementById('review-total-lbl');
+            const starsContainer = document.getElementById('review-stars-avg');
+            const barsContainer = document.getElementById('ratings-bars-list');
+
+            if (total === 0) {
+                if (avgEl) avgEl.innerText = 'New';
+                if (totalLbl) totalLbl.innerText = 'No reviews yet for this studio';
+                if (starsContainer) starsContainer.innerHTML = '';
+                if (barsContainer) barsContainer.innerHTML = '';
+            } else {
+                if (avgEl) avgEl.innerText = avg.toFixed(1);
+                if (totalLbl) totalLbl.innerText = `${total} review${total === 1 ? '' : 's'}`;
+
+                if (starsContainer) {
+                    starsContainer.innerHTML = '';
+                    const fullStars = Math.floor(avg);
+                    const hasHalf = avg % 1 >= 0.5;
                     for (let i = 1; i <= 5; i++) {
                         if (i <= fullStars) {
-                            starAvgContainer.innerHTML += `<span class="material-symbols-outlined fill-icon text-base">star</span>`;
+                            starsContainer.innerHTML += `<span class="material-symbols-outlined fill-icon text-base">star</span>`;
                         } else if (i === fullStars + 1 && hasHalf) {
-                            starAvgContainer.innerHTML += `<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 0.7">star_half</span>`;
+                            starsContainer.innerHTML += `<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 0.7">star_half</span>`;
                         } else {
-                            starAvgContainer.innerHTML += `<span class="material-symbols-outlined text-base">star</span>`;
+                            starsContainer.innerHTML += `<span class="material-symbols-outlined text-base">star</span>`;
                         }
                     }
                 }
 
-                // Progress bars list
-                const barsContainer = document.getElementById('ratings-bars-list');
-                barsContainer.innerHTML = '';
-                for (let s = 5; s >= 1; s--) {
-                    const pct = stats.breakdown_percentage[s] || 0;
-                    const count = stats.breakdown[s] || 0;
-                    barsContainer.innerHTML += `
-                        <div class="flex items-center gap-3">
-                            <span class="font-label-sm w-12 text-xs">${s} star</span>
-                            <div class="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden">
-                                <div class="bg-primary h-full rounded-full transition-all duration-700" style="width: ${pct}%"></div>
-                            </div>
-                            <span class="font-label-sm w-8 text-right text-xs text-on-surface-variant">${pct}%</span>
-                        </div>
-                    `;
-                }
-
-                if (reviews.length === 0) {
-                    empty.classList.remove('hidden');
-                    return;
-                }
-                empty.classList.add('hidden');
-
-                reviews.forEach(r => {
-                    const card = document.createElement('article');
-                    card.className = "bg-surface-bright p-6 md:p-8 rounded-xl border border-outline-variant hover:shadow-md transition-shadow duration-300 animate-fade-in";
-                    
-                    let ratingStars = '';
-                    for (let s = 1; s <= 5; s++) {
-                        ratingStars += `<span class="material-symbols-outlined ${s <= r.rating ? 'fill-icon' : ''} text-sm">star</span>`;
-                    }
-                    
-                    const dateFormatted = new Date(r.created_at).toLocaleDateString('en-IN', {
-                        year: 'numeric', month: 'long', day: 'numeric'
-                    });
-
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start mb-4">
+                if (barsContainer) {
+                    barsContainer.innerHTML = '';
+                    const dist = sellerReviewSummary?.rating_distribution || {};
+                    for (let s = 5; s >= 1; s--) {
+                        const count = dist[s] || 0;
+                        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                        barsContainer.innerHTML += `
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container flex items-center justify-center font-bold text-sm shrink-0 border border-outline-variant/30">
-                                    ${r.buyer_avatar_url 
-                                        ? `<img src="${r.buyer_avatar_url}" alt="${r.buyer_name}" class="w-full h-full object-cover" loading="lazy" />`
-                                        : (r.buyer_name || 'A').charAt(0).toUpperCase()
-                                    }
+                                <span class="font-label-sm w-12 text-xs">${s} star</span>
+                                <div class="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                                    <div class="bg-primary h-full rounded-full transition-all duration-700" style="width: ${pct}%"></div>
                                 </div>
-                                <div>
-                                    <h3 class="font-headline-sm text-sm text-primary font-bold">${r.buyer_name}</h3>
-                                    <p class="font-label-sm text-[10px] text-on-surface-variant uppercase tracking-wider">${dateFormatted}</p>
-                                </div>
+                                <span class="font-label-sm w-8 text-right text-xs text-on-surface-variant">${pct}%</span>
                             </div>
-                            <div class="flex text-primary">
-                                ${ratingStars}
-                            </div>
-                        </div>
-                        <blockquote class="italic font-headline-sm text-base text-on-surface mb-6 leading-relaxed">
-                            "${r.review_text}"
-                        </blockquote>
-                        
-                        <!-- Product Info Card -->
-                        <a href="/buyer/product.html?id=${r.product.id}" class="flex items-center gap-4 p-4 bg-surface-container-lowest rounded-lg border border-outline-variant/30 mb-6 cursor-pointer no-underline text-inherit">
-                            <div class="w-14 h-14 rounded overflow-hidden shrink-0 border border-outline-variant/20">
-                                <img src="${r.product.image_url || 'https://placehold.co/100x100/f6f3f2/061b0e?text=Product'}" alt="${r.product.name}" class="w-full h-full object-cover" loading="lazy" />
+                        `;
+                    }
+                }
+            }
+
+            const query = String(searchVal || '').trim().toLowerCase();
+            let filteredReviews = allSellerReviews;
+            if (query) {
+                filteredReviews = allSellerReviews.filter(r =>
+                    (r.comment && r.comment.toLowerCase().includes(query)) ||
+                    (r.buyer_name && r.buyer_name.toLowerCase().includes(query)) ||
+                    (r.listing_title && r.listing_title.toLowerCase().includes(query))
+                );
+            }
+
+            if (filteredReviews.length === 0) {
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+
+            filteredReviews.forEach(r => {
+                const card = document.createElement('article');
+                card.className = "bg-surface-bright p-5 sm:p-6 md:p-8 rounded-xl border border-outline-variant hover:shadow-md transition-shadow duration-300 animate-fade-in";
+
+                let ratingStars = '';
+                for (let s = 1; s <= 5; s++) {
+                    ratingStars += `<span class="material-symbols-outlined ${s <= (r.rating || 5) ? 'fill-icon' : ''} text-sm">star</span>`;
+                }
+
+                const dateFormatted = r.created_at ? new Date(r.created_at).toLocaleDateString('en-IN', {
+                    year: 'numeric', month: 'short', day: 'numeric'
+                }) : '';
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-3 sm:mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-surface-container flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 border border-outline-variant/30 text-primary">
+                                ${r.buyer_photo
+                                    ? `<img src="${safeImageUrl(r.buyer_photo, '/img/default-avatar.png')}" alt="${escapeHtml(r.buyer_name)}" class="w-full h-full object-cover" loading="lazy" />`
+                                    : escapeHtml((r.buyer_name || 'B').charAt(0).toUpperCase())
+                                }
                             </div>
                             <div>
-                                <p class="text-[10px] font-label-sm text-on-surface-variant uppercase tracking-wider mb-0.5">Purchased item</p>
-                                <p class="font-label-md text-sm text-primary font-bold line-clamp-1">${r.product.name}</p>
+                                <h3 class="font-headline-sm text-xs sm:text-sm text-primary font-bold">${escapeHtml(r.buyer_name || 'Verified Buyer')}</h3>
+                                <p class="font-label-sm text-[10px] text-on-surface-variant uppercase tracking-wider">${dateFormatted}</p>
                             </div>
-                        </a>
+                        </div>
+                        <div class="flex text-primary">
+                            ${ratingStars}
+                        </div>
+                    </div>
+                    <blockquote class="italic font-headline-sm text-sm sm:text-base text-on-surface mb-3 sm:mb-4 leading-relaxed">
+                        "${escapeHtml(r.comment || '')}"
+                    </blockquote>
 
-                        <!-- Seller Reply (If exists) -->
-                        ${r.reply_text ? `
-                            <div class="mt-6 p-4 bg-secondary-container/20 rounded-lg border-l-4 border-primary">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <span class="material-symbols-outlined text-primary text-sm">reply</span>
-                                    <span class="font-label-md text-xs text-primary font-bold">${sellerProfile.shop_name}'s Response</span>
-                                </div>
-                                <p class="text-xs text-on-surface-variant font-body-md italic leading-relaxed">"${r.reply_text}"</p>
+                    ${r.listing_title ? `
+                        <div class="flex items-center gap-2 p-2.5 bg-surface-container-lowest rounded-lg border border-outline-variant/30 mb-3 text-xs text-on-surface-variant">
+                            <span class="material-symbols-outlined text-[15px] text-primary">shopping_bag</span>
+                            <span class="truncate">Item: <strong>${escapeHtml(r.listing_title)}</strong></span>
+                        </div>
+                    ` : ''}
+
+                    ${r.reply_text ? `
+                        <div class="mt-4 p-3 sm:p-4 bg-secondary-container/20 rounded-lg border-l-4 border-primary">
+                            <div class="flex items-center gap-1.5 mb-1">
+                                <span class="material-symbols-outlined text-primary text-sm">reply</span>
+                                <span class="font-label-md text-xs text-primary font-bold">${escapeHtml(sellerProfile?.shop_name || 'Artisan')}'s Response</span>
                             </div>
-                        ` : ''}
-                    `;
-                    list.appendChild(card);
-                });
-            }
+                            <p class="text-xs text-on-surface-variant font-body-md italic leading-relaxed">"${escapeHtml(r.reply_text)}"</p>
+                        </div>
+                    ` : ''}
+                `;
+                list.appendChild(card);
+            });
         }
 
-        // Setup reviews search listener
+        // Search reviews listener
         let searchTimeout;
-        document.getElementById('review-search').addEventListener('input', function(e) {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                loadReviews(e.target.value);
-            }, 350);
-        });
+        const reviewSearchInput = document.getElementById('review-search');
+        if (reviewSearchInput) {
+            reviewSearchInput.addEventListener('input', function(e) {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    loadReviews(e.target.value);
+                }, 250);
+            });
+        }
 
-        // -- Cart & Wishlist Add Actions --
-        window.talkToSeller = async function(e, productId, btn) {
-            e.stopPropagation();
-            if (currentUser && sellerProfile && currentUser.id === sellerProfile.id) {
-                window.Toast?.show("Sellers cannot purchase their own products", "error");
-                return;
-            }
-            if (!isLoggedIn) {
-                window.Toast?.show("Please log in to contact the seller", "error");
-                /* login bypassed */
-                return;
-            }
+        // 4. Cart & Wishlist Actions & Grid Delegation
+        function attachGridDelegation(gridId) {
+            const grid = document.getElementById(gridId);
+            if (!grid || grid.dataset.delegated) return;
+            grid.dataset.delegated = 'true';
 
-            btn.disabled = true;
-            const originalText = btn.innerText;
-            btn.innerText = 'Starting chat...';
-
-            try {
-                const res = await apiClient.post('/requests', {
-                    listing_id: String(productId).trim(),
-                    request_type: 'customization',
-                    quantity: 1
-                });
-                if (res.data && res.data.success) {
-                    const convId = res.data.conversation_id;
-                    window.location.href = `/buyer/chat.html?conversationId=${convId}`;
-                } else {
-                    throw new Error("Invalid response");
+            grid.addEventListener('click', (e) => {
+                const btn = e.target.closest('button');
+                if (btn) {
+                    e.stopPropagation();
+                    const action = btn.dataset.action;
+                    const pid = btn.dataset.productId;
+                    if (action === 'wishlist') {
+                        toggleWishlist(pid, btn);
+                    } else if (action === 'cart') {
+                        addToCart(pid, btn);
+                    } else if (action === 'customise') {
+                        window.location.href = `/buyer/customization-form.html?productId=${pid}`;
+                    }
+                    return;
                 }
-            } catch (err) {
-                console.error("Failed to start customization request:", err);
-                btn.disabled = false;
-                btn.innerText = originalText;
-            }
-        };
 
-        window.handleConciergeChatClick = async function() {
-            if (currentUser && sellerProfile && String(currentUser.id) === String(sellerProfile.id)) {
-                window.Toast?.show("Sellers cannot start a chat with themselves", "error");
-                return;
-            }
-            if (!isLoggedIn) {
-                window.Toast?.show("Please log in to contact the seller", "error");
-                /* login bypassed */
-                return;
-            }
+                const card = e.target.closest('[data-href]');
+                if (card && card.dataset.href) {
+                    window.location.href = card.dataset.href;
+                }
+            });
+        }
 
-            const btn = document.getElementById('chat-concierge-btn');
-            btn.disabled = true;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span><span>Starting chat...</span>';
-
-            const customProduct = allSellerCustomisations.find(p => p.listing_type === 'custom' || p.is_customized);
-            const anyProduct = customProduct || allSellerProducts[0];
-
-            if (!anyProduct) {
-                window.Toast?.show("This artisan does not have any listings available for chat.", "info");
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-                return;
-            }
-
-            if (anyProduct.listing_type === 'custom' || anyProduct.is_customized) {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-                window.startCustomisation(anyProduct.id, anyProduct.product_type_tag || 'custom', anyProduct.name);
-            } else {
-                await window.talkToSeller(new Event('click'), anyProduct.id, btn);
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
-        };
-
-        window.addToCart = async function(e, productId) {
-            e.stopPropagation();
+        async function addToCart(productId, btnEl) {
             if (currentUser && sellerProfile && String(currentUser.id) === String(sellerProfile.id)) {
                 window.Toast?.show("Sellers cannot purchase their own products", "error");
                 return;
             }
             if (!isLoggedIn) {
                 window.Toast?.show("Please log in to purchase items", "error");
-                /* login bypassed */
                 return;
+            }
+
+            if (btnEl) {
+                btnEl.disabled = true;
+                btnEl.innerText = 'Adding...';
             }
 
             try {
@@ -1819,58 +1725,68 @@
                 }
             } catch (err) {
                 console.error("Failed to add to cart:", err);
+                window.Toast?.show("Failed to add to cart", "error");
+            } finally {
+                if (btnEl) {
+                    btnEl.disabled = false;
+                    btnEl.innerText = 'Add to Cart';
+                }
             }
-        };
+        }
 
-        window.toggleWishlist = async function(e, productId) {
-            e.stopPropagation();
-            if (currentUser && sellerProfile && currentUser.id === sellerProfile.id) {
+        async function toggleWishlist(productId, btnEl) {
+            if (currentUser && sellerProfile && String(currentUser.id) === String(sellerProfile.id)) {
                 window.Toast?.show("Sellers cannot wishlist their own products", "error");
                 return;
             }
             if (!isLoggedIn) {
                 window.Toast?.show("Please log in to add to wishlist", "error");
-                /* login bypassed */
                 return;
             }
+            const pid = Number(productId);
+            if (isWishlistUpdating[pid]) return;
+            isWishlistUpdating[pid] = true;
 
-            if (isWishlistUpdating[productId]) return;
-            isWishlistUpdating[productId] = true;
-
-            const iconEl = document.getElementById(`wishlist-icon-${productId}`);
-            const wasWishlisted = iconEl.classList.contains('fill-icon');
+            const isWishlisted = wishlistSet.has(pid);
+            const iconEl = btnEl ? btnEl.querySelector('span.material-symbols-outlined') : document.getElementById(`wishlist-icon-${pid}`);
 
             try {
-                if (wasWishlisted) {
-                    const res = await apiClient.delete(`/wishlist/${productId}`);
+                if (isWishlisted) {
+                    const res = await apiClient.delete(`/wishlist/${pid}`);
                     if (res.data && res.data.success) {
-                        iconEl.classList.remove('fill-icon', 'text-red-500');
-                        iconEl.classList.add('text-secondary');
-                        iconEl.style.fontVariationSettings = "'FILL' 0";
+                        wishlistSet.delete(pid);
+                        if (iconEl) {
+                            iconEl.classList.remove('fill-icon', 'text-red-500');
+                            iconEl.classList.add('text-[#14381F]');
+                            iconEl.style.fontVariationSettings = "'FILL' 0";
+                        }
                         window.Toast?.show("Removed from wishlist!", "success");
                     }
                 } else {
-                    const res = await apiClient.post(`/wishlist/${productId}`);
+                    const res = await apiClient.post(`/wishlist/${pid}`);
                     if (res.data && res.data.success) {
-                        iconEl.classList.add('fill-icon', 'text-red-500');
-                        iconEl.classList.remove('text-secondary');
-                        iconEl.style.fontVariationSettings = "'FILL' 1";
+                        wishlistSet.add(pid);
+                        if (iconEl) {
+                            iconEl.classList.add('fill-icon', 'text-red-500');
+                            iconEl.classList.remove('text-[#14381F]');
+                            iconEl.style.fontVariationSettings = "'FILL' 1";
+                        }
                         window.Toast?.show("Added to wishlist!", "success");
                     }
                 }
-                await updateWishlistBadge();
+                updateWishlistBadge();
             } catch (err) {
                 console.error("Failed to toggle wishlist item:", err);
             } finally {
-                isWishlistUpdating[productId] = false;
+                isWishlistUpdating[pid] = false;
             }
-        };
+        }
 
         async function updateCartBadge() {
             try {
                 const res = await apiClient.get('/cart');
                 if (res.data && res.data.success) {
-                    const count = res.data.data.item_count;
+                    const count = res.data.data.item_count || 0;
                     const navBadge = document.getElementById('nav-cart-badge');
                     if (navBadge) {
                         if (count > 0) {
@@ -1884,375 +1800,103 @@
             } catch (e) { /* ignore */ }
         }
 
-        async function updateWishlistBadge() {
-            try {
-                const res = await apiClient.get('/wishlist');
-                if (res.data && res.data.success) {
-                    const items = res.data.data.items || res.data.data || [];
-                    const count = items.length;
-                    const badge = document.getElementById('nav-wishlist-badge');
-                    if (badge) {
-                        if (count > 0) {
-                            badge.innerText = count;
-                            badge.classList.remove('hidden');
-                        } else {
-                            badge.classList.add('hidden');
-                        }
+        function updateWishlistBadge() {
+            const badge = document.getElementById('nav-wishlist-badge');
+            if (!badge) return;
+            const count = wishlistSet.size;
+            if (count > 0) {
+                badge.innerText = count;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        // 5. Share Actions & Modal
+        window.handleShareClick = async function() {
+            const shareData = {
+                title: sellerProfile?.shop_name || 'Tohfa Artisan Studio',
+                text: `Discover handcrafted creations by ${sellerProfile?.shop_name || 'this artisan'} on Tohfa!`,
+                url: window.location.href
+            };
+            if (navigator.share && /mobile|android|iphone|ipad/i.test(navigator.userAgent)) {
+                try {
+                    await navigator.share(shareData);
+                    return;
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        console.error('Navigator share error:', err);
+                        window.openShareModal();
                     }
                 }
-            } catch (e) { /* ignore */ }
-        }
-
-        // -- Customisation Intake Chatbot logic --
-        let currentConversationId = null;
-        let currentQuestion = null;
-
-        window.startCustomisation = async function(listingId, productTypeTag, listingTitle) {
-            if (currentUser && sellerProfile && currentUser.id === sellerProfile.id) {
-                window.Toast?.show("Sellers cannot start a chat with themselves", "error");
-                return;
-            }
-            if (!isLoggedIn) {
-                window.Toast?.show("Please log in to request customization", "error");
-                setTimeout(() => {
-                    // login check bypassed
-                }, 1500);
-                return;
-            }
-
-            try {
-                const response = await apiClient.post('/conversations', {
-                    listing_id: String(listingId).trim(),
-                    product_type_tag: productTypeTag
-                });
-                
-                if (response.data) {
-                    currentConversationId = response.data.conversation_id;
-                    
-                    // Setup Chat Pane Title & welcome
-                    document.getElementById('intake-title').innerText = `Customise ${listingTitle}`;
-                    document.getElementById('intake-messages').innerHTML = `
-                        <!-- Bot Welcome -->
-                        <div class="flex gap-3 animate-fade-in">
-                            <div class="w-8 h-8 rounded-full bg-primary-container text-white flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-sm">auto_awesome</span>
-                            </div>
-                            <div class="bg-surface-container-low border border-outline-variant/30 px-4 py-3 rounded-2xl rounded-tl-none max-w-[85%] text-xs text-on-surface leading-relaxed shadow-sm">
-                                Hello! Let's customise your bespoke request for <strong>${listingTitle}</strong>. I'll ask you a few questions to gather details for the artisan.
-                            </div>
-                        </div>
-                    `;
-                    
-                    // Open Modal / Pane
-                    const modal = document.getElementById('intake-chat-modal');
-                    const pane = document.getElementById('intake-chat-pane');
-                    modal.classList.remove('hidden');
-                    setTimeout(() => {
-                        pane.classList.remove('translate-x-full');
-                    }, 10);
-
-                    // Load next question
-                    await loadNextIntakeQuestion();
-                }
-            } catch (err) {
-                console.error("Failed to start customization flow:", err);
-            }
-        };
-
-        async function loadNextIntakeQuestion() {
-            try {
-                const response = await apiClient.get(`/conversations/${currentConversationId}/next-question`);
-                const data = response.data;
-                
-                if (data.done) {
-                    renderIntakeComplete();
-                    return;
-                }
-                
-                currentQuestion = data.question;
-                renderBotQuestion(currentQuestion);
-            } catch (err) {
-                console.error("Failed to fetch next question:", err);
-                window.Toast?.show("Failed to load question. Please try again.", "error");
-            }
-        }
-
-        function renderBotQuestion(question) {
-            const chatArea = document.getElementById('intake-messages');
-            
-            const msg = document.createElement('div');
-            msg.className = 'flex gap-3 animate-fade-in';
-            msg.innerHTML = `
-                <div class="w-8 h-8 rounded-full bg-primary-container text-white flex items-center justify-center shrink-0">
-                    <span class="material-symbols-outlined text-sm">auto_awesome</span>
-                </div>
-                <div class="bg-surface-container-low border border-outline-variant/30 px-4 py-3 rounded-2xl rounded-tl-none max-w-[85%] text-xs text-on-surface leading-relaxed shadow-sm">
-                    ${question.question_text}
-                </div>
-            `;
-            chatArea.appendChild(msg);
-            chatArea.scrollTop = chatArea.scrollHeight;
-            
-            // Render input based on answer_type
-            const inputContainer = document.getElementById('intake-input-container');
-            inputContainer.innerHTML = '';
-            
-            const inputWrapper = document.createElement('div');
-            inputWrapper.className = 'space-y-3';
-            
-            if (question.answer_type === 'free_text') {
-                inputWrapper.innerHTML = `
-                    <input type="text" id="intake-ans" class="w-full bg-[#FFF8E7] border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none" placeholder="Type your answer..."/>
-                    <button onclick="submitIntakeAnswer()" class="w-full bg-primary text-on-primary py-2.5 rounded-lg font-label-md text-xs hover:bg-primary-container transition-all active:scale-[0.98] cursor-pointer shadow-sm uppercase tracking-wider font-bold">
-                        Submit Answer
-                    </button>
-                `;
-            } else if (question.answer_type === 'long_text') {
-                inputWrapper.innerHTML = `
-                    <textarea id="intake-ans" rows="3" class="w-full bg-[#FFF8E7] border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none resize-none" placeholder="Type detailed specifications..."></textarea>
-                    <button onclick="submitIntakeAnswer()" class="w-full bg-primary text-on-primary py-2.5 rounded-lg font-label-md text-xs hover:bg-primary-container transition-all active:scale-[0.98] cursor-pointer shadow-sm uppercase tracking-wider font-bold">
-                        Submit Answer
-                    </button>
-                `;
-            } else if (question.answer_type === 'single_choice') {
-                const options = question.options || [];
-                let optionsHtml = options.map(opt => `
-                    <button onclick="submitChoiceAnswer('${opt.replace(/'/g, "\\'")}')" class="w-full text-left px-4 py-2.5 border border-outline-variant hover:border-primary hover:bg-primary/5 rounded-lg text-xs text-on-surface transition-all active:scale-[0.98] font-body-md cursor-pointer">
-                        ${opt}
-                    </button>
-                `).join('');
-                
-                inputWrapper.innerHTML = `
-                    <div class="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-1">
-                        ${optionsHtml}
-                    </div>
-                `;
-            } else if (question.answer_type === 'date_picker') {
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                const yyyy = tomorrow.getFullYear();
-                const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
-                const dd = String(tomorrow.getDate()).padStart(2, '0');
-                const tomorrowStr = `${yyyy}-${mm}-${dd}`;
-                
-                inputWrapper.innerHTML = `
-                    <input type="date" id="intake-ans" min="${tomorrowStr}" class="w-full bg-[#FFF8E7] border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"/>
-                    <button onclick="submitIntakeAnswer()" class="w-full bg-primary text-on-primary py-2.5 rounded-lg font-label-md text-xs hover:bg-primary-container transition-all active:scale-[0.98] cursor-pointer shadow-sm uppercase tracking-wider font-bold">
-                        Submit Answer
-                    </button>
-                `;
-            } else if (question.answer_type === 'photo_upload') {
-                inputWrapper.innerHTML = `
-                    <div class="border-2 border-dashed border-outline-variant/60 rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-all relative bg-[#FFF8E7]" onclick="document.getElementById('intake-file').click()">
-                        <span class="material-symbols-outlined text-on-surface-variant text-2xl mb-1">upload_file</span>
-                        <p class="text-xs text-on-surface-variant font-label-md" id="file-label">Click to upload reference photo</p>
-                        <p class="text-[10px] text-outline mt-0.5">JPEG, PNG up to 5MB</p>
-                        <input type="file" id="intake-file" accept="image/*" class="hidden" onchange="handleFileSelected(this)"/>
-                    </div>
-                    <button onclick="submitPhotoAnswer()" class="w-full bg-primary text-on-primary py-2.5 rounded-lg font-label-md text-xs hover:bg-primary-container transition-all active:scale-[0.98] hidden cursor-pointer shadow-sm uppercase tracking-wider font-bold" id="photo-submit-btn">
-                        Upload & Submit
-                    </button>
-                `;
-            }
-            
-            inputContainer.appendChild(inputWrapper);
-            
-            // Auto-focus input if exists
-            const inputAns = document.getElementById('intake-ans');
-            if (inputAns) inputAns.focus();
-        }
-
-        window.handleFileSelected = function(input) {
-            const btn = document.getElementById('photo-submit-btn');
-            const label = document.getElementById('file-label');
-            if (input.files && input.files[0]) {
-                label.innerText = `Selected: ${input.files[0].name}`;
-                label.classList.add('text-primary', 'font-bold');
-                btn.classList.remove('hidden');
             } else {
-                label.innerText = "Click to upload reference photo";
-                label.classList.remove('text-primary', 'font-bold');
-                btn.classList.add('hidden');
+                window.openShareModal();
             }
         };
 
-        window.submitChoiceAnswer = async function(choice) {
-            renderUserMessage(choice);
-            await sendAnswerToAPI(choice);
-        };
-
-        window.submitIntakeAnswer = async function() {
-            const input = document.getElementById('intake-ans');
-            if (!input) return;
-            const val = input.value.trim();
-            if (!val) {
-                window.Toast?.show("Please enter an answer", "error");
-                return;
-            }
-            
-            renderUserMessage(val);
-            await sendAnswerToAPI(val);
-        };
-
-        window.submitPhotoAnswer = async function() {
-            const input = document.getElementById('intake-file');
-            if (!input || !input.files[0]) {
-                window.Toast?.show("Please select a photo to upload", "error");
-                return;
-            }
-            
-            const file = input.files[0];
-            renderUserMessage(`Uploaded image: ${file.name}`);
-            
-            const formData = new FormData();
-            formData.append('question_id', currentQuestion.id);
-            formData.append('photo', file);
-            
-            try {
-                document.getElementById('intake-input-container').innerHTML = `
-                    <div class="flex items-center justify-center py-4 text-xs text-on-surface-variant font-label-md">
-                        <span class="material-symbols-outlined animate-spin mr-2">sync</span>
-                        Uploading image...
-                    </div>
-                `;
-                
-                await apiClient.post(`/conversations/${currentConversationId}/answer`, formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
-                
-                await loadNextIntakeQuestion();
-            } catch (err) {
-                console.error("Failed to submit photo answer:", err);
-            }
-        };
-
-        function renderUserMessage(text) {
-            const chatArea = document.getElementById('intake-messages');
-            const msg = document.createElement('div');
-            msg.className = 'flex gap-3 justify-end animate-fade-in';
-            msg.innerHTML = `
-                <div class="bg-primary text-on-primary px-4 py-3 rounded-2xl rounded-tr-none max-w-[85%] text-xs leading-relaxed shadow-sm">
-                    ${text}
-                </div>
-                <div class="w-8 h-8 rounded-full bg-outline-variant flex items-center justify-center shrink-0 text-white font-bold text-xs" id="user-avatar-intake">
-                    U
-                </div>
-            `;
-            chatArea.appendChild(msg);
-            
-            // Set user initials or avatar if available
-            const avatarImg = document.querySelector('#auth-buttons-container img');
-            const userAvatarIntake = msg.querySelector('#user-avatar-intake');
-            if (avatarImg && userAvatarIntake) {
-                userAvatarIntake.innerHTML = `<img src="${avatarImg.src}" class="w-full h-full object-cover rounded-full" loading="lazy" />`;
-            } else {
-                userAvatarIntake.innerText = sessionStorage.getItem('tohfa_user_initials') || 'U';
-            }
-            
-            chatArea.scrollTop = chatArea.scrollHeight;
-        }
-
-        async function sendAnswerToAPI(value) {
-            try {
-                document.getElementById('intake-input-container').innerHTML = `
-                    <div class="flex items-center justify-center py-4 text-xs text-on-surface-variant font-label-md">
-                        <span class="material-symbols-outlined animate-spin mr-2">sync</span>
-                        Saving answer...
-                    </div>
-                `;
-                
-                await apiClient.post(`/conversations/${currentConversationId}/answer`, {
-                    question_id: currentQuestion.id,
-                    answer_value: value
-                });
-                
-                await loadNextIntakeQuestion();
-            } catch (err) {
-                console.error("Failed to submit answer:", err);
-            }
-        }
-
-        function renderIntakeComplete() {
-            const chatArea = document.getElementById('intake-messages');
-            
-            const msg = document.createElement('div');
-            msg.className = 'flex gap-3 animate-fade-in';
-            msg.innerHTML = `
-                <div class="w-8 h-8 rounded-full bg-primary-container text-white flex items-center justify-center shrink-0">
-                    <span class="material-symbols-outlined text-sm">celebration</span>
-                </div>
-                <div class="bg-primary-container/20 border border-primary/20 px-4 py-3 rounded-2xl rounded-tl-none max-w-[85%] text-xs text-primary font-bold leading-relaxed shadow-sm">
-                    All details submitted! Your customisation request is complete. The artisan will review your answers and generate a customized price offer shortly.
-                </div>
-            `;
-            chatArea.appendChild(msg);
-            chatArea.scrollTop = chatArea.scrollHeight;
-            
-            const inputContainer = document.getElementById('intake-input-container');
-            inputContainer.innerHTML = `
-                <div class="space-y-2">
-                    <button onclick="window.location.href='/buyer/profile.html'" class="w-full bg-primary text-on-primary py-2.5 rounded-lg font-label-md text-xs hover:bg-primary-container transition-all active:scale-[0.98] cursor-pointer font-bold shadow-sm uppercase tracking-wider">
-                        Go to Custom Orders Chat
-                    </button>
-                    <button onclick="closeIntakeChat(null)" class="w-full border border-outline-variant text-on-surface-variant py-2 rounded-lg font-label-md text-xs hover:bg-surface-container transition-all active:scale-[0.98] cursor-pointer">
-                        Keep Browsing Studio
-                    </button>
-                </div>
-            `;
-        }
-
-        window.closeIntakeChat = function(e) {
-            if (e && e.target !== document.getElementById('intake-chat-modal')) return;
-            const modal = document.getElementById('intake-chat-modal');
-            const pane = document.getElementById('intake-chat-pane');
-            pane.classList.add('translate-x-full');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-        };
-
-        // -- Share Modal Logic --
         window.openShareModal = function() {
             if (!sellerProfile) return;
-            
-            // Set Share Modal Info
+
             document.getElementById('share-modal-name').innerText = sellerProfile.shop_name;
-            document.getElementById('share-modal-rating').innerText = `${sellerProfile.review_count > 0 ? sellerProfile.avg_rating.toFixed(1) : 'New'} (${sellerProfile.review_count} reviews)`;
-            
+            const revCount = sellerProfile.review_count || 0;
+            const avgRat = parseFloat(sellerProfile.avg_rating || 5.0).toFixed(1);
+            document.getElementById('share-modal-rating').innerText = `${revCount > 0 ? avgRat : 'New'} (${revCount} reviews)`;
+
             const shareAvatar = document.getElementById('share-modal-avatar');
             const defaultAvatar = '/img/default-avatar.png';
             const finalShareAvatar = (sellerProfile.avatar_url && !sellerProfile.avatar_url.includes('default-avatar.png')) ? sellerProfile.avatar_url : defaultAvatar;
-            shareAvatar.innerHTML = `<img src="${finalShareAvatar}" alt="${sellerProfile.shop_name}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='${defaultAvatar}';" />`;
+            shareAvatar.innerHTML = `<img src="${finalShareAvatar}" alt="${escapeHtml(sellerProfile.shop_name)}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='${defaultAvatar}';" />`;
 
             document.getElementById('share-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
         };
 
         window.closeShareModal = function(e) {
             if (e && e.target !== document.getElementById('share-modal')) return;
             document.getElementById('share-modal').classList.add('hidden');
+            document.body.style.overflow = '';
         };
 
         window.copyShareLink = function() {
             const input = document.getElementById('share-link-input');
-            input.select();
-            input.setSelectionRange(0, 99999); // For mobile devices
-            navigator.clipboard.writeText(input.value);
-            
-            window.Toast?.show("Link copied to clipboard!", "success");
+            const text = input ? input.value : window.location.href;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    window.Toast?.show("Link copied to clipboard!", "success");
+                }).catch(() => {
+                    copyFallback(input);
+                });
+            } else {
+                copyFallback(input);
+            }
         };
 
-        // Format helpers
-        function formatCount(num) {
-            if (!num) return '0';
-            if (num >= 1000) {
-                return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+        function copyFallback(input) {
+            if (input) {
+                input.select();
+                input.setSelectionRange(0, 99999);
+                document.execCommand('copy');
+                window.Toast?.show("Link copied to clipboard!", "success");
             }
-            return num;
         }
+
+        // Global Escape listener for modals
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const filterDrawer = document.getElementById('filter-drawer');
+                const filterBackdrop = document.getElementById('filter-drawer-backdrop');
+                if (filterDrawer && filterDrawer.classList.contains('translate-x-0')) {
+                    filterDrawer.classList.remove('translate-x-0');
+                    filterDrawer.classList.add('-translate-x-full');
+                    filterBackdrop?.classList.add('opacity-0', 'pointer-events-none');
+                    document.body.style.overflow = '';
+                }
+                window.closeShareModal();
+            }
+        });
 
         // Initialize Page
         initPage();
-
     </script>
 
 
@@ -2260,7 +1904,7 @@
 async function handleFooterSellerLink(e) {
   if (e) e.preventDefault();
   const isMobile = window.innerWidth < 768;
-  const token = sessionStorage.getItem('tohfa_access_token');
+  const token = localStorage.getItem('tohfa_access_token') || sessionStorage.getItem('tohfa_access_token');
   if (!token) {
     sessionStorage.setItem('tohfa_redirect_seller', 'true');
     sessionStorage.setItem('tohfa_return_to', window.location.pathname + window.location.search); window.location.href = '/auth/login.html';
@@ -2296,7 +1940,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const needsRedirect = sessionStorage.getItem('tohfa_redirect_seller');
   if (needsRedirect === 'true') {
     sessionStorage.removeItem('tohfa_redirect_seller');
-    const token = sessionStorage.getItem('tohfa_access_token');
+    const token = localStorage.getItem('tohfa_access_token') || sessionStorage.getItem('tohfa_access_token');
     if (token) {
       handleFooterSellerLink();
     }

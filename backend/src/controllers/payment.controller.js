@@ -8,6 +8,7 @@
 const paymentService = require('../services/payment.service');
 const logisticsService = require('../services/logistics.service');
 const whatsappService = require('../services/whatsapp.service');
+const bestsellerService = require('../services/bestseller.service');
 const { query, getClient } = require('../config/db');
 
 /**
@@ -149,6 +150,7 @@ async function verifyPayment(req, res, next) {
 
     // Trigger logistics & notifications post-commit (errors here must not fail the verified payment)
     logisticsService.createShipment(confirmedOrder).catch(e => console.error('[Logistics Dispatch Error]:', e.message));
+    bestsellerService.recomputeForOrder(confirmedOrder.id || orderId).catch(e => console.error('[Bestseller Recompute Error]:', e.message));
 
 
     // Notify seller via WhatsApp

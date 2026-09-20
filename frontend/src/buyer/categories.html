@@ -159,13 +159,6 @@
         <span>Category</span>
       </a>
       <a
-        href="/buyer/category.html?slug=best-sellers"
-        class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
-      >
-        <span class="material-symbols-outlined text-[20px]">military_tech</span>
-        <span>Best Sellers</span>
-      </a>
-      <a
         href="/buyer/zip-gift.html"
         class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-sm"
       >
@@ -455,24 +448,7 @@
             return;
           }
 
-          const bestSellersCard = `
-            <a href="/buyer/category.html?slug=best-sellers" class="category-card-editorial aspect-square relative cursor-pointer rounded-2xl overflow-hidden shadow-xs hover:-translate-y-1 transition-all duration-300 group block no-underline text-inherit border-2 border-[#C85A32]/50" data-category-name="best sellers popular trending top rated" data-subcategories="bestsellers popular top rated">
-              <img class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="/img/categories/artisan_showcase.jpg" alt="Best Sellers" loading="lazy">
-              <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
-              <div class="absolute top-2.5 left-2.5 z-20">
-                <span class="px-2.5 py-1 rounded-full bg-[#C85A32] text-white font-['Space_Mono'] text-[10px] font-bold tracking-wider uppercase shadow-xs flex items-center gap-1">
-                  <span class="material-symbols-outlined text-xs">military_tech</span>
-                  <span>Best Sellers</span>
-                </span>
-              </div>
-              <div class="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white z-10">
-                <h3 class="font-['Playfair_Display'] text-sm sm:text-base md:text-lg italic font-bold leading-tight mb-0.5">Best Sellers Showcase</h3>
-                <span class="font-['Space_Mono'] text-[9px] sm:text-[10px] text-white/80 uppercase tracking-wider block">Most loved handcrafted treasures</span>
-              </div>
-            </a>
-          `;
-
-          let html = bestSellersCard;
+          let html = '';
 
           categories.forEach(cat => {
             const displayName = cat.display_name || cat.name;
@@ -504,8 +480,8 @@
             let subsHtml = '';
             if (subs.length > 0) {
               subsHtml = `<div class="flex flex-nowrap overflow-x-auto gap-1 pt-1.5 max-w-full no-scrollbar" style="-webkit-overflow-scrolling:touch; scrollbar-width:none;" onclick="event.stopPropagation()">
-                ${displaySubs.map(s => `<a href="category.html?slug=${cat.slug}&subcategory_ids=${s.id}" class="flex-shrink-0 whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] bg-white/20 hover:bg-white/35 text-white backdrop-blur-xs transition-all no-underline">${s.name}</a>`).join('')}
-                ${hasMoreSubs ? `<a href="category.html?slug=${cat.slug}" class="flex-shrink-0 whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] bg-[#C85A32]/85 hover:bg-[#C85A32] text-white backdrop-blur-xs transition-all font-semibold no-underline">+${subs.length - 10} more</a>` : ''}
+              ${displaySubs.map(s => `<a href="/buyer/category.html?slug=${cat.slug}&subcategory_ids=${s.id}" class="flex-shrink-0 whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] bg-white/20 hover:bg-white/35 text-white backdrop-blur-xs transition-all no-underline">${s.name}</a>`).join('')}
+                ${hasMoreSubs ? `<a href="/buyer/category.html?slug=${cat.slug}" class="flex-shrink-0 whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] bg-[#C85A32]/85 hover:bg-[#C85A32] text-white backdrop-blur-xs transition-all font-semibold no-underline">+${subs.length - 10} more</a>` : ''}
               </div>`;
             }
 

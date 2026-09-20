@@ -10,6 +10,7 @@ const { query, getClient } = require('../config/db');
 const paymentService = require('../services/payment.service');
 const logisticsService = require('../services/logistics.service');
 const whatsappService = require('../services/whatsapp.service');
+const bestsellerService = require('../services/bestseller.service');
 
 const razorpay = require('../config/razorpay');
 
@@ -81,6 +82,7 @@ async function handleRazorpayWebhook(req, res) {
 
             // Async post-commit triggers
             logisticsService.createShipment(confirmedOrder).catch(e => console.error('[Webhook Logistics]:', e.message));
+            bestsellerService.recomputeForOrder(confirmedOrder.id).catch(e => console.error('[Webhook Bestseller Error]:', e.message));
 
             query(
               'SELECT whatsapp_number FROM seller_profiles WHERE user_id = $1',

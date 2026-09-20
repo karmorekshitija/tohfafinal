@@ -9,6 +9,7 @@
 'use strict';
 
 const { query, getClient } = require('../config/db');
+const bestsellerService = require('../services/bestseller.service');
 
 function uniqueImageUrls(values) {
   const seen = new Set();
@@ -107,8 +108,11 @@ function sanitizeProduct(p) {
     } : (p.category || null),
     listing_type: (p.customization_mode === 'fixed' || p.customization_mode === 'open') ? 'custom' : 'standard',
     is_customized: p.customization_mode === 'fixed' || p.customization_mode === 'open' || Boolean(p.is_customizable),
-    avg_rating: parseFloat(p.avg_rating || 5.0),
+    avg_rating: (p.avg_rating !== undefined && p.avg_rating !== null && !isNaN(parseFloat(p.avg_rating)))
+      ? parseFloat(p.avg_rating)
+      : 5.0,
     review_count: parseInt(p.review_count || 0, 10),
+    is_bestseller: p.is_bestseller === true,
     type: p.is_sponsored ? 'sponsored' : 'organic'
   };
 }
@@ -372,11 +376,16 @@ async function listProducts(req, res, next) {
     params.push(offset);
     const offsetIdx = params.length;
 
+    const includeRatings = req.query.include_ratings === 'true';
+    const ratingsSelect = includeRatings ? `,
+              (SELECT COALESCE(ROUND(AVG(r.rating)::numeric,2),0) FROM reviews r WHERE r.product_id = p.id) AS avg_rating,
+              (SELECT COUNT(*) FROM reviews r WHERE r.product_id = p.id) AS review_count` : '';
+
     const { rows: products } = await query(
       `SELECT p.id, p.name, p.description, p.base_price, p.stock_quantity, p.low_stock_threshold, p.category_id,
               p.tags, p.images AS direct_images,
               p.customization_mode, p.is_customizable, p.customization_schema, p.status, p.view_count, p.seller_id,
-              p.is_sponsored, p.special_packaging_available, p.slug,
+              p.is_sponsored, p.is_bestseller, p.special_packaging_available, p.slug,
               COALESCE(p.preparation_days, 2) AS preparation_days,
               COALESCE(p.weight_grams, 500) AS weight_grams,
               p.created_at,
@@ -390,7 +399,7 @@ async function listProducts(req, res, next) {
               COALESCE(
                 json_agg(pi ORDER BY pi.sort_order) FILTER (WHERE pi.id IS NOT NULL),
                 '[]'
-              ) AS product_images
+              ) AS product_images${ratingsSelect}
        FROM products p
        LEFT JOIN categories c ON c.id = p.category_id
        LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
@@ -447,7 +456,7 @@ async function forYouFeed(req, res, next) {
       const { rows: fetched } = await query(
         `SELECT p.id, p.name, p.description, p.base_price, p.category_id, p.tags,
                 p.images AS direct_images,
-                p.customization_mode, p.is_customizable, p.is_sponsored,
+                p.customization_mode, p.is_customizable, p.is_sponsored, p.is_bestseller,
                 p.status, p.view_count, p.seller_id, p.created_at,
                 p.special_packaging_available, p.slug,
                 COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
@@ -487,7 +496,7 @@ async function forYouFeed(req, res, next) {
       const { rows: fetched } = await query(
         `SELECT p.id, p.name, p.description, p.base_price, p.category_id, p.tags,
                 p.images AS direct_images,
-                p.customization_mode, p.is_customizable, p.is_sponsored,
+                p.customization_mode, p.is_customizable, p.is_sponsored, p.is_bestseller,
                 p.status, p.view_count, p.seller_id, p.created_at,
                 p.special_packaging_available, p.slug,
                 COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
@@ -532,7 +541,7 @@ async function getSponsoredProducts(req, res, next) {
     const { rows: sponsoredRows } = await query(
       `SELECT p.id, p.name, p.description, p.base_price, p.category_id, p.tags,
               p.customization_mode, p.is_customizable,
-              TRUE AS is_sponsored,
+              TRUE AS is_sponsored, p.is_bestseller,
               p.status, p.view_count, p.seller_id, p.created_at,
               p.special_packaging_available, p.slug,
               COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
@@ -569,7 +578,7 @@ async function getSponsoredProducts(req, res, next) {
       const { rows: fallbackRows } = await query(
         `SELECT p.id, p.name, p.description, p.base_price, p.category_id, p.tags,
                 p.customization_mode, p.is_customizable,
-                TRUE AS is_sponsored,
+                TRUE AS is_sponsored, p.is_bestseller,
                 p.status, p.view_count, p.seller_id, p.created_at,
                 p.special_packaging_available, p.slug,
                 COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
@@ -614,7 +623,7 @@ async function getTrendingProducts(req, res, next) {
 
     const { rows } = await query(
       `SELECT p.id, p.name, p.description, p.base_price, p.category_id, p.tags,
-              p.customization_mode, p.is_customizable, p.is_sponsored,
+              p.customization_mode, p.is_customizable, p.is_sponsored, p.is_bestseller,
               p.status, p.view_count, p.seller_id, p.created_at,
               p.special_packaging_available, p.slug,
               COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
@@ -710,7 +719,7 @@ async function searchProducts(req, res, next) {
 
     const { rows } = await query(
       `SELECT p.id, p.name, p.description, p.base_price, p.category_id, p.tags,
-              p.customization_mode, p.is_customizable, p.customization_schema, p.status, p.view_count, p.seller_id, p.created_at,
+              p.customization_mode, p.is_customizable, p.customization_schema, p.status, p.view_count, p.seller_id, p.is_bestseller, p.created_at,
               p.slug,
               c.name AS category_name,
               COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
@@ -779,7 +788,7 @@ async function getProduct(req, res, next) {
                 (SELECT to_jsonb(occ) FROM open_customization_configs occ WHERE occ.product_id = p.id),
                 NULL
               ) AS open_customization_config,
-              p.status, p.view_count, p.seller_id, p.is_sponsored,
+              p.status, p.view_count, p.seller_id, p.is_sponsored, p.is_bestseller,
               p.special_packaging_available,
               COALESCE(p.preparation_days, 2) AS preparation_days,
               COALESCE(p.weight_grams, 500) AS weight_grams,
@@ -874,7 +883,7 @@ async function getSellerProducts(req, res, next) {
 
     const { rows } = await query(
       `SELECT p.id, p.name, p.description, p.base_price, p.stock_quantity, p.low_stock_threshold, p.category_id,
-              p.customization_mode, p.is_customizable, p.customization_schema, p.status, p.view_count, p.seller_id, p.created_at,
+              p.customization_mode, p.is_customizable, p.customization_schema, p.status, p.view_count, p.seller_id, p.is_bestseller, p.created_at,
               p.discount_active, p.discount_percentage, p.sale_price,
               COALESCE(p.preparation_days, 2) AS preparation_days,
               COALESCE(p.weight_grams, 500) AS weight_grams,
@@ -1067,6 +1076,10 @@ async function createProduct(req, res, next) {
         );
       }
     }
+
+    bestsellerService.recomputeForSeller(sellerId).catch(err => {
+      console.error('[Bestseller] Error recomputing after createProduct:', err.message);
+    });
 
     return res.status(201).json({ success: true, data: { product: sanitizeProduct(product) } });
   } catch (err) {
@@ -1310,10 +1323,15 @@ async function deleteProduct(req, res, next) {
       }
     }
 
+    const targetSellerId = existing[0].seller_id;
     await query(
       `UPDATE products SET status = 'deleted', is_active = FALSE, updated_at = NOW() WHERE id = $1`,
       [id]
     );
+
+    bestsellerService.recomputeForSeller(targetSellerId).catch(err => {
+      console.error('[Bestseller] Error recomputing after deleteProduct:', err.message);
+    });
 
     return res.json({ success: true, message: 'Product deleted successfully.', id });
   } catch (err) {
@@ -1338,13 +1356,17 @@ async function updateProductStatus(req, res, next) {
     const { rows } = await query(
       `UPDATE products SET status = $1, updated_at = NOW()
        WHERE id = $2 AND (seller_id = $3 OR $4 = TRUE)
-       RETURNING id, status, updated_at`,
+       RETURNING id, seller_id, status, updated_at`,
       [status, id, sellerId, req.user?.role === 'admin' || req.user?.role === 'master_admin']
     );
 
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'Product not found.' });
     }
+
+    bestsellerService.recomputeForSeller(rows[0].seller_id).catch(err => {
+      console.error('[Bestseller] Error recomputing after updateProductStatus:', err.message);
+    });
 
     return res.json({ success: true, data: { product: rows[0] } });
   } catch (err) {
@@ -1609,7 +1631,7 @@ async function getRecommendations(req, res, next) {
       `SELECT p.id, p.name, p.slug, p.description, p.base_price, p.stock_quantity, p.category_id,
               p.tags, p.images AS direct_images,
               p.customization_mode, p.is_customizable, p.status, p.view_count, p.seller_id,
-              p.is_sponsored,
+              p.is_sponsored, p.is_bestseller,
               c.name AS category_name, c.slug AS category_slug,
               COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
               COALESCE(

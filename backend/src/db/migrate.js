@@ -39,6 +39,7 @@ const MIGRATION_FILES = [
   path.join(__dirname, 'migrations', '022_cart_image_integrity.sql'),
   path.join(__dirname, 'migrations', '023_overflow_orders.sql'),
   path.join(__dirname, 'migrations', '024_product_image_format_dedup.sql'),
+  path.join(__dirname, 'migrations', '025_bestseller_flag.sql'),
 ];
 
 async function runMigrations() {

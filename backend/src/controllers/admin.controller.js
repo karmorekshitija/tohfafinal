@@ -10,6 +10,7 @@ const db = require('../config/db');
 const { query } = db;
 const emailService = require('../services/email.service');
 const paymentService = require('../services/payment.service');
+const bestsellerService = require('../services/bestseller.service');
 const { logAdminAction } = require('../services/audit.service');
 const { createNotification } = require('./notification.controller');
 
@@ -436,6 +437,8 @@ async function forceRefundOrder(req, res, next) {
       WHERE oi.order_id = $1 AND p.id = oi.product_id
     `, [orderId]).catch(() => {});
 
+    bestsellerService.recomputeForOrder(orderId).catch(e => console.error('[Bestseller Recompute Error]:', e.message));
+
     // Notify buyer & seller
     await createNotification(
       order.buyer_id,
@@ -530,6 +533,10 @@ async function forceUpdateOrderStatus(req, res, next) {
           { order_id: updatedOrder.id, status }
         ).catch(() => {});
       }
+    }
+
+    if (status === 'cancelled') {
+      bestsellerService.recomputeForOrder(orderId).catch(e => console.error('[Bestseller Recompute Error]:', e.message));
     }
 
     await logAdminAction({
@@ -1152,6 +1159,8 @@ async function createProduct(req, res, next) {
       ipAddress: req.ip
     });
 
+    bestsellerService.recomputeForSeller(seller_id).catch(e => console.error('[Bestseller Recompute Error]:', e.message));
+
     return res.status(201).json({ success: true, data: newProduct });
   } catch (err) {
     next(err);
@@ -1300,6 +1309,10 @@ async function toggleProductStatus(req, res, next) {
       ipAddress: req.ip
     });
 
+    if (rows[0]?.seller_id) {
+      bestsellerService.recomputeForSeller(rows[0].seller_id).catch(e => console.error('[Bestseller Recompute Error]:', e.message));
+    }
+
     return res.json({ success: true, data: rows[0] });
   } catch (err) {
     next(err);
@@ -1332,7 +1345,10 @@ async function toggleSponsor(req, res, next) {
 async function deleteProduct(req, res, next) {
   try {
     const { id } = req.params;
-    await query("UPDATE products SET status = 'deleted' WHERE id = $1", [id]);
+    const { rows } = await query("UPDATE products SET status = 'deleted' WHERE id = $1 RETURNING seller_id", [id]);
+    if (rows[0]?.seller_id) {
+      bestsellerService.recomputeForSeller(rows[0].seller_id).catch(e => console.error('[Bestseller Recompute Error]:', e.message));
+    }
     await logAdminAction({
       adminId: req.user.id,
       actionType: 'PRODUCT_DELETED',

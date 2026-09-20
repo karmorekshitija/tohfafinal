@@ -202,14 +202,6 @@
       <span>Category</span>
     </a>
     <a
-      href="/buyer/category.html?slug=best-sellers"
-      id="nav-link-bestsellers"
-      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328] rounded"
-    >
-      <span class="material-symbols-outlined text-[20px] text-[#E29578]">local_fire_department</span>
-      <span>Best Sellers</span>
-    </a>
-    <a
       href="/buyer/zip-gift.html"
       class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328] rounded"
     >
@@ -608,7 +600,7 @@
     }
 
     const urlParams = new URLSearchParams(window.location.search);
-    let slug = urlParams.get('slug') || urlParams.get('category') || 'candles-aromatherapy';
+    let slug = urlParams.get('slug') || urlParams.get('category') || '';
     let subParam = urlParams.get('sub') || urlParams.get('subcategory') || urlParams.get('subcategory_ids') || urlParams.get('subcategory_id') || '';
 
     let selectedSubcategoryIds = [];
@@ -656,8 +648,20 @@
             }
           }
 
-          if (!cat && categories.length > 0) {
-            cat = categories[0];
+          if (!cat) {
+            // No matching category — show error and abort (do NOT silently
+            // fall back to categories[0], that's what caused the candles bug)
+            const grid = document.getElementById('product-grid');
+            if (grid) {
+              grid.innerHTML = `
+                <div class="col-span-full flex flex-col items-center justify-center py-24 text-center">
+                  <span class="material-symbols-outlined text-5xl text-[#14381F]/30 mb-4">category</span>
+                  <p class="font-['Playfair_Display'] italic text-lg text-[#14381F] mb-2">Category not found</p>
+                  <p class="text-sm text-[#587A5B] mb-6">The category you're looking for doesn't exist.</p>
+                  <a href="/buyer/categories.html" class="bg-[#14381F] text-[#FAF6EE] px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-[#285C3A] transition-colors no-underline">Browse all categories →</a>
+                </div>`;
+            }
+            return;
           }
 
           if (cat) {

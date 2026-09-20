@@ -67,6 +67,27 @@ async function autoSyncDatabase() {
       await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_price NUMERIC(10,2) DEFAULT NULL;`);
       await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS discount_active BOOLEAN DEFAULT FALSE;`);
       await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS discount_percentage INT DEFAULT NULL;`);
+      await query(`
+        DO $$
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'products' AND column_name = 'is_bestseller'
+          ) THEN
+            ALTER TABLE products ADD COLUMN is_bestseller BOOLEAN DEFAULT FALSE;
+          ELSE
+            IF EXISTS (
+              SELECT 1 FROM information_schema.columns
+              WHERE table_name = 'products' AND column_name = 'is_bestseller' AND data_type = 'integer'
+            ) THEN
+              ALTER TABLE products ALTER COLUMN is_bestseller DROP DEFAULT;
+              ALTER TABLE products ALTER COLUMN is_bestseller TYPE BOOLEAN USING (CASE WHEN is_bestseller = 1 THEN TRUE ELSE FALSE END);
+              ALTER TABLE products ALTER COLUMN is_bestseller SET DEFAULT FALSE;
+            END IF;
+          END IF;
+        END $$;
+      `);
+      await query(`CREATE INDEX IF NOT EXISTS idx_products_bestseller ON products(seller_id) WHERE is_bestseller = TRUE;`);
     } catch (err) {
       console.warn('⚠️ [Auto-Sync Step 2 - Products Notice]:', err.message);
     }

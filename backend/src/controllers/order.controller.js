@@ -10,6 +10,7 @@
 const { query } = require('../config/db');
 const { placeOrders } = require('../services/order.service');
 const paymentService = require('../services/payment.service');
+const bestsellerService = require('../services/bestseller.service');
 const { createNotification } = require('./notification.controller');
 
 // ---------------------------------------------------------------------------
@@ -529,6 +530,7 @@ async function updateOrderStatus(req, res, next) {
 
     // If order was cancelled, restock product inventory
     if (status === 'cancelled') {
+      bestsellerService.recomputeForOrder(id).catch(e => console.error('[Bestseller Recompute Error]:', e.message));
       const { rows: itemRows } = await query(
         'SELECT product_id, variant_id, quantity FROM order_items WHERE order_id = $1',
         [id]
@@ -733,6 +735,8 @@ async function cancelOrder(req, res, next) {
       { order_id: id }
     ).catch(() => {});
 
+    bestsellerService.recomputeForOrder(id).catch(e => console.error('[Bestseller Recompute Error]:', e.message));
+
     return res.json({
       success: true,
       message: 'Order cancelled successfully. Refund initiated to your original payment method.',
@@ -906,6 +910,8 @@ async function approveRefund(req, res, next) {
     } catch (e) {
       console.warn('[Inventory restock notice]:', e.message);
     }
+
+    bestsellerService.recomputeForOrder(refundReq.order_id).catch(e => console.error('[Bestseller Recompute Error]:', e.message));
 
     // Notify buyer
     await createNotification(

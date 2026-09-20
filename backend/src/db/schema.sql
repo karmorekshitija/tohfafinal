@@ -231,6 +231,7 @@ CREATE TABLE IF NOT EXISTS products (
   low_stock_threshold         INT DEFAULT 3 CHECK (low_stock_threshold >= 0),
   view_count                  INT DEFAULT 0,
   is_sponsored                BOOLEAN DEFAULT FALSE,
+  is_bestseller               BOOLEAN DEFAULT FALSE,
   created_at                  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at                  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -239,6 +240,7 @@ CREATE INDEX IF NOT EXISTS idx_products_seller_id        ON products(seller_id);
 CREATE INDEX IF NOT EXISTS idx_products_category_id     ON products(category_id);
 CREATE INDEX IF NOT EXISTS idx_products_status           ON products(status);
 CREATE INDEX IF NOT EXISTS idx_products_is_sponsored     ON products(is_sponsored);
+CREATE INDEX IF NOT EXISTS idx_products_bestseller       ON products(seller_id) WHERE is_bestseller = TRUE;
 CREATE INDEX IF NOT EXISTS idx_products_tohfa_original   ON products(is_tohfa_original) WHERE is_tohfa_original = TRUE;
 CREATE INDEX IF NOT EXISTS idx_products_priority_rank    ON products(priority_rank DESC);
 
