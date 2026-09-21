@@ -321,10 +321,10 @@
             <div class="lg:col-span-7 flex flex-col gap-6">
                 
                 <!-- Single Image Gallery Container -->
-                <div class="flex gap-3 sm:gap-4 items-start w-full">
+                <div class="flex gap-2 sm:gap-3 md:gap-4 items-start w-full">
 
                     <!-- Vertical Thumbnails Strip (desktop: left stacked column; mobile: horizontal row below) -->
-                    <div id="product-vertical-thumbs" class="hidden flex-shrink-0 w-16 sm:w-[72px] md:w-20 flex flex-col gap-2.5 overflow-y-auto max-h-[560px] no-scrollbar py-1">
+                    <div id="product-vertical-thumbs" class="hidden flex-shrink-0 w-14 sm:w-[72px] md:w-20 flex flex-col gap-2 sm:gap-2.5 overflow-y-auto max-h-[300px] sm:max-h-[420px] md:max-h-[560px] no-scrollbar py-1">
                         <!-- Dynamically populated vertical thumbnails -->
                     </div>
 
@@ -1236,7 +1236,7 @@
                                 verticalThumbs.classList.remove('hidden');
                                 verticalThumbs.style.display = 'flex';
                                 verticalThumbs.innerHTML = list.map((url, idx) => `
-                                    <div class="product-vert-thumb group relative aspect-square w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shrink-0 bg-white ${idx === activeIndex ? 'border-[#14381F] ring-2 ring-[#14381F]/30 scale-[1.02] shadow-sm opacity-100' : 'border-[#14381F]/20 opacity-70 hover:opacity-100 hover:border-[#14381F]/60'}" data-index="${idx}" data-img-url="${url}">
+                                    <div class="product-vert-thumb group relative aspect-square w-14 h-14 sm:w-20 sm:h-20 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shrink-0 bg-white ${idx === activeIndex ? 'border-[#14381F] ring-2 ring-[#14381F]/30 scale-[1.02] shadow-sm opacity-100' : 'border-[#14381F]/20 opacity-70 hover:opacity-100 hover:border-[#14381F]/60'}" data-index="${idx}" data-img-url="${url}">
                                         <img src="${url}" alt="${product.name} - Thumbnail ${idx + 1}" class="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
                                     </div>
                                 `).join('');
@@ -1254,9 +1254,9 @@
                                             counterBadge.textContent = `${idx + 1} / ${list.length}`;
                                         }
                                         verticalThumbs.querySelectorAll('.product-vert-thumb').forEach(t => {
-                                            t.className = 'product-vert-thumb group relative aspect-square w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shrink-0 bg-white border-[#14381F]/20 opacity-70 hover:opacity-100 hover:border-[#14381F]/60';
+                                            t.className = 'product-vert-thumb group relative aspect-square w-14 h-14 sm:w-20 sm:h-20 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shrink-0 bg-white border-[#14381F]/20 opacity-70 hover:opacity-100 hover:border-[#14381F]/60';
                                         });
-                                        thumb.className = 'product-vert-thumb group relative aspect-square w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shrink-0 bg-white border-[#14381F] ring-2 ring-[#14381F]/30 scale-[1.02] shadow-sm opacity-100';
+                                        thumb.className = 'product-vert-thumb group relative aspect-square w-14 h-14 sm:w-20 sm:h-20 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shrink-0 bg-white border-[#14381F] ring-2 ring-[#14381F]/30 scale-[1.02] shadow-sm opacity-100';
                                     });
                                 });
                             }

@@ -300,6 +300,66 @@ export function renderTanya() {
   if (triggerBtn) triggerBtn.addEventListener('click', toggleTanya);
   if (closeBtn) closeBtn.addEventListener('click', toggleTanya);
 
+  // ── Safe Markdown → HTML renderer for Tanya chat bubbles ─────────────────
+  // Handles: **bold**, *italic*, [link](url), **[bold link](url)**
+  // XSS-safe: HTML is escaped before any HTML is injected.
+  function renderTanyaMarkdown(raw) {
+    if (!raw) return '';
+
+    // Escape HTML entities in plain-text segments only
+    function esc(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Allow only relative URLs and http/https — block javascript: etc.
+    function safeUrl(url) {
+      const u = (url || '').trim();
+      return (/^https?:\/\//i.test(u) || u.startsWith('/')) ? u : '#';
+    }
+
+    // Split on double newlines → paragraphs; single newlines → <br>
+    const paragraphs = raw.split(/\n{2,}/);
+
+    const html = paragraphs.map(para => {
+      return para.split('\n').map(line => {
+        const tokens = [];
+
+        // Step 1 — Extract bold-links first: **[text](url)**
+        line = line.replace(/\*\*\[([^\]]+)\]\(([^)]+)\)\*\*/g, (_, t, u) => {
+          tokens.push(`<strong><a href="${safeUrl(u)}" style="color:#14381F;font-weight:700;text-decoration:underline;text-underline-offset:2px;">${esc(t)}</a></strong>`);
+          return `\x00${tokens.length - 1}\x00`;
+        });
+
+        // Step 2 — Extract regular links: [text](url)
+        line = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, t, u) => {
+          tokens.push(`<a href="${safeUrl(u)}" style="color:#14381F;font-weight:600;text-decoration:underline;text-underline-offset:2px;">${esc(t)}</a>`);
+          return `\x00${tokens.length - 1}\x00`;
+        });
+
+        // Step 3 — HTML-escape the remaining plain text (\x00 is unaffected)
+        line = esc(line);
+
+        // Step 4 — Bold: **text**
+        line = line.replace(/\*\*([^*\x00]+)\*\*/g, '<strong>$1</strong>');
+
+        // Step 5 — Italic: *text* (single asterisk only)
+        line = line.replace(/\*([^*\x00]+)\*/g, '<em>$1</em>');
+
+        // Step 6 — Restore link tokens
+        line = line.replace(/\x00(\d+)\x00/g, (_, i) => tokens[parseInt(i, 10)]);
+
+        return line;
+      }).join('<br>');
+    }).join('<br><br>');
+
+    return html;
+  }
+  // ──────────────────────────────────────────────────────────────────────────
+
   if (form && input && messages) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -323,20 +383,7 @@ export function renderTanya() {
         const res   = await api.post('/api/tanya/chat', { message: text, history });
         const reply = res?.data?.reply || 'Please explore our curated artisan collections!';
         
-        let sanitizedReply = reply
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;');
-          
-        sanitizedReply = sanitizedReply.replace(
-          /\[([^\]]+)\]\(([^)]+)\)/g, 
-          '<a href="$2" style="color: var(--color-gold, #C8A96E); font-weight: 600; text-decoration: underline; text-underline-offset: 2px;">$1</a>'
-        );
-        sanitizedReply = sanitizedReply.replace(/\n/g, '<br>');
-        
-        loadingMsg.innerHTML = sanitizedReply;
+        loadingMsg.innerHTML = renderTanyaMarkdown(reply);
         history.push({ role: 'user',  parts: [{ text }] });
         history.push({ role: 'model', parts: [{ text: reply }] });
       } catch {

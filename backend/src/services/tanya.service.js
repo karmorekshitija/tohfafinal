@@ -72,8 +72,8 @@ function formatProductsAsReply(products, userMessage) {
     const price = `₹${Number(p.base_price).toLocaleString('en-IN')}`;
     const link = `/buyer/product.html?id=${p.id}`;
     reply += `**${i + 1}. [${p.name}](${link})** — ${price}\n`;
-    reply += `   *By ${p.store_name}* · ${p.category_name || 'Artisan Gift'}\n`;
-    if (p.description) reply += `   ${p.description.slice(0, 90)}...\n`;
+    reply += `*By ${p.store_name}* · ${p.category_name || 'Artisan Gift'}\n`;
+    if (p.description) reply += `${p.description.slice(0, 90)}...\n`;
     reply += '\n';
   });
   reply += `\n💬 Want me to help narrow it down? Tell me the **recipient's age**, **your budget**, or **any personal preferences**!`;
