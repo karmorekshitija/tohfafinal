@@ -351,6 +351,24 @@
 
       <div class="grid grid-cols-2 gap-sm form-row-2col">
         <div class="space-y-xs">
+          <div class="flex items-center justify-between">
+            <label for="addr-pincode" class="block text-xs font-semibold text-on-surface-variant uppercase">Pincode</label>
+            <span id="checkout-pincode-loader" class="hidden text-[10px] text-primary font-semibold animate-pulse flex items-center gap-1">
+              <span class="material-symbols-outlined text-xs animate-spin">progress_activity</span>
+              <span>Detecting...</span>
+            </span>
+          </div>
+          <input type="text" id="addr-pincode" maxlength="6" pattern="[0-9]{6}" required class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
+          <p id="checkout-pincode-hint" class="hidden text-[10px] text-amber-700 mt-0.5 leading-tight font-medium"></p>
+        </div>
+        <div class="space-y-xs">
+          <label for="addr-locality" class="block text-xs font-semibold text-on-surface-variant uppercase">Locality / Area</label>
+          <input type="text" id="addr-locality" placeholder="e.g. South Delhi, Hauz Khas" class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-sm form-row-2col">
+        <div class="space-y-xs">
           <label for="addr-city" class="block text-xs font-semibold text-on-surface-variant uppercase">City</label>
           <input type="text" id="addr-city" required class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
         </div>
@@ -359,15 +377,10 @@
           <input type="text" id="addr-state" required class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-sm form-row-2col">
-        <div class="space-y-xs">
-          <label for="addr-pincode" class="block text-xs font-semibold text-on-surface-variant uppercase">Pincode</label>
-          <input type="text" id="addr-pincode" required class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
-        </div>
-        <div class="space-y-xs">
-          <label for="addr-phone" class="block text-xs font-semibold text-on-surface-variant uppercase">Phone (Optional)</label>
-          <input type="text" id="addr-phone" class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
-        </div>
+
+      <div class="space-y-xs">
+        <label for="addr-phone" class="block text-xs font-semibold text-on-surface-variant uppercase">Phone (Optional)</label>
+        <input type="text" id="addr-phone" class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
       </div>
 
       <!-- Billing address same as shipping checkbox (Guideline #1204) -->
@@ -708,7 +721,7 @@
                 <p class="font-bold text-on-surface">${addr.full_name}</p>
                 <p>${addr.line1}</p>
                 ${addr.line2 ? `<p>${addr.line2}</p>` : ''}
-                <p>${addr.city}, ${addr.state} - ${addr.pincode}</p>
+                <p>${[addr.locality || addr.area, addr.city, addr.state].filter(Boolean).join(', ')} - ${addr.pincode}</p>
                 ${addr.phone ? `<p class="mt-xs text-xs font-bold text-on-surface-variant">Phone: ${addr.phone}</p>` : ''}
             `;
         }
@@ -761,7 +774,7 @@
                             </div>
                             <p class="text-xs text-on-surface-variant mt-xs leading-relaxed">
                                 ${addr.line1}${addr.line2 ? `, ${addr.line2}` : ''}<br>
-                                ${addr.city}, ${addr.state} - ${addr.pincode}<br>
+                                ${[addr.locality || addr.area, addr.city, addr.state].filter(Boolean).join(', ')} - ${addr.pincode}<br>
                                 ${addr.phone ? `Phone: ${addr.phone}` : ''}
                             </p>
                         </div>
@@ -805,17 +818,113 @@
         document.getElementById('address-form-view').classList.add('hidden');
     }
 
+    let lastFetchedCheckoutPincode = '';
+    let checkoutPincodeDebounceTimer = null;
+
+    async function handleCheckoutPincodeLookup(pincode) {
+        if (!pincode || !/^\d{6}$/.test(pincode)) {
+            return;
+        }
+        if (pincode === lastFetchedCheckoutPincode) {
+            return;
+        }
+
+        const loader = document.getElementById('checkout-pincode-loader');
+        const hint = document.getElementById('checkout-pincode-hint');
+        const localityInput = document.getElementById('addr-locality');
+        const cityInput = document.getElementById('addr-city');
+        const stateInput = document.getElementById('addr-state');
+
+        if (loader) loader.classList.remove('hidden');
+        if (hint) {
+            hint.textContent = '';
+            hint.classList.add('hidden');
+        }
+
+        try {
+            const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+            const data = await res.json();
+
+            if (Array.isArray(data) && data[0] && data[0].Status === 'Success' && Array.isArray(data[0].PostOffice) && data[0].PostOffice.length > 0) {
+                const poList = data[0].PostOffice;
+                const po = poList.find(p => p.DeliveryStatus === 'Delivery') || poList[0];
+                
+                const detectedLocality = po.District || po.Name || '';
+                const detectedCity = (po.District || po.Circle || po.Division || '').replace(/( District| Division)/i, '').trim() || po.District || '';
+                const detectedState = po.State || '';
+
+                if (localityInput && detectedLocality) {
+                    localityInput.value = detectedLocality;
+                }
+                if (cityInput && detectedCity) {
+                    cityInput.value = detectedCity;
+                }
+                if (stateInput && detectedState) {
+                    stateInput.value = detectedState;
+                }
+
+                lastFetchedCheckoutPincode = pincode;
+                if (hint) hint.classList.add('hidden');
+            } else {
+                if (hint) {
+                    hint.textContent = "Couldn't auto-detect location, please fill manually";
+                    hint.classList.remove('hidden');
+                }
+            }
+        } catch (err) {
+            console.warn('Checkout pincode lookup failed:', err);
+            if (hint) {
+                hint.textContent = "Couldn't auto-detect location, please fill manually";
+                hint.classList.remove('hidden');
+            }
+        } finally {
+            if (loader) loader.classList.add('hidden');
+        }
+    }
+
+    const checkoutPincodeInput = document.getElementById('addr-pincode');
+    if (checkoutPincodeInput) {
+        checkoutPincodeInput.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            const hint = document.getElementById('checkout-pincode-hint');
+            if (hint && val.length < 6) {
+                hint.classList.add('hidden');
+            }
+            if (val.length === 6 && /^\d{6}$/.test(val)) {
+                clearTimeout(checkoutPincodeDebounceTimer);
+                checkoutPincodeDebounceTimer = setTimeout(() => {
+                    handleCheckoutPincodeLookup(val);
+                }, 300);
+            }
+        });
+
+        checkoutPincodeInput.addEventListener('blur', (e) => {
+            const val = e.target.value.trim();
+            if (val.length === 6 && /^\d{6}$/.test(val) && val !== lastFetchedCheckoutPincode) {
+                clearTimeout(checkoutPincodeDebounceTimer);
+                handleCheckoutPincodeLookup(val);
+            }
+        });
+    }
+
     function showNewAddressForm() {
         document.getElementById('address-form-title').innerText = "Add Address";
         document.getElementById('address-id-field').value = "";
         document.getElementById('addr-fullname').value = "";
         document.getElementById('addr-line1').value = "";
         document.getElementById('addr-line2').value = "";
+        document.getElementById('addr-locality').value = "";
         document.getElementById('addr-city').value = "";
         document.getElementById('addr-state').value = "";
         document.getElementById('addr-pincode').value = "";
         document.getElementById('addr-phone').value = "";
         document.getElementById('addr-default').checked = savedAddresses.length === 0;
+
+        lastFetchedCheckoutPincode = "";
+        const loader = document.getElementById('checkout-pincode-loader');
+        const hint = document.getElementById('checkout-pincode-hint');
+        if (loader) loader.classList.add('hidden');
+        if (hint) hint.classList.add('hidden');
         
         document.getElementById('address-list-view').classList.add('hidden');
         document.getElementById('address-form-view').classList.remove('hidden');
@@ -830,11 +939,18 @@
         document.getElementById('addr-fullname').value = addr.full_name;
         document.getElementById('addr-line1').value = addr.line1;
         document.getElementById('addr-line2').value = addr.line2 || "";
+        document.getElementById('addr-locality').value = addr.locality || addr.area || "";
         document.getElementById('addr-city').value = addr.city;
         document.getElementById('addr-state').value = addr.state;
         document.getElementById('addr-pincode').value = addr.pincode;
         document.getElementById('addr-phone').value = addr.phone || "";
-        document.getElementById('addr-default').checked = addr.is_default === 1;
+        document.getElementById('addr-default').checked = addr.is_default === 1 || addr.is_default === true;
+
+        lastFetchedCheckoutPincode = addr.pincode || "";
+        const loader = document.getElementById('checkout-pincode-loader');
+        const hint = document.getElementById('checkout-pincode-hint');
+        if (loader) loader.classList.add('hidden');
+        if (hint) hint.classList.add('hidden');
 
         document.getElementById('address-list-view').classList.add('hidden');
         document.getElementById('address-form-view').classList.remove('hidden');
@@ -847,6 +963,7 @@
             full_name: document.getElementById('addr-fullname').value.trim(),
             line1: document.getElementById('addr-line1').value.trim(),
             line2: document.getElementById('addr-line2').value.trim() || null,
+            locality: document.getElementById('addr-locality').value.trim() || null,
             city: document.getElementById('addr-city').value.trim(),
             state: document.getElementById('addr-state').value.trim(),
             pincode: document.getElementById('addr-pincode').value.trim(),

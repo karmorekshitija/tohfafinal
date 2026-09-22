@@ -324,7 +324,7 @@
                 <div class="flex gap-2 sm:gap-3 md:gap-4 items-start w-full">
 
                     <!-- Vertical Thumbnails Strip (desktop: left stacked column; mobile: horizontal row below) -->
-                    <div id="product-vertical-thumbs" class="hidden flex-shrink-0 w-14 sm:w-[72px] md:w-20 flex flex-col gap-2 sm:gap-2.5 overflow-y-auto max-h-[300px] sm:max-h-[420px] md:max-h-[560px] no-scrollbar py-1">
+                    <div id="product-vertical-thumbs" class="hidden flex-shrink-0 w-11 sm:w-16 md:w-16 flex flex-col gap-2 sm:gap-2.5 overflow-y-auto max-h-[300px] sm:max-h-[420px] md:max-h-[560px] no-scrollbar py-1">
                         <!-- Dynamically populated vertical thumbnails -->
                     </div>
 
@@ -833,7 +833,7 @@
 </footer>
 
     <script type="module">
-        import apiClient, { requireAuth } from '/src/utils/apiClient.js';
+        import apiClient, { requireAuth, getAuthToken, isAuthenticated } from '/src/utils/apiClient.js';
         import { formatPaise } from '/src/utils/currency.js';
         import { logout } from '/src/utils/auth.js';
         import { initSearchOverlay } from '/buyer/searchOverlay.js';
@@ -901,7 +901,7 @@
         let currentSelectedVariant = null;
 
     async function checkAuthState() {
-        const token = sessionStorage.getItem('tohfa_access_token');
+        const token = getAuthToken();
         const authContainer = document.getElementById('auth-buttons-container');
         
         if (token) {
@@ -1236,7 +1236,7 @@
                                 verticalThumbs.classList.remove('hidden');
                                 verticalThumbs.style.display = 'flex';
                                 verticalThumbs.innerHTML = list.map((url, idx) => `
-                                    <div class="product-vert-thumb group relative aspect-square w-14 h-14 sm:w-20 sm:h-20 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shrink-0 bg-white ${idx === activeIndex ? 'border-[#14381F] ring-2 ring-[#14381F]/30 scale-[1.02] shadow-sm opacity-100' : 'border-[#14381F]/20 opacity-70 hover:opacity-100 hover:border-[#14381F]/60'}" data-index="${idx}" data-img-url="${url}">
+                                    <div class="product-vert-thumb group relative aspect-square w-11 h-11 sm:w-16 sm:h-16 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shrink-0 bg-white ${idx === activeIndex ? 'border-[#14381F] ring-2 ring-[#14381F]/30 scale-[1.02] shadow-sm opacity-100' : 'border-[#14381F]/20 opacity-70 hover:opacity-100 hover:border-[#14381F]/60'}" data-index="${idx}" data-img-url="${url}">
                                         <img src="${url}" alt="${product.name} - Thumbnail ${idx + 1}" class="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
                                     </div>
                                 `).join('');
@@ -1254,9 +1254,9 @@
                                             counterBadge.textContent = `${idx + 1} / ${list.length}`;
                                         }
                                         verticalThumbs.querySelectorAll('.product-vert-thumb').forEach(t => {
-                                            t.className = 'product-vert-thumb group relative aspect-square w-14 h-14 sm:w-20 sm:h-20 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shrink-0 bg-white border-[#14381F]/20 opacity-70 hover:opacity-100 hover:border-[#14381F]/60';
+                                            t.className = 'product-vert-thumb group relative aspect-square w-11 h-11 sm:w-16 sm:h-16 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shrink-0 bg-white border-[#14381F]/20 opacity-70 hover:opacity-100 hover:border-[#14381F]/60';
                                         });
-                                        thumb.className = 'product-vert-thumb group relative aspect-square w-14 h-14 sm:w-20 sm:h-20 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shrink-0 bg-white border-[#14381F] ring-2 ring-[#14381F]/30 scale-[1.02] shadow-sm opacity-100';
+                                        thumb.className = 'product-vert-thumb group relative aspect-square w-11 h-11 sm:w-16 sm:h-16 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shrink-0 bg-white border-[#14381F] ring-2 ring-[#14381F]/30 scale-[1.02] shadow-sm opacity-100';
                                     });
                                 });
                             }
@@ -1677,8 +1677,7 @@
                 window.Toast?.show("Sellers cannot wishlist their own products", "error");
                 return;
             }
-            if (!isLoggedIn) {
-                // login check bypassed
+            if (!requireAuth({ type: 'wishlist', productId: String(productId).trim() })) {
                 return;
             }
 
@@ -2316,9 +2315,9 @@
             const avgRating = parseFloat(p.avg_rating || 5.0);
 
             return `
-                <div class="group bg-white border border-[#14381F]/15 rounded-xl p-3.5 shadow-sm hover:shadow-md transition-all duration-300 flex gap-3.5 cursor-pointer relative" onclick="window.location.href='product.html?id=${p.id}'">
+                <div class="group bg-white border border-[#14381F]/15 rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-300 flex gap-3 cursor-pointer relative" onclick="window.location.href='product.html?id=${p.id}'">
                     <!-- Left: Thumbnail Image -->
-                    <div class="relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 overflow-hidden rounded-xl bg-[#FAF6EE] border border-[#14381F]/10">
+                    <div class="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 overflow-hidden rounded-xl bg-[#FAF6EE] border border-[#14381F]/10">
                         <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="${imageUrl}" alt="${p.name}" loading="lazy" />
                         ${wishlistBtnHtml}
                     </div>
@@ -2410,9 +2409,7 @@
         }
 
         async function handleRecommendationToggleWishlist(productId, isWishlisted, btn) {
-            const token = sessionStorage.getItem('tohfa_access_token');
-            if (!token) {
-                // login check bypassed
+            if (!requireAuth({ type: 'wishlist', productId: String(productId).trim() })) {
                 return;
             }
 

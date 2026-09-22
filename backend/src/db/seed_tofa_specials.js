@@ -285,7 +285,7 @@ const PRODUCTS_CATALOG = [
   {
     shop: 'The Candle Story',
     name: 'Stacked Puppies Candle',
-    catKey: 'figurines',
+    catKey: 'candles',
     price: 499,
     preparationDays: 2,
     weightGrams: 400,
@@ -295,7 +295,7 @@ const PRODUCTS_CATALOG = [
   {
     shop: 'The Candle Story',
     name: 'Golden Retriever Round Candle',
-    catKey: 'figurines',
+    catKey: 'candles',
     price: 449,
     preparationDays: 2,
     weightGrams: 350,
@@ -305,7 +305,7 @@ const PRODUCTS_CATALOG = [
   {
     shop: 'The Candle Story',
     name: 'Chess Knight Horse Candle',
-    catKey: 'figurines',
+    catKey: 'candles',
     price: 549,
     preparationDays: 2,
     weightGrams: 450,
@@ -315,7 +315,7 @@ const PRODUCTS_CATALOG = [
   {
     shop: 'The Candle Story',
     name: 'Stacked Owls Candle',
-    catKey: 'figurines',
+    catKey: 'candles',
     price: 479,
     preparationDays: 2,
     weightGrams: 380,
@@ -325,7 +325,7 @@ const PRODUCTS_CATALOG = [
   {
     shop: 'The Candle Story',
     name: 'Swan Relief Pillar Candle',
-    catKey: 'figurines',
+    catKey: 'candles',
     price: 649,
     preparationDays: 2,
     weightGrams: 500,
@@ -461,7 +461,7 @@ const PRODUCTS_CATALOG = [
   {
     shop: 'The Candle Story',
     name: 'Mother & Child Relief Candle',
-    catKey: 'figurines',
+    catKey: 'candles',
     price: 799,
     preparationDays: 3,
     weightGrams: 550,
@@ -471,7 +471,7 @@ const PRODUCTS_CATALOG = [
   {
     shop: 'The Candle Story',
     name: 'Madonna Bust Candle',
-    catKey: 'figurines',
+    catKey: 'candles',
     price: 799,
     preparationDays: 3,
     weightGrams: 550,
@@ -481,7 +481,7 @@ const PRODUCTS_CATALOG = [
   {
     shop: 'The Candle Story',
     name: 'Enchanted Cottage Candle',
-    catKey: 'figurines',
+    catKey: 'candles',
     price: 699,
     preparationDays: 2,
     weightGrams: 450,
@@ -491,7 +491,7 @@ const PRODUCTS_CATALOG = [
   {
     shop: 'The Candle Story',
     name: 'Embracing Couple Candle',
-    catKey: 'figurines',
+    catKey: 'candles',
     price: 699,
     preparationDays: 2,
     weightGrams: 500,

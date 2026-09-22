@@ -57,7 +57,7 @@
           Support
         </h3>
         <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
-          <li><a href="/buyer/contact.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Contact Us</a></li>
+          <li><a href="#" onclick="handleFooterContactClick(event)" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Contact Us</a></li>
           <li><a href="/buyer/returns.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Returns &amp; Refunds</a></li>
           <li><a href="/buyer/faq.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">FAQs</a></li>
         </ul>
@@ -104,7 +104,7 @@
         <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
           <li><a href="/auth/signup-seller.html" onclick="handleFooterSellerLink(event)" class="text-[#FAF6EE]/90 no-underline">Sell on Tohfa</a></li>
           <li><a href="/seller/dashboard.html" class="text-[#FAF6EE]/90 no-underline">Seller Studio</a></li>
-          <li><a href="/buyer/contact.html" class="text-[#FAF6EE]/90 no-underline">Contact Us</a></li>
+          <li><a href="#" onclick="handleFooterContactClick(event)" class="text-[#FAF6EE]/90 no-underline">Contact Us</a></li>
           <li><a href="/buyer/returns.html" class="text-[#FAF6EE]/90 no-underline">Returns &amp; Refunds</a></li>
           <li><a href="/buyer/faq.html" class="text-[#FAF6EE]/90 no-underline">FAQs</a></li>
         </ul>
@@ -146,5 +146,45 @@ async function handleFooterSellerLink(e) {
     console.error("Error checking seller status:", err);
   }
   window.location.href = '/auth/signup-seller.html';
+}
+
+function handleFooterContactClick(e) {
+  if (e) e.preventDefault();
+  // Remove any existing popup first
+  const existing = document.getElementById('tohfa-contact-popup');
+  if (existing) existing.remove();
+
+  const popup = document.createElement('div');
+  popup.id = 'tohfa-contact-popup';
+  popup.style.cssText = `
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 18px;
+    border-radius: 10px;
+    background: #14381F;
+    color: #FFF8E7;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    max-width: 90%;
+    text-align: center;
+  `;
+  popup.innerHTML = `Get in touch with Tohfa: <strong>tohfa126@gmail.com</strong>`;
+  document.body.appendChild(popup);
+
+  // Dismiss on any click anywhere on screen (but not the same click that opened it)
+  setTimeout(() => {
+    document.addEventListener('click', function dismiss() {
+      popup.remove();
+      document.removeEventListener('click', dismiss);
+    }, { once: true });
+  }, 0);
 }
 </script>

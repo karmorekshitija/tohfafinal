@@ -156,6 +156,8 @@ const schemas = {
     line2:          Joi.string().trim().max(200).optional().allow('', null),
     address_line2:  Joi.string().trim().max(200).optional().allow('', null),
     landmark:       Joi.string().trim().max(200).optional().allow('', null),
+    locality:       Joi.string().trim().max(200).optional().allow('', null),
+    area:           Joi.string().trim().max(200).optional().allow('', null),
     city:           Joi.string().trim().min(2).max(100).required(),
     state:          Joi.string().trim().min(2).max(100).required(),
     pincode:        Joi.string().pattern(/^\d{6}$/).required(),

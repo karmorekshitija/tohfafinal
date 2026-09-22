@@ -109,6 +109,8 @@ function formatAddress(row) {
     address_line: addressLine,
     street: line1,
     landmark: row.landmark || null,
+    locality: row.locality || row.area || null,
+    area: row.locality || row.area || null,
     city: row.city,
     state: row.state,
     pincode: row.pincode,
@@ -161,6 +163,7 @@ async function createAddress(req, res, next) {
       line1, address_line1,
       line2, address_line2,
       landmark,
+      locality, area,
       city,
       state,
       pincode,
@@ -172,6 +175,7 @@ async function createAddress(req, res, next) {
     const addressLine1 = line1 || address_line1 || req.body.address_line || '';
     const addressLine2 = line2 || address_line2 || null;
     const addressLandmark = landmark || null;
+    const addressLocality = locality || area || null;
     const addressType = address_type || addressLabel || 'Home';
 
     const availableCols = await getAddressesColumns();
@@ -210,6 +214,8 @@ async function createAddress(req, res, next) {
       line2: addressLine2,
       address_line2: addressLine2,
       landmark: addressLandmark,
+      locality: addressLocality,
+      area: addressLocality,
     };
 
     const insertCols = [];
@@ -261,6 +267,7 @@ async function updateAddress(req, res, next) {
       line1, address_line1,
       line2, address_line2,
       landmark,
+      locality, area,
       city,
       state,
       pincode,
@@ -272,6 +279,7 @@ async function updateAddress(req, res, next) {
     const addressLine1 = line1 || address_line1 || req.body.address_line || null;
     const addressLine2 = line2 !== undefined ? (line2 || address_line2 || null) : (address_line2 !== undefined ? address_line2 : null);
     const addressLandmark = landmark !== undefined ? landmark : null;
+    const addressLocality = locality !== undefined ? (locality || area || null) : (area !== undefined ? area : null);
     const availableCols = await getAddressesColumns();
     const defaultVal = is_default !== undefined ? Boolean(is_default) : null;
 
@@ -303,6 +311,10 @@ async function updateAddress(req, res, next) {
     }
     if (landmark !== undefined) {
       candidateUpdates.landmark = addressLandmark;
+    }
+    if (locality !== undefined || area !== undefined) {
+      candidateUpdates.locality = addressLocality;
+      candidateUpdates.area = addressLocality;
     }
     if (city !== undefined) {
       candidateUpdates.city = city || null;
@@ -587,6 +599,7 @@ async function getOwnProfile(req, res, next) {
     const avatarUrl = userProfile.profile_photo_url || '/img/default-avatar.png';
     const normalized = {
       ...userProfile,
+      display_name: userProfile.name,
       avatar_url: avatarUrl,
       profile_photo_url: avatarUrl,
       profile_photo: avatarUrl,

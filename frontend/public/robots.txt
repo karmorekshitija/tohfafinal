@@ -1,7 +1,11 @@
 User-agent: *
 Allow: /
-Allow: /api/sitemap.xml
 Disallow: /api/
+Disallow: /admin/
+Disallow: /seller/
+Disallow: /account/
+Disallow: /checkout/
+Disallow: /cart/
+Disallow: /auth/
 
 Sitemap: https://thetohfa.in/sitemap.xml
-Sitemap: https://thetohfa.in/api/sitemap.xml

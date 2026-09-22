@@ -8,8 +8,9 @@
   <script type="module" src="/src/components/ProtectedRoute.js"></script>
   <script type="module" src="/src/utils/imageHelper.js"></script>
   <meta charset="utf-8"/>
-  <title>Tohfa | Handcrafted Treasures</title>
-  <link rel="canonical" href="https://thetohfa.in/buyer/home"/>
+  <meta name="robots" content="index, follow"/>
+  <title>Customized &amp; Handmade Gifts Online in India | Tohfa</title>
+  <link rel="canonical" href="https://thetohfa.in/"/>
   <meta name="description" content="India's premier curated marketplace for authentic handcrafted treasures, personalized gifts, bespoke studio creations, and artisanal craft directly from master makers."/>
 
   <!-- Open Graph / Facebook -->
@@ -17,7 +18,7 @@
   <meta property="og:type" content="website"/>
   <meta property="og:title" content="Tohfa | Handcrafted Treasures &amp; Personalized Gifts"/>
   <meta property="og:description" content="Discover soulful handcrafted gifts, personalized keepsakes, and bespoke artistic creations directly from independent Indian artisans."/>
-  <meta property="og:url" content="https://thetohfa.in/buyer/home"/>
+  <meta property="og:url" content="https://thetohfa.in/"/>
   <meta property="og:image" content="https://thetohfa.in/img/botanical-hero.png"/>
 
   <!-- Twitter / X -->
@@ -252,7 +253,7 @@
       class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328]"
       title="Shopping Cart"
     >
-      <span class="material-symbols-outlined text-[20px] sm:text-[22px]" aria-hidden="true">shopping_bag</span>
+      <span class="material-symbols-outlined text-[20px] sm:text-[22px]" aria-hidden="true">shopping_cart</span>
       <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#14381F] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
     </a>
 
@@ -290,12 +291,7 @@
 
     <!-- Elegant Compact Tohfa Serif Wordmark -->
     <div class="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-      <h1
-        class="text-center tracking-wide"
-        style="font-family: 'Playfair Display', serif; font-size: clamp(34px, 5.5vw, 72px); font-style: italic; font-weight: 400; color: #FAF6EE; line-height: 1; letter-spacing: -0.01em; text-shadow: 0 2px 16px rgba(0,0,0,0.55);"
-      >
-        Tohfa
-      </h1>
+      <h1 class="text-center tracking-wide" style="font-family: 'Playfair Display', serif; font-size: clamp(28px, 4.5vw, 60px); font-style: italic; font-weight: 400; color: #FAF6EE; line-height: 1.15; letter-spacing: -0.01em; text-shadow: 0 2px 16px rgba(0,0,0,0.55); max-width: 900px; margin: 0 auto; padding: 0 16px;">Customized, Personalized &amp; Handmade Gifts from India</h1>
     </div>
   </section>
 
@@ -963,29 +959,27 @@
       ? window.optimizeImageUrl(rawImageUrl, { width: 500 })
       : rawImageUrl;
 
-    const sellerName = product.seller_name || product.store_name || (product.seller?.seller_name) || (product.seller?.store_name) || 'Artisan Studio';
-
-    const isOwner = isProductOwned(product.seller_id);
+    const sellerName = product.seller_name || product.store_name || (product.seller?.seller_name) || (product.seller?.store_name) || 'Artisan Studio';    const isOwner = isProductOwned(product.seller_id);
     const wishlistBtnHtml = isOwner
-      ? `<button class="absolute top-1.5 right-1.5 w-6 h-6 sm:w-[26px] sm:h-[26px] min-w-0 min-h-0 rounded-full bg-[rgba(250,246,238,0.85)] opacity-50 cursor-not-allowed z-10 flex items-center justify-center p-0 toggle-wishlist-btn" disabled onclick="event.stopPropagation();">
+      ? `<button class="absolute top-1.5 right-1.5 w-6 h-6 sm:w-[26px] sm:h-[26px] min-w-0 min-h-0 rounded-full bg-[rgba(250,246,238,0.85)] opacity-50 cursor-not-allowed z-10 flex items-center justify-center p-0 toggle-wishlist-btn" disabled onclick="event.preventDefault(); event.stopPropagation();">
            <span class="material-symbols-outlined text-[15px] sm:text-[17px] text-[#14381F]" style="font-variation-settings: 'FILL' 0;">favorite</span>
          </button>`
-      : `<button class="absolute top-1.5 right-1.5 w-6 h-6 sm:w-[26px] sm:h-[26px] min-w-0 min-h-0 rounded-full bg-[rgba(250,246,238,0.9)] transition-all duration-200 hover:scale-110 active:scale-95 toggle-wishlist-btn z-10 flex items-center justify-center cursor-pointer shadow-xs p-0" data-id="${product.id}" data-wishlisted="${isWishlisted}" onclick="event.stopPropagation();" title="Wishlist">
+      : `<button class="absolute top-1.5 right-1.5 w-6 h-6 sm:w-[26px] sm:h-[26px] min-w-0 min-h-0 rounded-full bg-[rgba(250,246,238,0.9)] transition-all duration-200 hover:scale-110 active:scale-95 toggle-wishlist-btn z-10 flex items-center justify-center cursor-pointer shadow-xs p-0" data-id="${product.id}" data-wishlisted="${isWishlisted}" onclick="event.preventDefault(); event.stopPropagation();" title="Wishlist">
            <span class="material-symbols-outlined text-[15px] sm:text-[17px] ${isWishlisted ? 'fill-icon text-red-500' : 'text-[#14381F]'}" style="font-variation-settings: 'FILL' ${isWishlisted ? 1 : 0};">favorite</span>
          </button>`;
 
     const isCustomized = product.listing_type === 'custom' || product.customization_mode === 'fixed' || product.customization_mode === 'open';
     const actionBtnHtml = isOwner
-      ? `<button class="w-full py-1.5 px-2 rounded-md sm:rounded-lg font-semibold text-[11px] sm:text-xs bg-[#14381F]/20 text-[#605e57] opacity-60 cursor-not-allowed" disabled onclick="event.stopPropagation();">
+      ? `<button class="w-full py-1.5 px-2 rounded-md sm:rounded-lg font-semibold text-[11px] sm:text-xs bg-[#14381F]/20 text-[#605e57] opacity-60 cursor-not-allowed" disabled onclick="event.preventDefault(); event.stopPropagation();">
            Own Product
          </button>`
       : isCustomized
-        ? `<button class="w-full py-1.5 px-2 rounded-md sm:rounded-lg font-semibold text-[11px] sm:text-xs text-white bg-[#14381F] transition-opacity hover:opacity-90 active:scale-[0.98] talk-to-seller-btn" data-id="${product.id}" onclick="event.stopPropagation();">
-             Talk to Seller
-           </button>`
-        : `<button class="w-full py-1.5 px-2 rounded-md sm:rounded-lg font-semibold text-[11px] sm:text-xs text-white bg-[#14381F] transition-opacity hover:opacity-90 active:scale-[0.98] add-to-cart-btn" data-id="${product.id}" onclick="event.stopPropagation();">
-             Add to Cart
-           </button>`;
+        ? `<button class="w-full py-1.5 px-2 rounded-md sm:rounded-lg font-semibold text-[11px] sm:text-xs text-white bg-[#14381F] transition-opacity hover:opacity-90 active:scale-[0.98] talk-to-seller-btn" data-id="${product.id}" onclick="event.preventDefault(); event.stopPropagation();">
+              Talk to Seller
+            </button>`
+        : `<button class="w-full py-1.5 px-2 rounded-md sm:rounded-lg font-semibold text-[11px] sm:text-xs text-white bg-[#14381F] transition-opacity hover:opacity-90 active:scale-[0.98] add-to-cart-btn" data-id="${product.id}" onclick="event.preventDefault(); event.stopPropagation();">
+              Add to Cart
+            </button>`;
 
     card.innerHTML = `
       <div>
@@ -1006,7 +1000,7 @@
               : `<span class="bg-[#14381F]/10 text-[#14381F] text-[9px] sm:text-[10px] font-mono font-bold px-1 sm:px-1.5 py-0.5 rounded tracking-wider uppercase">New</span>`}
           </div>
           <h4 class="font-bold text-xs sm:text-sm leading-snug text-[#1C1C1A] line-clamp-2 min-h-[32px] sm:min-h-[38px]" style="font-family: 'Playfair Display', serif;">${escapeHtml(product.name)}</h4>
-          <span class="text-[10px] sm:text-xs text-[#7a7a6e] hover:underline cursor-pointer truncate block" onclick="event.stopPropagation(); window.location.href='/buyer/seller-profile.html?id=${product.seller_id}'" style="font-family: 'DM Sans', sans-serif;">By ${escapeHtml(sellerName)}</span>
+          <span class="text-[10px] sm:text-xs text-[#7a7a6e] hover:underline cursor-pointer truncate block" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/buyer/seller-profile.html?id=${product.seller_id}'" style="font-family: 'DM Sans', sans-serif;">By ${escapeHtml(sellerName)}</span>
         </div>
       </div>
       <div class="px-2 pb-2 sm:px-3 sm:pb-3 pt-0">
@@ -1018,6 +1012,7 @@
     const wishlistBtn = card.querySelector('.toggle-wishlist-btn');
     if (wishlistBtn) {
       wishlistBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
         e.stopPropagation();
         const wishlisted = wishlistBtn.getAttribute('data-wishlisted') === 'true';
         await handleToggleWishlist(product.id, wishlisted, wishlistBtn);
@@ -1027,6 +1022,7 @@
     const addToCartBtn = card.querySelector('.add-to-cart-btn');
     if (addToCartBtn) {
       addToCartBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
         e.stopPropagation();
         await handleAddToCart(product.id);
       });
@@ -1035,6 +1031,7 @@
     const talkToSellerBtn = card.querySelector('.talk-to-seller-btn');
     if (talkToSellerBtn) {
       talkToSellerBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
         e.stopPropagation();
         await handleTalkToSeller(product.id, talkToSellerBtn);
       });

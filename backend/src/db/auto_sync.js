@@ -468,6 +468,7 @@ async function autoSyncDatabase() {
       await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS line2 TEXT;`);
       await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS address_line2 TEXT;`);
       await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS landmark TEXT;`);
+      await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS locality TEXT;`);
       await query(`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS is_default BOOLEAN DEFAULT FALSE;`);
 
       await query(`UPDATE addresses SET tag = COALESCE(tag, label, address_type, 'Home') WHERE tag IS NULL;`);

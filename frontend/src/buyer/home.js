@@ -177,7 +177,7 @@ function renderProducts(container, products) {
       <a href="./product.html?id=${p.id}" class="product-card" style="text-decoration: none; color: inherit;">
         <div class="product-card__image-wrap">
           <img src="${imgUrl}" class="product-card__image" alt="${p.name}" loading="lazy">
-          <button class="product-card__wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('${p.id}', this)" title="Save to Wishlist">
+          <button class="product-card__wishlist-btn" onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('${p.id}', this)" title="Save to Wishlist">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
           </button>
           ${customBadge}
@@ -187,7 +187,7 @@ function renderProducts(container, products) {
           <div class="product-card__seller" style="font-size: var(--text-xs); color: var(--color-moss); margin-bottom: var(--space-3);">by ${p.store_name || 'Artisan Seller'}</div>
           <div class="product-card__footer" style="display: flex; align-items: center; justify-content: space-between;">
             <span class="text-price" style="font-size: var(--text-xl); font-weight: var(--weight-bold);">${formatPrice(p.base_price)}</span>
-            <button class="product-card__quick-add-btn" title="Add to Cart" onclick="event.stopPropagation(); quickAddToCart('${p.id}', this)">
+            <button class="product-card__quick-add-btn" title="Add to Cart" onclick="event.preventDefault(); event.stopPropagation(); quickAddToCart('${p.id}', this)">
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
             </button>
           </div>

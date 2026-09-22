@@ -40,6 +40,10 @@ const MIGRATION_FILES = [
   path.join(__dirname, 'migrations', '023_overflow_orders.sql'),
   path.join(__dirname, 'migrations', '024_product_image_format_dedup.sql'),
   path.join(__dirname, 'migrations', '025_bestseller_flag.sql'),
+  path.join(__dirname, 'migrations', '026_recategorise_figurine_candles.sql'),
+  path.join(__dirname, 'migrations', '027_unify_addresses_schema.sql'),
+  path.join(__dirname, 'migrations', '028_add_address_locality.sql'),
+  path.join(__dirname, 'migrations', '029_restore_candle_products.sql'),
 ];
 
 async function runMigrations() {

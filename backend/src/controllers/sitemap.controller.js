@@ -34,17 +34,27 @@ async function generateSitemap(req, res) {
   try {
     const nowIso = new Date().toISOString().split('T')[0];
 
-    // 1. Static Core Pages
+    // 1. Static Core Pages & High-Intent Landing Pages
     const staticUrls = [
-      { loc: `${BASE_URL}/buyer/home`, lastmod: nowIso, changefreq: 'daily', priority: '1.0' },
-      { loc: `${BASE_URL}/buyer/categories`, lastmod: nowIso, changefreq: 'weekly', priority: '0.9' },
-      { loc: `${BASE_URL}/buyer/bulk`, lastmod: nowIso, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/buyer/about`, lastmod: nowIso, changefreq: 'monthly', priority: '0.7' },
-      { loc: `${BASE_URL}/buyer/contact`, lastmod: nowIso, changefreq: 'monthly', priority: '0.7' },
-      { loc: `${BASE_URL}/buyer/faq`, lastmod: nowIso, changefreq: 'monthly', priority: '0.7' },
-      { loc: `${BASE_URL}/buyer/returns`, lastmod: nowIso, changefreq: 'monthly', priority: '0.6' },
-      { loc: `${BASE_URL}/buyer/privacy`, lastmod: nowIso, changefreq: 'monthly', priority: '0.6' },
-      { loc: `${BASE_URL}/buyer/terms-conditions`, lastmod: nowIso, changefreq: 'monthly', priority: '0.6' },
+      { loc: `${BASE_URL}/`, lastmod: nowIso, changefreq: 'daily', priority: '1.0' },
+      { loc: `${BASE_URL}/customized-gifts`, lastmod: nowIso, changefreq: 'daily', priority: '0.95' },
+      { loc: `${BASE_URL}/personalized-gifts`, lastmod: nowIso, changefreq: 'daily', priority: '0.95' },
+      { loc: `${BASE_URL}/handmade-gifts`, lastmod: nowIso, changefreq: 'daily', priority: '0.95' },
+      { loc: `${BASE_URL}/gifts-in-india`, lastmod: nowIso, changefreq: 'daily', priority: '0.95' },
+      { loc: `${BASE_URL}/categories`, lastmod: nowIso, changefreq: 'weekly', priority: '0.90' },
+      { loc: `${BASE_URL}/bulk`, lastmod: nowIso, changefreq: 'weekly', priority: '0.85' },
+      { loc: `${BASE_URL}/guides`, lastmod: nowIso, changefreq: 'weekly', priority: '0.85' },
+      { loc: `${BASE_URL}/guides/best-customized-gifts-in-india`, lastmod: nowIso, changefreq: 'weekly', priority: '0.80' },
+      { loc: `${BASE_URL}/guides/handmade-gifts-in-india`, lastmod: nowIso, changefreq: 'weekly', priority: '0.80' },
+      { loc: `${BASE_URL}/guides/how-to-choose-a-personalized-gift`, lastmod: nowIso, changefreq: 'weekly', priority: '0.80' },
+      { loc: `${BASE_URL}/guides/anniversary-gift-guide`, lastmod: nowIso, changefreq: 'weekly', priority: '0.80' },
+      { loc: `${BASE_URL}/guides/birthday-gift-guide`, lastmod: nowIso, changefreq: 'weekly', priority: '0.80' },
+      { loc: `${BASE_URL}/about`, lastmod: nowIso, changefreq: 'monthly', priority: '0.70' },
+      { loc: `${BASE_URL}/contact`, lastmod: nowIso, changefreq: 'monthly', priority: '0.70' },
+      { loc: `${BASE_URL}/faq`, lastmod: nowIso, changefreq: 'monthly', priority: '0.70' },
+      { loc: `${BASE_URL}/returns`, lastmod: nowIso, changefreq: 'monthly', priority: '0.60' },
+      { loc: `${BASE_URL}/privacy`, lastmod: nowIso, changefreq: 'monthly', priority: '0.50' },
+      { loc: `${BASE_URL}/terms-conditions`, lastmod: nowIso, changefreq: 'monthly', priority: '0.50' },
     ];
 
     // 2. Fetch Active Categories, Products, and Sellers in Parallel
@@ -63,10 +73,11 @@ async function generateSitemap(req, res) {
          LIMIT 5000`
       ),
       query(
-        `SELECT u.id, sp.slug, COALESCE(sp.updated_at, u.created_at, NOW()) AS last_modified 
+        `SELECT u.id, COALESCE(sp.slug, s.slug, sp.store_slug) AS slug, COALESCE(sp.updated_at, u.created_at, NOW()) AS last_modified 
          FROM users u
          LEFT JOIN seller_profiles sp ON sp.user_id = u.id
-         WHERE (u.role IN ('seller', 'maker') OR sp.id IS NOT NULL)
+         LEFT JOIN sellers s ON s.user_id = u.id
+         WHERE (u.role IN ('seller', 'maker') OR sp.id IS NOT NULL OR s.id IS NOT NULL)
          LIMIT 1000`
       )
     ]);
@@ -92,7 +103,7 @@ async function generateSitemap(req, res) {
     // Add category URLs
     for (const cat of categories) {
       xml += `  <url>\n`;
-      xml += `    <loc>${escapeXml(`${BASE_URL}/buyer/category?slug=${cat.slug}`)}</loc>\n`;
+      xml += `    <loc>${escapeXml(`${BASE_URL}/category/${cat.slug}`)}</loc>\n`;
       xml += `    <lastmod>${formatIsoDate(cat.last_modified)}</lastmod>\n`;
       xml += `    <changefreq>weekly</changefreq>\n`;
       xml += `    <priority>0.85</priority>\n`;
@@ -101,8 +112,9 @@ async function generateSitemap(req, res) {
 
     // Add product URLs
     for (const p of products) {
+      const prodSlug = p.slug || p.id;
       xml += `  <url>\n`;
-      xml += `    <loc>${escapeXml(`${BASE_URL}/buyer/product?id=${p.id}`)}</loc>\n`;
+      xml += `    <loc>${escapeXml(`${BASE_URL}/products/${prodSlug}`)}</loc>\n`;
       xml += `    <lastmod>${formatIsoDate(p.last_modified)}</lastmod>\n`;
       xml += `    <changefreq>daily</changefreq>\n`;
       xml += `    <priority>0.80</priority>\n`;
@@ -111,8 +123,9 @@ async function generateSitemap(req, res) {
 
     // Add seller profile URLs
     for (const s of sellers) {
+      const sellerSlug = s.slug || s.id;
       xml += `  <url>\n`;
-      xml += `    <loc>${escapeXml(`${BASE_URL}/buyer/seller-profile?id=${s.id}`)}</loc>\n`;
+      xml += `    <loc>${escapeXml(`${BASE_URL}/seller/${sellerSlug}`)}</loc>\n`;
       xml += `    <lastmod>${formatIsoDate(s.last_modified)}</lastmod>\n`;
       xml += `    <changefreq>weekly</changefreq>\n`;
       xml += `    <priority>0.70</priority>\n`;

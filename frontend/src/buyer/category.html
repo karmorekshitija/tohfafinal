@@ -228,7 +228,7 @@
       class="p-1.5 sm:p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273328]"
       title="Shopping Cart"
     >
-      <span class="material-symbols-outlined text-[20px] sm:text-[22px]" aria-hidden="true">shopping_bag</span>
+      <span class="material-symbols-outlined text-[20px] sm:text-[22px]" aria-hidden="true">shopping_cart</span>
       <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
     </a>
 
@@ -990,16 +990,41 @@
         try {
           const res = await apiClient.get('/products', { params });
           if (!res) {
-            console.warn('[fetchProducts] Null response — possible auth redirect or network error');
-          } else {
-            const payload = res.data || res;
-            if (payload?.success || payload?.data?.products || payload?.products) {
-              products = payload.data?.products || payload.data || payload.products || [];
-              if (!Array.isArray(products)) products = [];
-            }
+            throw new Error('Null response received from server');
+          }
+          const payload = res.data || res;
+          if (payload?.success || payload?.data?.products || payload?.products) {
+            products = payload.data?.products || payload.data || payload.products || [];
+            if (!Array.isArray(products)) products = [];
+          } else if (payload?.success === false) {
+            throw new Error(payload?.message || 'Failed to load products');
           }
         } catch (apiErr) {
-          console.warn("Falling back for products fetch:", apiErr);
+          console.error("Error fetching products:", apiErr);
+          const sponsoredSection = document.getElementById('sponsored-section');
+          if (sponsoredSection) sponsoredSection.classList.add('hidden');
+          const countTop = document.getElementById('product-count-top');
+          const countBottom = document.getElementById('product-count-bottom');
+          if (countTop) countTop.innerText = '';
+          if (countBottom) countBottom.innerText = '';
+
+          grid.innerHTML = `
+            <div class="col-span-full flex flex-col items-center justify-center py-20 px-4 text-center max-w-md mx-auto">
+              <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4 text-red-700">
+                <span class="material-symbols-outlined text-3xl">error_outline</span>
+              </div>
+              <h2 class="font-['Playfair_Display',serif] italic font-bold text-2xl sm:text-3xl text-[#14381F] mb-3">Something went wrong loading these products</h2>
+              <p class="text-sm text-[#587A5B] mb-6 font-['DM_Sans',sans-serif] leading-relaxed">We encountered a problem loading products for this collection. Please check your connection and try again.</p>
+              <button id="retry-products-btn" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#14381F] text-[#FAF6EE] font-semibold text-sm hover:bg-[#285C3A] active:scale-95 transition-all cursor-pointer shadow-sm">
+                <span class="material-symbols-outlined text-base">refresh</span>
+                <span>Try again</span>
+              </button>
+            </div>
+          `;
+          document.getElementById('retry-products-btn')?.addEventListener('click', () => {
+            fetchProducts();
+          });
+          return;
         }
 
         // Extract sponsored products

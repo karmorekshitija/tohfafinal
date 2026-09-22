@@ -21,8 +21,113 @@
   ],
   "redirects": [
     {
-      "source": "/",
-      "destination": "/buyer/home",
+      "source": "/buyer/home",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/buyer/home.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/buyer/about",
+      "destination": "/about",
+      "permanent": true
+    },
+    {
+      "source": "/buyer/about.html",
+      "destination": "/about",
+      "permanent": true
+    },
+    {
+      "source": "/buyer/contact",
+      "destination": "/contact",
+      "permanent": true
+    },
+    {
+      "source": "/buyer/contact.html",
+      "destination": "/contact",
+      "permanent": true
+    },
+    {
+      "source": "/buyer/bulk",
+      "destination": "/bulk",
+      "permanent": true
+    },
+    {
+      "source": "/buyer/bulk.html",
+      "destination": "/bulk",
+      "permanent": true
+    },
+    {
+      "source": "/buyer/faq",
+      "destination": "/faq",
+      "permanent": true
+    },
+    {
+      "source": "/buyer/faq.html",
+      "destination": "/faq",
+      "permanent": true
+    },
+    {
+      "source": "/buyer/categories",
+      "destination": "/categories",
+      "permanent": true
+    },
+    {
+      "source": "/buyer/categories.html",
+      "destination": "/categories",
+      "permanent": true
+    },
+    {
+      "source": "/buyer/returns",
+      "destination": "/returns",
+      "permanent": true
+    },
+    {
+      "source": "/buyer/returns.html",
+      "destination": "/returns",
+      "permanent": true
+    },
+    {
+      "source": "/buyer/privacy",
+      "destination": "/privacy",
+      "permanent": true
+    },
+    {
+      "source": "/buyer/privacy.html",
+      "destination": "/privacy",
+      "permanent": true
+    },
+    {
+      "source": "/buyer/terms-conditions",
+      "destination": "/terms-conditions",
+      "permanent": true
+    },
+    {
+      "source": "/buyer/terms-conditions.html",
+      "destination": "/terms-conditions",
+      "permanent": true
+    },
+    {
+      "source": "/customised-gifts",
+      "destination": "/customized-gifts",
+      "permanent": true
+    },
+    {
+      "source": "/personalised-gifts",
+      "destination": "/personalized-gifts",
+      "permanent": true
+    },
+    {
+      "source": "/gifts-online-india",
+      "destination": "/gifts-in-india",
+      "permanent": true
+    },
+    {
+      "source": "/handmade-gifts-india",
+      "destination": "/handmade-gifts",
       "permanent": true
     }
   ],
