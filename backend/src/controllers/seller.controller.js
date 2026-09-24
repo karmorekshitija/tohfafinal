@@ -87,9 +87,9 @@ async function getOwnSellerProfile(req, res, next) {
 
     const { rows } = await query(
       `SELECT sp.id, sp.user_id,
-              COALESCE(sp.store_name, sp.shop_name, u.display_name, u.name) AS store_name,
-              COALESCE(sp.shop_name, sp.store_name, u.display_name, u.name) AS shop_name,
-              COALESCE(sp.display_name, u.display_name, u.name) AS display_name,
+              COALESCE(sp.store_name, sp.shop_name, u.name) AS store_name,
+              COALESCE(sp.shop_name, sp.store_name, u.name) AS shop_name,
+              u.name AS display_name,
               sp.handle, sp.location,
               COALESCE(sp.bio, sp.shop_bio) AS bio,
               sp.shop_bio,

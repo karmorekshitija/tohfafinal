@@ -45,7 +45,7 @@ async function getWishlist(req, res, next) {
          COALESCE(p.base_price, 0) AS base_price,
          p.status,
          p.seller_id,
-         COALESCE(sp.store_name, sp.shop_name, sp.display_name, 'Artisan Studio') AS store_name,
+         COALESCE(sp.store_name, sp.shop_name, 'Artisan Studio') AS store_name,
          COALESCE(
            (SELECT url FROM product_images pi
             WHERE pi.product_id = p.id
