@@ -108,9 +108,9 @@ function sanitizeProduct(p) {
     } : (p.category || null),
     listing_type: (p.customization_mode === 'fixed' || p.customization_mode === 'open') ? 'custom' : 'standard',
     is_customized: p.customization_mode === 'fixed' || p.customization_mode === 'open' || Boolean(p.is_customizable),
-    avg_rating: (p.avg_rating !== undefined && p.avg_rating !== null && !isNaN(parseFloat(p.avg_rating)))
+    avg_rating: (p.avg_rating !== undefined && p.avg_rating !== null && !isNaN(parseFloat(p.avg_rating)) && parseInt(p.review_count || 0, 10) > 0)
       ? parseFloat(p.avg_rating)
-      : 5.0,
+      : null, // null means no reviews yet — display as "No ratings" not "5 stars"
     review_count: parseInt(p.review_count || 0, 10),
     is_bestseller: p.is_bestseller === true,
     type: p.is_sponsored ? 'sponsored' : 'organic'

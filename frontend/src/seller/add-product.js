@@ -587,6 +587,12 @@ async function handleSubmit(e) {
     return;
   }
 
+  // U-12 fix: Require at least one product image before listing
+  if (uploadedPhotos.length === 0) {
+    alert('Please add at least one product photo before publishing. Listings without images are not allowed.');
+    return;
+  }
+
   const isCustom = document.querySelector('input[name="product_type"]:checked')?.value === 'custom';
   const customMode = isCustom ? 'fixed' : 'none';
   const customizationSchema = getModularCustomizationSchema();

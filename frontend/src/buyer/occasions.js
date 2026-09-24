@@ -23,6 +23,11 @@ async function loadOccasions() {
             <div style="font-size:48px; margin-bottom:var(--space-3);">🎉</div>
             <h3 style="font-family:var(--font-display); font-size:var(--text-xl); color:var(--color-primary); margin-bottom:var(--space-2);">No Occasions Saved Yet</h3>
             <p style="color:var(--color-text-muted); max-width:380px; margin:0 auto var(--space-4); font-size:var(--text-sm);">Never miss a special birthday, anniversary, or milestone. Add your first occasion to receive curated artisan gift recommendations.</p>
+            <button
+              onclick="document.getElementById('addOccasionSection')?.scrollIntoView({ behavior:'smooth' }) || document.getElementById('addOccasionBtn')?.scrollIntoView({ behavior:'smooth' })"
+              style="background:var(--color-primary,#14381F); color:#fff; border:none; border-radius:8px; padding:10px 24px; font-size:var(--text-sm); font-weight:600; cursor:pointer;">
+              + Add Your First Occasion
+            </button>
           </div>
         `;
         empty.style.display = 'block';

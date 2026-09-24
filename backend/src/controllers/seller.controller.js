@@ -169,12 +169,20 @@ async function updateSellerProfile(req, res, next) {
     if (bank_details && typeof bank_details === 'object') {
       resolvedBankDetails = JSON.stringify(bank_details);
     } else if (bank_holder_name || bank_name || bank_account_num || bank_ifsc || bank_upi) {
+      // B-08: Validate IFSC format before saving
+      const ifscClean = (bank_ifsc || '').toUpperCase().trim();
+      if (ifscClean && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifscClean)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid IFSC code format. Expected format: XXXX0XXXXXX (e.g. SBIN0001234).',
+        });
+      }
       resolvedBankDetails = JSON.stringify({
         account_holder: bank_holder_name || '',
         account_holder_name: bank_holder_name || '',
         bank_name: bank_name || '',
         account_number: bank_account_num || '',
-        ifsc_code: (bank_ifsc || '').toUpperCase(),
+        ifsc_code: ifscClean || '',
         upi_id: bank_upi || null
       });
     }
@@ -288,7 +296,7 @@ async function getPublicSellerProfile(req, res, next) {
     }
 
     const { rows } = await query(
-      `SELECT u.id AS user_id, u.name, u.email, u.phone, u.profile_photo_url, u.cover_photo_url,
+      `SELECT u.id AS user_id, u.name, u.profile_photo_url, u.cover_photo_url,
               sp.id AS profile_id,
               COALESCE(sp.store_name, s.store_name, u.name, 'Artisan Studio') AS store_name,
               COALESCE(sp.slug, s.slug) AS slug,
@@ -298,7 +306,7 @@ async function getPublicSellerProfile(req, res, next) {
               sp.verification_status AS sp_verification_status, sp.is_approved AS sp_is_approved,
               s.verification_status AS s_verification_status, s.is_approved AS s_is_approved,
               (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status = 'active') AS product_count,
-              (SELECT COALESCE(AVG(r.rating), 5.0) FROM reviews r WHERE r.seller_id = u.id) AS avg_rating,
+              (SELECT AVG(r.rating) FROM reviews r WHERE r.seller_id = u.id) AS avg_rating,
               (SELECT COUNT(*) FROM reviews r WHERE r.seller_id = u.id) AS review_count
        FROM users u
        LEFT JOIN seller_profiles sp ON sp.user_id = u.id

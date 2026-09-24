@@ -103,6 +103,37 @@ async function verifyPayment(req, res, next) {
       });
     }
 
+    // SECURITY: Reject verification if Razorpay is not properly configured.
+    // Prevents forged signatures against the known fallback 'placeholder_secret'.
+    const primaryKeyId = process.env.RAZORPAY_PRIMARY_KEY_ID || process.env.RAZORPAY_KEY_ID || '';
+    const primarySecret = process.env.RAZORPAY_PRIMARY_KEY_SECRET || process.env.RAZORPAY_KEY_SECRET || '';
+    const isPlaceholder =
+      !primaryKeyId ||
+      primaryKeyId === 'rzp_test_placeholder' ||
+      !primarySecret ||
+      primarySecret === 'placeholder_secret';
+
+    if (isPlaceholder) {
+      console.error('[SECURITY] Payment verification blocked: Razorpay keys are not configured. Set RAZORPAY_PRIMARY_KEY_ID and RAZORPAY_PRIMARY_KEY_SECRET in environment variables.');
+      return res.status(503).json({
+        success: false,
+        message: 'Payment gateway is not configured. Please contact support.',
+      });
+    }
+
+    // SECURITY: Reject obviously fake payment/order IDs used by test-mode mock bypass.
+    if (
+      String(razorpay_payment_id).startsWith('mock_pay_') ||
+      String(razorpay_order_id) === 'mock_order_id' ||
+      String(razorpay_signature) === 'mock_signature'
+    ) {
+      console.warn('[SECURITY] Payment verification blocked: mock/test payment IDs rejected in live endpoint.');
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment data.',
+      });
+    }
+
     // Lookup which gateway account handled this order
     const { rows: payRows } = await query(
       'SELECT gateway_account FROM payments WHERE razorpay_order_id = $1 LIMIT 1',

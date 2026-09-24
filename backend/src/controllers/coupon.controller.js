@@ -144,16 +144,16 @@ async function applyCoupon(req, res, next) {
       });
     }
 
-    // SEC-03: Check per-user usage limit (only for DB coupons that have a coupon.id and buyer is logged in)
-    if (coupon.id && req.user && coupon.usage_limit_per_user) {
+    // Usage limit check — applies to ALL coupons (DB and static) when user is logged in
+    if (req.user && coupon.usage_limit_per_user) {
       try {
         const { rows: usageRows } = await query(
           `SELECT COUNT(*) AS use_count
            FROM orders
-           WHERE coupon_id = $1
-             AND (user_id = $2 OR buyer_id = $2)
-             AND payment_status != 'failed'`,
-          [coupon.id, req.user.id]
+           WHERE (coupon_id = $1 OR UPPER(coupon_code) = $2)
+             AND (user_id = $3 OR buyer_id = $3)
+             AND payment_status NOT IN ('failed', 'pending')`,
+          [coupon.id || 0, cleanCode, req.user.id]
         );
         const usedCount = parseInt(usageRows[0]?.use_count || 0, 10);
         if (usedCount >= coupon.usage_limit_per_user) {
@@ -163,7 +163,6 @@ async function applyCoupon(req, res, next) {
           });
         }
       } catch (usageErr) {
-        // If usage check fails (e.g., orders table not accessible), allow coupon but log
         console.warn('[Coupon] Per-user usage check failed (non-fatal):', usageErr.message);
       }
     }
@@ -179,13 +178,9 @@ async function applyCoupon(req, res, next) {
 
     const { discountAmount, finalAmount } = calculateDiscount(coupon, orderAmount);
 
-    // SEC-03: Increment global usage counter for DB-tracked coupons
-    if (coupon.id) {
-      query(
-        `UPDATE coupons SET times_used = COALESCE(times_used, 0) + 1 WHERE id = $1`,
-        [coupon.id]
-      ).catch(err => console.warn('[Coupon] Failed to increment times_used:', err.message));
-    }
+    // NOTE: times_used is NOT incremented here.
+    // Coupon usage is only recorded when the order is actually placed and paid.
+    // Incrementing here would burn the coupon even if the user abandons checkout.
 
     return res.json({
       success: true,

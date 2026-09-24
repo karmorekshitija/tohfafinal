@@ -97,8 +97,9 @@ app.use(cors({
       return callback(null, true);
     }
 
-    // Allow all Vercel preview and production deployments (*.vercel.app)
-    if (/^https:\/\/[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)*\.vercel\.app$/.test(origin)) {
+    // Allow only Tohfa's own Vercel preview and production deployments (tohfa-*.vercel.app)
+    // SECURITY: Do NOT allow all *.vercel.app — any attacker could deploy on Vercel and get CORS access
+    if (/^https:\/\/tohfa[a-zA-Z0-9_-]*\.vercel\.app$/.test(origin)) {
       return callback(null, true);
     }
 
@@ -209,8 +210,8 @@ app.get('/api/categories/:slug/products', (req, res, next) => {
 app.get('/api/logistics/check', logisticsController.checkServiceability);
 app.post('/api/wishlist/add', authMiddleware, wishlistController.addToWishlist);
 app.put('/api/cart/update', authMiddleware, cartController.updateCartItem);
-app.post('/api/coupon/verify', couponController.applyCoupon);
-app.post('/api/coupons/verify', couponController.applyCoupon);
+app.post('/api/coupon/verify',  authMiddleware, couponController.applyCoupon);
+app.post('/api/coupons/verify', authMiddleware, couponController.applyCoupon);
 app.get('/api/user/addresses', authMiddleware, buyerController.getAddresses);
 app.post('/api/occasion/new', authMiddleware, occasionController.createOccasion);
 app.post('/api/seller/follow', authMiddleware, sellerController.followSeller);
@@ -264,7 +265,8 @@ app.get('/api/cron/reminders', async (req, res) => {
     await processOccasionReminders();
     res.json({ success: true, message: 'Occasion reminder scan completed.' });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('[Cron/reminders] Error:', err.message);
+    res.status(500).json({ success: false, message: 'Cron job failed. Check server logs.' });
   }
 });
 
@@ -287,7 +289,8 @@ app.get('/api/cron/bestsellers', async (req, res) => {
     const results = await bestsellerService.recomputeAll();
     res.json({ success: true, message: 'Bestseller computation completed successfully.', data: results });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('[Cron/bestsellers] Error:', err.message);
+    res.status(500).json({ success: false, message: 'Cron job failed. Check server logs.' });
   }
 });
 

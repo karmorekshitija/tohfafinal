@@ -272,8 +272,20 @@ window.initiatePayment = async () => {
       throw new Error('Payment initialization failed.');
     }
 
-    // 3. Ensure Razorpay SDK script is loaded (BUG-29)
-    await loadRazorpayScript();
+    // 3. Ensure Razorpay SDK script is loaded
+    const sdkReady = await loadRazorpayScript();
+
+    // U-06 fix: Show a clear message if SDK didn't load (network issue or blocked script)
+    if (!sdkReady || !window.Razorpay) {
+      if (payData.razorpayKeyId !== 'rzp_test_placeholder') {
+        showToast('Payment system is loading, please try again in a moment.', 'warning');
+      } else {
+        showToast('[Dev Mode] Razorpay not configured — add real keys to test.', 'info');
+      }
+      payBtn.classList.remove('btn-loading');
+      payBtn.disabled = false;
+      return;
+    }
 
     // 4. Launch Razorpay modal
     const options = {
@@ -295,6 +307,9 @@ window.initiatePayment = async () => {
             orderId: firstOrder.id,
           });
 
+          // U-04 fix: Clear cart after successful payment verification
+          await api.delete('/api/cart').catch(() => {});
+
           window.location.href = `./payment-success.html?orderId=${firstOrder.id}&id=${firstOrder.id}`;
         } catch (vErr) {
           window.location.href = `./payment-failure.html?orderId=${firstOrder.id}&reason=${encodeURIComponent(vErr.message)}`;
@@ -309,17 +324,12 @@ window.initiatePayment = async () => {
       },
     };
 
-    // If in test mode with placeholder keys or without Razorpay SDK, simulate confirmation
-    if (!window.Razorpay || payData.razorpayKeyId === 'rzp_test_placeholder') {
-      console.warn('Razorpay test placeholder detected. Simulating instant confirmation...');
-      await api.post('/api/payments/verify', {
-        razorpay_order_id: payData.razorpay_order_id || 'mock_order_id',
-        razorpay_payment_id: 'mock_pay_' + Date.now(),
-        razorpay_signature: 'mock_signature',
-        orderId: firstOrder.id,
-      }).catch(() => {});
-
-      window.location.href = `./payment-success.html?orderId=${firstOrder.id}&id=${firstOrder.id}`;
+    // DEV-ONLY: Placeholder key guard — server will reject anyway, but show a clear dev message.
+    if (payData.razorpayKeyId === 'rzp_test_placeholder') {
+      console.warn('[DEV] Razorpay not configured. Payment simulation skipped. Set real keys to test end-to-end.');
+      showToast('[Dev Mode] Razorpay not configured — payment skipped. Add real keys to test.', 'info');
+      payBtn.classList.remove('btn-loading');
+      payBtn.disabled = false;
       return;
     }
 

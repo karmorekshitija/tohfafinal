@@ -107,4 +107,15 @@ searchForm.addEventListener('submit', (e) => {
 
 applyFiltersBtn.addEventListener('click', executeSearch);
 
+// U-11 fix: Debounce live search input — fire API only after user stops typing for 350ms
+let searchDebounceTimer = null;
+if (searchInput) {
+  searchInput.addEventListener('input', () => {
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+      executeSearch();
+    }, 350);
+  });
+}
+
 init();

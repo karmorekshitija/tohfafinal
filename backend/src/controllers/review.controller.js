@@ -67,6 +67,14 @@ async function submitReview(req, res, next) {
         });
       }
 
+      // B-06: Prevent a seller from reviewing their own product
+      if (orderRows[0].seller_id === buyerId) {
+        return res.status(403).json({
+          success: false,
+          message: 'You cannot review your own products.',
+        });
+      }
+
       finalSellerId = orderRows[0].seller_id;
 
       if (!finalProductId) {
@@ -75,6 +83,18 @@ async function submitReview(req, res, next) {
           [finalOrderId]
         );
         finalProductId = itemRows[0]?.product_id || null;
+      } else {
+        // S-04: Verify the supplied product_id actually belongs to this order
+        const { rows: productCheck } = await query(
+          'SELECT id FROM order_items WHERE order_id = $1 AND product_id = $2 LIMIT 1',
+          [finalOrderId, finalProductId]
+        );
+        if (!productCheck.length) {
+          return res.status(403).json({
+            success: false,
+            message: 'This product was not part of the specified order.',
+          });
+        }
       }
     } else if (finalProductId) {
       // Look up a delivered order containing this product purchased by the buyer

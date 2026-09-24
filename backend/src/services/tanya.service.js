@@ -129,7 +129,11 @@ async function chat(userMessage, history = []) {
     })) : [];
     let modelToUse = geminiModel;
     if (genAI) {
-      modelToUse = genAI.getGenerativeModel({ model: 'gemini-2.0-flash', systemInstruction: { role: 'system', parts: [{ text: systemInstruction }] } });
+      modelToUse = genAI.getGenerativeModel({
+        model: 'gemini-2.0-flash',
+        systemInstruction: { role: 'system', parts: [{ text: systemInstruction }] },
+        generationConfig: { maxOutputTokens: 500 }, // SECURITY: cap response size to limit cost per request
+      });
     }
     const chatSession = modelToUse.startChat({ history: formattedHistory, systemInstruction: { role: 'system', parts: [{ text: systemInstruction }] } });
     const result = await chatSession.sendMessage(userMessage);

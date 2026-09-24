@@ -154,8 +154,8 @@ async function getBuyerOrders(req, res, next) {
   try {
     const buyerId = req.user.id;
     const { page = '1', limit = '20', status } = req.query;
-    const pageNum  = Math.max(1, parseInt(page, 10));
-    const limitNum = Math.min(50, parseInt(limit, 10));
+    const pageNum  = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(50, parseInt(limit, 10) || 20);
     const offset   = (pageNum - 1) * limitNum;
 
     const conditions = ['o.buyer_id = $1'];
@@ -236,8 +236,8 @@ async function getSellerOrders(req, res, next) {
   try {
     const sellerId = req.user.id;
     const { page = '1', limit = '20', status } = req.query;
-    const pageNum  = Math.max(1, parseInt(page, 10));
-    const limitNum = Math.min(50, parseInt(limit, 10));
+    const pageNum  = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(50, parseInt(limit, 10) || 20);
     const offset   = (pageNum - 1) * limitNum;
 
     const conditions = ['o.seller_id = $1'];
@@ -626,19 +626,7 @@ async function cancelOrder(req, res, next) {
       [id]
     );
 
-    // Restock inventory
-    for (const item of itemRows) {
-      await query(
-        'UPDATE products SET stock_quantity = stock_quantity + $1, updated_at = NOW() WHERE id = $2',
-        [item.quantity, item.product_id]
-      ).catch(() => {});
-      if (item.variant_id) {
-        await query(
-          'UPDATE product_variants SET stock_qty = stock_qty + $1 WHERE id = $2',
-          [item.quantity, item.variant_id]
-        ).catch(() => {});
-      }
-    }
+
 
     const cancelReasonText = String(reason || notes || 'Cancelled by buyer').trim();
     let refundId = null;
@@ -691,7 +679,7 @@ async function cancelOrder(req, res, next) {
       ).catch(() => {});
     }
 
-    // Update order status = 'cancelled', payment_status = 'refunded' (if paid), cancellation_reason
+    // Update order status = 'cancelled' FIRST — restock only happens after this succeeds (B-03 fix)
     const newPaymentStatus = order.payment_status === 'paid' ? 'refunded' : order.payment_status;
     const { rows: updatedRows } = await query(
       `UPDATE orders 
@@ -716,6 +704,20 @@ async function cancelOrder(req, res, next) {
         [newPaymentStatus, `Cancelled: ${cancelReasonText}`, id]
       );
     });
+
+    // Restock inventory AFTER order is confirmed cancelled in DB (prevents double-restock on retry)
+    for (const item of itemRows) {
+      await query(
+        'UPDATE products SET stock_quantity = stock_quantity + $1, updated_at = NOW() WHERE id = $2',
+        [item.quantity, item.product_id]
+      ).catch(() => {});
+      if (item.variant_id) {
+        await query(
+          'UPDATE product_variants SET stock_qty = stock_qty + $1 WHERE id = $2',
+          [item.quantity, item.variant_id]
+        ).catch(() => {});
+      }
+    }
 
     // Notify buyer
     await createNotification(
