@@ -279,7 +279,7 @@
       class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
       title="Shopping Cart"
     >
-      <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
+      <span class="material-symbols-outlined text-[20px] sm:text-[22px]" aria-hidden="true">shopping_bag</span>
       <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
     </a>
 
@@ -1472,7 +1472,7 @@
                     } else {
                         if (qtySelector) qtySelector.style.display = 'flex';
                         if (addToCartBtn) {
-                            addToCartBtn.querySelector('span.material-symbols-outlined').innerText = 'shopping_cart';
+                            addToCartBtn.querySelector('span.material-symbols-outlined').innerText = 'shopping_bag';
                             addToCartBtn.querySelector('span:last-child').innerText = hasCustomOptions ? 'Add to Cart (Personalised)' : 'Add to Cart';
                         }
                     }
@@ -2317,7 +2317,7 @@
             return `
                 <div class="group bg-white border border-[#14381F]/15 rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-300 flex gap-3 cursor-pointer relative" onclick="window.location.href='product.html?id=${p.id}'">
                     <!-- Left: Thumbnail Image -->
-                    <div class="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 overflow-hidden rounded-xl bg-[#FAF6EE] border border-[#14381F]/10">
+                    <div class="relative w-20 sm:w-24 self-stretch flex-shrink-0 overflow-hidden rounded-xl bg-[#FAF6EE] border border-[#14381F]/10">
                         <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="${imageUrl}" alt="${p.name}" loading="lazy" />
                         ${wishlistBtnHtml}
                     </div>
@@ -2325,13 +2325,13 @@
                     <!-- Right: Content & Quick Actions -->
                     <div class="flex-grow flex flex-col justify-between min-w-0">
                         <div>
-                            <div class="flex items-center justify-between gap-1 mb-1">
-                                ${ribbonHtml ? `<div class="flex items-center gap-1">${ribbonHtml}</div>` : '<div></div>'}
-                                <span class="font-bold text-sm text-[#14381F] font-data-price">${priceFormatted}</span>
+                            <!-- Name + Price on the same row -->
+                            <div class="flex items-center justify-between gap-1 mb-0.5">
+                                <h4 class="font-bold text-sm text-[#1C1C1A] line-clamp-1 group-hover:text-[#14381F] transition-colors min-w-0 flex-1" style="font-family: 'Playfair Display', serif;">${p.name}</h4>
+                                <span class="font-bold text-sm text-[#14381F] font-data-price flex-shrink-0">${priceFormatted}</span>
                             </div>
-                            <h4 class="font-bold text-sm text-[#1C1C1A] line-clamp-1 group-hover:text-[#14381F] transition-colors" style="font-family: 'Playfair Display', serif;">${p.name}</h4>
-                            <p class="text-[11px] text-[#605e57] hover:underline cursor-pointer truncate mt-0.5" onclick="event.stopPropagation(); window.location.href='/buyer/seller-profile.html?id=${p.seller_id}'">By ${p.seller_name || p.store_name || 'Artisan'}</p>
-                            
+                            <p class="text-[11px] text-[#605e57] hover:underline cursor-pointer truncate" onclick="event.stopPropagation(); window.location.href='/buyer/seller-profile.html?id=${p.seller_id}'">By ${p.seller_name || p.store_name || 'Artisan'}</p>
+
                             <div class="flex items-center gap-1 mt-1 text-[11px] text-[#605e57]">
                                 ${ratingCount > 0
                                     ? `<span class="text-amber-500 font-bold text-xs">★</span>
@@ -2339,9 +2339,11 @@
                                        <span class="text-[10px]">(${ratingCount})</span>`
                                     : `<span class="bg-[#14381F]/8 text-[#14381F] text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase">New</span>`
                                 }
+                                ${ribbonHtml ? `<span class="ml-1">${ribbonHtml}</span>` : ''}
                             </div>
                         </div>
 
+                        <!-- Action button at the bottom -->
                         <div class="mt-2 font-['DM_Sans']">
                             ${actionBtnHtml}
                         </div>
