@@ -109,6 +109,31 @@
         Looking to sell handcrafted items? 
         <a href="/auth/signup-seller.html" class="text-[#14381F] font-bold hover:underline ml-1">Apply as an Artisan</a>
       </div>
+
+      <!-- OR Divider -->
+      <div class="relative my-5">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-[#14381F]/15"></div>
+        </div>
+        <div class="relative flex justify-center text-xs">
+          <span class="bg-[#FFF8E7] px-3 text-[#1C1C1C]/40 font-medium">or</span>
+        </div>
+      </div>
+
+      <!-- Sign in with Google Button -->
+      <a
+        href="/api/auth/google"
+        id="google-signin-btn"
+        class="w-full flex items-center justify-center gap-3 py-3 px-4 border border-[#14381F]/20 rounded-xl bg-white hover:bg-gray-50 active:scale-[0.99] transition-all text-sm font-medium text-[#1C1C1C] shadow-sm"
+      >
+        <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
+          <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+          <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+          <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/>
+        </svg>
+        Continue with Google
+      </a>
     </div>
   </main>
 
@@ -120,6 +145,56 @@
   <script type="module">
     import apiClient from '/src/utils/apiClient.js';
     import { authStorage, redirectUserByRole } from '/src/utils/auth.js';
+
+    // -------------------------------------------------------------------------
+    // Handle Google OAuth callback (URL params set by backend after redirect)
+    // -------------------------------------------------------------------------
+    (function handleGoogleCallback() {
+      const params = new URLSearchParams(window.location.search);
+      const googleSuccess = params.get('gs');
+      const googleError   = params.get('google_error');
+
+      if (googleSuccess === '1') {
+        try {
+          const accessToken  = params.get('gat');
+          const refreshToken = params.get('grt');
+          const userB64      = params.get('gu');
+          const user         = JSON.parse(atob(userB64));
+
+          if (accessToken) {
+            authStorage.setToken(accessToken);
+            if (user?.role === 'admin' || user?.role === 'master_admin') {
+              localStorage.setItem('tohfa_admin_token', accessToken);
+              sessionStorage.setItem('tohfa_admin_token', accessToken);
+            }
+          }
+          if (refreshToken) {
+            localStorage.setItem('tohfa_refresh_token', refreshToken);
+            sessionStorage.setItem('tohfa_refresh_token', refreshToken);
+          }
+          if (user) {
+            authStorage.setUser(user);
+          }
+          // Clean the URL then redirect
+          window.history.replaceState({}, document.title, window.location.pathname);
+          redirectUserByRole(user);
+        } catch (e) {
+          console.error('[Google OAuth] Failed to parse callback params:', e);
+        }
+        return;
+      }
+
+      if (googleError) {
+        const alertEl   = document.getElementById('error-alert');
+        const alertText = document.getElementById('error-alert-text');
+        const msg = googleError === 'cancelled'
+          ? 'Google sign-in was cancelled. Please try again.'
+          : (decodeURIComponent(googleError) || 'Google sign-in failed. Please try again.');
+        if (alertText) alertText.textContent = msg;
+        if (alertEl)   alertEl.classList.remove('hidden');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    })();
 
     const togglePwBtn = document.getElementById('toggle-pw-btn');
 

@@ -864,4 +864,154 @@ module.exports = {
   signRefreshToken,
   verifyRefreshToken,
   issueTokenPair,
+  generateGoogleAuthUrl,
+  googleLogin,
 };
+
+// ---------------------------------------------------------------------------
+// Google OAuth 2.0
+// ---------------------------------------------------------------------------
+
+const { OAuth2Client } = require('google-auth-library');
+
+/**
+ * Returns a configured Google OAuth2 client.
+ */
+function getGoogleOAuthClient() {
+  return new OAuth2Client(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_CALLBACK_URL
+  );
+}
+
+/**
+ * Generate the Google OAuth authorization URL.
+ * User is redirected here to begin Google login.
+ * @returns {string} Google OAuth URL
+ */
+async function generateGoogleAuthUrl() {
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    throw new Error('Google OAuth is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env');
+  }
+  const client = getGoogleOAuthClient();
+  return client.generateAuthUrl({
+    access_type: 'offline',
+    scope: ['openid', 'email', 'profile'],
+    prompt: 'select_account',
+  });
+}
+
+/**
+ * Complete Google OAuth login — exchange code for user info, find or create user, return JWT pair.
+ * @param {string} code — Authorization code from Google callback
+ * @returns {{ user: object, accessToken: string, refreshToken: string, token: string }}
+ */
+async function googleLogin(code) {
+  const client = getGoogleOAuthClient();
+
+  // Exchange auth code for Google tokens
+  const { tokens } = await client.getToken(code);
+  client.setCredentials(tokens);
+
+  // Verify and decode the ID token to get user profile
+  const ticket = await client.verifyIdToken({
+    idToken: tokens.id_token,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+
+  const gPayload = ticket.getPayload();
+  const googleId  = gPayload.sub;
+  const email     = gPayload.email;
+  const name      = gPayload.name || gPayload.given_name || email.split('@')[0];
+  const picture   = gPayload.picture || null;
+
+  if (!email) {
+    const err = new Error('Google account must have a verified email address.');
+    err.status = 400;
+    throw err;
+  }
+
+  const normalizedEmail = normalizeEmail(email);
+  let user = null;
+
+  // 1. Try to find by google_id (fastest path for returning users)
+  try {
+    const { rows } = await query(
+      `SELECT id, name, full_name, email, role, phone, is_active
+       FROM users WHERE google_id = $1`,
+      [googleId]
+    );
+    if (rows.length) user = rows[0];
+  } catch (_) {
+    // google_id column may not exist yet — migration pending, fall through
+  }
+
+  if (!user) {
+    // 2. Try to find by email (link existing account to Google)
+    const { rows: byEmail } = await query(
+      `SELECT id, name, full_name, email, role, phone, is_active
+       FROM users WHERE LOWER(TRIM(email)) = $1`,
+      [normalizedEmail]
+    );
+
+    if (byEmail.length) {
+      user = byEmail[0];
+      // Link Google ID & avatar to existing account (silently skip if columns missing)
+      await query(
+        `UPDATE users SET
+           google_id   = COALESCE(google_id, $1),
+           avatar_url  = COALESCE(avatar_url, $2)
+         WHERE id = $3`,
+        [googleId, picture, user.id]
+      ).catch(() => {});
+    } else {
+      // 3. Create a brand-new buyer account from Google profile
+      const randomPwHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), SALT_ROUNDS);
+
+      try {
+        const { rows: created } = await query(
+          `INSERT INTO users
+             (full_name, name, display_name, email, google_id, avatar_url, auth_provider, role, is_active, password_hash)
+           VALUES ($1, $2, $3, $4, $5, $6, 'google', 'buyer', TRUE, $7)
+           RETURNING id, name, full_name, email, role, phone, is_active`,
+          [name, name, name, normalizedEmail, googleId, picture, randomPwHash]
+        );
+        user = created[0];
+      } catch (insertErr) {
+        // Fallback if google_id / avatar_url / auth_provider columns don't exist yet
+        if (insertErr.code === '42703') {
+          const { rows: created } = await query(
+            `INSERT INTO users (full_name, name, display_name, email, role, is_active, password_hash)
+             VALUES ($1, $2, $3, $4, 'buyer', TRUE, $5)
+             RETURNING id, name, full_name, email, role, phone, is_active`,
+            [name, name, name, normalizedEmail, randomPwHash]
+          );
+          user = created[0];
+        } else {
+          throw insertErr;
+        }
+      }
+    }
+  }
+
+  if (user.is_active === 0 || user.is_active === false) {
+    const err = new Error('Your account has been deactivated. Please contact support.');
+    err.status = 403;
+    throw err;
+  }
+
+  const jwtPayload = await buildTokenPayload(user);
+  const jwtTokens  = await issueTokenPair(jwtPayload);
+
+  return {
+    user: {
+      id:    user.id,
+      name:  user.name || user.full_name,
+      email: user.email,
+      role:  user.role,
+      phone: user.phone || null,
+    },
+    ...jwtTokens,
+  };
+}

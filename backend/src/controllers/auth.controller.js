@@ -196,4 +196,52 @@ module.exports = {
   logout,
   forgotPassword,
   resetPassword,
+  googleAuth,
+  googleCallback,
 };
+
+/**
+ * GET /api/auth/google
+ * Redirects the user to Google's OAuth consent screen.
+ */
+async function googleAuth(req, res, next) {
+  try {
+    const url = await authService.generateGoogleAuthUrl();
+    return res.redirect(url);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * GET /api/auth/google/callback
+ * Google redirects here after user approves. Exchanges code for user, issues JWT, redirects to frontend.
+ */
+async function googleCallback(req, res) {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const { code, error } = req.query;
+
+  if (error || !code) {
+    return res.redirect(`${frontendUrl}/auth/login.html?google_error=cancelled`);
+  }
+
+  try {
+    const result = await authService.googleLogin(code);
+    const { accessToken, refreshToken, user } = result;
+
+    // Pass tokens and user back to frontend via URL params (base64 to avoid encoding issues)
+    const userB64 = Buffer.from(JSON.stringify(user)).toString('base64');
+    const redirectUrl = new URL(`${frontendUrl}/auth/login.html`);
+    redirectUrl.searchParams.set('gat', accessToken);       // google access token
+    redirectUrl.searchParams.set('grt', refreshToken);     // google refresh token
+    redirectUrl.searchParams.set('gu',  userB64);          // google user (base64)
+    redirectUrl.searchParams.set('gs',  '1');              // google success flag
+
+    return res.redirect(redirectUrl.toString());
+  } catch (err) {
+    console.error('[GoogleCallback] Error:', err.message);
+    return res.redirect(
+      `${frontendUrl}/auth/login.html?google_error=${encodeURIComponent(err.message)}`
+    );
+  }
+}

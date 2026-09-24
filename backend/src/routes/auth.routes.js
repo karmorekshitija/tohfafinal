@@ -34,4 +34,8 @@ router.post('/logout', authController.logout);
 router.post('/forgot-password', authRateLimiter, validate(schemas.forgotPassword), authController.forgotPassword);
 router.post('/reset-password', authRateLimiter, validate(schemas.resetPassword), authController.resetPassword);
 
+// Google OAuth — Sign in with Google
+router.get('/google', authController.googleAuth);
+router.get('/google/callback', authController.googleCallback);
+
 module.exports = router;
