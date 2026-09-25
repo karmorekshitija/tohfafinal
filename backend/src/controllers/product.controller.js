@@ -1012,11 +1012,11 @@ async function getSellerProducts(req, res, next) {
       params.push(status);
       conditions.push(`p.status = $${params.length}`);
       if (status !== 'deleted') {
-        conditions.push("(p.is_active IS NULL OR p.is_active::text != '0')");
+        conditions.push("p.is_active = TRUE");
       }
     } else {
       conditions.push("p.status != 'deleted'");
-      conditions.push("(p.is_active IS NULL OR p.is_active::text != '0')");
+      conditions.push("p.is_active = TRUE");
       if (!req.seller && !isAdmin) {
         // For unauthenticated/public seller storefront view, only show active
         conditions.push("p.status = 'active'");
@@ -1618,9 +1618,11 @@ async function updateProduct(req, res, next) {
 async function deleteProduct(req, res, next) {
   try {
     const { id } = req.params;
-    const sellerId = req.user.id;
+    const sellerId = req.user?.id;
     const userRole = String(req.user?.role || '').toUpperCase();
     const isAdmin = userRole === 'ADMIN' || userRole === 'MASTER_ADMIN';
+    const headerSellerId = req.headers['x-seller-id'] || req.headers['x-impersonate-seller-id'] || req.query.seller_id || req.query.sellerId;
+    const userSellerId = (isAdmin && headerSellerId) ? headerSellerId : sellerId;
 
     const { rows: existing } = await query(
       'SELECT id, seller_id FROM products WHERE id::text = $1',
@@ -1631,33 +1633,32 @@ async function deleteProduct(req, res, next) {
       return res.status(404).json({ success: false, message: 'Product not found.' });
     }
 
-    if (!isAdmin && Number(existing[0].seller_id) !== Number(sellerId)) {
-      const { rows: sRows } = await query(
-        'SELECT id, user_id FROM sellers WHERE user_id = $1 UNION SELECT id, user_id FROM seller_profiles WHERE user_id = $1',
-        [sellerId]
-      );
-      const validIds = new Set([
-        Number(sellerId),
-        String(sellerId),
-        ...sRows.flatMap(s => [s.id, s.user_id, Number(s.id), String(s.id)])
-      ]);
-      if (!validIds.has(existing[0].seller_id) && !validIds.has(Number(existing[0].seller_id)) && !validIds.has(String(existing[0].seller_id))) {
+    if (!isAdmin) {
+      const productSellerIdStr = String(existing[0].seller_id);
+      const reqUserIdStr = String(sellerId);
+
+      let isOwner = (productSellerIdStr === reqUserIdStr);
+      if (!isOwner) {
+        const { rows: match } = await query(
+          `SELECT 1 FROM sellers WHERE (id::text = $1 AND user_id::text = $2) OR (user_id::text = $1 AND id::text = $2)
+           UNION
+           SELECT 1 FROM seller_profiles WHERE (id::text = $1 AND user_id::text = $2) OR (user_id::text = $1 AND id::text = $2)`,
+          [productSellerIdStr, reqUserIdStr]
+        );
+        if (match.length > 0) {
+          isOwner = true;
+        }
+      }
+      if (!isOwner) {
         return res.status(403).json({ success: false, message: 'Forbidden: You do not have ownership of this product listing.' });
       }
     }
 
     const targetSellerId = existing[0].seller_id;
-    try {
-      await query(
-        `UPDATE products SET status = 'deleted', is_active = 0, updated_at = NOW() WHERE id::text = $1`,
-        [String(id)]
-      );
-    } catch (e) {
-      await query(
-        `UPDATE products SET status = 'deleted', is_active = FALSE, updated_at = NOW() WHERE id::text = $1`,
-        [String(id)]
-      );
-    }
+    await query(
+      `UPDATE products SET status = 'deleted', is_active = FALSE, updated_at = NOW() WHERE id::text = $1`,
+      [String(id)]
+    );
 
     bestsellerService.recomputeForSeller(targetSellerId).catch(err => {
       console.error('[Bestseller] Error recomputing after deleteProduct:', err.message);

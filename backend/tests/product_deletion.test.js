@@ -48,7 +48,12 @@ describe('Product Deletion — Seller Studio & Tohfa Special Studio', () => {
     const { rows: specialRows } = await query(
       "SELECT id, user_id, store_name FROM sellers WHERE is_admin_managed::text IN ('1', 'true') LIMIT 1"
     );
-    specialShopId = specialRows[0]?.id || specialRows[0]?.user_id || 28;
+    let specialShop = specialRows[0];
+    if (!specialShop) {
+      const { rows: anySeller } = await query("SELECT id, user_id FROM sellers LIMIT 1");
+      specialShop = anySeller[0];
+    }
+    specialShopId = specialShop ? (specialShop.user_id || specialShop.id) : sellerUser.id;
 
     const { rows: catRows } = await query(
       'SELECT id, slug, name FROM categories WHERE is_active = TRUE LIMIT 1'
@@ -64,9 +69,10 @@ describe('Product Deletion — Seller Studio & Tohfa Special Studio', () => {
 
   afterAll(async () => {
     if (createdProductIds.length > 0) {
-      await query('DELETE FROM product_images WHERE product_id = ANY($1::int[])', [createdProductIds]);
-      await query('DELETE FROM product_occasion_tags WHERE product_id = ANY($1::int[])', [createdProductIds]);
-      await query('DELETE FROM products WHERE id = ANY($1::int[])', [createdProductIds]);
+      const pIds = createdProductIds.map(String);
+      await query('DELETE FROM product_images WHERE product_id::text = ANY($1::text[])', [pIds]).catch(() => {});
+      await query('DELETE FROM product_occasion_tags WHERE product_id::text = ANY($1::text[])', [pIds]).catch(() => {});
+      await query('DELETE FROM products WHERE id::text = ANY($1::text[])', [pIds]).catch(() => {});
     }
   });
 
@@ -109,7 +115,7 @@ describe('Product Deletion — Seller Studio & Tohfa Special Studio', () => {
       // Create a test product owned by sellerUser
       const { rows } = await query(
         `INSERT INTO products (seller_id, name, description, category_id, base_price, price_paise, stock_quantity, status, is_active)
-         VALUES ($1, 'Test Delete Product', 'Description', $2, 500, 50000, 10, 'active', 1)
+         VALUES ($1, 'Test Delete Product', 'Description', $2, 500, 50000, 10, 'active', true)
          RETURNING id`,
         [sellerUser.id, activeCategory.id]
       );
@@ -175,7 +181,7 @@ describe('Product Deletion — Seller Studio & Tohfa Special Studio', () => {
       // Create a test product for Tohfa Special shop
       const { rows } = await query(
         `INSERT INTO products (seller_id, name, description, category_id, base_price, price_paise, stock_quantity, status, is_active)
-         VALUES ($1, 'Special Tohfa Delete Item', 'Special Description', $2, 1200, 120000, 5, 'active', 1)
+         VALUES ($1, 'Special Tohfa Delete Item', 'Special Description', $2, 1200, 120000, 5, 'active', true)
          RETURNING id`,
         [specialShopId, activeCategory.id]
       );

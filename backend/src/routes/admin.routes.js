@@ -48,10 +48,14 @@ router.put("/sellers/:id/plan", adminController.updateSellerPlan);
 router.get('/sellers', adminController.listSellers);
 router.get('/sellers/:sellerId', adminController.getSellerDetail);
 router.get('/sellers/:id', adminController.getSellerDetail);
-router.post('/sellers/:id/kyc', adminController.verifySellerKYC);
-router.patch('/sellers/:id/kyc', adminController.verifySellerKYC);
-router.post('/sellers/:sellerId/kyc', adminController.verifySellerKYC);
-router.patch('/sellers/:sellerId/kyc', adminController.verifySellerKYC);
+router.patch('/sellers/:id/verify-kyc', adminOnly, adminController.verifySellerKyc || adminController.verifySellerKYC);
+router.post('/sellers/:id/verify-kyc', adminOnly, adminController.verifySellerKyc || adminController.verifySellerKYC);
+router.patch('/sellers/:sellerId/verify-kyc', adminOnly, adminController.verifySellerKyc || adminController.verifySellerKYC);
+router.post('/sellers/:sellerId/verify-kyc', adminOnly, adminController.verifySellerKyc || adminController.verifySellerKYC);
+router.post('/sellers/:id/kyc', adminController.verifySellerKYC || adminController.verifySellerKyc);
+router.patch('/sellers/:id/kyc', adminController.verifySellerKYC || adminController.verifySellerKyc);
+router.post('/sellers/:sellerId/kyc', adminController.verifySellerKYC || adminController.verifySellerKyc);
+router.patch('/sellers/:sellerId/kyc', adminController.verifySellerKYC || adminController.verifySellerKyc);
 router.patch('/sellers/:id/suspend', adminController.suspendSeller);
 router.post('/sellers/:id/suspend', adminController.suspendSeller);
 router.patch('/sellers/:sellerId/suspend', adminController.suspendSeller);
@@ -105,6 +109,10 @@ router.patch('/products/:id/sponsor', adminController.toggleSponsor);
 router.delete('/products/:id', adminController.deleteProduct);
 
 // 4. Orders & Emergency Dispute Resolution
+router.get('/special-orders', adminController.getSpecialOrders);
+router.patch('/special-orders/:id/status', adminOnly, adminController.updateSpecialOrderStatus);
+router.put('/special-orders/:id/status', adminOnly, adminController.updateSpecialOrderStatus);
+
 router.get('/orders', orderController.getAdminOrders);
 router.get('/orders/:orderId', orderController.getOrderById);
 router.get('/orders/:id', orderController.getOrderById);
@@ -140,6 +148,7 @@ router.post('/payouts/:payoutId/disburse', adminController.disburseSellerPayout)
 router.patch('/payouts/:payoutId/disburse', adminController.disburseSellerPayout);
 router.get('/payments', adminController.listAllPayments);
 router.get('/payments/summary', adminController.getPaymentsSummary);
+router.get('/payments/seller-plans', adminOnly, adminController.getSellerSubscriptions);
 
 // 6. User Management
 router.get('/users', adminController.getAllUsers);

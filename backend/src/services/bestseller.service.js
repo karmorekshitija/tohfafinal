@@ -28,11 +28,11 @@ async function recomputeForSeller(sellerId) {
   const { rows: activeProducts } = await query(
     `SELECT p.id, p.created_at
      FROM products p
-     WHERE p.seller_id = $1
+     WHERE p.seller_id::text = $1::text
        AND p.status = 'active'
        AND (p.is_active IS NULL OR p.is_active = TRUE)
      ORDER BY p.created_at ASC, p.id ASC`,
-    [sellerId]
+    [String(sellerId)]
   );
 
   const activeCount = activeProducts.length;
@@ -41,14 +41,14 @@ async function recomputeForSeller(sellerId) {
   let topIds = [];
 
   if (activeCount > 0) {
-    const productIds = activeProducts.map(p => p.id);
+    const productIds = activeProducts.map(p => String(p.id));
 
     // 2) Units sold for active products in paid, non-cancelled orders
     const { rows: unitRows } = await query(
       `SELECT oi.product_id, SUM(oi.quantity)::int AS units
        FROM order_items oi
        JOIN orders o ON o.id = oi.order_id
-       WHERE oi.product_id = ANY($1::int[])
+       WHERE oi.product_id::text = ANY($1::text[])
          AND o.payment_status = 'paid'
          AND o.status NOT IN ('cancelled', 'cancel_requested')
        GROUP BY oi.product_id`,
@@ -64,7 +64,7 @@ async function recomputeForSeller(sellerId) {
     const { rows: ratingRows } = await query(
       `SELECT product_id, AVG(rating)::numeric AS avg_rating
        FROM reviews
-       WHERE product_id = ANY($1::int[])
+       WHERE product_id::text = ANY($1::text[])
        GROUP BY product_id`,
       [productIds]
     );
@@ -86,16 +86,16 @@ async function recomputeForSeller(sellerId) {
     });
 
     const ranked = rankCandidates(candidates, cap);
-    topIds = ranked.map(p => p.id);
+    topIds = ranked.map(p => String(p.id));
   }
 
   // Atomically update seller's products without updating updated_at timestamp
   await query(
     `UPDATE products
-     SET is_bestseller = (id = ANY($2::int[]))
-     WHERE seller_id = $1
-       AND is_bestseller IS DISTINCT FROM (id = ANY($2::int[]))`,
-    [sellerId, topIds]
+     SET is_bestseller = (id::text = ANY($2::text[]))
+     WHERE seller_id::text = $1::text
+       AND is_bestseller IS DISTINCT FROM (id::text = ANY($2::text[]))`,
+    [String(sellerId), topIds]
   );
 
   return {

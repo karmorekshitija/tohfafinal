@@ -198,114 +198,177 @@ async function getSellerDetail(req, res, next) {
   }
 }
 
-async function verifySellerKYC(req, res, next) {
+async function verifySellerKyc(req, res, next) {
+  const id = req.params.id || req.params.sellerId;
+  let { status, action, remarks, rejectionReason, rejection_reason, reason, commissionRate, commission_rate } = req.body;
+
+  let normStatus = (status || action || '').toString().toUpperCase();
+  if (['APPROVE', 'APPROVED', 'VERIFIED'].includes(normStatus)) {
+    normStatus = 'VERIFIED';
+  } else if (['REJECT', 'REJECTED'].includes(normStatus)) {
+    normStatus = 'REJECTED';
+  }
+
+  if (!['VERIFIED', 'REJECTED'].includes(normStatus)) {
+    return res.status(400).json({ success: false, message: 'Invalid verification status' });
+  }
+
+  const isApproved = normStatus === 'VERIFIED';
+  const sellerStatus = isApproved ? 'APPROVED' : 'REJECTED';
+  const kycRemarks = remarks || rejectionReason || rejection_reason || reason || null;
+  const finalCommission = commissionRate !== undefined ? commissionRate : commission_rate;
+
   try {
-    const rawId = req.params.sellerId || req.params.id;
-    let { status, commissionRate, commission_rate, rejectionReason, rejection_reason, reason } = req.body;
+    // Safely pre-ensure wallet row exists for approved sellers to satisfy fk_seller_wallet constraint
+    if (isApproved) {
+      await query(
+        `INSERT INTO wallets (seller_id, user_id, balance, created_at, updated_at)
+         SELECT s.id, s.user_id, 0.00, NOW(), NOW()
+         FROM sellers s
+         WHERE s.id::text = $1::text OR s.user_id::text = $1::text
+         ON CONFLICT (seller_id) DO NOTHING;`,
+        [String(id)]
+      ).catch(async () => {
+        await query(
+          `INSERT INTO wallets (seller_id, balance, created_at, updated_at)
+           VALUES ($1, 0.00, NOW(), NOW())
+           ON CONFLICT DO NOTHING;`,
+          [String(id)]
+        ).catch(() => {});
+      });
+    }
 
-    const finalCommission = commissionRate !== undefined ? commissionRate : commission_rate;
-    const finalRejectionReason = rejectionReason || rejection_reason || reason || null;
-
-    if (status === 'approve' || status === 'approved') status = 'verified';
-    if (status === 'reject') status = 'rejected';
-
-    const isApproved = status === 'verified';
-    const rejectReason = status === 'rejected' ? (finalRejectionReason || 'Application criteria not met') : null;
-
-    // Resolve target user_id with priority given to direct user ID matches
-    const userRes = await query(
-      `SELECT u.id, u.email, COALESCE(sp.store_name, s.store_name, 'Artisan Studio') as store_name
-       FROM users u
-       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
-       LEFT JOIN sellers s ON s.user_id = u.id
-       WHERE u.id::text = $1::text OR sp.id::text = $1::text OR s.id::text = $1::text
-       ORDER BY CASE 
-         WHEN u.id::text = $1::text AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 1
-         WHEN u.id::text = $1::text THEN 2
-         WHEN sp.id::text = $1::text THEN 3
-         WHEN s.id::text = $1::text THEN 4
-         ELSE 5 
-       END ASC
-       LIMIT 1`,
-      [String(rawId)]
+    // Update seller KYC and approval status atomically in sellers table
+    const { rows: updatedSellers } = await query(
+      `UPDATE sellers 
+       SET kyc_status = $1::varchar, 
+           is_approved = $2::boolean, 
+           status = $3::varchar, 
+           verification_status = CASE WHEN $1::text = 'VERIFIED' THEN 'verified' ELSE 'rejected' END,
+           kyc_remarks = COALESCE($4::text, kyc_remarks),
+           rejection_reason = CASE WHEN $1::text = 'REJECTED' THEN COALESCE($4::text, rejection_reason) ELSE NULL END,
+           commission_rate = COALESCE($5::numeric, commission_rate),
+           verified_at = CASE WHEN $1::text = 'VERIFIED' THEN NOW() ELSE NULL END,
+           approved_at = CASE WHEN $1::text = 'VERIFIED' THEN NOW() ELSE approved_at END,
+           updated_at = NOW() 
+       WHERE id::text = $6::text OR user_id::text = $6::text 
+       RETURNING *;`,
+      [normStatus, isApproved, sellerStatus, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, String(id)]
     );
 
-    if (userRes.rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Seller not found.' });
+    let sellerRecord = updatedSellers[0];
+
+    if (!sellerRecord) {
+      // Fallback: check seller_profiles or users table
+      const { rows: profiles } = await query(
+        `UPDATE seller_profiles
+         SET is_approved = $1,
+             verification_status = CASE WHEN $1 THEN 'verified' ELSE 'rejected' END,
+             rejection_reason = CASE WHEN NOT $1 THEN $2 ELSE NULL END,
+             commission_rate = COALESCE($3, commission_rate),
+             approved_at = CASE WHEN $1 THEN NOW() ELSE approved_at END,
+             updated_at = NOW()
+         WHERE id::text = $4::text OR user_id::text = $4::text
+         RETURNING *;`,
+        [isApproved, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, String(id)]
+      );
+
+      if (profiles.length === 0) {
+        return res.status(404).json({ success: false, message: 'Seller not found' });
+      }
+      sellerRecord = profiles[0];
+    } else {
+      // Sync seller_profiles table in parallel
+      await query(
+        `UPDATE seller_profiles
+         SET is_approved = $1,
+             verification_status = CASE WHEN $1 THEN 'verified' ELSE 'rejected' END,
+             rejection_reason = CASE WHEN NOT $1 THEN $2 ELSE NULL END,
+             commission_rate = COALESCE($3, commission_rate),
+             approved_at = CASE WHEN $1 THEN NOW() ELSE approved_at END,
+             updated_at = NOW()
+         WHERE id::text = $4::text OR user_id::text = $4::text;`,
+        [isApproved, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, String(id)]
+      ).catch(() => {});
     }
 
-    const targetUserId = userRes.rows[0].id;
-    const storeName = userRes.rows[0].store_name;
-    const sellerEmail = userRes.rows[0].email;
+    const userId = sellerRecord.user_id || sellerRecord.id;
+    const sellerTableId = sellerRecord.id;
 
-    // isApprovedInt: pass as integer (1/0) to match the live DB column type.
-    // isApprovedBool is a separate param used only in the CASE WHEN comparison.
-    const isApprovedInt = isApproved ? 1 : 0;
-    const result = await query(`
-      UPDATE seller_profiles
-      SET is_approved = $1,
-          verification_status = $2,
-          commission_rate = COALESCE($3, commission_rate),
-          rejection_reason = $4,
-          approved_at = CASE WHEN $1 = 1 THEN NOW() ELSE approved_at END,
-          updated_at = NOW()
-      WHERE user_id::text = $5::text
-      RETURNING *
-    `, [isApprovedInt, status, finalCommission !== undefined ? Number(finalCommission) : null, rejectReason, String(targetUserId)]);
+    // Ensure user role and status
+    if (isApproved && userId) {
+      await query(
+        `UPDATE users SET is_active = TRUE, role = 'seller', updated_at = NOW() WHERE id::text = $1::text;`,
+        [String(userId)]
+      ).catch(() => {});
+    }
 
-    // Also sync master sellers table
-    await query(`
-      UPDATE sellers
-      SET is_approved = $1,
-          verification_status = $2,
-          commission_rate = COALESCE($3, commission_rate),
-          rejection_reason = $4,
-          approved_at = CASE WHEN $1 = 1 THEN NOW() ELSE approved_at END
-      WHERE user_id::text = $5::text
-    `, [isApprovedInt, status, finalCommission !== undefined ? Number(finalCommission) : null, rejectReason, String(targetUserId)]).catch(() => {});
-
-    // Ensure user role and status (users.is_active is integer on live DB)
-    await query(`UPDATE users SET is_active = 1, role = 'seller' WHERE id::text = $1::text`, [String(targetUserId)]).catch(() => {});
-
-    const { rows: userRows } = await query('SELECT name, email FROM users WHERE id::text = $1::text', [String(targetUserId)]);
-    const sellerUser = userRows[0] || {};
-
+    // Safely ensure wallet exists for newly verified sellers
     if (isApproved) {
-      await emailService.sendSellerApprovalEmail(sellerUser.email || sellerEmail, result.rows[0]?.store_name || storeName).catch(() => {});
+      const targetSellerIdForWallet = sellerTableId || id;
+      await query(
+        `INSERT INTO wallets (seller_id, user_id, balance, created_at, updated_at)
+         VALUES ($1, $2, 0.00, NOW(), NOW())
+         ON CONFLICT (seller_id) DO NOTHING;`,
+        [targetSellerIdForWallet, userId || null]
+      ).catch(async () => {
+        await query(
+          `INSERT INTO wallets (seller_id, balance, created_at, updated_at)
+           VALUES ($1, 0.00, NOW(), NOW())
+           ON CONFLICT DO NOTHING;`,
+          [targetSellerIdForWallet]
+        ).catch(() => {});
+      });
+    }
+
+    // Send emails & notifications
+    if (isApproved && userId) {
+      const { rows: userRows } = await query('SELECT name, email FROM users WHERE id::text = $1::text', [String(userId)]).catch(() => ({ rows: [] }));
+      const sellerUser = userRows[0] || {};
+      const storeName = sellerRecord.store_name || 'Artisan Studio';
+      await emailService.sendSellerApprovalEmail(sellerUser.email, storeName).catch(() => {});
       await createNotification(
-        targetUserId,
+        userId,
         'seller_approved',
-        'Welcome to Tohfa Studio! ðŸŽ‰',
+        'Welcome to Tohfa Studio! 🎉',
         'Your artisan KYC application has been verified and approved. You can now publish handcrafted creations.'
       ).catch(() => {});
-    } else if (status === 'rejected') {
-      await emailService.sendSellerRejectionEmail(sellerUser.email || sellerEmail, result.rows[0]?.store_name || storeName, rejectReason).catch(() => {});
+    } else if (normStatus === 'REJECTED' && userId) {
+      const { rows: userRows } = await query('SELECT name, email FROM users WHERE id::text = $1::text', [String(userId)]).catch(() => ({ rows: [] }));
+      const sellerUser = userRows[0] || {};
+      const storeName = sellerRecord.store_name || 'Artisan Studio';
+      await emailService.sendSellerRejectionEmail(sellerUser.email, storeName, kycRemarks).catch(() => {});
       await createNotification(
-        targetUserId,
+        userId,
         'seller_rejected',
         'Seller Application Update',
-        `Your seller verification application was not approved. Reason: ${rejectReason}`
+        `Your seller verification application was not approved. Reason: ${kycRemarks || 'Application criteria not met'}`
       ).catch(() => {});
     }
 
-    await logAdminAction({
-      adminId: req.user.id,
-      actionType: isApproved ? 'SELLER_KYC_APPROVED' : 'SELLER_KYC_REJECTED',
-      targetEntity: 'sellers',
-      targetId: targetUserId,
-      details: { status, commissionRate: finalCommission, rejectionReason: rejectReason },
-      ipAddress: req.ip
-    });
+    if (req.user?.id) {
+      await logAdminAction({
+        adminId: req.user.id,
+        actionType: isApproved ? 'SELLER_KYC_APPROVED' : 'SELLER_KYC_REJECTED',
+        targetEntity: 'sellers',
+        targetId: id,
+        details: { status: normStatus, commissionRate: finalCommission, remarks: kycRemarks },
+        ipAddress: req.ip
+      }).catch(() => {});
+    }
 
-    return res.status(200).json({
+    return res.json({
       success: true,
-      message: `Seller KYC updated to ${status}.`,
-      data: result.rows[0]
+      message: `Seller KYC has been successfully ${normStatus.toLowerCase()}`,
+      data: sellerRecord
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    console.error('Error verifying seller KYC:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error while updating KYC' });
   }
 }
+
+const verifySellerKYC = verifySellerKyc;
 
 async function suspendSeller(req, res, next) {
   try {
@@ -2363,12 +2426,214 @@ async function updateSellerPlan(req, res, next) {
   }
 }
 
+/**
+ * Fetch seller plan subscriptions summary and breakdown
+ */
+async function getSellerSubscriptions(req, res, next) {
+  try {
+    // Query seller plans joining sellers and users
+    // Supports either a dedicated seller_subscriptions table or subscription columns on sellers / subscription_payments
+    const queryStr = `
+      SELECT 
+        s.id AS seller_id,
+        COALESCE(s.shop_name, s.store_name, 'Artisan Studio') AS shop_name,
+        u.name AS seller_name,
+        u.email AS seller_email,
+        u.phone AS seller_phone,
+        COALESCE(sub.plan_name, s.plan_type, s.subscription_plan, 'Free / Standard') AS plan_name,
+        COALESCE(sub.amount, s.plan_amount, s.subscription_price_paid, 0) AS plan_amount,
+        COALESCE(sub.start_date, s.plan_started_at, s.subscription_started_at, s.created_at) AS start_date,
+        COALESCE(sub.end_date, s.plan_expires_at, s.subscription_renews_at, s.created_at + INTERVAL '30 days') AS end_date,
+        CASE 
+          WHEN COALESCE(sub.end_date, s.plan_expires_at, s.subscription_renews_at) < NOW() THEN 'EXPIRED'
+          ELSE 'ACTIVE'
+        END AS status
+      FROM sellers s
+      JOIN users u ON s.user_id = u.id
+      LEFT JOIN LATERAL (
+        SELECT plan_name, amount, start_date, end_date
+        FROM seller_subscriptions 
+        WHERE seller_id = s.id 
+        ORDER BY created_at DESC 
+        LIMIT 1
+      ) sub ON true
+      WHERE s.is_approved = TRUE OR s.is_approved::text IN ('true', 't', '1')
+      ORDER BY start_date DESC;
+    `;
+
+    let subscriptions = [];
+    try {
+      const { rows } = await query(queryStr);
+      subscriptions = rows;
+    } catch (dbErr) {
+      // Fallback if seller_subscriptions table does not exist
+      const fallbackQueryStr = `
+        SELECT 
+          s.id AS seller_id,
+          COALESCE(s.shop_name, s.store_name, 'Artisan Studio') AS shop_name,
+          u.name AS seller_name,
+          u.email AS seller_email,
+          u.phone AS seller_phone,
+          COALESCE(sub.plan, s.subscription_plan, 'Free / Standard') AS plan_name,
+          COALESCE(sub.amount, s.subscription_price_paid, 0) AS plan_amount,
+          COALESCE(sub.started_at, s.subscription_started_at, s.created_at) AS start_date,
+          COALESCE(sub.renews_at, s.subscription_renews_at, s.created_at + INTERVAL '30 days') AS end_date,
+          CASE 
+            WHEN COALESCE(sub.renews_at, s.subscription_renews_at) < NOW() THEN 'EXPIRED'
+            ELSE 'ACTIVE'
+          END AS status
+        FROM sellers s
+        JOIN users u ON s.user_id = u.id
+        LEFT JOIN LATERAL (
+          SELECT plan, amount, started_at, renews_at
+          FROM subscription_payments 
+          WHERE (seller_id = s.id OR user_id = s.user_id) AND status = 'paid'
+          ORDER BY created_at DESC 
+          LIMIT 1
+        ) sub ON true
+        WHERE s.is_approved = TRUE OR s.is_approved::text IN ('true', 't', '1')
+        ORDER BY start_date DESC;
+      `;
+      const { rows } = await query(fallbackQueryStr);
+      subscriptions = rows;
+    }
+
+    const stats = {
+      totalSellersOnPlans: subscriptions.length,
+      activePlans: subscriptions.filter(s => s.status === 'ACTIVE').length,
+      expiredPlans: subscriptions.filter(s => s.status === 'EXPIRED').length
+    };
+
+    return res.json({
+      success: true,
+      data: {
+        stats,
+        subscriptions
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching seller plan subscriptions:', error);
+    return res.status(500).json({ success: false, message: 'Failed to retrieve seller plans' });
+  }
+}
+
+/**
+ * Fetch all Special Orders joined with Buyer details, Delivery address, Shop name, and line items.
+ */
+async function getSpecialOrders(req, res, next) {
+  try {
+    const { rows: orders } = await query(`
+      SELECT 
+        o.id,
+        COALESCE(o.order_number, o.order_ref, 'TOHFA-' || UPPER(SUBSTRING(o.id::text, 1, 8))) AS order_number,
+        o.order_ref,
+        o.total_amount,
+        o.status,
+        o.payment_status,
+        o.payment_method,
+        COALESCE(o.special_instructions, o.notes, o.studio_notes) AS special_instructions,
+        COALESCE(o.customization_details, '{}'::jsonb) AS customization_details,
+        o.shipping_address,
+        o.created_at,
+        o.updated_at,
+        u.id AS buyer_id,
+        u.name AS buyer_name,
+        u.email AS buyer_email,
+        u.phone AS buyer_phone,
+        COALESCE(s.shop_name, sp.store_name, sel.store_name, 'Tohfa Special Store') AS shop_name,
+        COALESCE(s.shop_name, sp.store_name, sel.store_name, 'Tohfa Special Store') AS store_name,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'product_name', COALESCE(p.name, 'Handcrafted Item'),
+              'quantity', oi.quantity,
+              'price', COALESCE(oi.unit_price, 0)
+            )
+          ) FILTER (WHERE oi.id IS NOT NULL), '[]'
+        ) AS items
+      FROM orders o
+      LEFT JOIN users u ON (o.buyer_id = u.id OR o.user_id = u.id)
+      LEFT JOIN shops s ON o.shop_id = s.id
+      LEFT JOIN seller_profiles sp ON o.seller_id = sp.user_id OR o.seller_id = sp.id
+      LEFT JOIN sellers sel ON o.seller_id = sel.id OR o.seller_id = sel.user_id
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      LEFT JOIN products p ON oi.product_id = p.id
+      WHERE o.is_special = TRUE 
+         OR o.shop_id IN (SELECT id FROM shops WHERE is_special = TRUE)
+         OR sp.is_admin_managed::text IN ('true', 't', '1')
+         OR sel.is_admin_managed::text IN ('true', 't', '1')
+         OR sp.seller_type = 'special'
+      GROUP BY o.id, u.id, s.id, s.shop_name, sp.id, sel.id
+      ORDER BY o.created_at DESC;
+    `);
+
+    return res.json({
+      success: true,
+      data: { orders }
+    });
+  } catch (error) {
+    console.error('Error fetching special orders:', error);
+    return res.status(500).json({ success: false, message: 'Failed to retrieve special orders' });
+  }
+}
+
+/**
+ * Update Special Order status and admin remarks.
+ */
+async function updateSpecialOrderStatus(req, res, next) {
+  const id = req.params.id || req.params.orderId;
+  const { status, remarks, notes, admin_notes } = req.body;
+
+  if (!status) {
+    return res.status(400).json({ success: false, message: 'Status is required' });
+  }
+
+  const normalizedStatus = String(status).trim().toUpperCase();
+  const VALID_STATUSES = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+
+  if (!VALID_STATUSES.includes(normalizedStatus)) {
+    return res.status(400).json({ 
+      success: false, 
+      message: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` 
+    });
+  }
+
+  try {
+    const effectiveRemarks = remarks || notes || admin_notes || null;
+    const { rows: updatedRows } = await query(
+      `UPDATE orders 
+       SET status = $1, 
+           admin_notes = COALESCE($2, admin_notes),
+           studio_notes = COALESCE($2, studio_notes),
+           delivered_at = CASE WHEN $1 = 'DELIVERED' THEN NOW() ELSE delivered_at END,
+           updated_at = NOW() 
+       WHERE id::text = $3::text OR order_ref = $3::text
+       RETURNING *;`,
+      [normalizedStatus, effectiveRemarks, String(id)]
+    );
+
+    if (updatedRows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    return res.json({
+      success: true,
+      message: `Special order status updated to ${normalizedStatus}`,
+      data: updatedRows[0]
+    });
+  } catch (error) {
+    console.error('Error updating special order status:', error);
+    return res.status(500).json({ success: false, message: 'Database error updating order status' });
+  }
+}
+
 module.exports = {
   getPlatformStats,
   listSellers,
   getAllSellers: listSellers,
   getSellerDetail,
   getSellerDetails: getSellerDetail,
+  verifySellerKyc,
   verifySellerKYC,
   approveSeller,
   rejectSeller,
@@ -2418,4 +2683,7 @@ module.exports = {
   getRevenueBreakdown,
   getPlansOverview,
   updateSellerPlan,
+  getSellerSubscriptions,
+  getSpecialOrders,
+  updateSpecialOrderStatus,
 };

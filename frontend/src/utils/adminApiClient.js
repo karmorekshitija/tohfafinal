@@ -24,7 +24,11 @@ adminApiClient.interceptors.request.use((config) => {
   const token = sessionStorage.getItem('tohfa_admin_token') ||
                 localStorage.getItem('tohfa_admin_token') ||
                 sessionStorage.getItem('tohfa_admin_access_token') ||
-                localStorage.getItem('tohfa_admin_access_token');
+                localStorage.getItem('tohfa_admin_access_token') ||
+                localStorage.getItem('adminToken') ||
+                localStorage.getItem('token') ||
+                sessionStorage.getItem('adminToken') ||
+                sessionStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });

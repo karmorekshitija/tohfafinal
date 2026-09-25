@@ -120,7 +120,8 @@
           <thead class="bg-[#14381F]/5 text-[#14381F] font-bold border-b border-[#14381F]/10">
             <tr>
               <th class="p-4">Order Ref / ID</th>
-              <th class="p-4">Customer</th>
+              <th class="p-4">Buyer Info</th>
+              <th class="p-4">Delivery Address</th>
               <th class="p-4">Special Store</th>
               <th class="p-4">Date</th>
               <th class="p-4">Amount</th>
@@ -131,7 +132,7 @@
           </thead>
           <tbody id="orders-table-body" class="divide-y divide-gray-100">
             <tr>
-              <td colspan="8" class="p-8 text-center text-gray-400">
+              <td colspan="9" class="p-8 text-center text-gray-400">
                 <span class="material-symbols-outlined text-3xl animate-spin text-[#14381F]">progress_activity</span>
                 <p class="text-xs mt-2 font-medium">Loading Tohfa Special orders...</p>
               </td>
@@ -152,212 +153,16 @@
   </main>
 
   <script type="module">
-    import adminApiClient from '/src/utils/adminApiClient.js';
-    import { isTokenExpired } from '/src/utils/auth.js';
+    import { 
+      fetchSpecialOrders, 
+      formatAddress, 
+      formatCurrency, 
+      handleStatusUpdateSubmit, 
+      openStatusModal, 
+      closeStatusModal, 
+      submitModalStatusUpdate 
+    } from '/src/admin/special-orders.js';
 
-    let currentPage = 1;
-    let allOrders = [];
-
-    function formatCurrency(val) {
-      return '₹' + (Number(val) || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
-    }
-
-    // ── FIX 4: Shared error renderer with friendly UX ────────────────────────
-    function showTableError(message, showLoginBtn = false) {
-      const tbody = document.getElementById('orders-table-body');
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="8" class="p-10 text-center">
-            <span class="material-symbols-outlined text-4xl text-rose-300 mb-2">error_outline</span>
-            <p class="text-sm font-semibold text-rose-600 mt-2">${message}</p>
-            ${showLoginBtn ? `
-              <a href="/admin/login.html"
-                 class="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-xl text-xs font-bold bg-[#14381F] text-[#FFF8E7] hover:bg-[#14381F]/90 transition-all shadow-sm">
-                <span class="material-symbols-outlined text-sm">login</span> Go to Login
-              </a>` : ''}
-          </td>
-        </tr>`;
-    }
-
-    // ── FIX 1 + 2: Use adminApiClient (auto refresh) + pre-check expiry ──────
-    async function fetchSpecialOrders() {
-      const tbody = document.getElementById('orders-table-body');
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="8" class="p-8 text-center text-gray-400">
-            <span class="material-symbols-outlined text-3xl animate-spin text-[#14381F]">progress_activity</span>
-            <p class="text-xs mt-2 font-medium">Loading Tohfa Special orders...</p>
-          </td>
-        </tr>
-      `;
-
-      // FIX 2: Client-side expiry pre-check — avoids wasted network call
-      const adminToken = sessionStorage.getItem('tohfa_admin_token') || localStorage.getItem('tohfa_admin_token');
-      if (!adminToken || isTokenExpired(adminToken)) {
-        // adminApiClient will attempt a silent refresh on the first 401;
-        // we continue — if there's a valid refresh token it will recover automatically.
-        // If not, adminApiClient will redirect to /admin/login.html by itself.
-        console.warn('[SpecialOrders] Admin token missing or expired — proceeding via adminApiClient refresh flow.');
-      }
-
-      try {
-        const status = document.getElementById('status-filter').value;
-        // FIX 1: URL path without /api prefix — adminApiClient baseURL is already /api
-        let url = `/admin/orders?special_only=true&page=${currentPage}&limit=30`;
-        if (status) url += `&status=${encodeURIComponent(status)}`;
-
-        // FIX 1: Use adminApiClient instead of raw fetch.
-        // It automatically: attaches the token, retries on 401 with refresh token,
-        // and redirects to /admin/login.html if refresh also fails.
-        const res = await adminApiClient.get(url);
-        const json = res.data; // axios wraps response in .data
-
-        if (json.success && json.data) {
-          allOrders = json.data.orders || [];
-          renderOrders(allOrders);
-          updateKPIs(allOrders, json.data.total);
-
-          // Update Pagination
-          const total = json.data.total || allOrders.length;
-          const limit = json.data.limit || 30;
-          const totalPages = Math.ceil(total / limit) || 1;
-          document.getElementById('page-info').textContent = `Showing page ${currentPage} of ${totalPages} (${total} total orders)`;
-          document.getElementById('btn-prev').disabled = currentPage <= 1;
-          document.getElementById('btn-next').disabled = currentPage >= totalPages;
-        } else {
-          // FIX 4: User-friendly error (not raw backend message)
-          showTableError(json.message || 'Could not load orders. Please try again.', false);
-        }
-      } catch (err) {
-        // If adminApiClient already redirected (401 unrecoverable), this may not fire.
-        // For network errors or other failures, show a friendly message.
-        const isAuthError = err?.response?.status === 401 || err?.response?.status === 403;
-        if (isAuthError) {
-          showTableError('Your session could not be verified. Redirecting to login…', true);
-          setTimeout(() => { window.location.href = '/admin/login.html'; }, 2000);
-        } else {
-          const errorMessage = err?.response?.data?.message || (err?.response?.status ? `Server error (${err.response.status})` : 'Server error (500)');
-          showTableError(errorMessage, false);
-        }
-      }
-    }
-
-    function renderOrders(orders) {
-      const tbody = document.getElementById('orders-table-body');
-      if (!orders.length) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="8" class="p-12 text-center text-gray-500">
-              <span class="material-symbols-outlined text-4xl text-gray-300 mb-2">shopping_bag</span>
-              <p class="text-sm font-bold text-gray-700">No Tohfa Special orders found</p>
-              <p class="text-xs text-gray-400 mt-1">Orders placed for admin-managed special shops will appear here.</p>
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      tbody.innerHTML = orders.map(o => {
-        const orderRef = o.order_ref || `TOHFA-${String(o.id).substring(0, 8).toUpperCase()}`;
-        const buyer = o.buyer_name || 'Customer';
-        const store = o.store_name || 'Tohfa Special Store';
-        const date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }) : 'n/a';
-        const amount = formatCurrency(o.total_amount || o.amount_paid);
-        const status = o.status || 'pending';
-        const payment = o.payment_status || 'pending';
-
-        return `
-          <tr class="hover:bg-gray-50/80 cursor-pointer transition-colors" onclick="DetailModal.showOrder('${o.id}')">
-            <td class="p-4 font-mono font-bold text-[#14381F]">${orderRef}</td>
-            <td class="p-4 font-medium text-gray-900">${buyer}</td>
-            <td class="p-4">
-              <span class="inline-flex items-center gap-1 font-semibold text-[#14381F]">
-                <span class="material-symbols-outlined text-xs text-[#C5A059]">stars</span> ${store}
-              </span>
-            </td>
-            <td class="p-4 text-gray-500 font-mono">${date}</td>
-            <td class="p-4 font-mono font-bold text-gray-900">${amount}</td>
-            <td class="p-4" onclick="event.stopPropagation()">
-              <button onclick="DetailModal.showStatusModal('${o.id}', '${status}', '${(o.notes || '').replace(/'/g, "\\'")}')" 
-                      class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-transform active:scale-95 hover:opacity-90 flex items-center gap-1 ${
-                status === 'delivered' ? 'bg-emerald-100 text-emerald-800' :
-                status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                status === 'cancelled' ? 'bg-rose-100 text-rose-800' :
-                'bg-amber-100 text-amber-800'
-              }" title="Click to update status & buyer note">
-                <span>${status}</span>
-                <span class="material-symbols-outlined text-[12px]">edit</span>
-              </button>
-            </td>
-            <td class="p-4">
-              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                payment === 'paid' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                payment === 'refunded' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
-                'bg-amber-50 text-amber-700 border border-amber-200'
-              }">${payment}</span>
-            </td>
-            <td class="p-4 text-right" onclick="event.stopPropagation()">
-              <div class="flex items-center justify-end gap-2">
-                <button onclick="DetailModal.showStatusModal('${o.id}', '${status}', '${(o.notes || '').replace(/'/g, "\\'")}')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold border border-[#14381F]/20 text-[#14381F] hover:bg-gray-50 transition-all shadow-xs flex items-center gap-1" title="Update status & message">
-                  <span class="material-symbols-outlined text-sm">local_shipping</span> Status
-                </button>
-                <button onclick="DetailModal.showOrder('${o.id}')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#14381F] text-[#FFF8E7] hover:bg-[#14381F]/90 transition-all shadow-sm">
-                  Details
-                </button>
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    function updateKPIs(orders, totalCount) {
-      document.getElementById('kpi-total-orders').textContent = totalCount || orders.length;
-      
-      const totalRev = orders.reduce((acc, o) => acc + (parseFloat(o.total_amount) || 0), 0);
-      document.getElementById('kpi-total-revenue').textContent = formatCurrency(totalRev);
-
-      const pending = orders.filter(o => o.status === 'pending' || o.status === 'processing').length;
-      document.getElementById('kpi-pending-orders').textContent = pending;
-
-      const delivered = orders.filter(o => o.status === 'delivered').length;
-      document.getElementById('kpi-delivered-orders').textContent = delivered;
-    }
-
-    function handleSearch() {
-      const q = document.getElementById('order-search').value.toLowerCase().trim();
-      if (!q) {
-        renderOrders(allOrders);
-        return;
-      }
-      const filtered = allOrders.filter(o => 
-        (o.order_ref && o.order_ref.toLowerCase().includes(q)) ||
-        (o.buyer_name && o.buyer_name.toLowerCase().includes(q)) ||
-        (o.store_name && o.store_name.toLowerCase().includes(q)) ||
-        String(o.id).includes(q)
-      );
-      renderOrders(filtered);
-    }
-
-    function changePage(delta) {
-      currentPage += delta;
-      if (currentPage < 1) currentPage = 1;
-      fetchSpecialOrders();
-    }
-
-    // ── Expose to window (required because this is a module script) ──────────
-    // HTML onclick="..." attributes can only reach global (window) functions.
-    window.fetchSpecialOrders = fetchSpecialOrders;
-    window.handleSearch = handleSearch;
-    window.changePage = changePage;
-
-    // ── FIX 3: Session-aware page init (fixes DOMContentLoaded race) ─────────
-    // When a new tab opens, sessionStorage is empty. ProtectedRoute.js hydrates
-    // it from localStorage asynchronously. If we fetch immediately on
-    // DOMContentLoaded we race against that hydration and send an empty token.
-    // Solution: wait for the 'tohfa-session-sync' event OR 250ms — whichever
-    // comes first — before calling fetchSpecialOrders(). This mirrors the same
-    // pattern already used inside ProtectedRoute.js (lines 177-182).
     let initFired = false;
     function initPage() {
       if (initFired) return;
@@ -365,8 +170,6 @@
       fetchSpecialOrders();
     }
 
-    // If the token is already in sessionStorage (normal navigation), fire immediately.
-    // Otherwise wait briefly for ProtectedRoute.js to hydrate from localStorage.
     function scheduleInit() {
       if (sessionStorage.getItem('tohfa_admin_token') || localStorage.getItem('tohfa_admin_token')) {
         initPage();

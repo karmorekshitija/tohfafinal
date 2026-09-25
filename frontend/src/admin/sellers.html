@@ -934,14 +934,55 @@ document.getElementById('cancel-reject-btn').onclick = () => rejectModal.classLi
 document.getElementById('close-suspend-modal-btn').onclick = () => suspendModal.classList.add('hidden');
 document.getElementById('cancel-suspend-btn').onclick = () => suspendModal.classList.add('hidden');
 
-// Confirm KYC Approval (Calls PATCH /api/admin/sellers/:sellerId/kyc)
+// Helper: Confirm KYC Verification
+async function confirmKycVerification(sellerId, isApprove = true) {
+  const status = isApprove ? 'VERIFIED' : 'REJECTED';
+  const confirmMsg = isApprove 
+    ? 'Confirm and approve this seller for the platform?' 
+    : 'Reject this seller KYC submission?';
+    
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    const adminToken = localStorage.getItem('adminToken') || 
+                       localStorage.getItem('token') || 
+                       sessionStorage.getItem('tohfa_admin_token') || 
+                       localStorage.getItem('tohfa_admin_token');
+    const res = await fetch(`/api/admin/sellers/${sellerId}/verify-kyc`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`
+      },
+      body: JSON.stringify({ status })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      showToast(data.message || 'Failed to update KYC status', 'error');
+      return;
+    }
+
+    showToast(`Seller ${status.toLowerCase()} successfully!`, 'success');
+    if (approveModal) approveModal.classList.add('hidden');
+    if (rejectModal) rejectModal.classList.add('hidden');
+    fetchSellers();
+    fetchApplications();
+  } catch (err) {
+    console.error('Error confirming verification:', err);
+    showToast('Network error while confirming verification.', 'error');
+  }
+}
+window.confirmKycVerification = confirmKycVerification;
+
+// Confirm KYC Approval (Calls PATCH /api/admin/sellers/:sellerId/verify-kyc)
 document.getElementById('confirm-approve-btn').addEventListener('click', async () => {
   if (!activeModalSellerId) return;
   const rate = parseFloat(document.getElementById('commission-rate-input').value) || 10;
   
   try {
-    const res = await adminApiClient.patch(`/admin/sellers/${activeModalSellerId}/kyc`, {
-      status: 'verified',
+    const res = await adminApiClient.patch(`/admin/sellers/${activeModalSellerId}/verify-kyc`, {
+      status: 'VERIFIED',
       commissionRate: rate
     });
 
@@ -950,20 +991,23 @@ document.getElementById('confirm-approve-btn').addEventListener('click', async (
       showToast('Seller KYC verified and commission rate updated successfully!', 'success');
       fetchSellers();
       fetchApplications();
+    } else {
+      showToast(res.data?.message || 'Failed to verify seller KYC.', 'error');
     }
   } catch (err) {
-    showToast(err.response?.data?.message || 'Failed to verify seller KYC.', 'error');
+    showToast(err.response?.data?.message || err.message || 'Failed to verify seller KYC.', 'error');
   }
 });
 
-// Confirm KYC Rejection (Calls PATCH /api/admin/sellers/:sellerId/kyc)
+// Confirm KYC Rejection (Calls PATCH /api/admin/sellers/:sellerId/verify-kyc)
 document.getElementById('confirm-reject-btn').addEventListener('click', async () => {
   if (!activeModalSellerId) return;
   const reason = document.getElementById('rejection-reason-input').value.trim() || 'Application criteria not met';
   
   try {
-    const res = await adminApiClient.patch(`/admin/sellers/${activeModalSellerId}/kyc`, {
-      status: 'rejected',
+    const res = await adminApiClient.patch(`/admin/sellers/${activeModalSellerId}/verify-kyc`, {
+      status: 'REJECTED',
+      remarks: reason,
       rejectionReason: reason
     });
 
@@ -972,9 +1016,11 @@ document.getElementById('confirm-reject-btn').addEventListener('click', async ()
       showToast('Seller application/KYC rejected.', 'info');
       fetchSellers();
       fetchApplications();
+    } else {
+      showToast(res.data?.message || 'Failed to reject KYC.', 'error');
     }
   } catch (err) {
-    showToast(err.response?.data?.message || 'Failed to reject KYC.', 'error');
+    showToast(err.response?.data?.message || err.message || 'Failed to reject KYC.', 'error');
   }
 });
 

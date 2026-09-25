@@ -76,9 +76,21 @@ function verifySellerOwnership(resourceType = 'order') {
         }
 
         const product = rows[0];
-        const hasAccess = validSellerIds.has(product.seller_id) ||
-                          validSellerIds.has(Number(product.seller_id)) ||
-                          validSellerIds.has(String(product.seller_id));
+        const productSellerIdStr = String(product.seller_id);
+        const reqUserIdStr = String(user.id);
+
+        let hasAccess = (productSellerIdStr === reqUserIdStr);
+        if (!hasAccess) {
+          const { rows: match } = await query(
+            `SELECT 1 FROM sellers WHERE (id::text = $1 AND user_id::text = $2) OR (user_id::text = $1 AND id::text = $2)
+             UNION
+             SELECT 1 FROM seller_profiles WHERE (id::text = $1 AND user_id::text = $2) OR (user_id::text = $1 AND id::text = $2)`,
+            [productSellerIdStr, reqUserIdStr]
+          );
+          if (match.length > 0) {
+            hasAccess = true;
+          }
+        }
 
         if (!hasAccess) {
           return res.status(403).json({
