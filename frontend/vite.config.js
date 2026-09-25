@@ -73,13 +73,6 @@ const copyDistSrcPlugin = () => ({
       copyFileSync(responsiveCss, resolve(distSrcDir, 'responsive.css'));
       copyFileSync(responsiveCss, resolve(dist, 'responsive.css'));
     }
-    const distAssets = resolve(dist, 'assets');
-    const footerHtml = resolve(__dirname, 'public', 'components', 'tohfa-footer.html');
-    const navbarHtml = resolve(__dirname, 'public', 'components', 'tohfa-navbar.html');
-    if (existsSync(distAssets)) {
-      if (existsSync(footerHtml)) copyFileSync(footerHtml, resolve(distAssets, 'tohfa-footer.html'));
-      if (existsSync(navbarHtml)) copyFileSync(navbarHtml, resolve(distAssets, 'tohfa-navbar.html'));
-    }
   }
 });
 
