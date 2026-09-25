@@ -154,12 +154,17 @@ async function resolveCategoryId(rawCategory) {
     return null;
   }
 
-  const cleanStr = String(rawCategory).trim();
+  let cleanStr = '';
+  if (typeof rawCategory === 'object') {
+    cleanStr = String(rawCategory.id || rawCategory.slug || rawCategory.name || '').trim();
+  } else {
+    cleanStr = String(rawCategory).trim();
+  }
   if (!cleanStr) return null;
 
   // 1. Exact match on id::text
   const { rows: idRows } = await query(
-    'SELECT id FROM categories WHERE id::text = $1 AND is_active = TRUE LIMIT 1',
+    'SELECT id FROM categories WHERE id::text = $1 AND (is_active = TRUE OR is_active IS NULL) LIMIT 1',
     [cleanStr]
   );
   if (idRows.length > 0) return idRows[0].id;
@@ -167,14 +172,14 @@ async function resolveCategoryId(rawCategory) {
   // 2. Exact match on slug (lowercased)
   const lowerStr = cleanStr.toLowerCase();
   const { rows: slugRows } = await query(
-    'SELECT id FROM categories WHERE slug = $1 AND is_active = TRUE LIMIT 1',
+    'SELECT id FROM categories WHERE LOWER(slug) = $1 AND (is_active = TRUE OR is_active IS NULL) LIMIT 1',
     [lowerStr]
   );
   if (slugRows.length > 0) return slugRows[0].id;
 
   // 3. Exact match on lower(name) or lower(display_name)
   const { rows: nameRows } = await query(
-    'SELECT id FROM categories WHERE (LOWER(name) = $1 OR LOWER(display_name) = $1) AND is_active = TRUE LIMIT 1',
+    'SELECT id FROM categories WHERE (LOWER(name) = $1 OR LOWER(display_name) = $1) AND (is_active = TRUE OR is_active IS NULL) LIMIT 1',
     [lowerStr]
   );
   if (nameRows.length > 0) return nameRows[0].id;
@@ -219,6 +224,7 @@ async function listCategories(req, res, next) {
             product_count: parseInt(row.product_count || 0, 10),
             image_url: img,
             banner_image_url: row.banner_image_url || img,
+            banner_url: row.banner_image_url || img,
             is_featured: !!row.is_featured,
             sort_order: row.sort_order,
             subcategories: []
@@ -363,6 +369,7 @@ async function getCategoryBySlug(req, res, next) {
           emoji_icon: emoji,
           image_url: img,
           banner_image_url: banner,
+          banner_url: banner,
           product_count: rootProductCount,
           subcategories
         },
@@ -969,22 +976,51 @@ async function getProduct(req, res, next) {
 // ---------------------------------------------------------------------------
 async function getSellerProducts(req, res, next) {
   try {
-    const { sellerId } = req.params;
+    let { sellerId } = req.params;
+    if (!sellerId && req.user) {
+      sellerId = req.user.id;
+    }
+    const headerSellerId = req.headers['x-seller-id'] || req.headers['x-impersonate-seller-id'] || req.query.seller_id || req.query.sellerId;
+    const userRole = String(req.user?.role || '').toUpperCase();
+    const isAdmin = userRole === 'ADMIN' || userRole === 'MASTER_ADMIN';
+    if (isAdmin && headerSellerId) {
+      sellerId = headerSellerId;
+    }
+
     const { page = '1', limit = '50', status, search } = req.query;
     const pageNum  = Math.max(1, parseInt(page, 10));
     const limitNum = Math.min(100, parseInt(limit, 10));
     const offset   = (pageNum - 1) * limitNum;
 
-    const conditions = ['p.seller_id::text = $1'];
-    const params = [String(sellerId)];
+    // Resolve all possible seller IDs (both user_id and sellers.id / seller_profiles.id)
+    const { rows: matchedSellers } = await query(
+      'SELECT id, user_id FROM sellers WHERE id::text = $1 OR user_id::text = $1 UNION SELECT id, user_id FROM seller_profiles WHERE id::text = $1 OR user_id::text = $1',
+      [String(sellerId)]
+    );
+    const sellerIds = new Set([String(sellerId)]);
+    matchedSellers.forEach(s => {
+      if (s.id) sellerIds.add(String(s.id));
+      if (s.user_id) sellerIds.add(String(s.user_id));
+    });
+    const sellerIdArray = Array.from(sellerIds);
 
-    // If caller explicitly specifies status
+    const conditions = [`p.seller_id::text = ANY($1)`];
+    const params = [sellerIdArray];
+
+    // Status filtering: Exclude soft-deleted products
     if (status && status !== 'all') {
       params.push(status);
       conditions.push(`p.status = $${params.length}`);
-    } else if (!req.seller && !req.user?.role?.includes('admin')) {
-      // For unauthenticated/public seller storefront view, only show active
-      conditions.push("p.status = 'active'");
+      if (status !== 'deleted') {
+        conditions.push("(p.is_active IS NULL OR p.is_active::text != '0')");
+      }
+    } else {
+      conditions.push("p.status != 'deleted'");
+      conditions.push("(p.is_active IS NULL OR p.is_active::text != '0')");
+      if (!req.seller && !isAdmin) {
+        // For unauthenticated/public seller storefront view, only show active
+        conditions.push("p.status = 'active'");
+      }
     }
 
     if (search && search.trim()) {
@@ -1049,10 +1085,34 @@ async function getSellerProducts(req, res, next) {
 // ---------------------------------------------------------------------------
 async function createProduct(req, res, next) {
   try {
-    const sellerId = req.seller?.user_id || req.user?.id || req.seller?.id;
+    let sellerId = null;
+    const userRole = String(req.user?.role || '').toUpperCase();
+    if (userRole === 'ADMIN' || userRole === 'MASTER_ADMIN') {
+      sellerId = req.headers['x-seller-id'] || req.headers['x-acting-seller-id'] || req.body?.seller_id || req.query?.seller_id;
+    }
+    if (!sellerId && userRole === 'SELLER') {
+      const { rows: sellerRows } = await query(
+        'SELECT id, user_id FROM sellers WHERE user_id = $1 LIMIT 1',
+        [req.user.id]
+      );
+      if (sellerRows.length > 0) sellerId = sellerRows[0].id;
+      if (!sellerId) sellerId = req.user.id;
+    }
+    if (!sellerId) {
+      return res.status(400).json({ success: false, message: 'Valid seller/shop identifier required' });
+    }
+
+    // Resolve sellerId to valid user_id if sellers table ID was provided (for FK constraint)
+    const { rows: matchedSellers } = await query(
+      'SELECT id, user_id FROM sellers WHERE id::text = $1 OR user_id::text = $1 LIMIT 1',
+      [String(sellerId)]
+    );
+    if (matchedSellers.length > 0 && matchedSellers[0].user_id) {
+      sellerId = matchedSellers[0].user_id;
+    }
+
     const {
       name,
-      category_id,
       description,
       base_price,
       stock_quantity = 10,
@@ -1094,37 +1154,30 @@ async function createProduct(req, res, next) {
     const priceVal = Number(base_price);
     const pricePaise = Math.round(priceVal * 100);
 
-    const rawCategory = req.body.category_id !== undefined ? req.body.category_id : req.body.category;
-    const rawSubcategory = req.body.subcategory_id;
-
-    let resolvedCatId = null;
-    let resolvedSubId = null;
-
-    if (rawCategory !== undefined && rawCategory !== null && String(rawCategory).trim() !== '') {
-      resolvedCatId = await resolveCategoryId(rawCategory);
-      if (!resolvedCatId) {
-        return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'Selected category does not exist or is inactive.' });
-      }
+    const rawCat = req.body.category_id || req.body.category || req.body.categoryId;
+    const categoryId = await resolveCategoryId(rawCat);
+    if (!categoryId) {
+      return res.status(400).json({ success: false, message: 'Valid category required' });
     }
+
+    const rawSubcategory = req.body.subcategory_id || req.body.subcategory || req.body.subcategoryId;
+    let resolvedSubId = null;
 
     if (rawSubcategory !== undefined && rawSubcategory !== null && String(rawSubcategory).trim() !== '') {
       resolvedSubId = await resolveCategoryId(rawSubcategory);
       if (!resolvedSubId) {
-        return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'Selected category does not exist or is inactive.' });
+        return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'Selected subcategory does not exist or is inactive.' });
       }
     }
 
-    if (resolvedCatId && resolvedSubId) {
-      const { rows: subRows } = await query('SELECT parent_id FROM categories WHERE id = $1', [resolvedSubId]);
-      if (!subRows.length || String(subRows[0].parent_id) !== String(resolvedCatId)) {
+    if (categoryId && resolvedSubId) {
+      const { rows: subRows } = await query('SELECT parent_id FROM categories WHERE id::text = $1', [String(resolvedSubId)]);
+      if (subRows.length && subRows[0].parent_id && String(subRows[0].parent_id) !== String(categoryId)) {
         return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'Selected subcategory does not belong to the selected category.' });
       }
     }
 
-    const finalCategoryId = resolvedSubId || resolvedCatId;
-    if ((rawCategory || rawSubcategory) && !finalCategoryId) {
-      return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'Selected category does not exist or is inactive.' });
-    }
+    const finalCategoryId = resolvedSubId || categoryId;
 
     const { rows } = await query(
       `INSERT INTO products
@@ -1150,12 +1203,23 @@ async function createProduct(req, res, next) {
       ]
     );
 
-
     const product = rows[0];
 
     // Handle occasions if provided in body
     const { occasions, occasion_tags } = req.body;
-    const occList = Array.isArray(occasions) ? occasions : (Array.isArray(occasion_tags) ? occasion_tags : []);
+    let occList = [];
+    if (Array.isArray(occasions)) occList = occasions;
+    else if (Array.isArray(occasion_tags)) occList = occasion_tags;
+    else if (typeof occasions === 'string' && occasions.trim()) {
+      try {
+        const parsed = JSON.parse(occasions);
+        if (Array.isArray(parsed)) occList = parsed;
+        else occList = [occasions];
+      } catch {
+        occList = [occasions];
+      }
+    }
+
     if (occList.length > 0) {
       for (const occ of occList) {
         const occSlug = String(occ).trim().toLowerCase().replace(/\s+/g, '-');
@@ -1170,7 +1234,18 @@ async function createProduct(req, res, next) {
       }
     }
 
-    // Handle images if provided in body (support images, photos, img_url, imagePath)
+    // Handle images cleanly whether they come as pre-uploaded URLs (req.body.images) or uploaded files (req.files)
+    let imageList = [];
+    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+      for (const f of req.files) {
+        const url = f.path || f.secure_url || f.url;
+        if (url) imageList.push(url);
+      }
+    } else if (req.file) {
+      const url = req.file.path || req.file.secure_url || req.file.url;
+      if (url) imageList.push(url);
+    }
+
     const rawImagesList = (Array.isArray(images) && images.length > 0) ? images : (
       (Array.isArray(req.body.photos) && req.body.photos.length > 0) ? req.body.photos : (
         (req.body.img_url || req.body.imagePath || req.body.imageUrl || req.body.image_url)
@@ -1178,7 +1253,33 @@ async function createProduct(req, res, next) {
           : []
       )
     );
-    const uniqueRawImagesList = uniqueImageUrls(rawImagesList);
+
+    if (Array.isArray(rawImagesList)) {
+      for (const img of rawImagesList) {
+        if (typeof img === 'string') {
+          try {
+            const parsed = JSON.parse(img);
+            if (Array.isArray(parsed)) imageList.push(...parsed);
+            else imageList.push(img);
+          } catch {
+            imageList.push(img);
+          }
+        } else if (img && typeof img === 'object') {
+          const u = img.url || img.secure_url || img.image_url || img.imagePath;
+          if (u) imageList.push(u);
+        }
+      }
+    } else if (typeof rawImagesList === 'string' && rawImagesList.trim()) {
+      try {
+        const parsed = JSON.parse(rawImagesList);
+        if (Array.isArray(parsed)) imageList.push(...parsed);
+        else imageList.push(rawImagesList);
+      } catch {
+        imageList.push(rawImagesList);
+      }
+    }
+
+    const uniqueRawImagesList = uniqueImageUrls(imageList);
     if (uniqueRawImagesList.length > 0) {
       let sortOrder = 0;
       for (const url of uniqueRawImagesList) {
@@ -1190,10 +1291,23 @@ async function createProduct(req, res, next) {
           );
         }
       }
+      await query(
+        'UPDATE products SET images = $1 WHERE id = $2',
+        [uniqueRawImagesList, product.id]
+      );
+      product.images = uniqueRawImagesList;
+      product.product_images = uniqueRawImagesList.map((url, idx) => ({ id: `img_${idx}`, url, sort_order: idx }));
+      product.image_url = uniqueRawImagesList[0] || null;
+      product.primary_image = uniqueRawImagesList[0] || null;
     }
 
     // Handle variants if provided in body
-    const { variants } = req.body;
+    let variants = req.body.variants;
+    if (typeof variants === 'string' && variants.trim()) {
+      try {
+        variants = JSON.parse(variants);
+      } catch {}
+    }
     if (Array.isArray(variants) && variants.length > 0) {
       for (const v of variants) {
         let vImgs = [];
@@ -1505,11 +1619,12 @@ async function deleteProduct(req, res, next) {
   try {
     const { id } = req.params;
     const sellerId = req.user.id;
-    const isAdmin = req.user.role === 'admin' || req.user.role === 'master_admin';
+    const userRole = String(req.user?.role || '').toUpperCase();
+    const isAdmin = userRole === 'ADMIN' || userRole === 'MASTER_ADMIN';
 
     const { rows: existing } = await query(
-      'SELECT id, seller_id FROM products WHERE id = $1',
-      [id]
+      'SELECT id, seller_id FROM products WHERE id::text = $1',
+      [String(id)]
     );
 
     if (!existing.length) {
@@ -1517,18 +1632,32 @@ async function deleteProduct(req, res, next) {
     }
 
     if (!isAdmin && Number(existing[0].seller_id) !== Number(sellerId)) {
-      const { rows: sRows } = await query('SELECT id FROM sellers WHERE user_id = $1', [sellerId]);
-      const validIds = [Number(sellerId), ...sRows.map(s => Number(s.id))];
-      if (!validIds.includes(Number(existing[0].seller_id))) {
+      const { rows: sRows } = await query(
+        'SELECT id, user_id FROM sellers WHERE user_id = $1 UNION SELECT id, user_id FROM seller_profiles WHERE user_id = $1',
+        [sellerId]
+      );
+      const validIds = new Set([
+        Number(sellerId),
+        String(sellerId),
+        ...sRows.flatMap(s => [s.id, s.user_id, Number(s.id), String(s.id)])
+      ]);
+      if (!validIds.has(existing[0].seller_id) && !validIds.has(Number(existing[0].seller_id)) && !validIds.has(String(existing[0].seller_id))) {
         return res.status(403).json({ success: false, message: 'Forbidden: You do not have ownership of this product listing.' });
       }
     }
 
     const targetSellerId = existing[0].seller_id;
-    await query(
-      `UPDATE products SET status = 'deleted', is_active = FALSE, updated_at = NOW() WHERE id = $1`,
-      [id]
-    );
+    try {
+      await query(
+        `UPDATE products SET status = 'deleted', is_active = 0, updated_at = NOW() WHERE id::text = $1`,
+        [String(id)]
+      );
+    } catch (e) {
+      await query(
+        `UPDATE products SET status = 'deleted', is_active = FALSE, updated_at = NOW() WHERE id::text = $1`,
+        [String(id)]
+      );
+    }
 
     bestsellerService.recomputeForSeller(targetSellerId).catch(err => {
       console.error('[Bestseller] Error recomputing after deleteProduct:', err.message);

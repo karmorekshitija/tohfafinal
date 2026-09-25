@@ -50,7 +50,7 @@ async function createRazorpayOrder(amountINR, orderReference, preferredAccount =
   };
 
   const primaryKeyId = process.env.RAZORPAY_PRIMARY_KEY_ID || process.env.RAZORPAY_KEY_ID;
-  const isPlaceholder = !primaryKeyId || primaryKeyId === 'YOUR_RAZORPAY_KEY_ID' || primaryKeyId === 'rzp_test_placeholder';
+  const isPlaceholder = !primaryKeyId || primaryKeyId === 'YOUR_RAZORPAY_KEY_ID' || primaryKeyId === 'rzp_test_placeholder' || primaryKeyId.includes('placeholder') || primaryKeyId.includes('YOUR_');
   if (isPlaceholder && (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV)) {
     console.warn('⚠️ [Payment Gateway] Development mode: using mock Razorpay order for local testing');
     return {
@@ -352,7 +352,7 @@ async function markOrderPaid(orderId, paymentDetails = {}, externalClient = null
          WHERE ci.product_id IN (
            SELECT oi.product_id FROM order_items oi WHERE oi.order_id = $1
          )
-         AND (ci.buyer_id = $2 OR ci.user_id = $2 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $2))`,
+         AND (ci.buyer_id = $2::int OR ci.user_id = $2::int OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $2::int))`,
         [orderId, order.buyer_id]
       );
     } catch (cartErr) {

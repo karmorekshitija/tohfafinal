@@ -567,10 +567,19 @@
     }
 
     const urlParams = new URLSearchParams(window.location.search);
-    const rawSlug = urlParams.get('slug') || urlParams.get('category') || '';
-    let slug = rawSlug.trim().toLowerCase();
-    let subParam = urlParams.get('sub') || urlParams.get('subcategory') || urlParams.get('subcategory_ids') || urlParams.get('subcategory_id') || '';
-    subParam = subParam.trim().toLowerCase();
+    let slug = urlParams.get('slug') || urlParams.get('category');
+    const sub = urlParams.get('sub');
+
+    slug = slug ? slug.trim().toLowerCase() : '';
+    let subParam = (sub || urlParams.get('subcategory') || urlParams.get('subcategory_ids') || urlParams.get('subcategory_id') || '').trim().toLowerCase();
+
+    if (!slug) {
+      const pathParts = window.location.pathname.split('/').filter(Boolean);
+      const catIdx = pathParts.indexOf('category');
+      if (catIdx !== -1 && pathParts[catIdx + 1]) {
+        slug = pathParts[catIdx + 1].replace(/\.html$/, '').trim().toLowerCase();
+      }
+    }
 
     if (!slug) {
       window.location.replace(ALL_CATEGORIES_URL);
@@ -676,7 +685,21 @@
     }
 
     async function initPage() {
-      if (!slug) return;
+      if (!slug) {
+        try {
+          const catRes = await apiClient.get('/products/categories');
+          const cats = catRes.data?.data?.categories || [];
+          if (cats.length > 0 && cats[0].slug) {
+            slug = cats[0].slug;
+          } else {
+            window.location.replace(ALL_CATEGORIES_URL);
+            return;
+          }
+        } catch (e) {
+          window.location.replace(ALL_CATEGORIES_URL);
+          return;
+        }
+      }
 
       try {
         const res = await apiClient.get('/products/categories/' + encodeURIComponent(slug));
@@ -712,10 +735,10 @@
         if (countEl) countEl.innerText = `${activeCategory.product_count !== undefined ? activeCategory.product_count : 0} active creations`;
 
         // Dynamic header background
-        const bannerBg = activeCategory.banner_image_url || activeCategory.image_url;
+        const coverImg = activeCategory.image_url || activeCategory.banner_url || activeCategory.banner_image_url || `/img/categories/${activeCategory.slug}.jpg`;
         const heroHeader = document.getElementById('category-hero-header');
-        if (heroHeader && bannerBg) {
-          heroHeader.style.backgroundImage = `linear-gradient(rgba(250, 246, 238, 0.88), rgba(250, 246, 238, 0.96)), url('${bannerBg}')`;
+        if (heroHeader && coverImg) {
+          heroHeader.style.backgroundImage = `linear-gradient(rgba(250, 246, 238, 0.88), rgba(250, 246, 238, 0.96)), url('${coverImg}')`;
           heroHeader.style.backgroundSize = 'cover';
           heroHeader.style.backgroundPosition = 'center';
         }
@@ -739,11 +762,11 @@
         if (twitterDescEl) twitterDescEl.content = catDesc;
         const canonicalEl = document.querySelector('link[rel="canonical"]');
         if (canonicalEl) canonicalEl.href = canonicalUrl;
-        if (bannerBg) {
+        if (coverImg) {
           const ogImgEl = document.querySelector('meta[property="og:image"]');
-          if (ogImgEl) ogImgEl.content = bannerBg;
+          if (ogImgEl) ogImgEl.content = coverImg;
           const twImgEl = document.querySelector('meta[name="twitter:image"]');
-          if (twImgEl) twImgEl.content = bannerBg;
+          if (twImgEl) twImgEl.content = coverImg;
         }
 
         // Check subcategory param from URL or backend selected_subcategory

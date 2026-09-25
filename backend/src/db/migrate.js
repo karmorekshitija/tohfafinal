@@ -44,6 +44,8 @@ const MIGRATION_FILES = [
   path.join(__dirname, 'migrations', '027_unify_addresses_schema.sql'),
   path.join(__dirname, 'migrations', '028_add_address_locality.sql'),
   path.join(__dirname, 'migrations', '029_restore_candle_products.sql'),
+  path.join(__dirname, 'migrations', '030_seller_subscription_plans.sql'),
+  path.join(__dirname, 'migrations', '031_fix_category_parent_hierarchy.sql'),
 ];
 
 async function runMigrations() {

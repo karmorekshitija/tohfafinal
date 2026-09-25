@@ -126,11 +126,20 @@ const uploadRefImages = createResilientMultiUploader('images', 'customization-re
 // Resilient single image uploader that tries Cloudinary first, and seamlessly falls back
 // to an optimized base64 Data URI if Cloudinary credentials or signatures fail.
 function createResilientSingleUploader(fieldName, defaultFolder, options = {}) {
+  const allowedFieldNames = Array.isArray(fieldName) ? [...fieldName] : [fieldName];
+  // Support common category cover/image field aliases from admin forms
+  if (allowedFieldNames.includes('image')) {
+    if (!allowedFieldNames.includes('cover_image')) allowedFieldNames.push('cover_image');
+    if (!allowedFieldNames.includes('banner')) allowedFieldNames.push('banner');
+    if (!allowedFieldNames.includes('banner_url')) allowedFieldNames.push('banner_url');
+    if (!allowedFieldNames.includes('file')) allowedFieldNames.push('file');
+  }
+
   const memUpload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: imageFileFilter,
-  }).single(fieldName);
+  }).fields(allowedFieldNames.map(name => ({ name, maxCount: 1 })));
 
   return (req, res, next) => {
     memUpload(req, res, async (err) => {
@@ -139,6 +148,22 @@ function createResilientSingleUploader(fieldName, defaultFolder, options = {}) {
       }
       if (err) {
         return res.status(400).json({ success: false, message: err.message });
+      }
+
+      // Map matching field to req.file
+      if (!req.file && req.files) {
+        for (const name of allowedFieldNames) {
+          if (req.files[name] && req.files[name][0]) {
+            req.file = req.files[name][0];
+            break;
+          }
+        }
+        if (!req.file) {
+          const allUploaded = Object.values(req.files).flat();
+          if (allUploaded.length > 0) {
+            req.file = allUploaded[0];
+          }
+        }
       }
 
       if (!req.file) {
@@ -155,6 +180,12 @@ function createResilientSingleUploader(fieldName, defaultFolder, options = {}) {
 
       if (isCloudinaryReady) {
         try {
+          const rawSlug = req.params?.id || req.body?.slug || req.body?.name || 'cover';
+          const cleanSlug = String(rawSlug).toLowerCase().replace(/[^a-z0-9_-]/g, '-').slice(0, 40);
+          const publicId = options.getPublicId
+            ? options.getPublicId(req)
+            : (folder === 'categories' ? `category_${cleanSlug}_${Date.now()}` : undefined);
+
           const uploadOptions = {
             folder: `tohfa/${folder}`,
             resource_type: 'image',
@@ -163,6 +194,10 @@ function createResilientSingleUploader(fieldName, defaultFolder, options = {}) {
               { width: options.maxWidth || 1200, height: options.maxHeight || 1200, crop: 'limit' }
             ],
           };
+
+          if (publicId) {
+            uploadOptions.public_id = publicId;
+          }
 
           const uploadResult = await new Promise((resolve, reject) => {
             const stream = cloudinary.uploader.upload_stream(uploadOptions, (cErr, result) => {
@@ -173,6 +208,8 @@ function createResilientSingleUploader(fieldName, defaultFolder, options = {}) {
           });
 
           req.file.path = optimizeCloudinaryUrl(uploadResult.secure_url);
+          req.file.secure_url = req.file.path;
+          req.file.url = req.file.path;
           req.file.filename = uploadResult.public_id;
           return next();
         } catch (cErr) {
@@ -184,6 +221,8 @@ function createResilientSingleUploader(fieldName, defaultFolder, options = {}) {
       const mime = req.file.mimetype || 'image/jpeg';
       const base64Data = req.file.buffer.toString('base64');
       req.file.path = `data:${mime};base64,${base64Data}`;
+      req.file.secure_url = req.file.path;
+      req.file.url = req.file.path;
       req.file.filename = `local_${Date.now()}`;
       next();
     });
@@ -194,6 +233,11 @@ function createResilientSingleUploader(fieldName, defaultFolder, options = {}) {
 const uploadCategoryImage = createResilientSingleUploader('image', 'categories', {
   maxWidth: 800,
   maxHeight: 800,
+  getPublicId: (req) => {
+    const rawSlug = req.params?.id || req.body?.slug || req.body?.name || 'cover';
+    const cleanSlug = String(rawSlug).toLowerCase().replace(/[^a-z0-9_-]/g, '-').slice(0, 40);
+    return `category_${cleanSlug}_${Date.now()}`;
+  }
 });
 
 // Banner/hero image (admin) - resilient

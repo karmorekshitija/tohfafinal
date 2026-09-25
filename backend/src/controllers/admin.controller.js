@@ -1354,7 +1354,14 @@ async function toggleSponsor(req, res, next) {
 async function deleteProduct(req, res, next) {
   try {
     const { id } = req.params;
-    const { rows } = await query("UPDATE products SET status = 'deleted' WHERE id = $1 RETURNING seller_id", [id]);
+    let rows;
+    try {
+      const resQuery = await query("UPDATE products SET status = 'deleted', is_active = 0, updated_at = NOW() WHERE id::text = $1 RETURNING seller_id", [String(id)]);
+      rows = resQuery.rows;
+    } catch (e) {
+      const resQuery = await query("UPDATE products SET status = 'deleted', is_active = FALSE, updated_at = NOW() WHERE id::text = $1 RETURNING seller_id", [String(id)]);
+      rows = resQuery.rows;
+    }
     if (rows[0]?.seller_id) {
       bestsellerService.recomputeForSeller(rows[0].seller_id).catch(e => console.error('[Bestseller Recompute Error]:', e.message));
     }
@@ -1425,14 +1432,15 @@ async function createCategory(req, res, next) {
     }
 
     const emoji = emoji_icon || icon_emoji || '🏺';
-    const uploadedUrl = req.file ? req.file.path : null;
-    const imgUrl = uploadedUrl || req.body.fallback_image_url || image_url || banner_image_url || null;
+    const newImageUrl = req.file
+      ? (req.file.path || req.file.secure_url)
+      : (image_url || cover_image || banner_url || banner_image_url || fallback_image_url || null);
 
     const { rows } = await query(
       `INSERT INTO categories (name, display_name, slug, description, emoji_icon, icon_emoji, image_url, banner_image_url, parent_id, sort_order, is_active)
        VALUES ($1, $2, $3, $4, $5, $5, $6, $6, $7, $8, $9)
        RETURNING *`,
-      [name, name, candidateSlug, description, emoji, imgUrl, parent_id || null, finalSortOrder, is_active !== false]
+      [name, name, candidateSlug, description, emoji, newImageUrl, parent_id || null, finalSortOrder, is_active !== false]
     );
 
     await logAdminAction({
@@ -1453,10 +1461,24 @@ async function createCategory(req, res, next) {
 async function updateCategory(req, res, next) {
   try {
     const { id } = req.params;
-    const rawName = req.body.display_name || req.body.name;
-    const { parent_id = null, sort_order, is_active, description, emoji_icon, icon_emoji, image_url, banner_image_url } = req.body;
+    const {
+      name,
+      display_name,
+      description,
+      image_url,
+      cover_image,
+      banner_url,
+      banner_image_url,
+      fallback_image_url,
+      is_active,
+      parent_id = null,
+      sort_order,
+      emoji_icon,
+      icon_emoji
+    } = req.body;
 
-    const name = rawName ? rawName.trim() : null;
+    const rawName = display_name || name;
+    const updatedName = rawName ? rawName.trim() : null;
     // Decision 1: Category slugs are immutable after creation. Ignore any req.body.slug.
 
     let activeVal = null;
@@ -1464,38 +1486,49 @@ async function updateCategory(req, res, next) {
       activeVal = (is_active === 'true' || is_active === true || is_active === 1 || is_active === '1');
     }
     const emoji = emoji_icon || icon_emoji || null;
-    const uploadedUrl = req.file ? req.file.path : null;
-    const imgUrl = uploadedUrl || req.body.fallback_image_url || image_url || banner_image_url || null;
+    const newImageUrl = req.file
+      ? (req.file.path || req.file.secure_url)
+      : (image_url || cover_image || banner_url || banner_image_url || fallback_image_url || null);
 
     const { rows } = await query(
       `UPDATE categories
        SET name             = COALESCE($1, name),
-           display_name     = COALESCE($1, display_name, name),
-           parent_id        = CASE WHEN $2::boolean THEN $9 ELSE parent_id END,
-           sort_order       = COALESCE($3, sort_order),
-           is_active        = COALESCE($4, is_active),
-           description      = COALESCE($5, description),
-           emoji_icon       = COALESCE($6, emoji_icon),
-           icon_emoji       = COALESCE($6, icon_emoji),
-           image_url        = COALESCE($7, image_url),
-           banner_image_url = COALESCE($7, banner_image_url),
+           display_name     = COALESCE($2, display_name, name),
+           description      = COALESCE($3, description),
+           image_url        = COALESCE($4, image_url),
+           banner_image_url = COALESCE($4, banner_image_url, image_url),
+           parent_id        = CASE WHEN $5::boolean THEN $6 ELSE parent_id END,
+           sort_order       = COALESCE($7, sort_order),
+           is_active        = COALESCE($8, is_active),
+           emoji_icon       = COALESCE($9, emoji_icon),
+           icon_emoji       = COALESCE($9, icon_emoji),
            updated_at       = NOW()
-       WHERE id = $8
+       WHERE id = $10
        RETURNING *`,
       [
-        name,
+        updatedName,
+        display_name ? display_name.trim() : updatedName,
+        description !== undefined ? description : null,
+        newImageUrl,
         req.body.parent_id !== undefined,
+        parent_id || null,
         (sort_order !== undefined && sort_order !== null && sort_order !== '') ? parseInt(sort_order, 10) : null,
         activeVal,
-        description !== undefined ? description : null,
         emoji,
-        imgUrl,
-        id,
-        parent_id || null
+        id
       ]
     );
 
     if (!rows.length) return res.status(404).json({ success: false, message: 'Category not found.' });
+
+    await logAdminAction({
+      adminId: req.user ? req.user.id : null,
+      actionType: 'CATEGORY_UPDATED',
+      targetEntity: 'categories',
+      targetId: id,
+      details: { name: rows[0].name, image_url: rows[0].image_url },
+      ipAddress: req.ip
+    });
 
     return res.json({ success: true, data: { ...rows[0], display_name: rows[0].name } });
   } catch (err) {

@@ -670,7 +670,7 @@ function rowHTML(l) {
     const isChecked = selectedListings[l.listing_id] ? 'checked' : '';
 
     return `
-    <tr class="group hover:bg-forest/5 transition-colors">
+    <tr id="product-row-${l.listing_id}" class="group hover:bg-forest/5 transition-colors">
         <td class="py-4 px-3 w-12 text-center" onclick="event.stopPropagation();">
             <input type="checkbox" data-id="${l.listing_id}" ${isChecked} class="listing-checkbox rounded border-sage/30 text-forest focus:ring-forest bg-background w-4 h-4 cursor-pointer" onchange="toggleRowSelection('${l.listing_id}')"/>
         </td>
@@ -693,19 +693,19 @@ function rowHTML(l) {
                 <div class="flex items-center gap-1">
                     ${statusBadge(l.status, l.stock_count)}
                 </div>
-                <button class="sponsor-btn ${l.is_sponsored ? 'text-amber-500 font-bold bg-amber-500/10' : 'text-stone-400 hover:text-amber-500'} transition-colors" title="${l.is_sponsored ? 'Sponsored (Click to remove)' : 'Feature as Sponsored'}" data-id="${l.listing_id}" data-sponsored="${l.is_sponsored ? '1' : '0'}">
+                <button type="button" class="sponsor-btn ${l.is_sponsored ? 'text-amber-500 font-bold bg-amber-500/10' : 'text-stone-400 hover:text-amber-500'} transition-colors" title="${l.is_sponsored ? 'Sponsored (Click to remove)' : 'Feature as Sponsored'}" data-id="${l.listing_id}" data-sponsored="${l.is_sponsored ? '1' : '0'}">
                     <span class="material-symbols-outlined text-lg">${l.is_sponsored ? 'star' : 'star_border'}</span>
                 </button>
-                <button class="edit-btn text-sage hover:text-forest transition-colors" title="Edit" data-id="${l.listing_id}">
+                <button type="button" class="edit-btn text-sage hover:text-forest transition-colors" title="Edit" data-id="${l.listing_id}">
                     <span class="material-symbols-outlined text-lg">edit</span>
                 </button>
-                <button class="add-color-btn text-forest hover:text-primary transition-colors flex items-center justify-center p-1 rounded-full hover:bg-forest/10 active:scale-95" title="Add Color Variant" onclick="event.stopPropagation(); window.location.href='/seller/edit-product.html?id=' + encodeURIComponent('${l.listing_id}');">
+                <button type="button" class="add-color-btn text-forest hover:text-primary transition-colors flex items-center justify-center p-1 rounded-full hover:bg-forest/10 active:scale-95" title="Add Color Variant" onclick="event.stopPropagation(); window.location.href='/seller/edit-product.html?id=' + encodeURIComponent('${l.listing_id}');">
                     <span class="material-symbols-outlined text-lg">palette</span>
                 </button>
-                <button class="pause-btn text-[#7B5EA7] hover:text-[#7B5EA7]/85 transition-colors" title="${pauseTitle}" data-id="${l.listing_id}" data-status="${l.status}">
+                <button type="button" class="pause-btn text-[#7B5EA7] hover:text-[#7B5EA7]/85 transition-colors" title="${pauseTitle}" data-id="${l.listing_id}" data-status="${l.status}">
                     <span class="material-symbols-outlined text-lg">${pauseIcon}</span>
                 </button>
-                <button class="delete-btn text-rose-400 hover:text-rose-600 transition-colors" title="Delete" data-id="${l.listing_id}" data-title="${l.title}">
+                <button type="button" class="delete-btn text-rose-400 hover:text-rose-600 transition-colors" title="Delete" data-id="${l.listing_id}" data-title="${l.title}">
                     <span class="material-symbols-outlined text-lg">delete</span>
                 </button>
             </div>
@@ -959,28 +959,101 @@ function attachCardListeners() {
 
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            e.stopPropagation();
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
             const id    = btn.dataset.id;
             const title = btn.dataset.title;
-            if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
-            await deleteListing(id, title);
+            if (typeof window.handleDeleteProduct === 'function') {
+                await window.handleDeleteProduct(e, id, title);
+            } else {
+                await deleteListing(id, title, e);
+            }
         });
     });
 }
 
 // ── Delete listing ────────────────────────────────────────────
-async function deleteListing(id, title) {
-    const token = sessionStorage.getItem('tohfa_access_token');
+async function deleteListing(id, title, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    if (!confirm(`Delete "${title || 'this product'}"? This cannot be undone.`)) return false;
+
+    const token = sessionStorage.getItem('tohfa_access_token') ||
+                  localStorage.getItem('tohfa_access_token') ||
+                  localStorage.getItem('token') ||
+                  sessionStorage.getItem('token') ||
+                  localStorage.getItem('adminToken') ||
+                  sessionStorage.getItem('adminToken');
+
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    let activeSellerId = null;
+    const switchCtx = sessionStorage.getItem('tohfa_admin_switch_context');
+    if (switchCtx) {
+        try {
+            const parsed = JSON.parse(switchCtx);
+            if (parsed.sellerId) activeSellerId = parsed.sellerId;
+        } catch (e) {}
+    }
+    if (!activeSellerId) {
+        activeSellerId = sessionStorage.getItem('seller_id') || localStorage.getItem('seller_id') || sessionStorage.getItem('tohfa_special_seller_id');
+    }
+    if (activeSellerId) {
+        headers['x-seller-id'] = String(activeSellerId);
+    }
+
     try {
-        const res = await fetch(`${API_BASE}/api/seller/listings/${id}`, {
+        let res = await fetch(`${API_BASE}/api/seller/listings/${id}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        showToast(`"${title}" deleted.`, 'success');
-        await loadListings(true);
+        if (res.status === 404) {
+            res = await fetch(`${API_BASE}/api/products/${id}`, {
+                method: 'DELETE',
+                headers
+            });
+        }
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.message || `HTTP ${res.status}`);
+        }
+
+        // Animate and remove row from DOM
+        const row = document.getElementById(`product-row-${id}`);
+        if (row) {
+            row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(20px)';
+            setTimeout(() => {
+                row.remove();
+                const remainingRows = document.querySelectorAll('#listings-tbody tr');
+                if (remainingRows.length === 0) {
+                    const emptyState = document.getElementById('empty-state');
+                    if (emptyState) emptyState.classList.remove('hidden');
+                    const tableContainer = document.getElementById('listings-table-container');
+                    if (tableContainer) tableContainer.classList.add('hidden');
+                }
+            }, 300);
+        }
+
+        if (Array.isArray(allListings)) {
+            allListings = allListings.filter(item => String(item.listing_id || item.id) !== String(id));
+        }
+
+        showToast(`"${title || 'Product'}" deleted successfully.`, 'success');
+        return true;
     } catch (err) {
         showToast('Delete failed: ' + err.message, 'error');
+        return false;
     }
 }
 

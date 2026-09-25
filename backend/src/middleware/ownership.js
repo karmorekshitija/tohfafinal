@@ -22,7 +22,8 @@ function verifySellerOwnership(resourceType = 'order') {
       }
 
       // Admins bypass seller ownership checks
-      if (user.role === 'admin' || user.role === 'master_admin') {
+      const userRole = String(user.role || '').toUpperCase();
+      if (userRole === 'ADMIN' || userRole === 'MASTER_ADMIN') {
         return next();
       }
 

@@ -454,7 +454,7 @@
             const displayName = cat.display_name || cat.name;
             const count = cat.product_count !== undefined ? cat.product_count : (cat.item_count || 0);
 
-            const imageToUse = cat.image_url || FALLBACK_IMAGE;
+            const imageToUse = cat.image_url || cat.banner_url || cat.banner_image_url || (cat.slug ? (`/img/categories/${cat.slug}.jpg`) : FALLBACK_IMAGE);
 
             const subs = cat.subcategories || [];
             const displaySubs = subs.slice(0, 10);

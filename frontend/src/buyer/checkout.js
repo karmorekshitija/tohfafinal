@@ -287,6 +287,24 @@ window.initiatePayment = async (isTestPay = false) => {
       throw new Error('Payment initialization failed.');
     }
 
+    // Fallback to test-pay in local dev mode when Razorpay placeholder keys are used
+    const activeKey = payData.razorpayKeyId || payData.key_id || '';
+    const isMockGateway = !activeKey ||
+      activeKey === 'rzp_test_placeholder' ||
+      activeKey === 'YOUR_RAZORPAY_KEY_ID' ||
+      activeKey.includes('placeholder') ||
+      activeKey.includes('YOUR_') ||
+      String(payData.razorpay_order_id || '').startsWith('order_mock_');
+
+    if (isMockGateway) {
+      console.log('[DEV] Razorpay keys not configured; completing order via test-pay.');
+      showToast('Confirming order payment in development test mode...', 'info');
+      await api.post('/api/payments/test-pay', { orderId: firstOrder.id, order_id: firstOrder.id });
+      await api.delete('/api/cart').catch(() => {});
+      window.location.href = `./payment-success.html?orderId=${firstOrder.id}&id=${firstOrder.id}&order_ref=${firstOrder.order_ref || ''}`;
+      return;
+    }
+
     // 3. Ensure Razorpay SDK script is loaded
     const sdkReady = await loadRazorpayScript();
 

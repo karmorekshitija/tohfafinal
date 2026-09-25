@@ -1134,7 +1134,7 @@
         ...cat,
         display_name: cat.display_name || cat.name || 'Artisan Collection',
         emoji_icon: cat.emoji_icon || cat.icon_emoji || '🏺',
-        image_url: cat.image_url || '/img/categories/ceramics.jpg'
+        image_url: cat.image_url || cat.banner_url || cat.banner_image_url || (cat.slug ? `/img/categories/${cat.slug}.jpg` : '/img/categories/artisan_showcase.jpg')
       }));
 
       container.innerHTML = '';
@@ -1160,7 +1160,7 @@
         <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3.5 sm:gap-5">
           ${categories.slice(0, 8).map(cat => `
             <a href="${categoryUrl(cat)}" class="group relative rounded-2xl overflow-hidden aspect-[4/3] border border-[#14381F]/15 shadow-sm hover:shadow-lg transition-all duration-300 no-underline bg-[#FAF6EE] flex flex-col justify-end p-4">
-              <img src="${cat.image_url}" alt="${escapeHtml(cat.display_name)}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
+              <img src="${cat.image_url}" alt="${escapeHtml(cat.display_name)}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onerror="this.onerror=null; this.src='/img/categories/artisan_showcase.jpg';">
               <div class="absolute inset-0 bg-gradient-to-t from-[#14381F]/90 via-[#14381F]/40 to-transparent"></div>
               <div class="relative z-10">
                 <span class="text-xl mb-1 block">${cat.emoji_icon}</span>

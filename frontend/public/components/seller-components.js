@@ -448,3 +448,115 @@ class SellerLayout extends HTMLElement {
 customElements.define('seller-sidebar', SellerSidebar);
 customElements.define('seller-topbar', SellerTopBar);
 customElements.define('seller-layout', SellerLayout);
+
+/**
+ * Global product delete handler for Seller Studio (Normal & Tohfa Special)
+ * Prevents default link/button action (avoiding premature page refresh),
+ * prompts confirmation, calls backend DELETE with proper auth & headers,
+ * and removes product row from DOM.
+ */
+window.handleDeleteProduct = async function(event, productId, productTitle) {
+  if (event) {
+    if (typeof event.preventDefault === 'function') event.preventDefault();
+    if (typeof event.stopPropagation === 'function') event.stopPropagation();
+  }
+
+  const title = productTitle || 'this product';
+  if (!confirm(`Delete "${title}"? This cannot be undone.`)) {
+    return false;
+  }
+
+  const token = sessionStorage.getItem('tohfa_access_token') ||
+                localStorage.getItem('tohfa_access_token') ||
+                localStorage.getItem('token') ||
+                sessionStorage.getItem('token') ||
+                localStorage.getItem('adminToken') ||
+                sessionStorage.getItem('adminToken');
+
+  const headers = {
+    'Content-Type': 'application/json'
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  let activeSellerId = null;
+  const switchCtx = sessionStorage.getItem('tohfa_admin_switch_context');
+  if (switchCtx) {
+    try {
+      const parsed = JSON.parse(switchCtx);
+      if (parsed.sellerId) activeSellerId = parsed.sellerId;
+    } catch (e) {}
+  }
+  if (!activeSellerId) {
+    activeSellerId = sessionStorage.getItem('seller_id') || localStorage.getItem('seller_id') || sessionStorage.getItem('tohfa_special_seller_id');
+  }
+  if (activeSellerId) {
+    headers['x-seller-id'] = String(activeSellerId);
+  }
+
+  const apiBase = window.API_BASE || (window.location.origin.includes(':5173') ? 'http://localhost:5000' : '');
+
+  try {
+    let res = await fetch(`${apiBase}/api/seller/listings/${productId}`, {
+      method: 'DELETE',
+      headers
+    });
+    if (res.status === 404) {
+      res = await fetch(`${apiBase}/api/products/${productId}`, {
+        method: 'DELETE',
+        headers
+      });
+    }
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.message || `HTTP ${res.status}`);
+    }
+
+    // Animate and remove row from DOM
+    const row = document.getElementById(`product-row-${productId}`) ||
+                document.querySelector(`tr[data-id="${productId}"]`) ||
+                document.querySelector(`tr[data-product-id="${productId}"]`) ||
+                (event && event.target ? event.target.closest('tr') : null);
+    if (row) {
+      row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      row.style.opacity = '0';
+      row.style.transform = 'translateX(20px)';
+      setTimeout(() => {
+        row.remove();
+        const tbody = document.querySelector('#listings-tbody, tbody');
+        if (tbody && tbody.querySelectorAll('tr').length === 0) {
+          const emptyState = document.getElementById('empty-state');
+          if (emptyState) emptyState.classList.remove('hidden');
+          const tableContainer = document.getElementById('listings-table-container');
+          if (tableContainer) tableContainer.classList.add('hidden');
+        }
+      }, 300);
+    }
+
+    if (typeof showToast === 'function') {
+      showToast(`"${title}" deleted successfully.`, 'success');
+    } else if (typeof window.showToast === 'function') {
+      window.showToast(`"${title}" deleted successfully.`, 'success');
+    }
+
+    // Reload listings in background if function exists
+    if (typeof loadListings === 'function') {
+      loadListings(true).catch(() => {});
+    }
+
+    return true;
+  } catch (err) {
+    console.error('[DeleteProduct Error]:', err);
+    if (typeof showToast === 'function') {
+      showToast('Delete failed: ' + err.message, 'error');
+    } else if (typeof window.showToast === 'function') {
+      window.showToast('Delete failed: ' + err.message, 'error');
+    } else {
+      alert('Delete failed: ' + err.message);
+    }
+    return false;
+  }
+};
+

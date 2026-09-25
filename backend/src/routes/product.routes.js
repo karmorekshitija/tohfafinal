@@ -63,7 +63,7 @@ router.post('/:id/view', (req, res, next) => {
 
 // Seller Product Management
 router.get('/seller-alerts/low-stock', authMiddleware, sellerOnly, productController.getLowStockProducts);
-router.post('/', authMiddleware, sellerOnly, validate(schemas.createProduct), productController.createProduct);
+router.post('/', authMiddleware, sellerOnly, uploadProductImages, validate(schemas.createProduct), productController.createProduct);
 router.put('/:id', authMiddleware, sellerOnly, productController.updateProduct);
 router.patch('/:id', authMiddleware, sellerOnly, productController.updateProduct);
 router.patch('/:id/status', authMiddleware, sellerOnly, productController.updateProductStatus);

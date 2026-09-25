@@ -13,10 +13,12 @@ const addBtn = document.getElementById('addOccasionBtn');
 async function loadOccasions() {
   try {
     const res = await api.get('/api/occasions');
-    const items = res?.data || [];
+    const occasions = Array.isArray(res?.data?.occasions)
+      ? res.data.occasions
+      : (Array.isArray(res?.data) ? res.data : []);
     if (loading) loading.style.display = 'none';
 
-    if (!items.length) {
+    if (!occasions.length) {
       if (empty) {
         empty.innerHTML = `
           <div style="text-align:center; padding:var(--space-8) var(--space-4);">
@@ -36,7 +38,7 @@ async function loadOccasions() {
     }
 
     if (list) {
-      list.innerHTML = items.map(occ => `
+      list.innerHTML = occasions.map(occ => `
         <div class="occasion-card">
           <div class="occasion-icon-wrap">🎁</div>
           <div style="flex:1;">

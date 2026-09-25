@@ -71,8 +71,31 @@ async function loadTab(tab) {
 // Tab 1: Orders
 async function renderOrdersTab() {
   try {
-    const res = await api.get('/api/orders');
-    const orders = Array.isArray(res?.data) ? res.data : [];
+    let res;
+    try {
+      res = await api.get('/api/orders');
+    } catch {
+      res = await api.get('/api/orders/buyer');
+    }
+
+    let orders = Array.isArray(res?.data?.orders)
+      ? res.data.orders
+      : (Array.isArray(res?.data)
+        ? res.data
+        : (Array.isArray(res?.orders) ? res.orders : null));
+
+    if (orders === null) {
+      try {
+        const fallbackRes = await api.get('/api/orders/buyer');
+        orders = Array.isArray(fallbackRes?.data?.orders)
+          ? fallbackRes.data.orders
+          : (Array.isArray(fallbackRes?.data)
+            ? fallbackRes.data
+            : (Array.isArray(fallbackRes?.orders) ? fallbackRes.orders : []));
+      } catch {
+        orders = [];
+      }
+    }
 
     if (!orders.length) {
       tabContent.innerHTML = `
@@ -104,7 +127,7 @@ async function renderOrdersTab() {
               <tr>
                 <td class="text-id">${String(o.id).slice(0, 8).toUpperCase()}</td>
                 <td>${formatDate(o.created_at)}</td>
-                <td>${o.seller_store_name || o.seller_name || 'Artisan Seller'}</td>
+                <td>${o.store_name || o.seller_store_name || o.seller_name || 'Artisan Seller'}</td>
                 <td class="text-price-sm">${formatPrice(o.total_amount)}</td>
                 <td><span class="badge ${statusClass(o.status)}">${statusLabel(o.status)}</span></td>
                 <td><a href="./order-detail.html?id=${o.id}" class="btn btn-xs btn-secondary">View Details →</a></td>
@@ -153,7 +176,9 @@ async function renderAddressesTab() {
 async function renderOccasionsTab() {
   try {
     const res = await api.get('/api/occasions');
-    const list = Array.isArray(res?.data) ? res.data : [];
+    const occasions = Array.isArray(res?.data?.occasions)
+      ? res.data.occasions
+      : (Array.isArray(res?.data) ? res.data : []);
 
     tabContent.innerHTML = `
       <div class="flex justify-between items-center" style="margin-bottom:var(--space-4);">
@@ -164,13 +189,13 @@ async function renderOccasionsTab() {
         <a href="./occasions.html" class="btn btn-sm btn-primary">+ Add Occasion</a>
       </div>
       <div class="grid" style="grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:var(--space-4);">
-        ${list.map(occ => `
+        ${occasions.map(occ => `
           <div class="card" style="padding:var(--space-4);">
             <div class="flex justify-between items-center">
               <span style="font-size:24px;">🎁</span>
-              <span class="badge badge-primary">${formatDate(occ.occasion_date)}</span>
+              <span class="badge badge-primary">${formatDate(occ.occasion_date || occ.date)}</span>
             </div>
-            <h4 style="font-family:var(--font-display); font-size:var(--text-md); color:var(--color-primary); margin-top:var(--space-2);">${occ.label}</h4>
+            <h4 style="font-family:var(--font-display); font-size:var(--text-md); color:var(--color-primary); margin-top:var(--space-2);">${occ.label || occ.title || occ.name || 'Special Occasion'}</h4>
             <p class="text-small" style="color:var(--color-text-muted);">For ${occ.person_name || 'Loved One'}</p>
           </div>
         `).join('')}
@@ -185,9 +210,11 @@ async function renderOccasionsTab() {
 async function renderCustomizationsTab() {
   try {
     const res = await api.get('/api/customization/buyer');
-    const list = Array.isArray(res?.data) ? res.data : [];
+    const customizations = Array.isArray(res?.data?.customizations)
+      ? res.data.customizations
+      : (Array.isArray(res?.data) ? res.data : []);
 
-    if (!list.length) {
+    if (!customizations.length) {
       tabContent.innerHTML = `
         <div class="empty-state">
           <div class="empty-state__icon">🎨</div>
@@ -200,7 +227,7 @@ async function renderCustomizationsTab() {
 
     tabContent.innerHTML = `
       <div class="flex flex-col gap-4">
-        ${list.map(req => `
+        ${customizations.map(req => `
           <div class="card flex justify-between items-center" style="padding:var(--space-4);">
             <div>
               <span class="badge ${statusClass(req.status)}">${statusLabel(req.status)}</span>

@@ -37,8 +37,8 @@ async function createOverflowOrder(req, res, next) {
        JOIN products p ON p.id = ci.product_id
        LEFT JOIN product_variants pv ON pv.id = ci.variant_id
        LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
-       WHERE (ci.buyer_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
-         AND p.status = 'active' AND p.is_active = TRUE
+       WHERE (ci.buyer_id = $1::int OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1::int))
+          AND p.status = 'active' AND (p.is_active = 1 OR p.is_active::text = 'true' OR p.is_active::text = '1')
          ${itemFilter}`,
       params
     );
@@ -47,9 +47,9 @@ async function createOverflowOrder(req, res, next) {
     }
 
     const { rows: addressRows } = await query(
-      `SELECT id FROM addresses WHERE id = $1 AND user_id = $2
+      `SELECT id FROM addresses WHERE id = $1::int AND user_id = $2::int
        UNION ALL
-       SELECT id FROM user_addresses WHERE id = $1 AND user_id = $2
+       SELECT id FROM user_addresses WHERE id = $1::int AND user_id = $2::int
        LIMIT 1`,
       [address_id, buyerId]
     );

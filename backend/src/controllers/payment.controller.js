@@ -119,8 +119,14 @@ async function verifyPayment(req, res, next) {
     const isPlaceholder =
       !primaryKeyId ||
       primaryKeyId === 'rzp_test_placeholder' ||
+      primaryKeyId === 'YOUR_RAZORPAY_KEY_ID' ||
+      primaryKeyId.includes('placeholder') ||
+      primaryKeyId.includes('YOUR_') ||
       !primarySecret ||
-      primarySecret === 'placeholder_secret';
+      primarySecret === 'placeholder_secret' ||
+      primarySecret === 'YOUR_RAZORPAY_KEY_SECRET' ||
+      primarySecret.includes('placeholder') ||
+      primarySecret.includes('YOUR_');
 
     if (isPlaceholder) {
       console.error('[SECURITY] Payment verification blocked: Razorpay keys are not configured. Set RAZORPAY_PRIMARY_KEY_ID and RAZORPAY_PRIMARY_KEY_SECRET in environment variables.');

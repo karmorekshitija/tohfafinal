@@ -966,6 +966,8 @@
                     const isMockGateway = !payData.razorpayKeyId ||
                         payData.razorpayKeyId === 'rzp_test_placeholder' ||
                         payData.razorpayKeyId === 'YOUR_RAZORPAY_KEY_ID' ||
+                        String(payData.razorpayKeyId).includes('placeholder') ||
+                        String(payData.razorpayKeyId).includes('YOUR_') ||
                         String(payData.razorpay_order_id || '').startsWith('order_mock_');
 
                     if (isMockGateway) {

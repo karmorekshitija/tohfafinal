@@ -104,9 +104,9 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
       LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
       LEFT JOIN sellers s ON s.user_id = p.seller_id
       LEFT JOIN product_variants pv ON pv.id = ci.variant_id
-      WHERE (ci.buyer_id = $1 OR ci.user_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
+      WHERE (ci.buyer_id = $1::int OR ci.user_id = $1::int OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1::int))
         AND ci.id::text = ANY($2::text[])
-        AND (p.status = 'active' OR p.is_active = TRUE)
+        AND (p.status = 'active' OR p.is_active = 1 OR p.is_active::text = 'true' OR p.is_active::text = '1')
     `;
     cartParams = [buyerId, cartItemIds];
   } else {
@@ -129,8 +129,8 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
       LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
       LEFT JOIN sellers s ON s.user_id = p.seller_id
       LEFT JOIN product_variants pv ON pv.id = ci.variant_id
-      WHERE (ci.buyer_id = $1 OR ci.user_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
-        AND (p.status = 'active' OR p.is_active = TRUE)
+      WHERE (ci.buyer_id = $1::int OR ci.user_id = $1::int OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1::int))
+        AND (p.status = 'active' OR p.is_active = 1 OR p.is_active::text = 'true' OR p.is_active::text = '1')
     `;
     cartParams = [buyerId];
   }
@@ -170,13 +170,13 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
   // Validate address belongs to buyer (check user_addresses first, fallback to addresses)
   let shippingAddressSnapshot = {};
   const { rows: addrRows } = await query(
-    `SELECT * FROM user_addresses WHERE id = $1 AND user_id = $2
+    `SELECT * FROM user_addresses WHERE id = $1::int AND user_id = $2::int
      UNION ALL
-     SELECT * FROM addresses WHERE id = $1 AND user_id = $2
+     SELECT * FROM addresses WHERE id = $1::int AND user_id = $2::int
      LIMIT 1`,
     [addressId, buyerId]
   ).catch(async () => {
-    return await query('SELECT * FROM addresses WHERE id = $1 AND user_id = $2 LIMIT 1', [addressId, buyerId]);
+    return await query('SELECT * FROM addresses WHERE id = $1::int AND user_id = $2::int LIMIT 1', [addressId, buyerId]);
   });
 
   if (!addrRows.length) {
@@ -268,7 +268,7 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
       `INSERT INTO orders
          (user_id, buyer_id, seller_id, address_id, total_amount, total_paise, subtotal_paise, shipping_paise,
           order_ref, discount_amount, shipping_amount, coupon_id, payment_method, payment_status, status, payout_status, shipping_address, notes)
-       VALUES ($1, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'razorpay', 'unpaid', 'pending', 'pending', $12, $13)
+       VALUES ($1::int, $1::int, $2::int, $3::int, $4, $5, $6, $7, $8, $9, $10, $11, 'razorpay', 'unpaid', 'pending', 'pending', $12, $13)
        RETURNING *`,
       [
         buyerId,

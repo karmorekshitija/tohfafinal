@@ -50,15 +50,35 @@ router.delete('/addresses/:id', authMiddleware, sellerOnly, buyerController.dele
 // Listings / Products
 router.get('/catalog/summary', authMiddleware, sellerOnly, sellerController.getCatalogSummary);
 router.get('/listings', authMiddleware, sellerOnly, (req, res, next) => {
-  req.params.sellerId = req.user.id;
+  const headerSellerId = req.headers['x-seller-id'] || req.headers['x-impersonate-seller-id'] || req.query.seller_id || req.query.sellerId;
+  const userRole = String(req.user?.role || '').toUpperCase();
+  const isAdmin = userRole === 'ADMIN' || userRole === 'MASTER_ADMIN';
+  if (isAdmin && headerSellerId) {
+    req.params.sellerId = headerSellerId;
+  } else {
+    req.params.sellerId = req.user.id;
+  }
+  return productController.getSellerProducts(req, res, next);
+});
+router.get('/products', authMiddleware, sellerOnly, (req, res, next) => {
+  const headerSellerId = req.headers['x-seller-id'] || req.headers['x-impersonate-seller-id'] || req.query.seller_id || req.query.sellerId;
+  const userRole = String(req.user?.role || '').toUpperCase();
+  const isAdmin = userRole === 'ADMIN' || userRole === 'MASTER_ADMIN';
+  if (isAdmin && headerSellerId) {
+    req.params.sellerId = headerSellerId;
+  } else {
+    req.params.sellerId = req.user.id;
+  }
   return productController.getSellerProducts(req, res, next);
 });
 router.get('/listings/:id', authMiddleware, sellerOnly, productController.getProduct);
-router.post('/listings', authMiddleware, sellerOnly, validate(schemas.createProduct), productController.createProduct);
+router.post('/listings', authMiddleware, sellerOnly, uploadProductImages, validate(schemas.createProduct), productController.createProduct);
+router.post('/products', authMiddleware, sellerOnly, uploadProductImages, validate(schemas.createProduct), productController.createProduct);
 router.put('/listings/:id', authMiddleware, sellerOnly, verifySellerOwnership('product'), productController.updateProduct);
 router.patch('/listings/:id', authMiddleware, sellerOnly, verifySellerOwnership('product'), productController.updateProduct);
 router.delete('/listings/:id', authMiddleware, sellerOnly, verifySellerOwnership('product'), productController.deleteProduct);
 router.delete('/listings/:id/delete', authMiddleware, sellerOnly, verifySellerOwnership('product'), productController.deleteProduct);
+router.delete('/products/:id', authMiddleware, sellerOnly, verifySellerOwnership('product'), productController.deleteProduct);
 router.patch('/listings/:id/discount', authMiddleware, sellerOnly, sellerController.updateListingDiscount);
 router.post('/listings/bulk-discount', authMiddleware, sellerOnly, sellerController.bulkDiscountListings);
 router.post('/listings/bulk-discount-all', authMiddleware, sellerOnly, sellerController.bulkDiscountAllListings);

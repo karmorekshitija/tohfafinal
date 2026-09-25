@@ -118,5 +118,7 @@ export default class Toast {
 }
 
 // Global access for pages that don't use ES modules
-window.Toast = Toast;
-window.showToast = (msg, type) => Toast.show(msg, type);
+if (typeof window !== 'undefined') {
+  window.Toast = Toast;
+  window.showToast = (msg, type) => Toast.show(msg, type);
+}
