@@ -50,7 +50,7 @@ async function getCart(req, res, next) {
        LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
        LEFT JOIN users u ON u.id = p.seller_id
        LEFT JOIN product_variants pv ON pv.id = ci.variant_id
-       WHERE (ci.buyer_id = $1 OR ci.user_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
+       WHERE (ci.buyer_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
        ORDER BY ci.created_at DESC`,
       [buyerId]
     ).catch(async () => {
@@ -78,7 +78,7 @@ async function getCart(req, res, next) {
          JOIN products p ON p.id = ci.product_id
          LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
          LEFT JOIN product_variants pv ON pv.id = ci.variant_id
-         WHERE (ci.buyer_id = $1 OR ci.user_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
+         WHERE (ci.buyer_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
          ORDER BY ci.created_at DESC`,
         [buyerId]
       );
@@ -258,11 +258,10 @@ async function addToCart(req, res, next) {
       ? 'ON CONFLICT (buyer_id, product_id, variant_id) WHERE variant_id IS NOT NULL'
       : 'ON CONFLICT (buyer_id, product_id) WHERE variant_id IS NULL';
     const { rows } = await query(
-      `INSERT INTO cart_items (user_id, buyer_id, product_id, variant_id, quantity, customization_data, customization_payload)
-       VALUES ($1, $1, $2, $3, $4, $5, COALESCE($5::jsonb, '{}'::jsonb))
+      `INSERT INTO cart_items (buyer_id, product_id, variant_id, quantity, customization_data, customization_payload)
+       VALUES ($1, $2, $3, $4, $5, COALESCE($5::jsonb, '{}'::jsonb))
        ${conflictClause}
        DO UPDATE SET
-         user_id = EXCLUDED.user_id,
          quantity = cart_items.quantity + EXCLUDED.quantity,
          customization_data = COALESCE(EXCLUDED.customization_data, cart_items.customization_data),
          customization_payload = COALESCE(EXCLUDED.customization_payload, cart_items.customization_payload)

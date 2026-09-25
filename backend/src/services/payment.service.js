@@ -352,7 +352,7 @@ async function markOrderPaid(orderId, paymentDetails = {}, externalClient = null
          WHERE ci.product_id IN (
            SELECT oi.product_id FROM order_items oi WHERE oi.order_id = $1
          )
-         AND (ci.buyer_id = $2::int OR ci.user_id = $2::int OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $2::int))`,
+         AND (ci.buyer_id = $2 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $2))`,
         [orderId, order.buyer_id]
       );
     } catch (cartErr) {

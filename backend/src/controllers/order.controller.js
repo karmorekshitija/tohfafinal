@@ -37,8 +37,8 @@ async function createOverflowOrder(req, res, next) {
        JOIN products p ON p.id = ci.product_id
        LEFT JOIN product_variants pv ON pv.id = ci.variant_id
        LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
-       WHERE (ci.buyer_id = $1::int OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1::int))
-          AND p.status = 'active' AND (p.is_active = 1 OR p.is_active::text = 'true' OR p.is_active::text = '1')
+       WHERE (ci.buyer_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
+          AND p.status = 'active' AND (p.is_active = TRUE OR p.is_active::text = 'true' OR p.is_active::text = '1')
          ${itemFilter}`,
       params
     );
@@ -47,9 +47,9 @@ async function createOverflowOrder(req, res, next) {
     }
 
     const { rows: addressRows } = await query(
-      `SELECT id FROM addresses WHERE id = $1::int AND user_id = $2::int
+      `SELECT id FROM addresses WHERE id = $1 AND user_id = $2
        UNION ALL
-       SELECT id FROM user_addresses WHERE id = $1::int AND user_id = $2::int
+       SELECT id FROM user_addresses WHERE id = $1 AND user_id = $2
        LIMIT 1`,
       [address_id, buyerId]
     );
@@ -425,7 +425,6 @@ async function getOrderById(req, res, next) {
                   'variant_name', COALESCE(oi.variant_name, pv.variant_name),
                   'customization_text', '',
                   'image_url', COALESCE(
-                    oi.image_url,
                     (SELECT pi.url FROM product_images pi WHERE pi.product_id = oi.product_id ORDER BY pi.sort_order LIMIT 1),
                     (p.images)[1],
                     '/img/placeholder-product.png'
@@ -475,7 +474,7 @@ async function updateOrderStatus(req, res, next) {
     const role = req.user.role;
     const { status } = req.body;
 
-    const allowed = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'cancel_requested'];
+    const allowed = ['pending', 'confirmed', 'processing', 'in_production', 'crafting', 'packed', 'dispatched', 'shipped', 'delivered', 'cancelled', 'cancel_requested'];
     if (!allowed.includes(status)) {
       return res.status(400).json({
         success: false,
@@ -486,7 +485,12 @@ async function updateOrderStatus(req, res, next) {
     // Valid state transitions (BUG-13)
     const VALID_TRANSITIONS = {
       pending: ['confirmed', 'cancelled'],
-      confirmed: ['shipped', 'cancelled', 'cancel_requested'],
+      confirmed: ['processing', 'in_production', 'crafting', 'packed', 'dispatched', 'shipped', 'cancelled', 'cancel_requested'],
+      processing: ['in_production', 'crafting', 'packed', 'dispatched', 'shipped', 'cancelled'],
+      in_production: ['crafting', 'packed', 'dispatched', 'shipped', 'cancelled'],
+      crafting: ['packed', 'dispatched', 'shipped', 'cancelled'],
+      packed: ['dispatched', 'shipped', 'cancelled'],
+      dispatched: ['shipped', 'delivered'],
       shipped: ['delivered'],
       delivered: [], // Terminal state
       cancelled: [], // Terminal state
