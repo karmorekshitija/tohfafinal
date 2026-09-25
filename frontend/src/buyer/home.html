@@ -73,7 +73,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="dns-prefetch" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
   <link rel="stylesheet" href="/src/tailwind.css">
 
   <style>
@@ -274,7 +275,7 @@
   </div>
 </header>
 
-<main class="relative overflow-hidden">
+<main class="relative overflow-hidden pb-[76px] md:pb-0">
   <!-- 1. BOTANICAL DISPLAY BANNER -->
   <section
     class="relative w-full overflow-hidden"
@@ -751,6 +752,26 @@
 
 <!-- Shared Footer -->
 <div id="tohfa-footer"></div>
+
+<!-- Mobile Bottom Navigation Bar -->
+<nav id="tohfa-buyer-bottom-nav" class="buyer-bottom-nav md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FAF6EE] border-t border-[#14381F]/15 flex items-center justify-around px-2 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]" style="height: 60px;">
+  <a href="/buyer/home.html" class="flex flex-col items-center justify-center gap-0.5 py-1 min-w-[60px] tap-target transition-transform active:scale-90" style="color: #14381F; text-decoration: none;">
+    <span class="material-symbols-outlined" style="font-size: 22px; font-variation-settings: 'FILL' 1;">home</span>
+    <span style="font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700;">Home</span>
+  </a>
+  <a href="/buyer/categories.html" class="flex flex-col items-center justify-center gap-0.5 py-1 min-w-[60px] tap-target transition-transform active:scale-90" style="color: rgba(28, 28, 28, 0.5); text-decoration: none;">
+    <span class="material-symbols-outlined" style="font-size: 22px; font-variation-settings: 'FILL' 0;">category</span>
+    <span style="font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 400;">Category</span>
+  </a>
+  <a href="/buyer/zip-gift.html" class="flex flex-col items-center justify-center gap-0.5 py-1 min-w-[60px] tap-target transition-transform active:scale-90" style="color: rgba(28, 28, 28, 0.5); text-decoration: none;">
+    <span class="material-symbols-outlined" style="font-size: 22px; font-variation-settings: 'FILL' 0;">bolt</span>
+    <span style="font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 400;">ZipGift</span>
+  </a>
+  <a href="/buyer/profile.html" class="flex flex-col items-center justify-center gap-0.5 py-1 min-w-[60px] tap-target transition-transform active:scale-90" style="color: rgba(28, 28, 28, 0.5); text-decoration: none;">
+    <span class="material-symbols-outlined" style="font-size: 22px; font-variation-settings: 'FILL' 0;">person</span>
+    <span style="font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 400;">Profile</span>
+  </a>
+</nav>
 <script type="module" src="/src/components/tohfa-include.js"></script>
 
 <script type="module">
@@ -1382,20 +1403,6 @@
         container.scrollBy({ left: 260, behavior: 'smooth' });
       });
     }
-
-    // Touch swipe gesture support for mobile (Guideline #957)
-    let touchStartX = 0;
-    let touchScrollLeft = 0;
-    container.addEventListener('touchstart', (e) => {
-      touchStartX = e.touches[0].pageX;
-      touchScrollLeft = container.scrollLeft;
-    }, { passive: true });
-
-    container.addEventListener('touchmove', (e) => {
-      const touchX = e.touches[0].pageX;
-      const walk = (touchX - touchStartX) * 1.2;
-      container.scrollLeft = touchScrollLeft - walk;
-    }, { passive: true });
 
     // Drag to scroll for desktop mouse users
     let isDown = false;

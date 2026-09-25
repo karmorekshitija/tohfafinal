@@ -12,7 +12,8 @@
       <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="dns-prefetch" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet">
   <link rel="stylesheet" href="/src/tailwind.css">
       <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     
@@ -399,6 +400,35 @@
         <button type="submit" class="flex-1 py-md bg-primary text-white hover:bg-primary/95 rounded-lg font-bold">Save</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Returns & Refund Policy Modal -->
+<style>
+  #tohfa-refunds-modal:not(.is-open) {
+    display: none !important;
+  }
+</style>
+<div id="tohfa-refunds-modal" onclick="if(event.target === this) closeRefundsModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+  <div class="bg-[#FFF8E7] rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative border border-[#1A3A32]/10 animate-in fade-in zoom-in-95 duration-150">
+    <button onclick="closeRefundsModal()" type="button" aria-label="Close modal" class="absolute top-4 right-4 text-[#1A3A32]/60 hover:text-[#1A3A32] p-1 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#1A3A32]">
+      <span class="material-symbols-outlined text-xl block">close</span>
+    </button>
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 rounded-full bg-[#1A3A32]/10 flex items-center justify-center text-[#1A3A32]">
+        <span class="material-symbols-outlined text-xl">assignment_return</span>
+      </div>
+      <h3 class="text-xl font-bold text-[#1A3A32] font-['Playfair_Display',serif]">Returns &amp; Refund Policy</h3>
+    </div>
+    <div class="space-y-3 text-sm text-[#1A3A32]/85 leading-relaxed font-['DM_Sans',sans-serif]">
+      <p>All items are eligible for return within 48 hours of delivery.</p>
+      <p>An unboxing video is required to process any return or replacement — this video must clearly show the product being unboxed and the defect/damage.</p>
+    </div>
+    <div class="mt-6 pt-4 border-t border-[#1A3A32]/10 flex justify-end">
+      <button onclick="closeRefundsModal()" type="button" class="px-5 py-2.5 bg-[#1A3A32] text-[#FFF8E7] rounded-xl font-medium text-sm hover:bg-[#1A3A32]/90 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A3A32]">
+        Close
+      </button>
+    </div>
   </div>
 </div>
 

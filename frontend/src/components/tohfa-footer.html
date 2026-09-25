@@ -34,7 +34,7 @@
           Company
         </h3>
         <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
-          <li><a href="/buyer/about.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">About Us</a></li>
+          <li><a href="#" onclick="openAboutModal(event)" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">About Us</a></li>
           <li><a href="/buyer/terms-conditions.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Terms of Service</a></li>
         </ul>
       </div>
@@ -89,7 +89,7 @@
           Company
         </h3>
         <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
-          <li><a href="/buyer/about.html" class="text-[#FAF6EE]/90 no-underline">About Us</a></li>
+          <li><a href="#" onclick="openAboutModal(event)" class="text-[#FAF6EE]/90 no-underline">About Us</a></li>
           <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Terms of Service</a></li>
         </ul>
       </div>
@@ -286,4 +286,94 @@ function handleFooterContactClick(e) {
     if (ev.target === overlay) overlay.remove();
   });
 }
+
+window.openAboutModal = function(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  const modal = document.getElementById('tohfa-about-modal');
+  if (modal) {
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeAboutModal = function() {
+  const modal = document.getElementById('tohfa-about-modal');
+  if (modal) {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+};
+
+if (!window.hasAboutModalEscListener) {
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      window.closeAboutModal();
+    }
+  });
+  window.hasAboutModalEscListener = true;
+}
 </script>
+
+<!-- About Us / Meet the Founders Modal -->
+<style>
+  #tohfa-about-modal:not(.is-open) {
+    display: none !important;
+  }
+  #tohfa-about-modal.is-open {
+    display: flex !important;
+  }
+</style>
+
+<div id="tohfa-about-modal" onclick="if(event.target === this) closeAboutModal()" class="fixed inset-0 z-[99999] items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-[#1C1C1A]">
+  <div class="bg-[#FFF8E7] rounded-3xl p-6 sm:p-8 max-w-3xl w-full shadow-2xl relative border border-[#14381F]/15 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
+    <button onclick="closeAboutModal()" type="button" aria-label="Close modal" class="absolute top-4 right-4 sm:top-5 sm:right-5 text-[#14381F]/60 hover:text-[#14381F] p-1.5 rounded-full hover:bg-[#14381F]/10 transition-colors focus:outline-none cursor-pointer">
+      <span class="material-symbols-outlined text-xl block">close</span>
+    </button>
+    
+    <div class="text-center max-w-xl mx-auto mb-6">
+      <span class="font-['Space_Mono'] text-[11px] sm:text-xs font-bold tracking-[0.2em] uppercase text-[#14381F] block mb-2 opacity-90">MEET THE FOUNDERS</span>
+      <h2 class="font-['Playfair_Display'] text-2xl sm:text-3xl italic font-bold text-[#14381F] tracking-tight mb-0">
+        Built with heart, by two people who believe in it.
+      </h2>
+    </div>
+
+    <!-- Founders Grid -->
+    <div class="grid grid-cols-2 gap-3 sm:gap-6 mb-6">
+      <!-- Founder 1: Kshitija -->
+      <div class="bg-white/70 border border-[#285C3A]/15 rounded-2xl p-4 sm:p-6 shadow-xs flex flex-col items-center text-center">
+        <img src="/img/founder-kshitija.jpg" alt="Kshitija, Co-Founder" class="w-20 h-20 sm:w-28 sm:h-28 rounded-full object-cover border-2 border-[#14381F]/20 mb-3 shadow-sm" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'112\' height=\'112\' viewBox=\'0 0 112 112\'><circle cx=\'56\' cy=\'56\' r=\'56\' fill=\'%2314381F\'/><text x=\'50%\' y=\'54%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23FAF6EE\' font-size=\'44\' font-family=\'sans-serif\' font-weight=\'bold\'>K</text></svg>';" />
+        <h3 class="font-['Playfair_Display'] text-lg sm:text-xl font-bold text-[#14381F] mb-0.5">Kshitija</h3>
+        <p class="text-[11px] sm:text-xs text-[#605e57] mb-3 font-medium">
+          <span class="italic text-[#14381F] font-semibold">Co-Founder</span> &middot; IIT Delhi &mdash; First Year
+        </p>
+        <div class="flex flex-wrap justify-center gap-1.5 mt-auto">
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium bg-[#14381F]/10 text-[#14381F] border border-[#285C3A]/15">AI/ML</span>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium bg-[#14381F]/10 text-[#14381F] border border-[#285C3A]/15">Engineering</span>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium bg-[#14381F]/10 text-[#14381F] border border-[#285C3A]/15">Data</span>
+        </div>
+      </div>
+
+      <!-- Founder 2: Krinjal -->
+      <div class="bg-white/70 border border-[#285C3A]/15 rounded-2xl p-4 sm:p-6 shadow-xs flex flex-col items-center text-center">
+        <img src="/img/founder-krinjal.jpg" alt="Krinjal, Co-Founder" class="w-20 h-20 sm:w-28 sm:h-28 rounded-full object-cover border-2 border-[#14381F]/20 mb-3 shadow-sm" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'112\' height=\'112\' viewBox=\'0 0 112 112\'><circle cx=\'56\' cy=\'56\' r=\'56\' fill=\'%2314381F\'/><text x=\'50%\' y=\'54%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23FAF6EE\' font-size=\'44\' font-family=\'sans-serif\' font-weight=\'bold\'>K</text></svg>';" />
+        <h3 class="font-['Playfair_Display'] text-lg sm:text-xl font-bold text-[#14381F] mb-0.5">Krinjal</h3>
+        <p class="text-[11px] sm:text-xs text-[#605e57] mb-3 font-medium">
+          <span class="italic text-[#14381F] font-semibold">Co-Founder</span> &middot; IIT Delhi &mdash; First Year
+        </p>
+        <div class="flex flex-wrap justify-center gap-1.5 mt-auto">
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium bg-[#14381F]/10 text-[#14381F] border border-[#285C3A]/15">Product</span>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium bg-[#14381F]/10 text-[#14381F] border border-[#285C3A]/15">UI/UX</span>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium bg-[#14381F]/10 text-[#14381F] border border-[#285C3A]/15">Strategy</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Banner Strip -->
+    <div class="bg-[#FAF6EE] border border-[#285C3A]/15 rounded-xl p-3 sm:p-4 text-center shadow-xs">
+      <p class="text-xs font-medium text-[#14381F] flex items-center justify-center gap-1.5 m-0">
+        <span class="material-symbols-outlined text-[16px] text-[#14381F]">school</span>
+        <span>IIT Delhi &mdash; Rigour, Problem-Solving, and Network. We are just getting started.</span>
+      </p>
+    </div>
+  </div>
+</div>

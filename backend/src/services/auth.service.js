@@ -491,7 +491,7 @@ async function login(data) {
         name: 'Platform Founder',
         email: 'admin@thetohfa.in',
         role: 'admin',
-        phone: '9876543212',
+        phone: null,
         is_active: true,
       },
     };
@@ -628,7 +628,7 @@ async function adminLogin(data) {
     process.env.NODE_ENV === 'development' &&
     process.env.ALLOW_DEMO_LOGIN === 'true'
   ) {
-    if (loginEmail === 'admin@thetohfa.in' || loginEmail === 'admin@tohfa.in' || username === 'admin' || loginPhone === '9876543212') {
+    if (loginEmail === 'admin@thetohfa.in' || loginEmail === 'admin@tohfa.in' || username === 'admin') {
       const DEMO_PASSWORDS = ['AdminPassword123!', 'Password@123', 'admin123', 'demo123', 'admin', 'password'];
       if (DEMO_PASSWORDS.includes(password)) {
         const demoUser = {
@@ -636,7 +636,7 @@ async function adminLogin(data) {
           name: 'Platform Founder',
           email: 'admin@thetohfa.in',
           role: 'admin',
-          phone: '9876543212',
+          phone: null,
           is_active: true,
         };
         const accessToken = signAccessToken({ id: demoUser.id, email: demoUser.email, role: demoUser.role, isSellerApproved: true });
