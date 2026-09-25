@@ -816,46 +816,49 @@ async function getDashboardMetrics(req, res, next) {
     // 1. All-time Core KPIs
     const { rows: allTimeStats } = await query(
       `SELECT
-         COALESCE(SUM(CASE WHEN LOWER(COALESCE(payment_status, '')) = 'paid' AND LOWER(COALESCE(status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN COALESCE(NULLIF(total_paise, 0) / 100.0, CASE WHEN total_amount >= 10000 THEN total_amount / 100.0 ELSE total_amount END, 0) ELSE 0 END), 0) AS all_revenue,
-         COUNT(CASE WHEN LOWER(COALESCE(payment_status, '')) = 'paid' AND LOWER(COALESCE(status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS all_orders,
-         COUNT(CASE WHEN LOWER(COALESCE(status, '')) IN ('pending', 'confirmed', 'crafting', 'packed', 'processing') THEN 1 END) AS pending_orders
-       FROM orders
-       WHERE (seller_id = $1::integer OR seller_id::text = $1::text)`,
+         COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN so.subtotal ELSE 0 END), 0) AS all_revenue,
+         COUNT(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS all_orders,
+         COUNT(CASE WHEN LOWER(COALESCE(so.status, '')) IN ('pending', 'confirmed', 'crafting', 'packed', 'processing') THEN 1 END) AS pending_orders
+       FROM seller_orders so
+       JOIN orders o ON o.id = so.order_id
+       WHERE (so.seller_id = $1 OR so.seller_id::text = $1::text)`,
       [sellerId]
     ).catch(() => ({ rows: [{ all_revenue: 0, all_orders: 0, pending_orders: 0 }] }));
 
     // Current period stats
     const { rows: currPeriodStats } = await query(
       `SELECT
-         COALESCE(SUM(CASE WHEN LOWER(COALESCE(payment_status, '')) = 'paid' AND LOWER(COALESCE(status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN COALESCE(NULLIF(total_paise, 0) / 100.0, CASE WHEN total_amount >= 10000 THEN total_amount / 100.0 ELSE total_amount END, 0) ELSE 0 END), 0) AS curr_revenue,
-         COUNT(CASE WHEN LOWER(COALESCE(payment_status, '')) = 'paid' AND LOWER(COALESCE(status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS curr_orders
-       FROM orders
-       WHERE (seller_id = $1::integer OR seller_id::text = $1::text)
-         AND created_at >= NOW() - ($2 || ' days')::interval`,
+         COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN so.subtotal ELSE 0 END), 0) AS curr_revenue,
+         COUNT(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS curr_orders
+       FROM seller_orders so
+       JOIN orders o ON o.id = so.order_id
+       WHERE (so.seller_id = $1 OR so.seller_id::text = $1::text)
+         AND so.created_at >= NOW() - ($2 || ' days')erval`,
       [sellerId, days]
     ).catch(() => ({ rows: [{ curr_revenue: 0, curr_orders: 0 }] }));
 
     // Previous period stats (for % delta comparison)
     const { rows: prevPeriodStats } = await query(
       `SELECT
-         COALESCE(SUM(CASE WHEN LOWER(COALESCE(payment_status, '')) = 'paid' AND LOWER(COALESCE(status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN COALESCE(NULLIF(total_paise, 0) / 100.0, CASE WHEN total_amount >= 10000 THEN total_amount / 100.0 ELSE total_amount END, 0) ELSE 0 END), 0) AS prev_revenue,
-         COUNT(CASE WHEN LOWER(COALESCE(payment_status, '')) = 'paid' AND LOWER(COALESCE(status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS prev_orders
-       FROM orders
-       WHERE (seller_id = $1::integer OR seller_id::text = $1::text)
-         AND created_at >= NOW() - ($2 || ' days')::interval * 2
-         AND created_at < NOW() - ($2 || ' days')::interval`,
+         COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN so.subtotal ELSE 0 END), 0) AS prev_revenue,
+         COUNT(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS prev_orders
+       FROM seller_orders so
+       JOIN orders o ON o.id = so.order_id
+       WHERE (so.seller_id = $1 OR so.seller_id::text = $1::text)
+         AND so.created_at >= NOW() - ($2 || ' days')erval * 2
+         AND so.created_at < NOW() - ($2 || ' days')erval`,
       [sellerId, days]
     ).catch(() => ({ rows: [{ prev_revenue: 0, prev_orders: 0 }] }));
 
     const { rows: prodRows } = await query(
       `SELECT COUNT(*) AS active_products, COALESCE(SUM(view_count), 0) AS total_views
-       FROM products WHERE (seller_id = $1::integer OR seller_id::text = $1::text) AND status != 'deleted'`,
+       FROM products WHERE (seller_id = $1 OR seller_id::text = $1::text) AND status != 'deleted'`,
       [sellerId]
     ).catch(() => ({ rows: [{ active_products: 0, total_views: 0 }] }));
 
     const { rows: reviewRows } = await query(
       `SELECT COALESCE(ROUND(AVG(rating)::numeric, 1), 5.0) AS average_rating, COUNT(*) AS review_count
-       FROM reviews WHERE (seller_id = $1::integer OR seller_id::text = $1::text)`,
+       FROM reviews WHERE (seller_id = $1 OR seller_id::text = $1::text)`,
       [sellerId]
     ).catch(() => ({ rows: [{ average_rating: 5.0, review_count: 0 }] }));
 
@@ -892,7 +895,7 @@ async function getDashboardMetrics(req, res, next) {
       `SELECT id, name, name AS title, stock_quantity, stock_quantity AS stock_count,
               COALESCE(low_stock_threshold, 5) AS threshold
        FROM products
-       WHERE (seller_id = $1::integer OR seller_id::text = $1::text) AND status != 'deleted' AND stock_quantity <= COALESCE(low_stock_threshold, 5)
+       WHERE (seller_id = $1 OR seller_id::text = $1::text) AND status != 'deleted' AND stock_quantity <= COALESCE(low_stock_threshold, 5)
        ORDER BY stock_quantity ASC
        LIMIT 5`,
       [sellerId]
@@ -900,7 +903,7 @@ async function getDashboardMetrics(req, res, next) {
 
     // 3. Recent orders (latest 5)
     const { rows: recentOrderRows } = await query(
-      `SELECT o.id, o.total_amount, o.total_amount AS subtotal, o.status, o.created_at, o.payment_status, o.payout_status,
+      `SELECT o.id AS parent_order_id, so.id AS id, so.subtotal, so.subtotal AS total_amount, so.status, so.created_at, o.payment_status, so.payout_status,
               COALESCE(u.name, 'Valued Buyer') AS buyer_name,
               u.email AS buyer_email,
               COALESCE(a.city, 'India') AS shipping_city,
@@ -919,14 +922,15 @@ async function getDashboardMetrics(req, res, next) {
                 ))
                 FROM order_items oi
                 LEFT JOIN products p ON p.id = oi.product_id
-                WHERE oi.order_id = o.id),
+                WHERE oi.seller_order_id = so.id),
                 '[]'
               ) AS items
-       FROM orders o
+       FROM seller_orders so
+       JOIN orders o ON o.id = so.order_id
        LEFT JOIN users u ON u.id = o.buyer_id
        LEFT JOIN addresses a ON a.id = o.address_id
-       WHERE o.seller_id = $1
-       ORDER BY o.created_at DESC
+       WHERE so.seller_id = $1
+       ORDER BY so.created_at DESC
        LIMIT 5`,
       [sellerId]
     );
@@ -960,7 +964,7 @@ async function getDashboardMetrics(req, res, next) {
               COALESCE(SUM(CASE WHEN payment_status = 'paid' AND status != 'cancelled' THEN total_amount ELSE 0 END), 0) AS revenue,
               COUNT(CASE WHEN status != 'cancelled' THEN 1 END) AS orders_count
        FROM orders
-       WHERE seller_id = $1 AND created_at >= NOW() - ($2 || ' days')::interval
+       WHERE seller_id = $1 AND created_at >= NOW() - ($2 || ' days')erval
        GROUP BY DATE(created_at)
        ORDER BY date ASC`,
       [sellerId, days]
@@ -1081,7 +1085,7 @@ async function getSellerAnalytics(req, res, next) {
          COUNT(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS total_orders,
          COUNT(CASE WHEN LOWER(COALESCE(o.status, '')) IN ('cancelled', 'refunded', 'cancel_requested') OR LOWER(COALESCE(o.payment_status, '')) = 'refunded' THEN 1 END) AS returns_cancellations
        FROM orders o
-       WHERE (o.seller_id = $1::integer OR o.seller_id::text = $1::text) AND ${dateCondition}`,
+       WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text) AND ${dateCondition}`,
       queryParams
     ).catch(() => ({ rows: [{ total_revenue: 0, total_orders: 0, returns_cancellations: 0 }] }));
 
@@ -1089,7 +1093,7 @@ async function getSellerAnalytics(req, res, next) {
     const { rows: prodViews } = await query(
       `SELECT COALESCE(SUM(view_count), 0) AS total_views, COUNT(*) AS active_products
        FROM products
-       WHERE (seller_id = $1::integer OR seller_id::text = $1::text) AND status != 'deleted'`,
+       WHERE (seller_id = $1 OR seller_id::text = $1::text) AND status != 'deleted'`,
       [sellerId]
     ).catch(() => ({ rows: [{ total_views: 0, active_products: 0 }] }));
 
@@ -1108,7 +1112,7 @@ async function getSellerAnalytics(req, res, next) {
          COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN COALESCE(NULLIF(o.total_paise, 0) / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0) ELSE 0 END), 0) AS daily_revenue,
          COUNT(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS daily_orders
        FROM orders o
-       WHERE (o.seller_id = $1::integer OR o.seller_id::text = $1::text) AND ${dateCondition}
+       WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text) AND ${dateCondition}
        GROUP BY TO_CHAR(o.created_at, 'YYYY-MM-DD')
        ORDER BY date_str ASC`,
       queryParams
@@ -1158,7 +1162,7 @@ async function getSellerAnalytics(req, res, next) {
        FROM products p
        LEFT JOIN order_items oi ON oi.product_id = p.id
        LEFT JOIN orders o ON o.id = oi.order_id AND ${dateCondition}
-       WHERE (p.seller_id = $1::integer OR p.seller_id::text = $1::text) AND p.status != 'deleted'
+       WHERE (p.seller_id = $1 OR p.seller_id::text = $1::text) AND p.status != 'deleted'
        GROUP BY p.id, p.name, p.base_price, p.view_count, p.stock_quantity
        ORDER BY total_revenue DESC, units_sold DESC
        LIMIT 10`,
@@ -1187,7 +1191,7 @@ async function getSellerAnalytics(req, res, next) {
          COUNT(CASE WHEN (LOWER(COALESCE(o.order_type, '')) NOT IN ('custom', 'customized') AND o.customization IS NULL AND NOT EXISTS (SELECT 1 FROM order_items oi WHERE oi.order_id = o.id AND (oi.customization_data IS NOT NULL AND oi.customization_data::text NOT IN ('', 'null', '{}')))) THEN 1 END) AS premade_count,
          COALESCE(SUM(CASE WHEN (LOWER(COALESCE(o.order_type, '')) NOT IN ('custom', 'customized') AND o.customization IS NULL AND NOT EXISTS (SELECT 1 FROM order_items oi WHERE oi.order_id = o.id AND (oi.customization_data IS NOT NULL AND oi.customization_data::text NOT IN ('', 'null', '{}')))) THEN COALESCE(NULLIF(o.total_paise, 0) / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0) ELSE 0 END), 0) AS premade_revenue
        FROM orders o
-       WHERE (o.seller_id = $1::integer OR o.seller_id::text = $1::text)
+       WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text)
          AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
          AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested')
          AND ${dateCondition}`,
@@ -1199,7 +1203,7 @@ async function getSellerAnalytics(req, res, next) {
       `WITH seller_buyers AS (
          SELECT o.buyer_id, COUNT(o.id) AS order_count
          FROM orders o
-         WHERE (o.seller_id = $1::integer OR o.seller_id::text = $1::text)
+         WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text)
            AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
            AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested')
          GROUP BY o.buyer_id
@@ -1218,7 +1222,7 @@ async function getSellerAnalytics(req, res, next) {
          COALESCE(SUM(COALESCE(NULLIF(o.total_paise, 0) / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0)), 0) AS revenue
        FROM orders o
        LEFT JOIN addresses a ON a.id = o.address_id
-       WHERE (o.seller_id = $1::integer OR o.seller_id::text = $1::text)
+       WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text)
          AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
          AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested')
        GROUP BY city
@@ -1302,12 +1306,12 @@ async function getSellerOrders(req, res, next) {
     const limitNum = Math.min(50, parseInt(limit, 10));
     const offset   = (pageNum - 1) * limitNum;
 
-    const conditions = ['o.seller_id = $1'];
+    const conditions = ['so.seller_id = $1'];
     const params = [sellerId];
 
     if (status && status !== 'all') {
       params.push(status);
-      conditions.push(`o.status = $${params.length}`);
+      conditions.push(`so.status = $${params.length}`);
     }
 
     if (search && search.trim()) {
@@ -1317,7 +1321,8 @@ async function getSellerOrders(req, res, next) {
         LOWER(u.name) LIKE $${sIdx} OR
         LOWER(u.email) LIKE $${sIdx} OR
         CAST(o.id AS TEXT) LIKE $${sIdx} OR
-        LOWER(COALESCE(o.tracking_id, '')) LIKE $${sIdx}
+        CAST(so.id AS TEXT) LIKE $${sIdx} OR
+        LOWER(COALESCE(so.tracking_id, '')) LIKE $${sIdx}
       )`);
     }
 
@@ -1328,10 +1333,11 @@ async function getSellerOrders(req, res, next) {
     const offsetIdx = params.length;
 
     const { rows } = await query(
-      `SELECT o.id, o.buyer_id, o.seller_id, o.total_amount, o.total_paise,
-              o.order_ref, o.order_type, o.customization, o.customization_summary,
-              o.status, o.payment_status, o.payout_status,
-              o.tracking_id, o.tracking_url, o.notes, o.studio_notes, o.delivered_at, o.created_at, o.updated_at,
+      `SELECT o.id AS parent_order_id, o.buyer_id, so.seller_id,
+              so.subtotal AS total_amount, (so.subtotal * 100) AS total_paise,
+              so.id AS id, o.order_ref, o.order_type, o.customization, o.customization_summary,
+              so.status, o.payment_status, so.payout_status,
+              so.tracking_id, so.tracking_url, o.notes, o.studio_notes, so.delivered_at, so.created_at, so.updated_at,
               u.name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone,
               a.line1 AS delivery_line1, a.line2 AS delivery_line2, a.city AS delivery_city,
               a.state AS delivery_state, a.pincode AS delivery_pincode,
@@ -1350,21 +1356,23 @@ async function getSellerOrders(req, res, next) {
                 ))
                 FROM order_items oi
                 LEFT JOIN products p ON p.id = oi.product_id
-                WHERE oi.order_id = o.id),
+                WHERE oi.seller_order_id = so.id),
                 '[]'
               ) AS items
-       FROM orders o
+       FROM seller_orders so
+       JOIN orders o ON o.id = so.order_id
        LEFT JOIN users u ON u.id = o.buyer_id
        LEFT JOIN addresses a ON a.id = o.address_id
        WHERE ${where}
-       ORDER BY o.created_at DESC
+       ORDER BY so.created_at DESC
        LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
       params
     );
 
     const { rows: countRows } = await query(
       `SELECT COUNT(*) AS total
-       FROM orders o
+       FROM seller_orders so
+       JOIN orders o ON o.id = so.order_id
        LEFT JOIN users u ON u.id = o.buyer_id
        WHERE ${where}`,
       params.slice(0, params.length - 2)
@@ -1458,7 +1466,10 @@ async function getSellerOrderDetail(req, res, next) {
     const isAdmin = req.user.role === 'admin' || req.user.role === 'master_admin';
 
     // IDOR Check: Ensure order exists and belongs to this seller
-    const { rows: orderCheck } = await query('SELECT id, seller_id FROM orders WHERE id::text = $1 OR order_ref = $1', [String(id)]);
+    const { rows: orderCheck } = await query(
+      `SELECT so.id, so.seller_id FROM seller_orders so JOIN orders o ON o.id = so.order_id WHERE so.id::text = $1 OR o.order_ref = $1`,
+      [String(id)]
+    );
     if (!orderCheck.length) {
       return res.status(404).json({ success: false, message: 'Order not found.' });
     }
@@ -1471,8 +1482,8 @@ async function getSellerOrderDetail(req, res, next) {
     }
 
     const { rows } = await query(
-      `SELECT o.id, o.buyer_id, o.seller_id, o.address_id, o.total_amount, o.status, o.payment_status,
-              o.payout_status, o.tracking_id, o.tracking_url, o.notes, o.studio_notes, o.delivered_at, o.created_at, o.updated_at,
+      `SELECT o.id AS parent_order_id, so.id AS id, o.buyer_id, so.seller_id, o.address_id, so.subtotal AS total_amount, so.status, o.payment_status,
+              so.payout_status, so.tracking_id, so.tracking_url, o.notes, o.studio_notes, so.delivered_at, so.created_at, so.updated_at,
               u.name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone,
               sp.store_name, sp.whatsapp_number AS seller_whatsapp, sp.pickup_address,
               a.name AS recipient_name, a.phone AS recipient_phone,
@@ -1493,14 +1504,15 @@ async function getSellerOrderDetail(req, res, next) {
                 ))
                 FROM order_items oi
                 LEFT JOIN products p ON p.id = oi.product_id
-                WHERE oi.order_id = o.id),
+                WHERE oi.seller_order_id = so.id),
                 '[]'
               ) AS items
-       FROM orders o
+       FROM seller_orders so
+       JOIN orders o ON o.id = so.order_id
        LEFT JOIN users u ON u.id = o.buyer_id
-       LEFT JOIN seller_profiles sp ON sp.user_id = o.seller_id
+       LEFT JOIN seller_profiles sp ON sp.user_id = so.seller_id
        LEFT JOIN addresses a ON a.id = o.address_id
-       WHERE (o.id::text = $1 OR o.order_ref = $1)`,
+       WHERE so.id::text = $1 OR o.order_ref = $1`,
       [String(id)]
     );
 
@@ -1958,7 +1970,7 @@ async function getSellerWallet(req, res, next) {
       `SELECT
          COALESCE(SUM(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0), 0) AS available_balance
        FROM orders o
-       WHERE (o.seller_id = $1::integer OR o.seller_id::text = $1::text)
+       WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text)
          AND LOWER(COALESCE(o.status, '')) = 'delivered'
          AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
          AND o.created_at <= NOW() - INTERVAL '7 days'`,
@@ -1969,7 +1981,7 @@ async function getSellerWallet(req, res, next) {
       `SELECT
          COALESCE(SUM(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0), 0) AS holding_balance
        FROM orders o
-       WHERE (o.seller_id = $1::integer OR o.seller_id::text = $1::text)
+       WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text)
          AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
          AND (
            LOWER(COALESCE(o.status, '')) IN ('pending', 'confirmed', 'processing', 'crafting', 'packed', 'shipped', 'in_production')
@@ -2021,7 +2033,7 @@ async function getPayoutOverview(req, res, next) {
          COALESCE(SUM(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0), 0) AS available_balance,
          COUNT(o.id) AS eligible_count
        FROM orders o
-       WHERE (o.seller_id = $1::integer OR o.seller_id::text = $1::text)
+       WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text)
          AND LOWER(COALESCE(o.status, '')) = 'delivered'
          AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
          AND o.created_at <= NOW() - INTERVAL '7 days'`,
@@ -2034,7 +2046,7 @@ async function getPayoutOverview(req, res, next) {
          COALESCE(SUM(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0), 0) AS holding_balance,
          COUNT(o.id) AS holding_count
        FROM orders o
-       WHERE (o.seller_id = $1::integer OR o.seller_id::text = $1::text)
+       WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text)
          AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
          AND (
            LOWER(COALESCE(o.status, '')) IN ('pending', 'confirmed', 'processing', 'crafting', 'packed', 'shipped', 'in_production')
@@ -2047,14 +2059,14 @@ async function getPayoutOverview(req, res, next) {
     const { rows: completedRows } = await query(
       `SELECT COALESCE(SUM(amount), 0) AS total_paid_out
        FROM seller_payouts
-       WHERE (seller_id = $1::integer OR seller_id::text = $1::text)
+       WHERE (seller_id = $1 OR seller_id::text = $1::text)
          AND LOWER(status) IN ('paid', 'completed')`,
       [sellerId]
     ).catch(async () => {
       return await query(
         `SELECT COALESCE(SUM(amount), 0) AS total_paid_out
          FROM payouts
-         WHERE (seller_id = $1::integer OR seller_id::text = $1::text)
+         WHERE (seller_id = $1 OR seller_id::text = $1::text)
            AND LOWER(status) IN ('paid', 'completed')`,
         [sellerId]
       ).catch(() => ({ rows: [{ total_paid_out: 0 }] }));
@@ -2064,14 +2076,14 @@ async function getPayoutOverview(req, res, next) {
     const { rows: payoutList } = await query(
       `SELECT id, amount, status, utr_number, reference, disbursed_at, created_at
        FROM seller_payouts
-       WHERE (seller_id = $1::integer OR seller_id::text = $1::text)
+       WHERE (seller_id = $1 OR seller_id::text = $1::text)
        ORDER BY created_at DESC`,
       [sellerId]
     ).catch(async () => {
       return await query(
         `SELECT id, amount, status, reference_id AS reference, initiated_at, completed_at, initiated_at AS created_at
          FROM payouts
-         WHERE (seller_id = $1::integer OR seller_id::text = $1::text)
+         WHERE (seller_id = $1 OR seller_id::text = $1::text)
          ORDER BY id DESC`,
         [sellerId]
       ).catch(() => ({ rows: [] }));
@@ -2084,14 +2096,15 @@ async function getPayoutOverview(req, res, next) {
          COALESCE(SUM(CASE WHEN o.created_at >= NOW() - INTERVAL '7 days' THEN COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0 ELSE 0 END), 0) AS week_earned,
          COALESCE(SUM(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0), 0) AS total_earned
        FROM orders o
-       WHERE (o.seller_id = $1::integer OR o.seller_id::text = $1::text)
+       WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text)
          AND LOWER(COALESCE(o.payment_status, '')) = 'paid'`,
       [sellerId]
     ).catch(() => ({ rows: [{ month_earned: 0, week_earned: 0, total_earned: 0 }] }));
 
-    const availableBalance = parseFloat(availableRows[0]?.available_balance || 0);
-    const holdingBalance = parseFloat(holdingRows[0]?.holding_balance || 0);
     const totalPaidOut = parseFloat(completedRows[0]?.total_paid_out || 0);
+    const grossAvailable = parseFloat(availableRows[0]?.available_balance || 0);
+    const availableBalance = Math.max(0, grossAvailable - totalPaidOut);
+    const holdingBalance = parseFloat(holdingRows[0]?.holding_balance || 0);
     const totalEarned = parseFloat(periodRows[0]?.total_earned || 0);
     const monthEarned = parseFloat(periodRows[0]?.month_earned || 0);
     const weekEarned = parseFloat(periodRows[0]?.week_earned || 0);
@@ -2156,7 +2169,7 @@ async function getSellerEarningsGraph(req, res, next) {
          TO_CHAR(o.created_at, 'YYYY-MM-DD') AS date_str,
          SUM(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0) AS total_day_amount
        FROM orders o
-       WHERE (o.seller_id = $1::integer OR o.seller_id::text = $1::text)
+       WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text)
          AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
          AND o.created_at >= NOW() - ($2 || ' days')::INTERVAL
        GROUP BY TO_CHAR(o.created_at, 'YYYY-MM-DD')
@@ -2196,7 +2209,7 @@ async function getReceivingDetails(req, res, next) {
   try {
     const sellerId = req.user.id;
     const { rows } = await query(
-      `SELECT bank_details FROM seller_profiles WHERE (user_id = $1::integer OR user_id::text = $1::text)`,
+      `SELECT bank_details FROM seller_profiles WHERE (user_id = $1 OR user_id::text = $1::text)`,
       [sellerId]
     ).catch(() => ({ rows: [] }));
     const bd = rows[0]?.bank_details || {};
@@ -2229,7 +2242,7 @@ async function saveReceivingDetails(req, res, next) {
     const { type, account_holder_name, bank_name, account_number, ifsc_code, upi_id } = req.body;
 
     const { rows } = await query(
-      `SELECT bank_details FROM seller_profiles WHERE (user_id = $1::integer OR user_id::text = $1::text)`,
+      `SELECT bank_details FROM seller_profiles WHERE (user_id = $1 OR user_id::text = $1::text)`,
       [sellerId]
     ).catch(() => ({ rows: [] }));
     let currentBd = rows[0]?.bank_details || {};
@@ -2256,11 +2269,11 @@ async function saveReceivingDetails(req, res, next) {
     }
 
     await query(
-      `UPDATE seller_profiles SET bank_details = $1, updated_at = NOW() WHERE (user_id = $2::integer OR user_id::text = $2::text)`,
+      `UPDATE seller_profiles SET bank_details = $1, updated_at = NOW() WHERE (user_id = $2 OR user_id::text = $2::text)`,
       [JSON.stringify(currentBd), sellerId]
     );
     await query(
-      `UPDATE sellers SET bank_details = $1 WHERE (user_id = $2::integer OR user_id::text = $2::text)`,
+      `UPDATE sellers SET bank_details = $1 WHERE (user_id = $2 OR user_id::text = $2::text)`,
       [JSON.stringify(currentBd), sellerId]
     ).catch(() => {});
 
@@ -2288,7 +2301,7 @@ async function getPaymentHistory(req, res, next) {
               COALESCE(disbursed_at, created_at) AS date,
               COALESCE(reference, 'Payout Settlement') AS buyer_name
        FROM seller_payouts
-       WHERE (seller_id = $1::integer OR seller_id::text = $1::text)
+       WHERE (seller_id = $1 OR seller_id::text = $1::text)
        ORDER BY created_at DESC
        LIMIT $2`,
       [sellerId, limit]
@@ -2302,7 +2315,7 @@ async function getPaymentHistory(req, res, next) {
               o.created_at AS date
        FROM orders o
        LEFT JOIN users u ON u.id = o.buyer_id
-       WHERE (o.seller_id = $1::integer OR o.seller_id::text = $1::text)
+       WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text)
          AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
        ORDER BY o.created_at DESC
        LIMIT $2`,
@@ -2333,7 +2346,7 @@ async function getTaxSettings(req, res, next) {
     const sellerId = req.user.id;
     await ensureTaxColumns();
     const { rows } = await query(
-      `SELECT tax_details FROM seller_profiles WHERE (user_id = $1::integer OR user_id::text = $1::text)`,
+      `SELECT tax_details FROM seller_profiles WHERE (user_id = $1 OR user_id::text = $1::text)`,
       [sellerId]
     ).catch(() => ({ rows: [] }));
     const tax = rows[0]?.tax_details || {};
@@ -2367,7 +2380,7 @@ async function saveTaxSettings(req, res, next) {
       updated_at: new Date().toISOString(),
     };
     await query(
-      `UPDATE seller_profiles SET tax_details = $1, updated_at = NOW() WHERE (user_id = $2::integer OR user_id::text = $2::text)`,
+      `UPDATE seller_profiles SET tax_details = $1, updated_at = NOW() WHERE (user_id = $2 OR user_id::text = $2::text)`,
       [JSON.stringify(taxPayload), sellerId]
     );
     return res.json({
@@ -2394,7 +2407,7 @@ async function getSellerInvoices(req, res, next) {
          SUM(COALESCE(o.total_paise, o.total_amount * 100, 0) / 100.0) AS gross_sales,
          ROUND(SUM(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0), 2) AS net_payout
        FROM orders o
-       WHERE (o.seller_id = $1::integer OR o.seller_id::text = $1::text)
+       WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text)
          AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
        GROUP BY TO_CHAR(o.created_at, 'YYYY-MM'), TO_CHAR(o.created_at, 'Month YYYY')
        ORDER BY month_key DESC`,
@@ -2442,7 +2455,7 @@ async function getSellerDisputes(req, res, next) {
        FROM refund_requests rr
        LEFT JOIN orders o ON o.id = rr.order_id
        LEFT JOIN users u ON u.id = rr.buyer_id
-       WHERE (rr.seller_id = $1::integer OR rr.seller_id::text = $1::text)
+       WHERE (rr.seller_id = $1 OR rr.seller_id::text = $1::text)
        ORDER BY rr.created_at DESC`,
       [sellerId]
     ).catch(() => ({ rows: [] }));
@@ -2469,14 +2482,24 @@ async function requestPayout(req, res, next) {
       `SELECT
          COALESCE(SUM(COALESCE(o.seller_payout, ROUND(COALESCE(o.total_paise, o.total_amount * 100, 0) * 0.95)) / 100.0), 0) AS available_balance
        FROM orders o
-       WHERE (o.seller_id = $1::integer OR o.seller_id::text = $1::text)
+       WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text)
          AND LOWER(COALESCE(o.status, '')) = 'delivered'
          AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
          AND o.created_at <= NOW() - INTERVAL '7 days'`,
       [sellerId]
     ).catch(() => ({ rows: [{ available_balance: 0 }] }));
 
-    const availableBalance = parseFloat(availableRows[0]?.available_balance || 0);
+    const { rows: completedRows } = await query(
+      `SELECT COALESCE(SUM(amount), 0) AS total_paid_out
+       FROM seller_payouts
+       WHERE (seller_id = $1 OR seller_id::text = $1::text)
+         AND status IN ('pending', 'processing', 'scheduled', 'paid')`,
+      [sellerId]
+    ).catch(() => ({ rows: [{ total_paid_out: 0 }] }));
+    const totalPaidOut = parseFloat(completedRows[0]?.total_paid_out || 0);
+
+    const grossAvailable = parseFloat(availableRows[0]?.available_balance || 0);
+    const availableBalance = Math.max(0, grossAvailable - totalPaidOut);
 
     let requestedAmount = parseFloat(req.body.amount || req.body.requestedAmount);
     if (isNaN(requestedAmount) || requestedAmount <= 0) {
@@ -2777,14 +2800,14 @@ async function getCatalogSummary(req, res, next) {
 
     const { rows } = await query(
       `SELECT 
-         COUNT(*)::int AS total_listings,
-         COUNT(*) FILTER (WHERE COALESCE(stock_quantity, stock_qty, 0) <= COALESCE(low_stock_threshold, 5))::int AS low_stock,
-         COUNT(*) FILTER (WHERE discount_active::text IN ('true', '1', 't'))::int AS on_discount
+         COUNT(*) AS total_listings,
+         COUNT(*) FILTER (WHERE COALESCE(stock_quantity, stock_qty, 0) <= COALESCE(low_stock_threshold, 5)) AS low_stock,
+         COUNT(*) FILTER (WHERE discount_active::text IN ('true', '1', 't')) AS on_discount
        FROM products
        WHERE (
          seller_id::text = $1 
-         OR seller_id IN (SELECT id FROM sellers WHERE user_id = $1::int)
-         OR seller_id IN (SELECT id FROM seller_profiles WHERE user_id = $1::int)
+         OR seller_id IN (SELECT id FROM sellers WHERE user_id = $1)
+         OR seller_id IN (SELECT id FROM seller_profiles WHERE user_id = $1)
        ) AND status NOT IN ('deleted')`,
       [String(sellerId)]
     );
@@ -2908,7 +2931,7 @@ async function bulkDiscountListings(req, res, next) {
              ELSE NULL 
            END,
            updated_at = NOW()
-       WHERE id = ANY($4::int[]) 
+       WHERE id = ANY($4[]) 
          AND (
            seller_id = $5 
            OR seller_id IN (SELECT id FROM sellers WHERE user_id = $5)

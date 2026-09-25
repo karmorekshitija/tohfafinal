@@ -120,8 +120,8 @@ async function listSellers(req, res, next) {
              COALESCE(sp.subscription_renews_at, s.subscription_renews_at) AS subscription_renews_at,
              COALESCE(sp.subscription_price_paid, s.subscription_price_paid, 0.00) AS subscription_price_paid,
              (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status != 'deleted') AS product_count,
-             (SELECT COALESCE(SUM(o.total_amount), 0) FROM orders o WHERE o.seller_id = u.id AND o.payment_status = 'paid') AS total_revenue,
-             (SELECT MAX(o2.created_at) FROM orders o2 WHERE o2.seller_id = u.id AND o2.payment_status = 'paid') AS last_order_at
+             (SELECT COALESCE(SUM(so.subtotal), 0) FROM seller_orders so JOIN orders o ON o.id = so.order_id WHERE so.seller_id = u.id AND o.payment_status = 'paid') AS total_revenue,
+             (SELECT MAX(so2.created_at) FROM seller_orders so2 JOIN orders o2 ON o2.id = so2.order_id WHERE so2.seller_id = u.id AND o2.payment_status = 'paid') AS last_order_at
       ${baseSql}
       ORDER BY COALESCE(sp.applied_at, s.applied_at, u.created_at) DESC
       LIMIT $${params.length + 1} OFFSET $${params.length + 2}
@@ -171,8 +171,8 @@ async function getSellerDetail(req, res, next) {
               COALESCE(sp.approved_at, s.approved_at) AS approved_at,
               COALESCE(sp.rejection_reason, s.rejection_reason) AS rejection_reason,
               (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status != 'deleted') AS product_count,
-              (SELECT COALESCE(SUM(o.total_amount), 0) FROM orders o WHERE o.seller_id = u.id AND o.payment_status = 'paid') AS total_revenue,
-              (SELECT MAX(o2.created_at) FROM orders o2 WHERE o2.seller_id = u.id AND o2.payment_status = 'paid') AS last_order_at
+              (SELECT COALESCE(SUM(so.subtotal), 0) FROM seller_orders so JOIN orders o ON o.id = so.order_id WHERE so.seller_id = u.id AND o.payment_status = 'paid') AS total_revenue,
+              (SELECT MAX(so2.created_at) FROM seller_orders so2 JOIN orders o2 ON o2.id = so2.order_id WHERE so2.seller_id = u.id AND o2.payment_status = 'paid') AS last_order_at
        FROM users u
        LEFT JOIN seller_profiles sp ON sp.user_id = u.id
        LEFT JOIN sellers s ON s.user_id = u.id
@@ -1994,9 +1994,9 @@ async function listSpecialShops(req, res, next) {
              TRUE AS is_admin_managed,
              COALESCE(sp.created_at, s.created_at) AS created_at,
              sp.updated_at AS updated_at,
-             (SELECT COUNT(*) FROM products p WHERE (p.seller_id = u.id OR (s.id IS NOT NULL AND p.seller_id = s.id)) AND p.status != 'deleted') AS product_count,
-             (SELECT COALESCE(SUM(COALESCE(o.total_paise/100.0, o.total_amount, 0)), 0) FROM orders o WHERE (o.seller_id = u.id OR (s.id IS NOT NULL AND o.seller_id = s.id)) AND o.payment_status = 'paid') AS total_revenue,
-             (SELECT COUNT(*) FROM orders o WHERE (o.seller_id = u.id OR (s.id IS NOT NULL AND o.seller_id = s.id))) AS total_orders
+             (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status != 'deleted') AS product_count,
+             (SELECT COALESCE(SUM(so.subtotal), 0) FROM seller_orders so JOIN orders o ON o.id = so.order_id WHERE so.seller_id = u.id AND o.payment_status = 'paid') AS total_revenue,
+             (SELECT COUNT(*) FROM seller_orders so WHERE so.seller_id = u.id) AS total_orders
       FROM users u
       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
       LEFT JOIN sellers s ON s.user_id = u.id
@@ -2031,7 +2031,7 @@ async function createSpecialShop(req, res, next) {
 
     if (existingUser.length > 0) {
       userId = existingUser[0].id;
-      await client.query('UPDATE users SET role = $1, is_active = 1, name = $2 WHERE id = $3', ['seller', store_name, userId]);
+      await client.query('UPDATE users SET role = $1, is_active = TRUE, name = $2 WHERE id = $3', ['seller', store_name, userId]);
     } else {
       const { rows: newUser } = await client.query(
         `INSERT INTO users (name, full_name, display_name, email, phone, password_hash, role, is_active)
@@ -2057,7 +2057,7 @@ async function createSpecialShop(req, res, next) {
          is_admin_managed = TRUE,
          is_approved = TRUE,
          verification_status = 'verified',
-         is_active = 1`,
+         is_active = TRUE`,
       [userId, store_name, cleanSlug, bio || '', pickupAddressJson]
     );
 
@@ -2072,7 +2072,7 @@ async function createSpecialShop(req, res, next) {
          is_admin_managed = TRUE,
          is_approved = TRUE,
          verification_status = 'verified',
-         is_active = 1,
+         is_active = TRUE,
          seller_type = 'special',
          updated_at = NOW()
        RETURNING *`,
