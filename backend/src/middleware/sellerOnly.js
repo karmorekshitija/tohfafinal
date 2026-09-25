@@ -8,11 +8,10 @@
 
 const sellerOnly = (req, res, next) => {
   const role = req.user && req.user.role ? String(req.user.role).toUpperCase() : '';
-  if (req.user && (req.user.role === 'SELLER' || req.user.role === 'ADMIN' || role === 'SELLER' || role === 'ADMIN' || role === 'MASTER_ADMIN')) {
+  if (['SELLER', 'ADMIN', 'MASTER_ADMIN'].includes(role)) {
     return next();
   }
   return res.status(403).json({ success: false, message: 'Seller or Admin access required' });
 };
 
-module.exports = sellerOnly;
-module.exports.sellerOnly = sellerOnly;
+module.exports = { sellerOnly };

@@ -10,7 +10,7 @@ const router = express.Router();
 const paymentController = require('../controllers/payment.controller');
 const sellerController = require('../controllers/seller.controller');
 const { authMiddleware } = require('../middleware/auth');
-const sellerOnly = require('../middleware/sellerOnly');
+const { sellerOnly } = require('../middleware/sellerOnly');
 
 router.use(authMiddleware);
 
