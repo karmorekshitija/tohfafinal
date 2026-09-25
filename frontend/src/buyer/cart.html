@@ -316,9 +316,9 @@
 
 
 <script type="module">
-    import apiClient, { requireAuth } from '/src/utils/apiClient.js';
+    import apiClient, { requireAuth, getAuthToken } from '/src/utils/apiClient.js';
     import { formatPaise } from '/src/utils/currency.js';
-    import { logout } from '/src/utils/auth.js';
+    import { logout, authStorage } from '/src/utils/auth.js';
     import { initSearchOverlay } from '/buyer/searchOverlay.js';
 
     initSearchOverlay();
@@ -356,7 +356,7 @@
     }
 
     async function initCart() {
-        const token = sessionStorage.getItem('tohfa_access_token');
+        const token = authStorage.getToken();
         if (!token) {
             await loadGuestCart();
             return;
@@ -648,7 +648,7 @@
             return;
         }
 
-        const token = sessionStorage.getItem('tohfa_access_token');
+        const token = authStorage.getToken();
         if (!token) {
             const guestCartRaw = sessionStorage.getItem('tohfa_guest_cart') || localStorage.getItem('tohfa_guest_cart');
             if (guestCartRaw) {
@@ -680,7 +680,7 @@
     }
 
     async function removeItem(id) {
-        const token = sessionStorage.getItem('tohfa_access_token');
+        const token = authStorage.getToken();
         if (!token) {
             const guestCartRaw = sessionStorage.getItem('tohfa_guest_cart') || localStorage.getItem('tohfa_guest_cart');
             if (guestCartRaw) {
@@ -912,7 +912,7 @@
 
     // Place Order & Pay
     async function placeOrder(isTestPay = false) {
-        const token = sessionStorage.getItem('tohfa_access_token');
+        const token = authStorage.getToken();
         if (!token) {
             window.location.href = '/buyer/checkout.html?mode=guest';
             return;
@@ -945,29 +945,45 @@
 
             const res = await apiClient.post('/orders', { address_id: selectedAddressId });
             if (res.data && res.data.success) {
-                const order = res.data.data;
-                const orderId = order.order_id;
+                const order = res.data.data?.order || {};
+                const orderId = order.id;
+                const orderRef = order.order_ref || `TH-${String(order.id || '').slice(0, 8).toUpperCase()}`;
                 
                 if (isTestPay) {
                     btn.innerHTML = `<span>Confirming Test Payment...</span>`;
                     const testRes = await apiClient.post('/payments/test-pay', { order_id: orderId, orderId: orderId });
                     if (testRes.data && testRes.data.success) {
-                        window.location.href = `payment-success.html?order_ref=${order.order_ref}&order_id=${orderId}`;
+                        window.location.href = `payment-success.html?order_ref=${orderRef}&order_id=${orderId}`;
                         return;
                     }
                 }
 
-                const initRes = await apiClient.post('/payments/initiate', { order_id: orderId });
+                const initRes = await apiClient.post('/payments/create-order', { orderId: orderId });
                 if (initRes.data && initRes.data.success) {
                     const payData = initRes.data.data;
                     
+                    // Fallback to test-pay in local dev mode when Razorpay placeholder keys are used
+                    const isMockGateway = !payData.razorpayKeyId ||
+                        payData.razorpayKeyId === 'rzp_test_placeholder' ||
+                        payData.razorpayKeyId === 'YOUR_RAZORPAY_KEY_ID' ||
+                        String(payData.razorpay_order_id || '').startsWith('order_mock_');
+
+                    if (isMockGateway) {
+                        btn.innerHTML = `<span>Confirming Test Payment...</span>`;
+                        const testRes = await apiClient.post('/payments/test-pay', { orderId: orderId, order_id: orderId });
+                        if (testRes.data && testRes.data.success) {
+                            window.location.href = `payment-success.html?order_ref=${orderRef}&order_id=${orderId}`;
+                            return;
+                        }
+                    }
+
                     const options = {
-                        key: payData.key_id,
-                        amount: payData.amount_paise,
-                        currency: payData.currency,
+                        key: payData.razorpayKeyId,
+                        amount: payData.amount_paise || payData.amount,
+                        currency: payData.currency || 'INR',
                         order_id: payData.razorpay_order_id,
                         name: "Tohfa Artisan Studio",
-                        description: `Order Ref: ${order.order_ref}`,
+                        description: `Order Ref: ${orderRef}`,
                         prefill: payData.prefill,
                         handler: async function (response) {
                             // Helper: attempt verify, retry once on 401 (token refresh)
@@ -996,20 +1012,20 @@
 
                                 const success = verifyRes?.data?.success ?? verifyRes?.success;
                                 if (success) {
-                                    window.location.href = `payment-success.html?order_ref=${order.order_ref}&order_id=${orderId}`;
+                                    window.location.href = `payment-success.html?order_ref=${orderRef}&order_id=${orderId}`;
                                 } else {
-                                    window.location.href = `payment-failure.html?order_ref=${order.order_ref}&reason=verify_failed`;
+                                    window.location.href = `payment-failure.html?order_ref=${orderRef}&reason=verify_failed`;
                                 }
                             } catch (verifyErr) {
                                 console.error("Verify payment error:", verifyErr);
                                 const reason = verifyErr.response?.data?.message || verifyErr.message || 'unknown';
-                                window.location.href = `payment-failure.html?order_ref=${order.order_ref}&reason=${encodeURIComponent(reason)}`;
+                                window.location.href = `payment-failure.html?order_ref=${orderRef}&reason=${encodeURIComponent(reason)}`;
                             }
                         },
                         modal: {
                             ondismiss: function () {
                                 btn.disabled = false;
-                                btn.innerHTML = `<span>Place Order & Pay</span><span id="btn-total" class="font-data-price text-sm border-l border-solid border-white/40 pl-3 ml-3">${formatPaise(payData.amount_paise)}</span>`;
+                                btn.innerHTML = `<span>Place Order & Pay</span><span id="btn-total" class="font-data-price text-sm border-l border-solid border-white/40 pl-3 ml-3">${formatPaise(Math.round(payData.amount * 100))}</span>`;
                             }
                         }
                     };
@@ -1018,7 +1034,7 @@
                     rzp.on('payment.failed', function (resp) {
                         console.error("Payment failed:", resp.error);
                         const reason = resp.error?.description || resp.error?.reason || 'payment_failed';
-                        window.location.href = `payment-failure.html?order_ref=${order.order_ref}&reason=${encodeURIComponent(reason)}`;
+                        window.location.href = `payment-failure.html?order_ref=${orderRef}&reason=${encodeURIComponent(reason)}`;
                     });
                     rzp.open();
                 }
@@ -1048,7 +1064,7 @@
 
     let isLoggedIn = false;
     async function checkAuthState() {
-        const token = sessionStorage.getItem('tohfa_access_token');
+        const token = authStorage.getToken();
         const authContainer = document.getElementById('auth-buttons-container');
         
         if (token) {

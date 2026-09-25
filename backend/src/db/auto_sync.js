@@ -414,6 +414,7 @@ async function autoSyncDatabase() {
       `);
       await query(`CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id);`);
       await query(`CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);`);
+      await query(`CREATE UNIQUE INDEX IF NOT EXISTS uq_payments_razorpay_order_id ON payments(razorpay_order_id);`);
 
       // Backfill payments from existing paid orders if empty
       const { rows: pCount } = await query(`SELECT COUNT(*) AS count FROM payments`);
@@ -574,6 +575,63 @@ async function autoSyncDatabase() {
       console.warn('⚠️ [Auto-Sync Step 9e - Checkout Columns Notice]:', err.message);
     }
 
+    // 9f. Cart items table schema sync & unique constraints
+    try {
+      await query(`
+        CREATE TABLE IF NOT EXISTS cart_items (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          buyer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+          variant_id UUID REFERENCES product_variants(id) ON DELETE SET NULL,
+          quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
+          customization_data JSONB DEFAULT NULL,
+          customization_payload JSONB DEFAULT '{}',
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `);
+      await query(`ALTER TABLE cart_items ADD COLUMN IF NOT EXISTS buyer_id INTEGER;`);
+      await query(`ALTER TABLE cart_items ADD COLUMN IF NOT EXISTS user_id INTEGER;`);
+      await query(`ALTER TABLE cart_items ADD COLUMN IF NOT EXISTS customization_data JSONB;`);
+      await query(`ALTER TABLE cart_items ADD COLUMN IF NOT EXISTS customization_payload JSONB DEFAULT '{}';`);
+      await query(`ALTER TABLE cart_items ALTER COLUMN user_id DROP NOT NULL;`);
+      await query(`UPDATE cart_items SET buyer_id = user_id WHERE buyer_id IS NULL AND user_id IS NOT NULL;`);
+      await query(`UPDATE cart_items SET user_id = buyer_id WHERE user_id IS NULL AND buyer_id IS NOT NULL;`);
+
+      // Deduplicate any existing cart_items before creating partial unique indexes
+      await query(`
+        DELETE FROM cart_items duplicate
+        USING (
+          SELECT id,
+                 ROW_NUMBER() OVER (
+                   PARTITION BY COALESCE(buyer_id, user_id), product_id, variant_id
+                   ORDER BY created_at NULLS LAST, id
+                 ) AS row_number
+          FROM cart_items
+        ) ranked
+        WHERE duplicate.id = ranked.id
+          AND ranked.row_number > 1;
+      `);
+
+      // Ensure partial unique indexes for ON CONFLICT matching
+      await query(`
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_cart_items_buyer_product_no_variant
+          ON cart_items (buyer_id, product_id)
+          WHERE variant_id IS NULL;
+      `);
+      await query(`
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_cart_items_buyer_product_variant
+          ON cart_items (buyer_id, product_id, variant_id)
+          WHERE variant_id IS NOT NULL;
+      `);
+      await query(`CREATE INDEX IF NOT EXISTS idx_cart_items_buyer_id ON cart_items(buyer_id);`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id);`);
+      console.log('✅ [Auto-Sync Step 9f] cart_items schema and constraints ensured');
+    } catch (err) {
+      console.warn('⚠️ [Auto-Sync Step 9f - Cart Items Notice]:', err.message);
+    }
+
     // 10. Curate Categories Data (Clean display names, unique icons, and specific artisan images)
     try {
       const categoryCurations = [
@@ -613,6 +671,53 @@ async function autoSyncDatabase() {
       }
     } catch (err) {
       console.warn('⚠️ [Auto-Sync Step 11 - Sponsored Products Notice]:', err.message);
+    }
+
+    // 12. Seller Subscription Plans Schema & Ledger Table
+    try {
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS subscription_plan VARCHAR(20) DEFAULT 'basic';`);
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(50) DEFAULT 'active';`);
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS subscription_price_paid NUMERIC(10,2) DEFAULT 0.00;`);
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS subscription_started_at TIMESTAMPTZ;`);
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS subscription_renews_at TIMESTAMPTZ;`);
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS subscription_discount_used BOOLEAN DEFAULT FALSE;`);
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS subscription_updated_by VARCHAR(50) DEFAULT 'system';`);
+
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS subscription_plan VARCHAR(20) DEFAULT 'basic';`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(50) DEFAULT 'active';`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS subscription_price_paid NUMERIC(10,2) DEFAULT 0.00;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS subscription_started_at TIMESTAMPTZ;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS subscription_renews_at TIMESTAMPTZ;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS subscription_discount_used BOOLEAN DEFAULT FALSE;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS subscription_updated_by VARCHAR(50) DEFAULT 'system';`);
+
+      await query(`
+        CREATE TABLE IF NOT EXISTS subscription_payments (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          seller_id UUID,
+          user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+          plan VARCHAR(20) NOT NULL,
+          amount NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+          currency VARCHAR(10) DEFAULT 'INR',
+          razorpay_order_id TEXT,
+          razorpay_payment_id TEXT,
+          razorpay_signature TEXT,
+          status VARCHAR(50) NOT NULL DEFAULT 'created',
+          discount_applied BOOLEAN DEFAULT FALSE,
+          started_at TIMESTAMPTZ,
+          renews_at TIMESTAMPTZ,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `);
+      await query(`CREATE INDEX IF NOT EXISTS idx_subscription_payments_user_id ON subscription_payments(user_id);`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_subscription_payments_order_id ON subscription_payments(razorpay_order_id);`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_subscription_payments_plan ON subscription_payments(plan);`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_sellers_subscription_plan ON sellers(subscription_plan);`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_seller_profiles_subscription_plan ON seller_profiles(subscription_plan);`);
+      console.log('✅ [Auto-Sync Step 12] Seller subscription columns & payments table ensured');
+    } catch (err) {
+      console.warn('⚠️ [Auto-Sync Step 12 - Subscriptions Notice]:', err.message);
     }
 
     // 13. Ensure Initial Admin Exists

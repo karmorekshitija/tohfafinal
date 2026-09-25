@@ -35,7 +35,11 @@ async function loadSellerProfile() {
     renderHero(seller);
     loadSellerProducts();
   } catch (err) {
-    heroEl.innerHTML = `<p class="text-body" style="padding:var(--space-6);">${err.message}</p>`;
+    const studioBadgeHtml = s.studio_badge
+    ? '<span class="badge" style="background:#14381F; color:#FFF8E7; font-weight:700; border:1px solid rgba(255,248,231,0.3); font-size:11px; padding:2px 8px; border-radius:12px;">✦ ' + s.studio_badge + '</span>'
+    : '';
+
+  heroEl.innerHTML = `<p class="text-body" style="padding:var(--space-6);">${err.message}</p>`;
   }
 }
 
@@ -64,7 +68,10 @@ function renderHero(s) {
           <img src="${s.profile_photo_url || s.avatar_url || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80'}" alt="${s.store_name}">
         </div>
         <div>
-          <span class="badge badge-accent" style="margin-bottom:var(--space-1);">Verified Artisan Maker</span>
+          <div class="flex items-center gap-2 flex-wrap" style="margin-bottom:var(--space-1);">
+            <span class="badge badge-accent">Verified Artisan Maker</span>
+            ${studioBadgeHtml}
+          </div>
           <h1 style="font-family:var(--font-display); font-size:var(--text-2xl); color:var(--color-primary);">${s.store_name || s.name}</h1>
           <p class="text-body" style="margin-top:var(--space-1); max-width:600px;">${s.bio || 'Independent handmade creator crafting thoughtful artisan gifts.'}</p>
         </div>

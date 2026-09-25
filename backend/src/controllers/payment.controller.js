@@ -82,6 +82,14 @@ async function createOrder(req, res, next) {
       },
     });
   } catch (err) {
+    console.error('[Payment createOrder error]:', err);
+    if (err.statusCode === 401 || err.status === 401) {
+      return res.status(502).json({
+        success: false,
+        message: 'Payment gateway authentication failed. Please verify Razorpay API keys in backend/.env',
+        code: 'GATEWAY_AUTH_ERROR'
+      });
+    }
     next(err);
   }
 }

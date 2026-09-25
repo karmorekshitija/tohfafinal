@@ -228,9 +228,12 @@ class SellerSidebar extends HTMLElement {
           </a>
           ${!isAdminSwitched ? `
           <!-- Studio Plans -->
-          <a class="sidebar-link ${activeTab === 'plans' ? 'sidebar-link-active' : ''}" href="/seller/plans.html" title="Studio Plans">
+          <a class="sidebar-link ${activeTab === 'plans' ? 'sidebar-link-active' : ''} relative" href="/seller/plans.html" title="Studio Plans">
             <span class="material-symbols-outlined mb-1 text-2xl">workspace_premium</span>
-            <span class="text-[9px] uppercase tracking-widest text-center">Plans</span>
+            <span class="text-[9px] uppercase tracking-widest text-center flex items-center justify-center gap-1">
+              <span>Plans</span>
+              <span id="sidebar-plan-pill" class="hidden text-[8px] px-1 py-0.2 rounded font-bold uppercase tracking-normal" style="background:#FFF8E7;color:#14381F;"></span>
+            </span>
           </a>
           ` : ''}
         </nav>
@@ -344,6 +347,11 @@ class SellerTopBar extends HTMLElement {
             const avatarEl = this.querySelector('#sidebar-avatar');
             if (avatarEl) {
               avatarEl.src = p.profile_photo || p.avatar_url || p.logo_url || '/img/default-avatar.png';
+            }
+            const planPill = document.querySelector('#sidebar-plan-pill');
+            if (planPill && p.subscription_plan && p.subscription_plan !== 'basic') {
+              planPill.textContent = p.subscription_plan.toUpperCase();
+              planPill.classList.remove('hidden');
             }
           }
         })

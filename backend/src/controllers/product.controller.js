@@ -635,9 +635,10 @@ async function forYouFeed(req, res, next) {
 // ---------------------------------------------------------------------------
 async function getSponsoredProducts(req, res, next) {
   try {
-    const limit = Math.min(Math.max(parseInt(req.query.limit || 8, 10), 1), 50);
+    // Capped at 5 top sitewide sponsored slots by default, max 5 for featured carousel
+    const limit = Math.min(Math.max(parseInt(req.query.limit || 5, 10), 1), 5);
 
-    // 1. First fetch products explicitly flagged as sponsored
+    // 1. First fetch products explicitly flagged as sponsored, prioritized by Max Studio first, then Pro Studio
     const { rows: sponsoredRows } = await query(
       `SELECT p.id, p.name, p.description, p.base_price, p.category_id, p.tags,
               p.customization_mode, p.is_customizable,
@@ -645,6 +646,7 @@ async function getSponsoredProducts(req, res, next) {
               p.status, p.view_count, p.seller_id, p.created_at,
               p.special_packaging_available, p.slug,
               COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
+              COALESCE(sp.subscription_plan, s.subscription_plan, 'basic') AS subscription_plan,
               COALESCE(
                 json_agg(pi ORDER BY pi.sort_order) FILTER (WHERE pi.id IS NOT NULL),
                 '[]'
@@ -662,15 +664,22 @@ async function getSponsoredProducts(req, res, next) {
            OR s.is_approved = TRUE
            OR (sp.user_id IS NULL AND s.user_id IS NULL)
          )
-       GROUP BY p.id, sp.store_name, s.store_name, p.special_packaging_available
-       ORDER BY p.priority_rank DESC, p.created_at DESC
+       GROUP BY p.id, sp.store_name, s.store_name, sp.subscription_plan, s.subscription_plan, p.special_packaging_available
+       ORDER BY 
+         CASE 
+           WHEN COALESCE(sp.subscription_plan, s.subscription_plan) = 'max' THEN 1
+           WHEN COALESCE(sp.subscription_plan, s.subscription_plan) = 'pro' THEN 2
+           ELSE 3
+         END ASC,
+         p.priority_rank DESC,
+         p.created_at DESC
        LIMIT $1`,
       [limit]
     );
 
     let finalRows = sponsoredRows;
 
-    // 2. Fallback if fewer than limit (e.g. fresh marketplace launch): supplement with top creations
+    // 2. Fallback if fewer than 5 (supplement with high quality active listings)
     if (finalRows.length < limit) {
       const needed = limit - finalRows.length;
       const existingIds = finalRows.map(r => r.id);
@@ -682,6 +691,7 @@ async function getSponsoredProducts(req, res, next) {
                 p.status, p.view_count, p.seller_id, p.created_at,
                 p.special_packaging_available, p.slug,
                 COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
+                COALESCE(sp.subscription_plan, s.subscription_plan, 'basic') AS subscription_plan,
                 COALESCE(
                   json_agg(pi ORDER BY pi.sort_order) FILTER (WHERE pi.id IS NOT NULL),
                   '[]'
@@ -699,8 +709,15 @@ async function getSponsoredProducts(req, res, next) {
              OR s.is_approved = TRUE
              OR (sp.user_id IS NULL AND s.user_id IS NULL)
            )
-         GROUP BY p.id, sp.store_name, s.store_name, p.special_packaging_available
-         ORDER BY p.priority_rank DESC, p.created_at DESC
+         GROUP BY p.id, sp.store_name, s.store_name, sp.subscription_plan, s.subscription_plan, p.special_packaging_available
+         ORDER BY 
+           CASE 
+             WHEN COALESCE(sp.subscription_plan, s.subscription_plan) = 'max' THEN 1
+             WHEN COALESCE(sp.subscription_plan, s.subscription_plan) = 'pro' THEN 2
+             ELSE 3
+           END ASC,
+           p.priority_rank DESC,
+           p.created_at DESC
          LIMIT $2`,
         [existingIds.length ? existingIds.map(String) : ['-1'], needed]
       );
@@ -1154,13 +1171,13 @@ async function createProduct(req, res, next) {
     }
 
     // Handle images if provided in body (support images, photos, img_url, imagePath)
-    const rawImagesList = dedupeAlternateFormatImages((Array.isArray(images) && images.length > 0) ? images : (
+    const rawImagesList = (Array.isArray(images) && images.length > 0) ? images : (
       (Array.isArray(req.body.photos) && req.body.photos.length > 0) ? req.body.photos : (
         (req.body.img_url || req.body.imagePath || req.body.imageUrl || req.body.image_url)
           ? [req.body.img_url || req.body.imagePath || req.body.imageUrl || req.body.image_url]
           : []
       )
-    ));
+    );
     const uniqueRawImagesList = uniqueImageUrls(rawImagesList);
     if (uniqueRawImagesList.length > 0) {
       let sortOrder = 0;
@@ -1586,8 +1603,7 @@ async function uploadImages(req, res, next) {
     let sortOrder = parseInt(maxRows[0].max_order, 10) + 1;
 
     const inserted = [];
-    const filesToInsert = dedupeAlternateFormatImages(req.files);
-    for (const filePath of uniqueImageUrls(filesToInsert.map(file => file.path))) {
+    for (const filePath of uniqueImageUrls(req.files.map(file => file.path))) {
       const { rows } = await query(
         `INSERT INTO product_images (product_id, url, sort_order)
          VALUES ($1, $2, $3)

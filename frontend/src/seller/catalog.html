@@ -78,7 +78,7 @@
       margin-top: 0 !important;
     }
     /* Make buttons tappable with min touch target */
-    .edit-btn, .pause-btn, .delete-btn {
+    .sponsor-btn, .edit-btn, .pause-btn, .delete-btn {
       min-width: 44px !important;
       min-height: 44px !important;
       display: inline-flex !important;
@@ -87,6 +87,10 @@
       border-radius: 9999px !important;
       background: #FFF8E7 !important;
       transition: all 0.2s ease !important;
+    }
+    .sponsor-btn:hover {
+      background: rgba(245,158,11,0.2) !important;
+      color: #b45309 !important;
     }
     .edit-btn:hover {
       background: rgba(20,56,31,0.2) !important;
@@ -689,6 +693,9 @@ function rowHTML(l) {
                 <div class="flex items-center gap-1">
                     ${statusBadge(l.status, l.stock_count)}
                 </div>
+                <button class="sponsor-btn ${l.is_sponsored ? 'text-amber-500 font-bold bg-amber-500/10' : 'text-stone-400 hover:text-amber-500'} transition-colors" title="${l.is_sponsored ? 'Sponsored (Click to remove)' : 'Feature as Sponsored'}" data-id="${l.listing_id}" data-sponsored="${l.is_sponsored ? '1' : '0'}">
+                    <span class="material-symbols-outlined text-lg">${l.is_sponsored ? 'star' : 'star_border'}</span>
+                </button>
                 <button class="edit-btn text-sage hover:text-forest transition-colors" title="Edit" data-id="${l.listing_id}">
                     <span class="material-symbols-outlined text-lg">edit</span>
                 </button>
@@ -874,6 +881,26 @@ function attachCardListeners() {
             if (editBtn) {
                 const id = editBtn.dataset.id;
                 window.location.href = `/seller/edit-product.html?id=${id}`;
+            }
+        });
+    });
+
+    document.querySelectorAll('.sponsor-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            const token = sessionStorage.getItem('tohfa_access_token');
+            try {
+                const res = await fetch(`${API_BASE}/api/seller/products/${id}/sponsor`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Failed to toggle sponsorship');
+                showToast(data.message || 'Sponsorship updated', 'success');
+                await loadListings(true);
+            } catch (err) {
+                showToast(err.message, 'error');
             }
         });
     });

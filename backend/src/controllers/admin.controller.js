@@ -111,6 +111,14 @@ async function listSellers(req, res, next) {
              COALESCE(sp.approved_at, s.approved_at) AS approved_at,
              COALESCE(sp.rejection_reason, s.rejection_reason) AS rejection_reason,
              (COALESCE(sp.is_admin_managed::text, s.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
+             COALESCE(sp.subscription_plan, s.subscription_plan, 'basic') AS subscription_plan,
+             COALESCE(sp.subscription_status, s.subscription_status, 'active') AS subscription_status,
+             COALESCE(sp.subscription_renews_at, s.subscription_renews_at) AS subscription_renews_at,
+             COALESCE(sp.subscription_price_paid, s.subscription_price_paid, 0.00) AS subscription_price_paid,
+             COALESCE(sp.subscription_plan, s.subscription_plan, 'basic') AS subscription_plan,
+             COALESCE(sp.subscription_status, s.subscription_status, 'active') AS subscription_status,
+             COALESCE(sp.subscription_renews_at, s.subscription_renews_at) AS subscription_renews_at,
+             COALESCE(sp.subscription_price_paid, s.subscription_price_paid, 0.00) AS subscription_price_paid,
              (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status != 'deleted') AS product_count,
              (SELECT COALESCE(SUM(o.total_amount), 0) FROM orders o WHERE o.seller_id = u.id AND o.payment_status = 'paid') AS total_revenue,
              (SELECT MAX(o2.created_at) FROM orders o2 WHERE o2.seller_id = u.id AND o2.payment_status = 'paid') AS last_order_at
@@ -2187,6 +2195,141 @@ async function getAuditLogDiff(req, res, next) {
   }
 }
 
+
+async function getPlansOverview(req, res, next) {
+  try {
+    const { rows: planCounts } = await query(`
+      SELECT COALESCE(sp.subscription_plan, 'basic') AS plan, COUNT(*) AS count
+      FROM seller_profiles sp
+      GROUP BY COALESCE(sp.subscription_plan, 'basic')
+    `);
+    const distribution = { basic: 0, pro: 0, max: 0 };
+    planCounts.forEach(r => {
+      const p = (r.plan || 'basic').toLowerCase();
+      if (distribution[p] !== undefined) distribution[p] = parseInt(r.count, 10);
+    });
+
+    const { rows: paidDiscountRows } = await query(`
+      SELECT plan, COUNT(DISTINCT user_id) AS paid_count
+      FROM subscription_payments
+      WHERE status = 'paid' AND discount_applied = TRUE
+      GROUP BY plan
+    `).catch(() => ({ rows: [] }));
+    const discountPaid = { pro: 0, max: 0 };
+    paidDiscountRows.forEach(r => {
+      const p = (r.plan || '').toLowerCase();
+      if (discountPaid[p] !== undefined) discountPaid[p] = parseInt(r.paid_count, 10);
+    });
+
+    const discountSlots = {
+      pro: { total: 20, used: discountPaid.pro, remaining: Math.max(0, 20 - discountPaid.pro) },
+      max: { total: 20, used: discountPaid.max, remaining: Math.max(0, 20 - discountPaid.max) },
+    };
+
+    const { rows: bulkPriorityList } = await query(`
+      SELECT u.id, u.name, u.email, u.phone,
+             COALESCE(sp.store_name, s.store_name, u.name) AS store_name,
+             COALESCE(sp.whatsapp_number, s.whatsapp_number, u.phone) AS whatsapp_number,
+             COALESCE(sp.subscription_plan, s.subscription_plan, 'basic') AS subscription_plan,
+             COALESCE(sp.daily_capacity_max, s.daily_capacity_max, 50) AS daily_capacity,
+             (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status = 'active') AS active_products
+      FROM users u
+      LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+      LEFT JOIN sellers s ON s.user_id = u.id
+      WHERE u.role = 'seller' AND u.is_active = TRUE
+      ORDER BY 
+        CASE 
+          WHEN COALESCE(sp.subscription_plan, s.subscription_plan) = 'max' THEN 1
+          WHEN COALESCE(sp.subscription_plan, s.subscription_plan) = 'pro' THEN 2
+          ELSE 3
+        END ASC,
+        (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status = 'active') DESC
+      LIMIT 50
+    `);
+
+    const { rows: metaAdsEligible } = await query(`
+      SELECT u.id, u.name, u.email,
+             COALESCE(sp.store_name, s.store_name, u.name) AS store_name,
+             COALESCE(sp.instagram_handle, s.instagram_handle) AS instagram_handle,
+             COALESCE(sp.instagram_followers, s.instagram_followers) AS instagram_followers,
+             COALESCE(sp.subscription_plan, s.subscription_plan) AS subscription_plan,
+             (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status = 'active') AS active_products,
+             (SELECT json_agg(json_build_object('id', p.id, 'name', p.name, 'base_price', p.base_price, 'is_sponsored', p.is_sponsored)) 
+              FROM (SELECT * FROM products WHERE seller_id = u.id AND status = 'active' ORDER BY is_sponsored DESC, created_at DESC LIMIT 3) p
+             ) AS showcase_products
+      FROM users u
+      JOIN seller_profiles sp ON sp.user_id = u.id
+      LEFT JOIN sellers s ON s.user_id = u.id
+      WHERE u.role = 'seller'
+        AND u.is_active = TRUE
+        AND COALESCE(sp.subscription_plan, s.subscription_plan) IN ('pro', 'max')
+      ORDER BY CASE WHEN COALESCE(sp.subscription_plan, s.subscription_plan) = 'max' THEN 1 ELSE 2 END ASC
+    `);
+
+    return res.json({
+      success: true,
+      data: {
+        distribution,
+        discount_slots: discountSlots,
+        bulk_priority_sellers: bulkPriorityList,
+        meta_ads_eligible: metaAdsEligible
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function updateSellerPlan(req, res, next) {
+  try {
+    const sellerId = req.params.id || req.params.sellerId;
+    const { plan = 'basic', status = 'active' } = req.body;
+    const adminUser = req.user?.email || 'admin';
+
+    const normalizedPlan = String(plan).toLowerCase().trim();
+    if (!['basic', 'pro', 'max'].includes(normalizedPlan)) {
+      return res.status(400).json({ success: false, message: 'Invalid plan tier. Must be basic, pro, or max.' });
+    }
+
+    const renewsAt = normalizedPlan === 'basic' ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    await query(
+      `UPDATE sellers
+       SET subscription_plan = $1,
+           subscription_status = $2,
+           subscription_renews_at = $3,
+           subscription_updated_by = $4,
+           updated_at = NOW()
+       WHERE id::text = $5::text OR user_id::text = $5::text`,
+      [normalizedPlan, status, renewsAt, 'admin:' + adminUser, String(sellerId)]
+    );
+
+    await query(
+      `UPDATE seller_profiles
+       SET subscription_plan = $1,
+           subscription_status = $2,
+           subscription_renews_at = $3,
+           subscription_updated_by = $4,
+           updated_at = NOW()
+       WHERE id::text = $5::text OR user_id::text = $5::text`,
+      [normalizedPlan, status, renewsAt, 'admin:' + adminUser, String(sellerId)]
+    );
+
+    return res.json({
+      success: true,
+      message: 'Seller plan updated to ' + normalizedPlan + ' (' + status + ').',
+      data: {
+        seller_id: sellerId,
+        subscription_plan: normalizedPlan,
+        subscription_status: status,
+        subscription_renews_at: renewsAt
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   getPlatformStats,
   listSellers,
@@ -2240,4 +2383,6 @@ module.exports = {
   updateSpecialShop,
   switchSessionToSpecialShop,
   getRevenueBreakdown,
+  getPlansOverview,
+  updateSellerPlan,
 };

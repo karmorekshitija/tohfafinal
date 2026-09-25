@@ -146,6 +146,7 @@
           <tr class="bg-parchment border-b border-sage-border">
             <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase">Avatar + Name</th>
             <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase">Email</th>
+            <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase">Plan</th>
             <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase">Status</th>
             <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase">Products</th>
             <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase">Joined</th>
@@ -735,6 +736,13 @@ function renderSellers(sellers) {
         <div>${seller.email || '-'}</div>
         <div class="text-[11px] text-text-faint mt-0.5">${seller.phone || ''}</div>
       </td>
+      <td class="px-6 py-4">
+        <select class="change-seller-plan-select text-[11px] font-bold px-2 py-1 rounded border border-sage-border cursor-pointer ${seller.subscription_plan === 'max' ? 'bg-[#14381F] text-[#FFF8E7]' : (seller.subscription_plan === 'pro' ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-surface-ivory text-stone-800')}" data-id="${seller.id}">
+          <option value="basic" ${(!seller.subscription_plan || seller.subscription_plan === 'basic') ? 'selected' : ''}>Basic</option>
+          <option value="pro" ${seller.subscription_plan === 'pro' ? 'selected' : ''}>Pro Studio</option>
+          <option value="max" ${seller.subscription_plan === 'max' ? 'selected' : ''}>Max Studio</option>
+        </select>
+      </td>
       <td class="px-6 py-4">${statusBadge}</td>
       <td class="px-6 py-4 text-xs font-medium text-accent-violet">${seller.product_count || 0} items</td>
       <td class="px-6 py-4 text-xs text-text-muted">${seller.applied_at ? new Date(seller.applied_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}</td>
@@ -752,6 +760,23 @@ function renderSellers(sellers) {
 }
 
 function attachSellerEventListeners() {
+  document.querySelectorAll('.change-seller-plan-select').forEach(sel => {
+    sel.addEventListener('change', async (e) => {
+      const sId = e.currentTarget.getAttribute('data-id');
+      const newPlan = e.currentTarget.value;
+      try {
+        const res = await adminApiClient.patch(`/admin/sellers/${sId}/plan`, { plan: newPlan });
+        if (res.data?.success) {
+          showToast(`Seller plan updated to ${newPlan.toUpperCase()}`);
+          fetchSellers();
+        } else {
+          showToast(res.data?.message || 'Failed to update plan', 'error');
+        }
+      } catch (err) {
+        showToast(err.response?.data?.message || err.message || 'Error updating plan', 'error');
+      }
+    });
+  });
   document.querySelectorAll('.open-kyc-approve-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       activeModalSellerId = e.currentTarget.getAttribute('data-id');

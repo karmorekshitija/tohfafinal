@@ -42,6 +42,9 @@ router.get('/audit-logs', adminController.listAuditLogs);
 router.get('/audit-logs/:id/diff', adminController.getAuditLogDiff);
 
 // 2. Sellers & KYC Authority
+router.get("/plans/overview", adminController.getPlansOverview);
+router.patch("/sellers/:id/plan", adminController.updateSellerPlan);
+router.put("/sellers/:id/plan", adminController.updateSellerPlan);
 router.get('/sellers', adminController.listSellers);
 router.get('/sellers/:sellerId', adminController.getSellerDetail);
 router.get('/sellers/:id', adminController.getSellerDetail);

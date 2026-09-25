@@ -433,8 +433,8 @@
 </div>
 
 <script type="module">
-    import apiClient, { requireAuth } from '/src/utils/apiClient.js';
-    import { logout } from '/src/utils/auth.js';
+    import apiClient, { requireAuth, getAuthToken } from '/src/utils/apiClient.js';
+    import { logout, authStorage } from '/src/utils/auth.js';
     import { formatPaise } from '/src/utils/currency.js';
     import { initSearchOverlay } from '/buyer/searchOverlay.js';
 
@@ -465,7 +465,7 @@
     };
 
     async function initCheckout() {
-        const token = sessionStorage.getItem('tohfa_access_token');
+        const token = authStorage.getToken();
         if (!token) {
             const guestEmailSec = document.getElementById('guest-email-section');
             if (guestEmailSec) guestEmailSec.classList.remove('hidden');
@@ -1001,7 +1001,7 @@
             is_default: document.getElementById('addr-default').checked
         };
 
-        if (!sessionStorage.getItem('tohfa_access_token')) {
+        if (!authStorage.getToken()) {
             const guestAddr = { ...body, id: 'guest-addr-1' };
             savedAddresses = [guestAddr];
             selectedAddressId = guestAddr.id;
@@ -1120,10 +1120,10 @@
     }
     // ---------------------------------------------------------------------
 
-    async function placeOrder() {
-        const token = sessionStorage.getItem('tohfa_access_token');
+    async function placeOrder(isTestPay = false) {
+        const token = authStorage.getToken();
         if (!token) {
-            const emailInput = document.getElementById('guest-email');
+            const emailInput = document.getElementById('guest-email-input') || document.getElementById('guest-email');
             const guestEmail = emailInput?.value?.trim();
             if (!guestEmail || !guestEmail.includes('@')) {
                 alert('Please enter a valid contact email for your order.');
@@ -1163,9 +1163,9 @@
             };
             const res = await apiClient.post('/orders', orderPayload);
             if (res.data && res.data.success) {
-                let order = res.data.data || {};
-                let orderId = order.order_id;
-                let orderRef = order.order_ref;
+                let order = res.data.data?.order || {};
+                let orderId = order.id;
+                let orderRef = order.order_ref || `TH-${String(order.id || '').slice(0, 8).toUpperCase()}`;
 
                 // -- Phase 4: Handle contention --------------------------------
                 if (res.data.status === 'contention_pending' && res.data.attempt_id) {
@@ -1183,15 +1183,39 @@
                 }
                 // -------------------------------------------------------------
                 
+                if (isTestPay) {
+                    btn.innerHTML = `<span>Confirming Test Payment...</span>`;
+                    const testRes = await apiClient.post('/payments/test-pay', { order_id: orderId, orderId: orderId });
+                    if (testRes.data && testRes.data.success) {
+                        window.location.href = `payment-success.html?order_ref=${orderRef}&order_id=${orderId}`;
+                        return;
+                    }
+                }
+
                 // Task 15: Payment Flow
-                const initRes = await apiClient.post('/payments/initiate', { order_id: orderId });
+                const initRes = await apiClient.post('/payments/create-order', { orderId: orderId });
                 if (initRes.data && initRes.data.success) {
                     const payData = initRes.data.data;
                     
+                    // Fallback to test-pay in local dev mode when Razorpay placeholder keys are used
+                    const isMockGateway = !payData.razorpayKeyId ||
+                        payData.razorpayKeyId === 'rzp_test_placeholder' ||
+                        payData.razorpayKeyId === 'YOUR_RAZORPAY_KEY_ID' ||
+                        String(payData.razorpay_order_id || '').startsWith('order_mock_');
+
+                    if (isMockGateway) {
+                        btn.innerHTML = `<span>Confirming Test Payment...</span>`;
+                        const testRes = await apiClient.post('/payments/test-pay', { orderId: orderId, order_id: orderId });
+                        if (testRes.data && testRes.data.success) {
+                            window.location.href = `payment-success.html?order_ref=${orderRef}&order_id=${orderId}`;
+                            return;
+                        }
+                    }
+
                     const options = {
-                        key: payData.key_id,
-                        amount: payData.amount_paise,
-                        currency: payData.currency,
+                        key: payData.razorpayKeyId,
+                        amount: payData.amount_paise || payData.amount, // already in paise
+                        currency: payData.currency || 'INR',
                         order_id: payData.razorpay_order_id,
                         name: "Tohfa Artisan Studio",
                         description: `Order Ref: ${orderRef}`,
@@ -1199,6 +1223,7 @@
                         handler: async function (response) {
                             try {
                                 const verifyRes = await apiClient.post('/payments/verify', {
+                                    orderId: orderId,
                                     order_id: orderId,
                                     razorpay_payment_id: response.razorpay_payment_id,
                                     razorpay_order_id: response.razorpay_order_id,
@@ -1254,7 +1279,7 @@
 
     let isLoggedIn = false;
     async function checkAuthState() {
-        const token = sessionStorage.getItem('tohfa_access_token');
+        const token = authStorage.getToken();
         const authContainer = document.getElementById('auth-buttons-container');
         
         if (token) {

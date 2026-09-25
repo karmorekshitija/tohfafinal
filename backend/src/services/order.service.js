@@ -104,7 +104,7 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
       LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
       LEFT JOIN sellers s ON s.user_id = p.seller_id
       LEFT JOIN product_variants pv ON pv.id = ci.variant_id
-      WHERE (ci.buyer_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
+      WHERE (ci.buyer_id = $1 OR ci.user_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
         AND ci.id::text = ANY($2::text[])
         AND (p.status = 'active' OR p.is_active = TRUE)
     `;
@@ -129,7 +129,7 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
       LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
       LEFT JOIN sellers s ON s.user_id = p.seller_id
       LEFT JOIN product_variants pv ON pv.id = ci.variant_id
-      WHERE (ci.buyer_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
+      WHERE (ci.buyer_id = $1 OR ci.user_id = $1 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $1))
         AND (p.status = 'active' OR p.is_active = TRUE)
     `;
     cartParams = [buyerId];

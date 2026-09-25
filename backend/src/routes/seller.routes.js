@@ -124,42 +124,22 @@ router.delete('/follow', authMiddleware, sellerController.unfollowSeller);
 router.post('/:id/follow', authMiddleware, sellerController.followSeller);
 router.delete('/:id/follow', authMiddleware, sellerController.unfollowSeller);
 
-// Subscription Plans & Billing (Graceful demo/staging support for plans.html)
-router.post('/subscription/create-order', authMiddleware, sellerOnly, (req, res) => {
-  const { plan = 'pro', amount = 199 } = req.body;
-  return res.json({
-    success: true,
-    data: {
-      plan,
-      amount,
-      currency: 'INR',
-      razorpay_order: {
-        id: `order_sub_mock_${Date.now()}`,
-        amount: amount * 100,
-        currency: 'INR'
-      },
-      key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder'
-    }
-  });
-});
-
-router.post('/subscription/verify', authMiddleware, sellerOnly, (req, res) => {
-  const { plan = 'pro' } = req.body;
-  return res.json({
-    success: true,
-    message: `Successfully upgraded to ${plan} plan.`,
-    data: { plan, active: true }
-  });
-});
-
-router.patch('/subscription', authMiddleware, sellerOnly, (req, res) => {
+// Subscription Plans & Billing
+router.get('/subscription', authMiddleware, sellerOnly, sellerController.getSubscription);
+router.post('/subscription/create-order', authMiddleware, sellerOnly, sellerController.createSubscriptionOrder);
+router.post('/subscription/verify', authMiddleware, sellerOnly, sellerController.verifySubscriptionPayment);
+router.patch('/subscription/downgrade', authMiddleware, sellerOnly, sellerController.downgradeSubscription);
+router.patch('/subscription', authMiddleware, sellerOnly, (req, res, next) => {
   const { plan = 'basic' } = req.body;
-  return res.json({
-    success: true,
-    message: `Plan updated to ${plan}.`,
-    data: { plan, active: true }
-  });
+  if (plan === 'basic') {
+    return sellerController.downgradeSubscription(req, res, next);
+  }
+  return sellerController.createSubscriptionOrder(req, res, next);
 });
+
+// Self-serve product sponsorship toggle (enforces plan cap)
+router.post('/products/:id/sponsor', authMiddleware, sellerOnly, sellerController.toggleProductSponsor);
+router.patch('/products/:id/sponsor', authMiddleware, sellerOnly, sellerController.toggleProductSponsor);
 
 // Public storefront view
 router.get('/public/:userId', sellerController.getPublicSellerProfile);

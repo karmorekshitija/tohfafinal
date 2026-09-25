@@ -193,19 +193,18 @@
       <div class="plan-icon" style="background:rgba(255,248,231,0.14);"><span class="material-symbols-outlined">auto_awesome</span></div>
       <div class="plan-name">Pro</div>
       <div class="plan-tagline">Grow your studio faster</div>
-      <div class="plan-price"><span class="currency">&#8377;</span><span class="amount">199</span></div>
-      <div class="plan-price-note">per month &middot; billed monthly</div>
+      <div class="plan-price" id="pro-price-wrap"><span class="currency">&#8377;</span><span class="amount" id="pro-amount">499</span></div>
+      <div class="plan-price-note" id="pro-price-note">per month &middot; billed monthly</div>
       <div class="plan-divider"></div>
       <button class="plan-cta solid" id="pro-cta" onclick="handlePlanAction('pro')">Upgrade to Pro</button>
       <div class="features-heading">Everything in Basic, plus:</div>
       <ul class="feature-list">
-        <li class="hl"><span class="material-symbols-outlined check">check_circle</span><span><strong>5 Sponsored Products</strong> &mdash; featured in search &amp; home feed</span></li>
+        <li class="hl"><span class="material-symbols-outlined check">check_circle</span><span><strong>3 Sponsored Products</strong> &mdash; featured in sitewide showcase</span></li>
         <li><span class="material-symbols-outlined check">check_circle</span>Priority placement in category pages</li>
-        <li><span class="material-symbols-outlined check">check_circle</span>&ldquo;Pro Studio&rdquo; badge on your profile</li>
+        <li><span class="material-symbols-outlined check">check_circle</span>&ldquo;Pro Studio&rdquo; trust badge on public profile</li>
+        <li><span class="material-symbols-outlined check">check_circle</span>Meta &amp; Instagram promotion eligibility</li>
         <li><span class="material-symbols-outlined check">check_circle</span>Advanced analytics &amp; revenue insights</li>
-        <li><span class="material-symbols-outlined check">check_circle</span>Priority customer support</li>
         <li><span class="material-symbols-outlined check">check_circle</span>Bulk order priority (above Basic)</li>
-        <li><span class="material-symbols-outlined check">check_circle</span>More features coming <span class="soon-tag">soon</span></li>
       </ul>
     </div>
 
@@ -214,19 +213,18 @@
       <div class="plan-icon"><span class="material-symbols-outlined">diamond</span></div>
       <div class="plan-name">Max</div>
       <div class="plan-tagline">The complete growth engine</div>
-      <div class="plan-price"><span class="currency">&#8377;</span><span class="amount">499</span></div>
-      <div class="plan-price-note">per month &middot; billed monthly</div>
+      <div class="plan-price" id="max-price-wrap"><span class="currency">&#8377;</span><span class="amount" id="max-amount">999</span></div>
+      <div class="plan-price-note" id="max-price-note">per month &middot; billed monthly</div>
       <div class="plan-divider"></div>
       <button class="plan-cta outline" id="max-cta" onclick="handlePlanAction('max')" style="border-color:rgba(255,248,231,0.5);">Upgrade to Max</button>
       <div class="features-heading">Everything in Pro, plus:</div>
       <ul class="feature-list">
-        <li class="hl"><span class="material-symbols-outlined check">check_circle</span><span><strong>Meta Ads Integration</strong> &mdash; Instagram &amp; Facebook promotion</span></li>
-        <li class="hl"><span class="material-symbols-outlined check">check_circle</span><span><strong>Unlimited Sponsored Products</strong> &mdash; no cap</span></li>
-        <li><span class="material-symbols-outlined check">check_circle</span>&ldquo;Max Studio&rdquo; badge &mdash; top buyer trust signal</li>
+        <li class="hl"><span class="material-symbols-outlined check">check_circle</span><span><strong>5 Sponsored Products</strong> &mdash; top carousel priority</span></li>
+        <li class="hl"><span class="material-symbols-outlined check">check_circle</span><span><strong>Meta Ads Promotion</strong> &mdash; Instagram &amp; Facebook campaigns</span></li>
+        <li><span class="material-symbols-outlined check">check_circle</span>&ldquo;Max Studio&rdquo; premium badge &mdash; top trust signal</li>
         <li><span class="material-symbols-outlined check">check_circle</span>Highest priority for Bulk &amp; Corporate orders</li>
-        <li><span class="material-symbols-outlined check">check_circle</span>Dedicated account manager <span class="soon-tag">soon</span></li>
-        <li><span class="material-symbols-outlined check">check_circle</span>Early access to new Tohfa features</li>
-        <li><span class="material-symbols-outlined check">check_circle</span>More features being added <span class="soon-tag">soon</span></li>
+        <li><span class="material-symbols-outlined check">check_circle</span>Dedicated seller support</li>
+        <li><span class="material-symbols-outlined check">check_circle</span>Early access to promotional campaigns</li>
       </ul>
     </div>
 
@@ -277,16 +275,60 @@
   'use strict';
   var API = '/api';
   var tok = function(){ return sessionStorage.getItem('tohfa_access_token') || localStorage.getItem('tohfa_access_token'); };
+  
   var PLANS = {
-    basic:{ name:'Basic', price:0,   icon:'storefront',   sub:'You are already on the free Basic plan. No charges apply.' },
-    pro:  { name:'Pro',   price:199, icon:'auto_awesome', sub:'Upgrade to Pro for \u20b9199/month. Get 5 Sponsored Products & priority placement.' },
-    max:  { name:'Max',   price:499, icon:'diamond',      sub:'Upgrade to Max for \u20b9499/month. Get Meta Ads, unlimited sponsored products & bulk order priority.' }
+    basic: { name: 'Basic', price: 0, regularPrice: 0, icon: 'storefront', sub: 'You are on the free Basic plan. Unlimited handcrafted listings.' },
+    pro:   { name: 'Pro',   price: 499, regularPrice: 499, icon: 'auto_awesome', sub: 'Upgrade to Pro Studio. Includes 3 Sponsored Products, Pro badge & priority placement.' },
+    max:   { name: 'Max',   price: 999, regularPrice: 999, icon: 'diamond', sub: 'Upgrade to Max Studio. 5 Sponsored Products, Meta Ads promotion, and top bulk priority.' }
   };
+  
   var currentPlan = 'basic';
   var targetPlan  = null;
+  var livePricing = null;
 
   function apiFetch(url, opts){
     return fetch(API + url, Object.assign({ headers:{ 'Authorization':'Bearer '+ tok(), 'Content-Type':'application/json' } }, opts));
+  }
+
+  function applyPricingUI(pricing){
+    if(!pricing) return;
+    livePricing = pricing;
+
+    // Update Pro Card
+    var proInfo = pricing.pro;
+    if(proInfo){
+      PLANS.pro.price = proInfo.amount;
+      PLANS.pro.regularPrice = proInfo.regularPrice;
+      var proWrap = document.getElementById('pro-price-wrap');
+      var proNote = document.getElementById('pro-price-note');
+      if(proWrap){
+        if(proInfo.isDiscountApplied){
+          proWrap.innerHTML = '<span class="currency">&#8377;</span><span class="amount">' + proInfo.amount + '</span> <span style="font-size:16px;text-decoration:line-through;color:rgba(255,248,231,0.4);margin-left:6px;">&#8377;' + proInfo.regularPrice + '</span>';
+          if(proNote) proNote.innerHTML = '<span style="color:#6FCF97;font-weight:700;">★ Launch Offer</span> (' + proInfo.slotsLeft + ' slots left) &middot; billed monthly';
+        } else {
+          proWrap.innerHTML = '<span class="currency">&#8377;</span><span class="amount">' + proInfo.amount + '</span>';
+          if(proNote) proNote.innerHTML = 'per month &middot; billed monthly';
+        }
+      }
+    }
+
+    // Update Max Card
+    var maxInfo = pricing.max;
+    if(maxInfo){
+      PLANS.max.price = maxInfo.amount;
+      PLANS.max.regularPrice = maxInfo.regularPrice;
+      var maxWrap = document.getElementById('max-price-wrap');
+      var maxNote = document.getElementById('max-price-note');
+      if(maxWrap){
+        if(maxInfo.isDiscountApplied){
+          maxWrap.innerHTML = '<span class="currency">&#8377;</span><span class="amount">' + maxInfo.amount + '</span> <span style="font-size:16px;text-decoration:line-through;color:rgba(255,248,231,0.4);margin-left:6px;">&#8377;' + maxInfo.regularPrice + '</span>';
+          if(maxNote) maxNote.innerHTML = '<span style="color:#6FCF97;font-weight:700;">★ Launch Offer</span> (' + maxInfo.slotsLeft + ' slots left) &middot; billed monthly';
+        } else {
+          maxWrap.innerHTML = '<span class="currency">&#8377;</span><span class="amount">' + maxInfo.amount + '</span>';
+          if(maxNote) maxNote.innerHTML = 'per month &middot; billed monthly';
+        }
+      }
+    }
   }
 
   function renderCurrentState(){
@@ -301,14 +343,14 @@
       if(k === currentPlan){
         card.classList.add('current');
         btn.classList.add('current-plan');
-        btn.textContent = '\u2713 Current Plan';
+        btn.textContent = '✓ Current Plan';
         btn.disabled = true;
       } else if(k === 'basic'){
         btn.classList.add('outline');
         btn.textContent = 'Downgrade to Basic';
       } else if(k === 'pro'){
         btn.classList.add(currentPlan === 'max' ? 'outline' : 'solid');
-        btn.textContent = currentPlan === 'max' ? 'Downgrade to Pro' : 'Upgrade to Pro';
+        btn.textContent = currentPlan === 'max' ? 'Switch to Pro' : 'Upgrade to Pro';
       } else if(k === 'max'){
         btn.classList.add('outline');
         btn.style.borderColor = 'rgba(255,248,231,0.5)';
@@ -322,9 +364,9 @@
     targetPlan = planKey;
     var p = PLANS[planKey];
     document.getElementById('modalIcon').textContent    = p.icon;
-    document.getElementById('modalTitle').textContent   = p.name + ' Plan';
+    document.getElementById('modalTitle').textContent   = p.name + ' Studio Plan';
     document.getElementById('modalSubtitle').textContent= p.sub;
-    document.getElementById('modalConfirm').textContent = p.price === 0 ? 'Confirm Downgrade (Free)' : 'Pay \u20b9' + p.price + ' / month';
+    document.getElementById('modalConfirm').textContent = p.price === 0 ? 'Confirm Downgrade (Free)' : 'Pay ₹' + p.price + ' / month';
     var m = document.getElementById('upgradeModal');
     m.style.display = 'flex';
   };
@@ -337,57 +379,120 @@
   window.confirmUpgrade = function(){
     if(!targetPlan) return;
     var plan = PLANS[targetPlan];
+    var chosen = targetPlan;
     window.closeModal();
-    if(plan.price === 0){ doUpdate(targetPlan); return; }
-    apiFetch('/seller/subscription/create-order',{ method:'POST', body: JSON.stringify({ plan: targetPlan, amount: plan.price }) })
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        var order = (data && data.data && data.data.razorpay_order) || {};
-        if(!order.id){ doUpdate(targetPlan); return; }
-        var rzp = new Razorpay({
-          key: (data.data && data.data.key_id) || '',
-          amount: plan.price * 100,
-          currency: 'INR',
-          name: 'Tohfa Studio Plans',
-          description: plan.name + ' Plan \u2014 \u20b9' + plan.price + '/month',
-          order_id: order.id,
-          handler: function(resp){
-            apiFetch('/seller/subscription/verify',{ method:'POST', body: JSON.stringify({ plan: targetPlan, razorpay_payment_id: resp.razorpay_payment_id, razorpay_order_id: resp.razorpay_order_id, razorpay_signature: resp.razorpay_signature }) });
-            currentPlan = targetPlan;
-            renderCurrentState();
-            showToast(plan.name);
-          },
-          theme:{ color:'#14381F' }
-        });
-        rzp.open();
-      })
-      .catch(function(){ doUpdate(targetPlan); });
-  };
 
-  function doUpdate(planKey){
-    apiFetch('/seller/subscription',{ method:'PATCH', body: JSON.stringify({ plan: planKey }) }).catch(function(){});
-    currentPlan = planKey;
-    renderCurrentState();
-    showToast(PLANS[planKey].name);
-  }
+    // Free downgrade flow
+    if(plan.price === 0){
+      apiFetch('/seller/subscription/downgrade', { method: 'PATCH' })
+        .then(function(r){ return r.json(); })
+        .then(function(res){
+          if(res.success){
+            currentPlan = 'basic';
+            renderCurrentState();
+            showToast('Basic');
+          } else {
+            alert(res.message || 'Failed to downgrade');
+          }
+        })
+        .catch(function(err){ alert('Network error downgrading plan.'); });
+      return;
+    }
+
+    // Paid upgrade flow via Razorpay
+    var confirmBtn = document.getElementById('modalConfirm');
+    apiFetch('/seller/subscription/create-order', {
+      method: 'POST',
+      body: JSON.stringify({ plan: chosen })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(!data.success || !data.data){
+        alert(data.message || 'Unable to initiate upgrade order.');
+        return;
+      }
+
+      var orderData = data.data;
+      var rzOrder = orderData.razorpay_order || {};
+      var keyId = orderData.key_id;
+
+      if(!rzOrder.id){
+        alert('Payment gateway order initialization failed.');
+        return;
+      }
+
+      var rzp = new Razorpay({
+        key: keyId,
+        amount: orderData.amount * 100,
+        currency: 'INR',
+        name: 'Tohfa Studio Plans',
+        description: PLANS[chosen].name + ' Studio Subscription',
+        order_id: rzOrder.id,
+        handler: function(resp){
+          // Verify on backend
+          apiFetch('/seller/subscription/verify', {
+            method: 'POST',
+            body: JSON.stringify({
+              plan: chosen,
+              razorpay_order_id: resp.razorpay_order_id,
+              razorpay_payment_id: resp.razorpay_payment_id,
+              razorpay_signature: resp.razorpay_signature
+            })
+          })
+          .then(function(vr){ return vr.json(); })
+          .then(function(vData){
+            if(vData.success){
+              currentPlan = chosen;
+              renderCurrentState();
+              showToast(PLANS[chosen].name);
+              // Refresh subscription details
+              loadSubscriptionInfo();
+            } else {
+              alert(vData.message || 'Payment verification failed. Please contact support.');
+            }
+          })
+          .catch(function(){
+            alert('Error verifying payment with server.');
+          });
+        },
+        theme: { color: '#14381F' }
+      });
+
+      rzp.on('payment.failed', function(resp){
+        alert('Payment failed: ' + (resp.error?.description || 'Transaction unsuccessful'));
+      });
+
+      rzp.open();
+    })
+    .catch(function(err){
+      alert('Unable to connect to payment service. Please try again.');
+    });
+  };
 
   function showToast(planName){
     var t = document.createElement('div');
     t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#14381F;color:#FFF8E7;padding:12px 24px;border-radius:50px;font-size:14px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.3);z-index:9999;display:flex;align-items:center;gap:8px;';
-    t.innerHTML = '<span style="font-size:18px;">\u2736</span> You are now on the <strong>&nbsp;' + planName + '</strong>&nbsp;plan!';
+    t.innerHTML = '<span style="font-size:18px;">✶</span> You are now on the <strong>&nbsp;' + planName + ' Studio</strong>&nbsp;plan!';
     document.body.appendChild(t);
     setTimeout(function(){ t.remove(); }, 4000);
   }
 
-  // Load current plan
-  apiFetch('/seller/profile')
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      var p = (d && d.data && d.data.profile) || (d && d.data) || {};
-      currentPlan = p.subscription_plan || p.plan || 'basic';
-      renderCurrentState();
-    })
-    .catch(function(){ renderCurrentState(); });
+  function loadSubscriptionInfo(){
+    apiFetch('/seller/subscription')
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d && d.success && d.data){
+          currentPlan = d.data.current_plan || 'basic';
+          applyPricingUI(d.data.pricing);
+          renderCurrentState();
+        } else {
+          renderCurrentState();
+        }
+      })
+      .catch(function(){ renderCurrentState(); });
+  }
+
+  loadSubscriptionInfo();
 })();
 </script>
 </body>

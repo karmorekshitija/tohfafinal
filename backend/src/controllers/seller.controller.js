@@ -12,6 +12,8 @@
 const { query, getClient } = require('../config/db');
 const { createNotification } = require('./notification.controller');
 const logisticsService = require('../services/logistics.service');
+const paymentService = require('../services/payment.service');
+const { PLANS, getPlan, calculateEffectivePrice } = require('../config/plans');
 
 // Strip internal fields (never exposed in public or seller responses)
 function sanitizeSellerProfile(sp) {
@@ -111,10 +113,17 @@ async function getOwnSellerProfile(req, res, next) {
               sp.pickup_address, sp.bank_details,
               COALESCE(sp.onboarding_completed, FALSE) AS onboarding_completed,
               (COALESCE(sp.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
+              COALESCE(sp.subscription_plan, s.subscription_plan, 'basic') AS subscription_plan,
+              COALESCE(sp.subscription_status, s.subscription_status, 'active') AS subscription_status,
+              COALESCE(sp.subscription_price_paid, s.subscription_price_paid, 0.00) AS subscription_price_paid,
+              COALESCE(sp.subscription_started_at, s.subscription_started_at) AS subscription_started_at,
+              COALESCE(sp.subscription_renews_at, s.subscription_renews_at) AS subscription_renews_at,
+              COALESCE(sp.subscription_discount_used, s.subscription_discount_used, FALSE) AS subscription_discount_used,
               sp.created_at,
               u.name, u.email, u.phone
        FROM seller_profiles sp
        JOIN users u ON u.id = sp.user_id
+       LEFT JOIN sellers s ON s.user_id = u.id
        WHERE sp.user_id = $1`,
       [userId]
     );
@@ -131,6 +140,29 @@ async function getOwnSellerProfile(req, res, next) {
     profile.logo_url = profile.logo_url || photo;
     profile.banner_url = banner;
     profile.cover_photo = banner;
+
+    // Auto-expire subscription if renewal date has passed
+    if (profile.subscription_renews_at && new Date(profile.subscription_renews_at) < new Date() && profile.subscription_plan !== 'basic') {
+      await query(
+        "UPDATE sellers SET subscription_plan = 'basic', subscription_status = 'expired', updated_at = NOW() WHERE user_id = $1",
+        [userId]
+      ).catch(() => {});
+      await query(
+        "UPDATE seller_profiles SET subscription_plan = 'basic', subscription_status = 'expired', updated_at = NOW() WHERE user_id = $1",
+        [userId]
+      ).catch(() => {});
+      await query(
+        "UPDATE products SET is_sponsored = FALSE, updated_at = NOW() WHERE seller_id = $1 AND is_sponsored = TRUE",
+        [userId]
+      ).catch(() => {});
+      profile.subscription_plan = 'basic';
+      profile.subscription_status = 'expired';
+    }
+
+    const planDef = getPlan(profile.subscription_plan);
+    profile.subscription_plan = planDef.id;
+    profile.studio_badge = (profile.subscription_status === 'active' || !profile.subscription_status) ? planDef.badge : null;
+    profile.sponsor_cap = planDef.sponsorCap;
 
     return res.json({
       success: true,
@@ -305,6 +337,8 @@ async function getPublicSellerProfile(req, res, next) {
               sp.pickup_address, sp.created_at,
               sp.verification_status AS sp_verification_status, sp.is_approved AS sp_is_approved,
               s.verification_status AS s_verification_status, s.is_approved AS s_is_approved,
+              COALESCE(sp.subscription_plan, s.subscription_plan, 'basic') AS subscription_plan,
+              COALESCE(sp.subscription_status, s.subscription_status, 'active') AS subscription_status,
               (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status = 'active') AS product_count,
               (SELECT AVG(r.rating) FROM reviews r WHERE r.seller_id = u.id) AS avg_rating,
               (SELECT COUNT(*) FROM reviews r WHERE r.seller_id = u.id) AS review_count
@@ -333,6 +367,7 @@ async function getPublicSellerProfile(req, res, next) {
     }
 
     const row = rows[0];
+    const planDef = getPlan(row.subscription_plan);
     const storeName = row.store_name || row.name || 'Artisan Studio';
     const slug = row.slug || (storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
     const avatarUrl = row.profile_photo_url || row.profile_photo || '/img/default-avatar.png';
@@ -358,6 +393,8 @@ async function getPublicSellerProfile(req, res, next) {
       row.s_is_approved === true
     );
 
+    const studioBadge = (row.subscription_status === 'active' || !row.subscription_status) ? planDef.badge : null;
+
     const normalized = {
       id: row.user_id,
       user_id: row.user_id,
@@ -375,6 +412,8 @@ async function getPublicSellerProfile(req, res, next) {
       review_count: parseInt(row.review_count || 0, 10),
       product_count: parseInt(row.product_count || 0, 10),
       is_verified: isVerified,
+      subscription_plan: planDef.id,
+      studio_badge: studioBadge,
       avatar_url: avatarUrl,
       profile_photo_url: avatarUrl,
       profile_photo: avatarUrl,
@@ -3189,6 +3228,413 @@ async function checkHandleAvailability(req, res, next) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// SUBSCRIPTION PLANS & BILLING HANDLERS
+// ---------------------------------------------------------------------------
+
+async function getSubscription(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const { rows: profileRows } = await query(
+      `SELECT COALESCE(sp.subscription_plan, s.subscription_plan, 'basic') AS subscription_plan,
+              COALESCE(sp.subscription_status, s.subscription_status, 'active') AS subscription_status,
+              COALESCE(sp.subscription_renews_at, s.subscription_renews_at) AS subscription_renews_at,
+              COALESCE(sp.subscription_started_at, s.subscription_started_at) AS subscription_started_at,
+              COALESCE(sp.subscription_discount_used, s.subscription_discount_used, FALSE) AS subscription_discount_used
+       FROM users u
+       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+       LEFT JOIN sellers s ON s.user_id = u.id
+       WHERE u.id = $1`,
+      [userId]
+    );
+
+    let currentPlanId = profileRows[0]?.subscription_plan || 'basic';
+    let currentStatus = profileRows[0]?.subscription_status || 'active';
+
+    // Auto-expire subscription if renewal date has passed
+    if (profileRows[0]?.subscription_renews_at && new Date(profileRows[0].subscription_renews_at) < new Date() && currentPlanId !== 'basic') {
+      await query(
+        "UPDATE sellers SET subscription_plan = 'basic', subscription_status = 'expired', updated_at = NOW() WHERE user_id = $1",
+        [userId]
+      ).catch(() => {});
+      await query(
+        "UPDATE seller_profiles SET subscription_plan = 'basic', subscription_status = 'expired', updated_at = NOW() WHERE user_id = $1",
+        [userId]
+      ).catch(() => {});
+      await query(
+        "UPDATE products SET is_sponsored = FALSE, updated_at = NOW() WHERE seller_id = $1 AND is_sponsored = TRUE",
+        [userId]
+      ).catch(() => {});
+      currentPlanId = 'basic';
+      currentStatus = 'expired';
+    }
+
+    const currentPlanDef = getPlan(currentPlanId);
+    const discountUsed = Boolean(profileRows[0]?.subscription_discount_used);
+
+    // Get paid discount usage from ledger for Pro & Max
+    const { rows: ledgerCounts } = await query(
+      `SELECT plan, COUNT(DISTINCT user_id) AS paid_count
+       FROM subscription_payments
+       WHERE status = 'paid' AND discount_applied = TRUE
+       GROUP BY plan`
+    ).catch(() => ({ rows: [] }));
+
+    const countsMap = { pro: 0, max: 0 };
+    ledgerCounts.forEach(r => { countsMap[r.plan] = parseInt(r.paid_count, 10) || 0; });
+
+    const pricing = {
+      basic: calculateEffectivePrice('basic', 0, false),
+      pro: calculateEffectivePrice('pro', countsMap.pro, discountUsed),
+      max: calculateEffectivePrice('max', countsMap.max, discountUsed)
+    };
+
+    // Sponsored products usage vs cap
+    const { rows: sponsoredRows } = await query(
+      `SELECT COUNT(*) AS count
+       FROM products
+       WHERE seller_id = $1 AND is_sponsored = TRUE AND status != 'deleted'`,
+      [userId]
+    ).catch(() => ({ rows: [{ count: 0 }] }));
+    const currentSponsoredCount = parseInt(sponsoredRows[0]?.count || 0, 10);
+
+    return res.json({
+      success: true,
+      data: {
+        current_plan: currentPlanDef.id,
+        plan_name: currentPlanDef.name,
+        studio_badge: currentPlanDef.badge,
+        status: profileRows[0]?.subscription_status || 'active',
+        started_at: profileRows[0]?.subscription_started_at || null,
+        renews_at: profileRows[0]?.subscription_renews_at || null,
+        discount_used: discountUsed,
+        sponsored_info: {
+          used: currentSponsoredCount,
+          cap: currentPlanDef.sponsorCap,
+          can_sponsor_more: currentSponsoredCount < currentPlanDef.sponsorCap
+        },
+        pricing,
+        plans: PLANS
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function createSubscriptionOrder(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const { plan = 'pro' } = req.body;
+    const planKey = String(plan).toLowerCase().trim();
+
+    if (!['pro', 'max'].includes(planKey)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid plan selected. Only Pro and Max require payment.'
+      });
+    }
+
+    const { rows: profileRows } = await query(
+      `SELECT COALESCE(sp.subscription_discount_used, s.subscription_discount_used, FALSE) AS subscription_discount_used,
+              COALESCE(s.id, sp.id) AS seller_id
+       FROM users u
+       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+       LEFT JOIN sellers s ON s.user_id = u.id
+       WHERE u.id = $1`,
+      [userId]
+    );
+
+    const discountUsed = Boolean(profileRows[0]?.subscription_discount_used);
+    const sellerId = profileRows[0]?.seller_id || null;
+
+    // Check discount slots used from subscription_payments ledger
+    const { rows: discountRows } = await query(
+      `SELECT COUNT(DISTINCT user_id) AS paid_count
+       FROM subscription_payments
+       WHERE plan = $1 AND status = 'paid' AND discount_applied = TRUE`,
+      [planKey]
+    ).catch(() => ({ rows: [{ paid_count: 0 }] }));
+    const paidCount = parseInt(discountRows[0]?.paid_count || 0, 10);
+    const pricing = calculateEffectivePrice(planKey, paidCount, discountUsed);
+
+    const receipt = `sub_${planKey}_${String(userId).replace(/-/g, '').substring(0, 12)}_${Date.now()}`;
+    const razorpayOrder = await paymentService.createRazorpayOrder(pricing.amount, receipt, 'primary');
+
+    // Audit log order attempt in subscription_payments
+    await query(
+      `INSERT INTO subscription_payments (seller_id, user_id, plan, amount, currency, razorpay_order_id, status, discount_applied)
+       VALUES ($1, $2, $3, $4, 'INR', $5, 'created', $6)`,
+      [sellerId, userId, planKey, pricing.amount, razorpayOrder.id, pricing.isDiscountApplied]
+    ).catch(err => {
+      console.warn('⚠️ [Subscription Payment Log Warning]:', err.message);
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        plan: planKey,
+        amount: pricing.amount,
+        regular_price: pricing.regularPrice,
+        is_discount: pricing.isDiscountApplied,
+        currency: 'INR',
+        razorpay_order: razorpayOrder,
+        key_id: razorpayOrder.keyId || process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_PRIMARY_KEY_ID || 'rzp_test_placeholder'
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function verifySubscriptionPayment(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const { plan, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const planKey = String(plan || 'pro').toLowerCase().trim();
+
+    if (!['pro', 'max'].includes(planKey)) {
+      return res.status(400).json({ success: false, message: 'Invalid subscription plan.' });
+    }
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing Razorpay payment verification parameters.'
+      });
+    }
+
+    // Verify HMAC signature
+    const isValid = paymentService.verifyPaymentSignature(
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature
+    );
+
+    if (!isValid) {
+      await query(
+        `UPDATE subscription_payments
+         SET status = 'failed', razorpay_payment_id = $1, razorpay_signature = $2, updated_at = NOW()
+         WHERE razorpay_order_id = $3`,
+        [razorpay_payment_id, razorpay_signature, razorpay_order_id]
+      ).catch(() => {});
+
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment signature. Verification failed.'
+      });
+    }
+
+    const { rows: paymentRows } = await query(
+      `SELECT amount, discount_applied FROM subscription_payments WHERE razorpay_order_id = $1`,
+      [razorpay_order_id]
+    ).catch(() => ({ rows: [] }));
+    const pricePaid = paymentRows[0]?.amount || (planKey === 'max' ? 999 : 499);
+    const discountApplied = Boolean(paymentRows[0]?.discount_applied);
+
+    const now = new Date();
+    const renewsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    // 1. Update subscription_payments audit log
+    await query(
+      `UPDATE subscription_payments
+       SET status = 'paid',
+           razorpay_payment_id = $1,
+           razorpay_signature = $2,
+           started_at = $3,
+           renews_at = $4,
+           updated_at = NOW()
+       WHERE razorpay_order_id = $5`,
+      [razorpay_payment_id, razorpay_signature, now, renewsAt, razorpay_order_id]
+    ).catch(() => {});
+
+    // 2. Persist new plan in sellers
+    await query(
+      `UPDATE sellers
+       SET subscription_plan = $1,
+           subscription_status = 'active',
+           subscription_price_paid = $2,
+           subscription_started_at = $3,
+           subscription_renews_at = $4,
+           subscription_discount_used = (subscription_discount_used OR $5),
+           subscription_updated_by = 'seller_payment',
+           updated_at = NOW()
+       WHERE user_id = $6`,
+      [planKey, pricePaid, now, renewsAt, discountApplied, userId]
+    );
+
+    // 3. Persist new plan in seller_profiles
+    await query(
+      `UPDATE seller_profiles
+       SET subscription_plan = $1,
+           subscription_status = 'active',
+           subscription_price_paid = $2,
+           subscription_started_at = $3,
+           subscription_renews_at = $4,
+           subscription_discount_used = (subscription_discount_used OR $5),
+           subscription_updated_by = 'seller_payment',
+           updated_at = NOW()
+       WHERE user_id = $6`,
+      [planKey, pricePaid, now, renewsAt, discountApplied, userId]
+    );
+
+    const planDef = getPlan(planKey);
+
+    return res.json({
+      success: true,
+      message: `Successfully upgraded to ${planDef.displayName}!`,
+      data: {
+        plan: planDef.id,
+        plan_name: planDef.name,
+        studio_badge: planDef.badge,
+        status: 'active',
+        renews_at: renewsAt
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function downgradeSubscription(req, res, next) {
+  try {
+    const userId = req.user.id;
+
+    await query(
+      `UPDATE sellers
+       SET subscription_plan = 'basic',
+           subscription_status = 'active',
+           subscription_updated_by = 'seller_downgrade',
+           updated_at = NOW()
+       WHERE user_id = $1`,
+      [userId]
+    );
+
+    await query(
+      `UPDATE seller_profiles
+       SET subscription_plan = 'basic',
+           subscription_status = 'active',
+           subscription_updated_by = 'seller_downgrade',
+           updated_at = NOW()
+       WHERE user_id = $1`,
+      [userId]
+    );
+
+    // On Basic, cap is 0 -> un-sponsor active sponsored products
+    await query(
+      `UPDATE products
+       SET is_sponsored = FALSE, updated_at = NOW()
+       WHERE seller_id = $1 AND is_sponsored = TRUE`,
+      [userId]
+    ).catch(() => {});
+
+    return res.json({
+      success: true,
+      message: 'Plan downgraded to Basic.',
+      data: { plan: 'basic', status: 'active', sponsor_cap: 0 }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function toggleProductSponsor(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const productId = req.params.id || req.params.productId;
+
+    if (!productId) {
+      return res.status(400).json({ success: false, message: 'Product ID is required.' });
+    }
+
+    // Verify ownership and check current sponsored state
+    const { rows: prodRows } = await query(
+      `SELECT id, is_sponsored, seller_id FROM products WHERE id = $1 AND status != 'deleted'`,
+      [productId]
+    );
+
+    if (!prodRows.length) {
+      return res.status(404).json({ success: false, message: 'Product not found.' });
+    }
+
+    if (String(prodRows[0].seller_id) !== String(userId)) {
+      return res.status(403).json({ success: false, message: 'You do not have permission to manage this product.' });
+    }
+
+    const currentSponsored = Boolean(prodRows[0].is_sponsored);
+
+    // If currently sponsored -> turn off freely
+    if (currentSponsored) {
+      const { rows: updated } = await query(
+        `UPDATE products SET is_sponsored = FALSE, updated_at = NOW() WHERE id = $1 RETURNING id, is_sponsored`,
+        [productId]
+      );
+      const { rows: countRows } = await query(
+        `SELECT COUNT(*) AS count FROM products WHERE seller_id = $1 AND is_sponsored = TRUE AND status != 'deleted'`,
+        [userId]
+      );
+      return res.json({
+        success: true,
+        message: 'Product removed from sponsored showcase.',
+        data: {
+          id: updated[0].id,
+          is_sponsored: false,
+          sponsored_count: parseInt(countRows[0]?.count || 0, 10)
+        }
+      });
+    }
+
+    // If trying to turn ON -> check plan cap!
+    const { rows: profRows } = await query(
+      `SELECT COALESCE(sp.subscription_plan, s.subscription_plan, 'basic') AS subscription_plan
+       FROM users u
+       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+       LEFT JOIN sellers s ON s.user_id = u.id
+       WHERE u.id = $1`,
+      [userId]
+    );
+
+    const planKey = profRows[0]?.subscription_plan || 'basic';
+    const planDef = getPlan(planKey);
+
+    const { rows: countRows } = await query(
+      `SELECT COUNT(*) AS count FROM products WHERE seller_id = $1 AND is_sponsored = TRUE AND status != 'deleted'`,
+      [userId]
+    );
+    const activeSponsored = parseInt(countRows[0]?.count || 0, 10);
+
+    if (activeSponsored >= planDef.sponsorCap) {
+      return res.status(400).json({
+        success: false,
+        message: `You have reached your limit of ${planDef.sponsorCap} sponsored product(s) for the ${planDef.name} plan. Upgrade your plan to sponsor more products.`,
+        data: {
+          current_plan: planDef.id,
+          sponsor_cap: planDef.sponsorCap,
+          active_sponsored: activeSponsored
+        }
+      });
+    }
+
+    const { rows: updated } = await query(
+      `UPDATE products SET is_sponsored = TRUE, updated_at = NOW() WHERE id = $1 RETURNING id, is_sponsored`,
+      [productId]
+    );
+
+    return res.json({
+      success: true,
+      message: `Product is now sponsored! (${activeSponsored + 1}/${planDef.sponsorCap} used)`,
+      data: {
+        id: updated[0].id,
+        is_sponsored: true,
+        sponsored_count: activeSponsored + 1,
+        sponsor_cap: planDef.sponsorCap
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   getOwnSellerProfile,
   updateSellerProfile,
@@ -3231,5 +3677,11 @@ module.exports = {
   bulkDiscountAllListings,
   followSeller,
   unfollowSeller,
+  // Subscription handlers
+  getSubscription,
+  createSubscriptionOrder,
+  verifySubscriptionPayment,
+  downgradeSubscription,
+  toggleProductSponsor,
 };
 
