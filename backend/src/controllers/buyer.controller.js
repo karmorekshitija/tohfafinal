@@ -195,7 +195,7 @@ async function createAddress(req, res, next) {
     // Map all candidate fields and only insert into columns that actually exist in the active table
     const candidateFields = {
       user_id: userId,
-      phone: phone,
+      phone: phone || '',  // addresses.phone is NOT NULL — default to empty string if not provided
       city: city,
       state: state,
       pincode: pincode,

@@ -36,7 +36,6 @@
         <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
           <li><a href="/buyer/about.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">About Us</a></li>
           <li><a href="/buyer/terms-conditions.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Terms of Service</a></li>
-          <li><a href="/buyer/privacy.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Privacy Policy</a></li>
         </ul>
       </div>
 
@@ -92,7 +91,6 @@
         <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
           <li><a href="/buyer/about.html" class="text-[#FAF6EE]/90 no-underline">About Us</a></li>
           <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Terms of Service</a></li>
-          <li><a href="/buyer/privacy.html" class="text-[#FAF6EE]/90 no-underline">Privacy Policy</a></li>
         </ul>
       </div>
 
@@ -154,37 +152,138 @@ function handleFooterContactClick(e) {
   const existing = document.getElementById('tohfa-contact-popup');
   if (existing) existing.remove();
 
-  const popup = document.createElement('div');
-  popup.id = 'tohfa-contact-popup';
-  popup.style.cssText = `
+  // Create overlay backdrop
+  const overlay = document.createElement('div');
+  overlay.id = 'tohfa-contact-popup';
+  overlay.style.cssText = `
     position: fixed;
-    top: 24px;
-    left: 50%;
-    transform: translateX(-50%);
+    inset: 0;
     z-index: 99999;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 13px 18px;
-    border-radius: 10px;
-    background: #14381F;
-    color: #FFF8E7;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-    max-width: 90%;
-    text-align: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(3px);
+    padding: 20px;
   `;
-  popup.innerHTML = `Get in touch with Tohfa: <strong>tohfa126@gmail.com</strong>`;
-  document.body.appendChild(popup);
 
-  // Dismiss on any click anywhere on screen (but not the same click that opened it)
-  setTimeout(() => {
-    document.addEventListener('click', function dismiss() {
-      popup.remove();
-      document.removeEventListener('click', dismiss);
-    }, { once: true });
-  }, 0);
+  // Create modal card
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    background: #FFF8E7;
+    border-radius: 20px;
+    padding: 48px 44px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.22);
+    font-family: 'DM Sans', sans-serif;
+    position: relative;
+    text-align: center;
+    animation: tohfaPopIn 0.22s ease;
+  `;
+
+  modal.innerHTML = `
+    <style>
+      @keyframes tohfaPopIn {
+        from { opacity: 0; transform: scale(0.92); }
+        to   { opacity: 1; transform: scale(1); }
+      }
+    </style>
+    <button id="tohfa-contact-close" style="
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 22px;
+      color: #7a5c3a;
+      line-height: 1;
+      padding: 4px 8px;
+      border-radius: 8px;
+    " aria-label="Close">&#x2715;</button>
+
+    <div style="
+      width: 60px;
+      height: 60px;
+      background: #14381F;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    ">
+      <svg width="28" height="28" fill="none" viewBox="0 0 24 24">
+        <path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z" stroke="#FFF8E7" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="m2 6 10 7 10-7" stroke="#FFF8E7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <h2 style="
+      font-size: 22px;
+      font-weight: 700;
+      color: #14381F;
+      margin: 0 0 8px;
+      font-family: 'DM Sans', sans-serif;
+    ">Get in touch with Tohfa</h2>
+
+    <p style="
+      font-size: 14px;
+      color: #7a5c3a;
+      margin: 0 0 24px;
+      font-family: 'DM Sans', sans-serif;
+    ">We'd love to hear from you. Drop us a message!</p>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <a href="mailto:tohfa126@gmail.com" style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: #14381F;
+        color: #FFF8E7;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        padding: 13px 28px;
+        border-radius: 12px;
+        text-decoration: none;
+        letter-spacing: 0.2px;
+      ">
+        <svg width="17" height="17" fill="none" viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z" stroke="#FFF8E7" stroke-width="1.8" stroke-linejoin="round"/><path d="m2 6 10 7 10-7" stroke="#FFF8E7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        tohfa126@gmail.com
+      </a>
+      <a href="tel:8882923640" style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: #FFF8E7;
+        color: #14381F;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        padding: 13px 28px;
+        border-radius: 12px;
+        text-decoration: none;
+        letter-spacing: 0.2px;
+        border: 2px solid #14381F;
+      ">
+        <svg width="17" height="17" fill="none" viewBox="0 0 24 24"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24 11.47 11.47 0 0 0 3.58.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.47 11.47 0 0 0 .57 3.58 1 1 0 0 1-.25 1.02l-2.2 2.19Z" stroke="#14381F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        888-2923-640
+      </a>
+    </div>
+  `;
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // Close on close button click
+  document.getElementById('tohfa-contact-close').addEventListener('click', () => overlay.remove());
+
+  // Close when clicking the backdrop (outside modal)
+  overlay.addEventListener('click', function(ev) {
+    if (ev.target === overlay) overlay.remove();
+  });
 }
 </script>

@@ -35,12 +35,13 @@ async function chat(req, res, next) {
     const MAX_HISTORY_TURNS = 20;
     const safeHistory = Array.isArray(history) ? history.slice(-MAX_HISTORY_TURNS) : [];
 
-    const reply = await tanyaService.chat(userMessage, safeHistory);
+    const { reply, products = [] } = await tanyaService.chat(userMessage, safeHistory);
     return res.json({
       success: true,
       data: {
         reply,
         message: reply,
+        products,
       },
     });
   } catch (err) {

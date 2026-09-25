@@ -209,6 +209,10 @@
               <span>Place Order &amp; Pay</span>
               <span id="btn-total" class="font-data-price text-sm border-l border-white/30 pl-2.5 ml-1">₹0.00</span>
             </button>
+            <button id="btn-test-pay" onclick="placeOrder(true)" class="w-full bg-amber-800 hover:bg-amber-900 text-white py-2.5 rounded-full font-semibold text-xs font-['DM_Sans'] transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+              <span class="material-symbols-outlined text-sm">bolt</span>
+              <span>Instant Test Order (Bypass Razorpay Modal)</span>
+            </button>
 
             <!-- Trust badges below button -->
             <div class="p-3 bg-[#1A3A32]/5 rounded-xl border border-[#1A3A32]/10 text-xs text-[#1A3A32]/80 space-y-1">
@@ -289,10 +293,6 @@
         <div class="space-y-xs">
           <label class="block text-xs font-semibold text-on-surface-variant uppercase">Pincode</label>
           <input type="text" id="addr-pincode" required class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
-        </div>
-        <div class="space-y-xs">
-          <label class="block text-xs font-semibold text-on-surface-variant uppercase">Phone (Optional)</label>
-          <input type="text" id="addr-phone" class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
         </div>
       </div>
       <div class="flex items-center gap-xs">
@@ -832,7 +832,6 @@
         document.getElementById('addr-city').value = "";
         document.getElementById('addr-state').value = "";
         document.getElementById('addr-pincode').value = "";
-        document.getElementById('addr-phone').value = "";
         document.getElementById('addr-default').checked = savedAddresses.length === 0;
         
         document.getElementById('address-list-view').classList.add('hidden');
@@ -851,7 +850,6 @@
         document.getElementById('addr-city').value = addr.city;
         document.getElementById('addr-state').value = addr.state;
         document.getElementById('addr-pincode').value = addr.pincode;
-        document.getElementById('addr-phone').value = addr.phone || "";
         document.getElementById('addr-default').checked = addr.is_default === 1;
 
         document.getElementById('address-list-view').classList.add('hidden');
@@ -868,22 +866,25 @@
             city: document.getElementById('addr-city').value.trim(),
             state: document.getElementById('addr-state').value.trim(),
             pincode: document.getElementById('addr-pincode').value.trim(),
-            phone: document.getElementById('addr-phone').value.trim() || null,
             is_default: document.getElementById('addr-default').checked
         };
 
         try {
+            let res;
             if (id) {
-                const res = await apiClient.put(`/addresses/${id}`, body);
-                if (res.data && res.data.success) {
-                    await fetchAddresses();
-                    showAddressList();
-                }
+                res = await apiClient.put(`/addresses/${id}`, body);
             } else {
-                const res = await apiClient.post('/addresses', body);
-                if (res.data && res.data.success) {
-                    await fetchAddresses();
-                    showAddressList();
+                res = await apiClient.post('/addresses', body);
+            }
+
+            if (res.data && res.data.success) {
+                const savedData = res.data.data;
+                const newId = savedData?.id || savedData?.address?.id || id;
+                await fetchAddresses();
+                if (newId) {
+                    selectAddress(newId);
+                } else {
+                    closeAddressModal();
                 }
             }
         } catch (err) {
@@ -909,7 +910,7 @@
     }
 
     // Place Order & Pay
-    async function placeOrder() {
+    async function placeOrder(isTestPay = false) {
         const token = sessionStorage.getItem('tohfa_access_token');
         if (!token) {
             window.location.href = '/buyer/checkout.html?mode=guest';
@@ -946,6 +947,15 @@
                 const order = res.data.data;
                 const orderId = order.order_id;
                 
+                if (isTestPay) {
+                    btn.innerHTML = `<span>Confirming Test Payment...</span>`;
+                    const testRes = await apiClient.post('/payments/test-pay', { order_id: orderId, orderId: orderId });
+                    if (testRes.data && testRes.data.success) {
+                        window.location.href = `payment-success.html?order_ref=${order.order_ref}&order_id=${orderId}`;
+                        return;
+                    }
+                }
+
                 const initRes = await apiClient.post('/payments/initiate', { order_id: orderId });
                 if (initRes.data && initRes.data.success) {
                     const payData = initRes.data.data;
@@ -959,21 +969,40 @@
                         description: `Order Ref: ${order.order_ref}`,
                         prefill: payData.prefill,
                         handler: async function (response) {
-                            try {
-                                const verifyRes = await apiClient.post('/payments/verify', {
+                            // Helper: attempt verify, retry once on 401 (token refresh)
+                            async function doVerify() {
+                                return apiClient.post('/payments/verify', {
+                                    orderId: orderId,
                                     order_id: orderId,
                                     razorpay_payment_id: response.razorpay_payment_id,
                                     razorpay_order_id: response.razorpay_order_id,
                                     razorpay_signature: response.razorpay_signature
                                 });
-                                if (verifyRes.data && verifyRes.data.success) {
+                            }
+
+                            try {
+                                let verifyRes;
+                                try {
+                                    verifyRes = await doVerify();
+                                } catch (firstErr) {
+                                    if (firstErr.response?.status === 401) {
+                                        await new Promise(r => setTimeout(r, 800));
+                                        verifyRes = await doVerify();
+                                    } else {
+                                        throw firstErr;
+                                    }
+                                }
+
+                                const success = verifyRes?.data?.success ?? verifyRes?.success;
+                                if (success) {
                                     window.location.href = `payment-success.html?order_ref=${order.order_ref}&order_id=${orderId}`;
                                 } else {
-                                    window.location.href = `payment-failure.html?order_ref=${order.order_ref}`;
+                                    window.location.href = `payment-failure.html?order_ref=${order.order_ref}&reason=verify_failed`;
                                 }
                             } catch (verifyErr) {
                                 console.error("Verify payment error:", verifyErr);
-                                window.location.href = `payment-failure.html?order_ref=${order.order_ref}`;
+                                const reason = verifyErr.response?.data?.message || verifyErr.message || 'unknown';
+                                window.location.href = `payment-failure.html?order_ref=${order.order_ref}&reason=${encodeURIComponent(reason)}`;
                             }
                         },
                         modal: {
@@ -987,7 +1016,8 @@
                     const rzp = new window.Razorpay(options);
                     rzp.on('payment.failed', function (resp) {
                         console.error("Payment failed:", resp.error);
-                        window.location.href = `payment-failure.html?order_ref=${order.order_ref}`;
+                        const reason = resp.error?.description || resp.error?.reason || 'payment_failed';
+                        window.location.href = `payment-failure.html?order_ref=${order.order_ref}&reason=${encodeURIComponent(reason)}`;
                     });
                     rzp.open();
                 }

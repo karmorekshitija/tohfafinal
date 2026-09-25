@@ -149,7 +149,7 @@ const schemas = {
     name:           Joi.string().trim().min(2).max(100).optional().allow('', null),
     recipient_name: Joi.string().trim().min(2).max(100).optional().allow('', null),
     full_name:      Joi.string().trim().min(2).max(100).optional().allow('', null),
-    phone:          Joi.string().pattern(/^[0-9+\s-]{8,20}$/).required(),
+    phone:          Joi.string().pattern(/^[0-9+\s-]{8,20}$/).optional().allow('', null),
     line1:          Joi.string().trim().min(2).max(200).optional(),
     address_line1:  Joi.string().trim().min(2).max(200).optional(),
     address_line:   Joi.string().trim().min(2).max(200).optional(),

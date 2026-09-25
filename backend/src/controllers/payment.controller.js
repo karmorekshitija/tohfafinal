@@ -5,6 +5,7 @@
  */
 'use strict';
 
+const crypto = require('crypto');
 const paymentService = require('../services/payment.service');
 const logisticsService = require('../services/logistics.service');
 const whatsappService = require('../services/whatsapp.service');
@@ -232,6 +233,60 @@ async function verifyPayment(req, res, next) {
 }
 
 /**
+ * POST /api/payments/test-pay
+ * Instant test mode payment confirmation helper
+ */
+async function testPay(req, res, next) {
+  const client = await getClient();
+  try {
+    const orderId = req.body.orderId || req.body.order_id;
+    if (!orderId) {
+      return res.status(400).json({ success: false, message: 'orderId or order_id is required.' });
+    }
+
+    const { rows } = await query('SELECT * FROM orders WHERE id = $1', [orderId]);
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'Order not found.' });
+    }
+    const order = rows[0];
+
+    const primarySecret = process.env.RAZORPAY_PRIMARY_KEY_SECRET || process.env.RAZORPAY_KEY_SECRET || 'a83Jah98nRJs5Etu50o0a2P9';
+    const razorpay_order_id = req.body.razorpay_order_id || `order_test_${Date.now()}`;
+    const razorpay_payment_id = `pay_test_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    const payload = `${razorpay_order_id}|${razorpay_payment_id}`;
+    const razorpay_signature = crypto.createHmac('sha256', primarySecret).update(payload).digest('hex');
+
+    await client.query('BEGIN');
+
+    const result = await paymentService.markOrderPaid(
+      order.id,
+      { razorpay_payment_id, razorpay_order_id, razorpay_signature, gateway_account: 'primary' },
+      client
+    );
+
+    await client.query('COMMIT');
+
+    logisticsService.createShipment(result.order).catch(() => {});
+    bestsellerService.recomputeForOrder(order.id).catch(() => {});
+
+    return res.json({
+      success: true,
+      data: {
+        message: 'Test payment verified and order confirmed.',
+        orderId: order.id,
+        order_id: order.id,
+        order: result.order,
+      },
+    });
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch (_) {}
+    next(err);
+  } finally {
+    client.release();
+  }
+}
+
+/**
  * GET /api/payments/status/:orderId
  */
 async function getPaymentStatus(req, res, next) {
@@ -255,5 +310,6 @@ async function getPaymentStatus(req, res, next) {
 module.exports = {
   createOrder,
   verifyPayment,
+  testPay,
   getPaymentStatus,
 };

@@ -212,7 +212,7 @@ function loadRazorpayScript() {
   });
 }
 
-window.initiatePayment = async () => {
+window.initiatePayment = async (isTestPay = false) => {
   if (!selectedAddressId) {
     showToast('Please select or add a delivery address first.', 'warning');
     return;
@@ -264,6 +264,21 @@ window.initiatePayment = async () => {
 
     const firstOrder = orders[0];
 
+    // If instant test mode pay
+    if (isTestPay) {
+      try {
+        await api.post('/api/payments/test-pay', { orderId: firstOrder.id, order_id: firstOrder.id });
+        await api.delete('/api/cart').catch(() => {});
+        window.location.href = `./payment-success.html?orderId=${firstOrder.id}&id=${firstOrder.id}`;
+        return;
+      } catch (tErr) {
+        showToast(tErr.message || 'Test payment failed.', 'error');
+        payBtn.classList.remove('btn-loading');
+        payBtn.disabled = false;
+        return;
+      }
+    }
+
     // 2. Request Razorpay checkout intent
     const payRes = await api.post('/api/payments/create-order', { orderId: firstOrder.id });
     const payData = payRes?.data;
@@ -275,7 +290,6 @@ window.initiatePayment = async () => {
     // 3. Ensure Razorpay SDK script is loaded
     const sdkReady = await loadRazorpayScript();
 
-    // U-06 fix: Show a clear message if SDK didn't load (network issue or blocked script)
     if (!sdkReady || !window.Razorpay) {
       if (payData.razorpayKeyId !== 'rzp_test_placeholder') {
         showToast('Payment system is loading, please try again in a moment.', 'warning');
@@ -289,8 +303,8 @@ window.initiatePayment = async () => {
 
     // 4. Launch Razorpay modal
     const options = {
-      key: payData.razorpayKeyId,
-      amount: payData.amount * 100,
+      key: payData.razorpayKeyId || payData.key_id,
+      amount: payData.amount_paise || payData.amount, // already in paise from backend
       currency: payData.currency || 'INR',
       name: payData.name || 'Tohfa Gifting',
       description: payData.description || 'Artisan Gift Order',
@@ -299,7 +313,6 @@ window.initiatePayment = async () => {
       theme: { color: '#14381F' },
       handler: async function (response) {
         try {
-          // Verify signature on backend
           await api.post('/api/payments/verify', {
             razorpay_order_id: response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
@@ -307,9 +320,7 @@ window.initiatePayment = async () => {
             orderId: firstOrder.id,
           });
 
-          // U-04 fix: Clear cart after successful payment verification
           await api.delete('/api/cart').catch(() => {});
-
           window.location.href = `./payment-success.html?orderId=${firstOrder.id}&id=${firstOrder.id}`;
         } catch (vErr) {
           window.location.href = `./payment-failure.html?orderId=${firstOrder.id}&reason=${encodeURIComponent(vErr.message)}`;
@@ -324,8 +335,7 @@ window.initiatePayment = async () => {
       },
     };
 
-    // DEV-ONLY: Placeholder key guard — server will reject anyway, but show a clear dev message.
-    if (payData.razorpayKeyId === 'rzp_test_placeholder') {
+    if ((payData.razorpayKeyId || payData.key_id) === 'rzp_test_placeholder') {
       console.warn('[DEV] Razorpay not configured. Payment simulation skipped. Set real keys to test end-to-end.');
       showToast('[Dev Mode] Razorpay not configured — payment skipped. Add real keys to test.', 'info');
       payBtn.classList.remove('btn-loading');
@@ -334,6 +344,12 @@ window.initiatePayment = async () => {
     }
 
     const rzp = new window.Razorpay(options);
+    rzp.on('payment.failed', function (response) {
+      const reason = response.error?.description || response.error?.reason || 'Payment failed';
+      showToast(`Payment failed: ${reason}`, 'error');
+      payBtn.classList.remove('btn-loading');
+      payBtn.disabled = false;
+    });
     rzp.open();
   } catch (err) {
     showToast(err.message || 'Payment initiation failed.', 'error');

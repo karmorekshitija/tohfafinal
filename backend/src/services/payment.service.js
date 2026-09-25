@@ -324,6 +324,23 @@ async function markOrderPaid(orderId, paymentDetails = {}, externalClient = null
       // payments table update guard
     }
 
+    // 5. Clear cart items for this order NOW that payment is confirmed.
+    //    Items are matched via order_items so only the purchased products are removed,
+    //    scoped to the buyer so we never touch another user's cart.
+    try {
+      await client.query(
+        `DELETE FROM cart_items ci
+         WHERE ci.product_id IN (
+           SELECT oi.product_id FROM order_items oi WHERE oi.order_id = $1
+         )
+         AND (ci.buyer_id = $2 OR ci.cart_id IN (SELECT id FROM carts WHERE user_id = $2))`,
+        [orderId, order.buyer_id]
+      );
+    } catch (cartErr) {
+      // Non-fatal: log and continue — order is already paid, cart cleanup is best-effort
+      console.error('[Cart Cleanup Error] Failed to clear cart after payment:', cartErr.message);
+    }
+
     if (shouldManageTx) {
       await client.query('COMMIT');
     }

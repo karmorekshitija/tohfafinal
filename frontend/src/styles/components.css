@@ -1365,6 +1365,106 @@
 }
 
 /* ---------------------------------------------------------------------------
+   TANYA PRODUCT CARDS — Horizontal scrollable strip shown after a product list
+--------------------------------------------------------------------------- */
+
+.tanya-product-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  animation: fadeSlideUp var(--transition-base) ease;
+}
+
+.tanya-product-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  text-decoration: none;
+  color: var(--color-text);
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  cursor: pointer;
+  padding: 0;
+}
+
+.tanya-product-card:hover {
+  box-shadow: 0 4px 16px rgba(200, 169, 110, 0.18);
+  border-color: var(--color-gold);
+  transform: translateY(-1px);
+}
+
+.tanya-product-card__img-wrap {
+  flex-shrink: 0;
+  width: 68px;
+  height: 68px;
+  overflow: hidden;
+  background: var(--color-border);
+}
+
+.tanya-product-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--transition-base);
+}
+
+.tanya-product-card:hover .tanya-product-card__img {
+  transform: scale(1.06);
+}
+
+.tanya-product-card__body {
+  flex: 1;
+  padding: var(--space-2) var(--space-1);
+  min-width: 0;
+}
+
+.tanya-product-card__name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.tanya-product-card__meta {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tanya-product-card__price {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--color-primary);
+  margin-top: var(--space-1);
+}
+
+.tanya-product-card__arrow {
+  flex-shrink: 0;
+  padding: var(--space-3);
+  font-size: var(--text-md);
+  color: var(--color-gold);
+  opacity: 0.7;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.tanya-product-card:hover .tanya-product-card__arrow {
+  opacity: 1;
+  transform: translateX(3px);
+}
+
+
+/* ---------------------------------------------------------------------------
    DIVIDER
 --------------------------------------------------------------------------- */
 

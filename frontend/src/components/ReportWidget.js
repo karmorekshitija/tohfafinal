@@ -497,9 +497,9 @@
     // Create Mascot Button
     const mascot = document.createElement('div');
     mascot.id = 'tohfa-chat-mascot';
-    mascot.title = 'Tohfa Assistant';
+    mascot.title = 'Tanya';
     mascot.innerHTML = `
-      <img class="mascot-img" src="/img/artisan-mascot.png" alt="Tohfa Assistant" draggable="false" />
+      <img class="mascot-img" src="/img/artisan-mascot.png" alt="Tanya" draggable="false" />
       <div id="tohfa-chat-badge" style="display:none;"></div>
     `;
     document.body.appendChild(mascot);
@@ -512,7 +512,7 @@
         <div class="tohfa-chat-header-info">
           <div class="tohfa-chat-header-avatar">🌱</div>
           <div>
-            <h4 class="tohfa-chat-header-title">Tohfa Assistant</h4>
+            <h4 class="tohfa-chat-header-title">Tanya</h4>
             <p class="tohfa-chat-header-status">Online · AI Companion</p>
           </div>
         </div>
@@ -551,7 +551,7 @@
     let isWaitingResponse = false;
 
     // Load initial greeting
-    appendBotMessage("Namaste! I'm the Tohfa Assistant. 🌱 How can I help you today? You can search for handcrafted items, ask about policies, or report a problem.");
+    appendBotMessage("Namaste! I'm Tanya 🌱, your Tohfa AI Companion. How can I help you today? You can search for handcrafted items, ask about policies, or report a problem.");
 
     // Toggle open state
     if (mascot && panel) {
@@ -682,18 +682,23 @@
       products.forEach(p => {
         const card = document.createElement('a');
         card.className = 'tohfa-chat-product-card';
-        card.href = `/buyer/product.html?id=${p.id}`;
+        card.href = p.link || `/buyer/product.html?id=${p.id}`;
 
-        const imgUrl = p.image_url || '/img/ceramic_bowls.jpg';
-        const formattedPrice = `₹${(p.price_paise / 100).toFixed(0)}`;
+        const imgUrl = p.image_url || '/img/placeholder-product.png';
+        // price_paise > 10000 means it's real paise, otherwise treat as rupees directly
+        const rupees = p.price_paise > 10000
+          ? Math.round(p.price_paise / 100)
+          : (p.price_paise || 0);
+        const formattedPrice = rupees ? `₹${rupees.toLocaleString('en-IN')}` : '';
 
         card.innerHTML = `
           <div class="tohfa-chat-product-img-wrapper">
-            <img class="tohfa-chat-product-img" src="${imgUrl}" alt="${p.name}" loading="lazy" />
+            <img class="tohfa-chat-product-img" src="${imgUrl}" alt="${p.name}" loading="lazy"
+                 onerror="this.src='/img/placeholder-product.png'" />
           </div>
           <div class="tohfa-chat-product-details">
             <h5 class="tohfa-chat-product-name">${p.name}</h5>
-            <p class="tohfa-chat-product-price">${formattedPrice}</p>
+            ${formattedPrice ? `<p class="tohfa-chat-product-price">${formattedPrice}</p>` : ''}
             <p class="tohfa-chat-product-reason">${p.reason || ''}</p>
           </div>
         `;
@@ -758,20 +763,37 @@
         if (res.ok) {
           const resp = await res.json();
           const data = resp.data || {};
-          const reply = typeof data === 'string' ? { text: data } : (data.reply ? { text: data.reply } : data);
+          const replyText = typeof data === 'string' ? data : (data.reply || data.message || data.text || '');
+          const rawProducts = Array.isArray(data.products) ? data.products : [];
+
+          // Map backend field names to what appendRecommendations expects
+          const products = rawProducts.map(p => ({
+            id: p.id,
+            name: p.name,
+            // cover_image from backend; fallback to placeholder
+            image_url: p.cover_image || p.image_url || '/img/placeholder-product.png',
+            // base_price is in rupees; convert to paise for the price formatter
+            price_paise: p.price_paise || (p.base_price ? Math.round(Number(p.base_price) * 100) : 0),
+            reason: p.category_name || p.store_name || '',
+          }));
 
           // Render response based on intent/type
+          const reply = typeof data === 'string' ? { text: data } : (data.reply ? { text: data.reply, type: data.type, products: data.products, ticket: data.ticket } : data);
           if (reply.type === 'recommendation') {
-            appendBotMessage(reply.text || "Here are some recommendations from our catalog:");
-            if (reply.products && reply.products.length > 0) {
-              appendRecommendations(reply.products, reply.text);
+            appendBotMessage(replyText || "Here are some recommendations from our catalog:");
+            if (products.length > 0) {
+              appendRecommendations(products, replyText);
             }
           } else if (reply.type === 'problem_report' && reply.ticket) {
-            appendBotMessage(reply.text || "Your ticket has been logged successfully.");
+            appendBotMessage(replyText || "Your ticket has been logged successfully.");
             appendTicketCard(reply.ticket);
           } else {
             // FAQ / Unclear / Standard text reply
-            appendBotMessage(reply.text || "I've received your query but encountered an empty response.");
+            appendBotMessage(replyText || "I've received your query but encountered an empty response.");
+            // Show product cards even for non-typed replies (Tanya gift recommendations)
+            if (products.length > 0) {
+              appendRecommendations(products, replyText);
+            }
           }
 
           // Trigger gold unread badge if panel is closed

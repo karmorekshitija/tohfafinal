@@ -173,7 +173,15 @@
     document.addEventListener('DOMContentLoaded', async () => {
         const params = new URLSearchParams(window.location.search);
         const orderRef = params.get('order_ref') || 'N/A';
+        const reasonMsg = params.get('reason');
         document.getElementById('order-ref-text').innerText = `Order Ref: #${orderRef}`;
+
+        if (reasonMsg) {
+            const reasonEl = document.getElementById('failure-reason-text') || document.querySelector('main p.text-on-surface-variant');
+            if (reasonEl) {
+                reasonEl.innerText = decodeURIComponent(reasonMsg);
+            }
+        }
 
         // Setup nav state
         const token = sessionStorage.getItem('tohfa_access_token');

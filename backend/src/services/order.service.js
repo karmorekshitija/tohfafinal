@@ -390,14 +390,9 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
       ).catch(() => {});
     }
 
-    // 6. Delete processed cart items from DB
-    const itemIds = cartItems.map(it => String(it.id));
-    await client.query(
-      `DELETE FROM cart_items
-       WHERE id::text = ANY($1::text[])
-         AND (buyer_id = $2 OR cart_id IN (SELECT id FROM carts WHERE user_id = $2))`,
-      [itemIds, buyerId]
-    );
+    // 6. Cart items are intentionally NOT deleted here.
+    //    They are cleared only after payment is successfully verified (in payment.service.js → markOrderPaid).
+    //    This ensures items remain in the cart if payment fails so the buyer can retry.
 
     // 7. Notify buyer
     await createNotification(

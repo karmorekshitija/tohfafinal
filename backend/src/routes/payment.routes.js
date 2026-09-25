@@ -18,6 +18,7 @@ router.use(authMiddleware);
 router.post('/create-order', paymentController.createOrder);
 router.post('/initiate', paymentController.createOrder);
 router.post('/verify', paymentController.verifyPayment);
+router.post('/test-pay', paymentController.testPay);
 router.get('/status/:orderId', paymentController.getPaymentStatus);
 
 // Seller Settlements & Payouts Financial Operations (consumed by Seller Studio payouts.html)

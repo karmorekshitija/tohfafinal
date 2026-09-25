@@ -343,11 +343,11 @@ export function renderTanya() {
         // Step 3 — HTML-escape the remaining plain text (\x00 is unaffected)
         line = esc(line);
 
-        // Step 4 — Bold: **text**
-        line = line.replace(/\*\*([^*\x00]+)\*\*/g, '<strong>$1</strong>');
+        // Step 4 — Bold: **text** (allow brackets and most chars inside, lazy match)
+        line = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 
-        // Step 5 — Italic: *text* (single asterisk only)
-        line = line.replace(/\*([^*\x00]+)\*/g, '<em>$1</em>');
+        // Step 5 — Italic: *text* (single asterisk only, not preceded by another *)
+        line = line.replace(/(?<!\*)\*([^*\x00]+?)\*(?!\*)/g, '<em>$1</em>');
 
         // Step 6 — Restore link tokens
         line = line.replace(/\x00(\d+)\x00/g, (_, i) => tokens[parseInt(i, 10)]);
@@ -382,10 +382,45 @@ export function renderTanya() {
       try {
         const res   = await api.post('/api/tanya/chat', { message: text, history });
         const reply = res?.data?.reply || 'Please explore our curated artisan collections!';
-        
-        loadingMsg.innerHTML = renderTanyaMarkdown(reply);
+        const products = Array.isArray(res?.data?.products) ? res.data.products : [];
+
         history.push({ role: 'user',  parts: [{ text }] });
         history.push({ role: 'model', parts: [{ text: reply }] });
+
+        // Render text reply
+        loadingMsg.innerHTML = renderTanyaMarkdown(reply);
+
+        // Render product cards if any were returned
+        if (products.length > 0) {
+          const cardsWrap = document.createElement('div');
+          cardsWrap.className = 'tanya-product-list';
+          products.forEach(p => {
+            const priceStr = p.base_price ? `₹${Number(p.base_price).toLocaleString('en-IN')}` : '';
+            const imgSrc = p.cover_image || '/img/placeholder-product.png';
+            const card = document.createElement('a');
+            card.href = p.link || `/buyer/product.html?id=${p.id}`;
+            card.className = 'tanya-product-card';
+            card.innerHTML = `
+              <div class="tanya-product-card__img-wrap">
+                <img
+                  src="${imgSrc}"
+                  alt="${p.name || 'Product'}"
+                  class="tanya-product-card__img"
+                  onerror="this.src='/img/placeholder-product.png'"
+                  loading="lazy"
+                />
+              </div>
+              <div class="tanya-product-card__body">
+                <div class="tanya-product-card__name">${p.name || ''}</div>
+                <div class="tanya-product-card__meta">${p.store_name || ''}</div>
+                ${priceStr ? `<div class="tanya-product-card__price">${priceStr}</div>` : ''}
+              </div>
+              <div class="tanya-product-card__arrow">→</div>
+            `;
+            cardsWrap.appendChild(card);
+          });
+          messages.appendChild(cardsWrap);
+        }
       } catch {
         loadingMsg.textContent = "I'm taking a brief pause — please browse our collections or try again!";
       }
@@ -462,7 +497,6 @@ export function renderFooter() {
         <div class="footer__heading">Support</div>
         <a href="mailto:support@thetohfa.in"    class="footer__link">Contact Us</a>
         <a href="/buyer/faq.html"               class="footer__link">FAQs & Help</a>
-        <a href="/buyer/terms-conditions.html"  class="footer__link">Privacy Policy</a>
         <a href="/buyer/terms-conditions.html"  class="footer__link">Terms of Service</a>
         <a href="/admin/login.html"             class="footer__link" style="opacity:0.35;">Partner Portal</a>
       </div>
