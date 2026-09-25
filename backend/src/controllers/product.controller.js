@@ -1655,10 +1655,17 @@ async function deleteProduct(req, res, next) {
     }
 
     const targetSellerId = existing[0].seller_id;
-    await query(
-      `UPDATE products SET status = 'deleted', is_active = FALSE, updated_at = NOW() WHERE id::text = $1`,
-      [String(id)]
-    );
+    try {
+      await query(
+        `UPDATE products SET status = 'deleted', is_active = 0, updated_at = NOW() WHERE id::text = $1`,
+        [String(id)]
+      );
+    } catch (e) {
+      await query(
+        `UPDATE products SET status = 'deleted', is_active = FALSE, updated_at = NOW() WHERE id::text = $1`,
+        [String(id)]
+      );
+    }
 
     bestsellerService.recomputeForSeller(targetSellerId).catch(err => {
       console.error('[Bestseller] Error recomputing after deleteProduct:', err.message);

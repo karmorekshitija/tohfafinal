@@ -22,7 +22,48 @@ describe('Product Publishing — Seller Studio & Tohfa Special Studio', () => {
   let activeCategory;
   const createdProductIds = [];
 
+  const TEST_PRODUCT_NAMES = [
+    'Special Studio Handcrafted Lamp',
+    'Special Studio Scented Candle',
+    'Unassigned Product',
+    'Artisan Ceramic Vase',
+    'Handwoven Macrame Wall Hanging',
+    'Product with categoryId key',
+    'Product with category name string',
+    'Product with category slug string',
+    'Multipart Upload Product',
+    'Product without category',
+    'Product with fake category',
+    'Unauthorized Product'
+  ];
+
+  async function cleanupTestProducts() {
+    try {
+      const pIds = createdProductIds.map(String);
+      if (pIds.length > 0) {
+        await query('DELETE FROM product_images WHERE product_id::text = ANY($1::text[])', [pIds]).catch(() => {});
+        await query('DELETE FROM product_occasion_tags WHERE product_id::text = ANY($1::text[])', [pIds]).catch(() => {});
+        await query('DELETE FROM products WHERE id::text = ANY($1::text[])', [pIds]).catch(() => {});
+      }
+      await query(
+        'DELETE FROM product_images WHERE product_id::text IN (SELECT id::text FROM products WHERE name = ANY($1::text[]))',
+        [TEST_PRODUCT_NAMES]
+      ).catch(() => {});
+      await query(
+        'DELETE FROM product_occasion_tags WHERE product_id::text IN (SELECT id::text FROM products WHERE name = ANY($1::text[]))',
+        [TEST_PRODUCT_NAMES]
+      ).catch(() => {});
+      await query(
+        'DELETE FROM products WHERE name = ANY($1::text[])',
+        [TEST_PRODUCT_NAMES]
+      ).catch(() => {});
+    } catch (_) {}
+  }
+
   beforeAll(async () => {
+    // 0. Pre-test cleanup in case previous runs were interrupted
+    await cleanupTestProducts();
+
     // 1. Fetch fixture users and shop
     const { rows: adminRows } = await query(
       "SELECT id, email FROM users WHERE role IN ('admin', 'master_admin') LIMIT 1"
@@ -56,11 +97,7 @@ describe('Product Publishing — Seller Studio & Tohfa Special Studio', () => {
   });
 
   afterAll(async () => {
-    if (createdProductIds.length > 0) {
-      await query('DELETE FROM product_images WHERE product_id = ANY($1::int[])', [createdProductIds]);
-      await query('DELETE FROM product_occasion_tags WHERE product_id = ANY($1::int[])', [createdProductIds]);
-      await query('DELETE FROM products WHERE id = ANY($1::int[])', [createdProductIds]);
-    }
+    await cleanupTestProducts();
   });
 
   describe('sellerOnly Middleware Unit Tests', () => {

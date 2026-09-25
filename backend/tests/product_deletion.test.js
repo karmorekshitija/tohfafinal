@@ -27,7 +27,27 @@ describe('Product Deletion — Seller Studio & Tohfa Special Studio', () => {
   let activeCategory;
   const createdProductIds = [];
 
+  const TEST_NAMES = [
+    'Test Delete Product',
+    'Special Tohfa Delete Item'
+  ];
+
+  async function cleanupTestProducts() {
+    try {
+      const pIds = createdProductIds.map(String);
+      if (pIds.length > 0) {
+        await query('DELETE FROM product_images WHERE product_id::text = ANY($1::text[])', [pIds]).catch(() => {});
+        await query('DELETE FROM product_occasion_tags WHERE product_id::text = ANY($1::text[])', [pIds]).catch(() => {});
+        await query('DELETE FROM products WHERE id::text = ANY($1::text[])', [pIds]).catch(() => {});
+      }
+      await query('DELETE FROM products WHERE name = ANY($1::text[])', [TEST_NAMES]).catch(() => {});
+    } catch (_) {}
+  }
+
   beforeAll(async () => {
+    // 0. Pre-cleanup
+    await cleanupTestProducts();
+
     // 1. Fetch fixture users and shop
     const { rows: adminRows } = await query(
       "SELECT id, email FROM users WHERE role IN ('admin', 'master_admin') LIMIT 1"
@@ -68,12 +88,7 @@ describe('Product Deletion — Seller Studio & Tohfa Special Studio', () => {
   });
 
   afterAll(async () => {
-    if (createdProductIds.length > 0) {
-      const pIds = createdProductIds.map(String);
-      await query('DELETE FROM product_images WHERE product_id::text = ANY($1::text[])', [pIds]).catch(() => {});
-      await query('DELETE FROM product_occasion_tags WHERE product_id::text = ANY($1::text[])', [pIds]).catch(() => {});
-      await query('DELETE FROM products WHERE id::text = ANY($1::text[])', [pIds]).catch(() => {});
-    }
+    await cleanupTestProducts();
   });
 
   describe('verifySellerOwnership Middleware Unit Tests', () => {
@@ -113,13 +128,25 @@ describe('Product Deletion — Seller Studio & Tohfa Special Studio', () => {
 
     beforeEach(async () => {
       // Create a test product owned by sellerUser
-      const { rows } = await query(
-        `INSERT INTO products (seller_id, name, description, category_id, base_price, price_paise, stock_quantity, status, is_active)
-         VALUES ($1, 'Test Delete Product', 'Description', $2, 500, 50000, 10, 'active', true)
-         RETURNING id`,
-        [sellerUser.id, activeCategory.id]
-      );
-      testProductId = rows[0].id;
+      let insertedRow;
+      try {
+        const { rows } = await query(
+          `INSERT INTO products (seller_id, name, description, category_id, base_price, price_paise, stock_quantity, status, is_active)
+           VALUES ($1, 'Test Delete Product', 'Description', $2, 500, 50000, 10, 'active', 1)
+           RETURNING id`,
+          [sellerUser.id, activeCategory.id]
+        );
+        insertedRow = rows[0];
+      } catch (_) {
+        const { rows } = await query(
+          `INSERT INTO products (seller_id, name, description, category_id, base_price, price_paise, stock_quantity, status, is_active)
+           VALUES ($1, 'Test Delete Product', 'Description', $2, 500, 50000, 10, 'active', true)
+           RETURNING id`,
+          [sellerUser.id, activeCategory.id]
+        );
+        insertedRow = rows[0];
+      }
+      testProductId = insertedRow.id;
       createdProductIds.push(testProductId);
     });
 
@@ -132,7 +159,7 @@ describe('Product Deletion — Seller Studio & Tohfa Special Studio', () => {
       expect(res.body.success).toBe(true);
 
       // Verify DB state: soft deleted
-      const { rows } = await query('SELECT status, is_active FROM products WHERE id = $1', [testProductId]);
+      const { rows } = await query('SELECT status, is_active FROM products WHERE id::text = $1', [testProductId]);
       expect(rows.length).toBe(1);
       expect(rows[0].status).toBe('deleted');
       expect(String(rows[0].is_active)).toMatch(/^(0|false)$/);
@@ -156,7 +183,7 @@ describe('Product Deletion — Seller Studio & Tohfa Special Studio', () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
 
-      const { rows } = await query('SELECT status, is_active FROM products WHERE id = $1', [testProductId]);
+      const { rows } = await query('SELECT status, is_active FROM products WHERE id::text = $1', [testProductId]);
       expect(rows[0].status).toBe('deleted');
     });
 
@@ -169,7 +196,7 @@ describe('Product Deletion — Seller Studio & Tohfa Special Studio', () => {
       expect(res.body.success).toBe(false);
 
       // Verify product is still active
-      const { rows } = await query('SELECT status FROM products WHERE id = $1', [testProductId]);
+      const { rows } = await query('SELECT status FROM products WHERE id::text = $1', [testProductId]);
       expect(rows[0].status).toBe('active');
     });
   });
@@ -179,13 +206,25 @@ describe('Product Deletion — Seller Studio & Tohfa Special Studio', () => {
 
     beforeEach(async () => {
       // Create a test product for Tohfa Special shop
-      const { rows } = await query(
-        `INSERT INTO products (seller_id, name, description, category_id, base_price, price_paise, stock_quantity, status, is_active)
-         VALUES ($1, 'Special Tohfa Delete Item', 'Special Description', $2, 1200, 120000, 5, 'active', true)
-         RETURNING id`,
-        [specialShopId, activeCategory.id]
-      );
-      specialProductId = rows[0].id;
+      let insertedRow;
+      try {
+        const { rows } = await query(
+          `INSERT INTO products (seller_id, name, description, category_id, base_price, price_paise, stock_quantity, status, is_active)
+           VALUES ($1, 'Special Tohfa Delete Item', 'Special Description', $2, 1200, 120000, 5, 'active', 1)
+           RETURNING id`,
+          [specialShopId, activeCategory.id]
+        );
+        insertedRow = rows[0];
+      } catch (_) {
+        const { rows } = await query(
+          `INSERT INTO products (seller_id, name, description, category_id, base_price, price_paise, stock_quantity, status, is_active)
+           VALUES ($1, 'Special Tohfa Delete Item', 'Special Description', $2, 1200, 120000, 5, 'active', true)
+           RETURNING id`,
+          [specialShopId, activeCategory.id]
+        );
+        insertedRow = rows[0];
+      }
+      specialProductId = insertedRow.id;
       createdProductIds.push(specialProductId);
     });
 
@@ -198,7 +237,7 @@ describe('Product Deletion — Seller Studio & Tohfa Special Studio', () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
 
-      const { rows } = await query('SELECT status, is_active FROM products WHERE id = $1', [specialProductId]);
+      const { rows } = await query('SELECT status, is_active FROM products WHERE id::text = $1', [specialProductId]);
       expect(rows.length).toBe(1);
       expect(rows[0].status).toBe('deleted');
       expect(String(rows[0].is_active)).toMatch(/^(0|false)$/);
@@ -223,7 +262,7 @@ describe('Product Deletion — Seller Studio & Tohfa Special Studio', () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
 
-      const { rows } = await query('SELECT status FROM products WHERE id = $1', [specialProductId]);
+      const { rows } = await query('SELECT status FROM products WHERE id::text = $1', [specialProductId]);
       expect(rows[0].status).toBe('deleted');
     });
   });
