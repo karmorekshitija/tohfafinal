@@ -318,8 +318,12 @@ function renderCategories() {
 
   listToRender.forEach((cat) => {
     const tr = document.createElement('tr');
-    tr.className = "row-alt group transition-colors border-b border-outline-variant/30";
-    
+    tr.className = "row-alt group transition-colors border-b border-outline-variant/30 cursor-pointer";
+    tr.addEventListener('click', (e) => {
+      if (e.target.closest('button, input, a, .toggle-subcats-btn')) return;
+      startEditing(cat);
+    });
+
     // Add slide micro-animation behaviors
     tr.addEventListener('mouseenter', () => {
       tr.style.transform = 'translateX(4px)';
@@ -341,15 +345,14 @@ function renderCategories() {
          </button>`;
 
     const productCount = cat.product_count || 0;
-    const isDeletable = productCount === 0 && (!cat.subcategories || cat.subcategories.length === 0);
+    const isUncategorized = (cat.slug === 'uncategorized' || cat.name?.toLowerCase() === 'uncategorized');
 
-    const deleteBtn = isDeletable
-      ? `<button class="delete-btn p-1.5 rounded-full hover:bg-danger-terracotta/10 text-danger-terracotta transition-all" data-id="${cat.id}">
+    const deleteBtn = !isUncategorized
+      ? `<button class="delete-btn p-1.5 rounded-full hover:bg-danger-terracotta/10 text-danger-terracotta transition-all" data-id="${cat.id}" title="Delete category">
            <span class="material-symbols-outlined text-[18px]">delete</span>
          </button>`
-      : `<span class="inline-flex items-center gap-1 text-text-faint opacity-60" title="Has products or subcategories — cannot delete">
-           <span class="material-symbols-outlined text-[18px] cursor-not-allowed">delete</span>
-           <span class="text-[10px]">Has items</span>
+      : `<span class="inline-flex items-center gap-1 text-text-faint opacity-40 cursor-not-allowed" title="System fallback category cannot be deleted">
+           <span class="material-symbols-outlined text-[18px]">lock</span>
          </span>`;
 
     const restoreBtn = isBannedOrHidden
@@ -390,7 +393,7 @@ function renderCategories() {
       <td class="p-4 text-right">
         <div class="flex items-center justify-end gap-2">
           ${restoreBtn}
-          <button class="edit-btn p-1.5 rounded-full hover:bg-sage-soft/20 text-secondary transition-all" data-id="${cat.id}">
+          <button type="button" class="edit-btn p-1.5 rounded-full hover:bg-sage-soft/20 text-secondary transition-all" onclick="window.startEditingCategory('${cat.id}')" title="Edit Category">
             <span class="material-symbols-outlined text-[18px]">edit</span>
           </button>
           ${deleteBtn}
@@ -518,17 +521,7 @@ function renderCategories() {
     });
   });
 
-  // Edit Category click
-  listEl.querySelectorAll('.edit-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const target = e.currentTarget;
-      const id = target.getAttribute('data-id');
-      const cat = categories.find(c => String(c.id) === String(id));
-      if (cat) {
-        startEditing(cat);
-      }
-    });
-  });
+  // Edit Category click — handled directly by onclick="window.startEditingCategory(id)" on each button.
 
   // Toggle Category Status (Active <-> Hidden) click
   listEl.querySelectorAll('.toggle-status-btn').forEach(btn => {
@@ -576,7 +569,8 @@ function renderCategories() {
       const target = e.currentTarget;
       const id = target.getAttribute('data-id');
       const cat = categories.find(c => String(c.id) === String(id));
-      if (confirm(`This will hide "${cat?.display_name || ''}" from customers (it won't be permanently deleted, and can be restored later). Continue?`)) {
+      const hasItemsMsg = (cat?.product_count || 0) > 0 ? `\n\nNote: ${cat.product_count} product(s) in this category will be reassigned to 'Uncategorized'.` : '';
+      if (confirm(`Are you sure you want to delete category "${cat?.display_name || ''}"?${hasItemsMsg}`)) {
         try {
           await adminApiClient.delete(`/admin/categories/${id}`);
           fetchCategories();
@@ -666,21 +660,27 @@ subcatForm.addEventListener('submit', async (e) => {
 function startEditing(cat) {
   editingCategoryId = cat.id;
   formTitle.textContent = "Edit Category";
-  currentEmoji = cat.emoji_icon || '🏺';
+  currentEmoji = cat.emoji_icon || cat.icon_emoji || '🏺';
   emojiSpan.textContent = currentEmoji;
-  displayNameInput.value = cat.display_name;
-  slugInput.value = cat.slug;
-  slugPreview.textContent = cat.slug;
+  displayNameInput.value = cat.display_name || cat.name || '';
+  slugInput.value = cat.slug || '';
+  slugPreview.textContent = cat.slug || '[slug]';
   descriptionInput.value = cat.description || '';
-  sortOrderInput.value = cat.sort_order;
+  sortOrderInput.value = cat.sort_order !== undefined ? cat.sort_order : 0;
   activeStatus.checked = !!cat.is_active;
   const statusLabel = document.getElementById('activeStatusLabel');
   if (statusLabel) {
     statusLabel.textContent = activeStatus.checked ? 'Active' : 'Hidden';
   }
-  imageUrlInput.value = cat.image_url || '';
-  imagePreview.src = cat.image_url || '/img/ceramic_bowls.jpg';
+  const categoryImageUrl = cat.image_url || cat.cover_image || cat.banner_image_url || '';
+  imageUrlInput.value = categoryImageUrl;
+  imagePreview.src = categoryImageUrl || '/img/ceramic_bowls.jpg';
   imageInput.value = '';
+
+  const formPanel = document.querySelector('section.w-2\\/5') || document.getElementById('categoryForm');
+  if (formPanel) {
+    formPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 function resetForm() {
@@ -756,12 +756,14 @@ formEl.addEventListener('submit', async (e) => {
     saveBtn.innerHTML = '<span class="inline-flex items-center justify-center gap-2"><svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Saving Category...</span>';
   }
 
+  const nameVal = displayNameInput.value.trim();
   const formData = new FormData();
   formData.append('emoji_icon', currentEmoji);
-  formData.append('display_name', displayNameInput.value.trim());
-  formData.append('slug', slugInput.value.trim());
+  formData.append('display_name', nameVal);
+  formData.append('name', nameVal);
+  formData.append('slug', slugInput.value.trim().toLowerCase());
   formData.append('description', descriptionInput.value.trim());
-  formData.append('sort_order', sortOrderInput.value);
+  formData.append('sort_order', parseInt(sortOrderInput.value, 10) || 0);
   formData.append('is_active', activeStatus.checked);
   
   let dataUrlFallback = null;
@@ -786,14 +788,22 @@ formEl.addEventListener('submit', async (e) => {
     } catch (readErr) {
       console.warn('Could not generate data URL fallback:', readErr);
     }
-  } else if (imageUrlInput.value.trim()) {
-    formData.append('image_url', imageUrlInput.value.trim());
-    formData.append('banner_image_url', imageUrlInput.value.trim());
+  } else {
+    const urlVal = imageUrlInput.value.trim();
+    if (urlVal) {
+      formData.append('image_url', urlVal);
+      formData.append('cover_image', urlVal);
+      formData.append('banner_image_url', urlVal);
+    }
   }
 
   try {
     if (editingCategoryId) {
-      await adminApiClient.patch(`/admin/categories/${editingCategoryId}`, formData);
+      try {
+        await adminApiClient.put(`/admin/categories/${editingCategoryId}`, formData);
+      } catch (putErr) {
+        await adminApiClient.patch(`/admin/categories/${editingCategoryId}`, formData);
+      }
     } else {
       await adminApiClient.post('/admin/categories', formData);
     }
@@ -805,17 +815,23 @@ formEl.addEventListener('submit', async (e) => {
       try {
         const jsonPayload = {
           emoji_icon: currentEmoji,
-          display_name: displayNameInput.value.trim(),
-          slug: slugInput.value.trim(),
+          display_name: nameVal,
+          name: nameVal,
+          slug: slugInput.value.trim().toLowerCase(),
           description: descriptionInput.value.trim(),
-          sort_order: sortOrderInput.value,
+          sort_order: parseInt(sortOrderInput.value, 10) || 0,
           is_active: activeStatus.checked,
           image_url: dataUrlFallback,
+          cover_image: dataUrlFallback,
           banner_image_url: dataUrlFallback,
           fallback_image_url: dataUrlFallback
         };
         if (editingCategoryId) {
-          await adminApiClient.patch(`/admin/categories/${editingCategoryId}`, jsonPayload);
+          try {
+            await adminApiClient.put(`/admin/categories/${editingCategoryId}`, jsonPayload);
+          } catch (pErr) {
+            await adminApiClient.patch(`/admin/categories/${editingCategoryId}`, jsonPayload);
+          }
         } else {
           await adminApiClient.post('/admin/categories', jsonPayload);
         }
@@ -843,6 +859,41 @@ formEl.addEventListener('submit', async (e) => {
 
 cancelBtn.addEventListener('click', resetForm);
 closeFormBtn.addEventListener('click', resetForm);
+
+
+// ── Global helpers so external elements (e.g. inline onclick or other scripts) can open the form ──
+
+/**
+ * Open the category form panel in EDIT mode pre-filled with the given category's data.
+ * Called directly by the edit button's onclick="window.startEditingCategory('id')" in the table.
+ * @param {string|number} categoryId - The ID of the category to edit.
+ */
+window.startEditingCategory = function(categoryId) {
+  const category = categories.find(c => String(c.id) === String(categoryId));
+  if (!category) {
+    console.warn('[Categories] startEditingCategory: category not found for id', categoryId);
+    return;
+  }
+  startEditing(category);
+};
+
+/**
+ * Alias kept for backward-compatibility with any external callers.
+ * Prefer window.startEditingCategory for new code.
+ */
+window.openCategoryEditDrawer = window.startEditingCategory;
+
+/**
+ * Open the category form panel in CREATE mode (clears form).
+ */
+window.openNewCategoryDrawer = function() {
+  resetForm();
+  displayNameInput.focus();
+  const formPanel = document.querySelector('section.w-2\\/5') || document.getElementById('categoryForm');
+  if (formPanel) {
+    formPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+};
 
 // Initial Load
 fetchCategories();

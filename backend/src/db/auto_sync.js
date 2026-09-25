@@ -21,6 +21,7 @@ async function autoSyncDatabase() {
       await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS icon_emoji VARCHAR(20);`);
       await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS banner_image_url TEXT;`);
       await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS image_url TEXT;`);
+      await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS cover_image TEXT;`);
       await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS description TEXT;`);
       await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS sort_order INT DEFAULT 0;`);
       await query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;`);

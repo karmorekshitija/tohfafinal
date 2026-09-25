@@ -380,9 +380,21 @@ export function renderTanya() {
       messages.scrollTop = messages.scrollHeight;
 
       try {
-        const res   = await api.post('/api/tanya/chat', { message: text, history });
-        const reply = res?.data?.reply || 'Please explore our curated artisan collections!';
-        const products = Array.isArray(res?.data?.products) ? res.data.products : [];
+        const res = await api.post('/api/tanya/chat', { message: text, history });
+
+        // Surface real API errors — never fall back to canned responses
+        if (!res || res.success === false) {
+          loadingMsg.textContent = res?.message || 'Tanya is currently offline. Please contact tohfa126@gmail.com.';
+          return;
+        }
+
+        const reply = res?.data?.reply || res?.reply || '';
+        if (!reply) {
+          loadingMsg.textContent = 'Tanya returned an empty response. Please try again.';
+          return;
+        }
+
+        const products = Array.isArray(res?.data?.products) ? res.data.products : (Array.isArray(res?.products) ? res.products : []);
 
         history.push({ role: 'user',  parts: [{ text }] });
         history.push({ role: 'model', parts: [{ text: reply }] });
@@ -390,12 +402,13 @@ export function renderTanya() {
         // Render text reply
         loadingMsg.innerHTML = renderTanyaMarkdown(reply);
 
-        // Render product cards if any were returned
+        // Render product cards ONLY if products array is non-empty
         if (products.length > 0) {
           const cardsWrap = document.createElement('div');
           cardsWrap.className = 'tanya-product-list';
           products.forEach(p => {
-            const priceStr = p.base_price ? `₹${Number(p.base_price).toLocaleString('en-IN')}` : '';
+            const price = p.base_price || p.price;
+            const priceStr = price ? `₹${Number(price).toLocaleString('en-IN')}` : '';
             const imgSrc = p.cover_image || '/img/placeholder-product.png';
             const card = document.createElement('a');
             card.href = p.link || `/buyer/product.html?id=${p.id}`;
@@ -412,7 +425,7 @@ export function renderTanya() {
               </div>
               <div class="tanya-product-card__body">
                 <div class="tanya-product-card__name">${p.name || ''}</div>
-                <div class="tanya-product-card__meta">${p.store_name || ''}</div>
+                <div class="tanya-product-card__meta">${p.store_name || p.category_name || ''}</div>
                 ${priceStr ? `<div class="tanya-product-card__price">${priceStr}</div>` : ''}
               </div>
               <div class="tanya-product-card__arrow">→</div>
@@ -421,8 +434,11 @@ export function renderTanya() {
           });
           messages.appendChild(cardsWrap);
         }
-      } catch {
-        loadingMsg.textContent = "I'm taking a brief pause — please browse our collections or try again!";
+      } catch (err) {
+        // Network or unexpected errors — show real message, never a canned fallback
+        console.error('[Tanya] Network error:', err);
+        const serverError = err?.response?.data?.message || err?.data?.message || err?.message;
+        loadingMsg.textContent = serverError || 'Unable to reach Tanya right now. Please check your internet connection.';
       }
       messages.scrollTop = messages.scrollHeight;
     });
@@ -495,7 +511,7 @@ export function renderFooter() {
       <!-- Support -->
       <div>
         <div class="footer__heading">Support</div>
-        <a href="mailto:support@thetohfa.in"    class="footer__link">Contact Us</a>
+        <a href="mailto:tohfa126@gmail.com"    class="footer__link">Contact Us</a>
         <a href="/buyer/faq.html"               class="footer__link">FAQs & Help</a>
         <a href="/buyer/terms-conditions.html"  class="footer__link">Terms of Service</a>
         <a href="/admin/login.html"             class="footer__link" style="opacity:0.35;">Partner Portal</a>

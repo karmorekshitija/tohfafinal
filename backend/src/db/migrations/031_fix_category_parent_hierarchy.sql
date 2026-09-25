@@ -15,6 +15,8 @@ WHERE parent_id IS NOT NULL
     'ceramics',
     'woodcraft',
     'jewellery',
+    'nail-art',
+    'nails',
     'skincare',
     'art-prints'
   );

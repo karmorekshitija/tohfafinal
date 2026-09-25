@@ -6,13 +6,13 @@
 'use strict';
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 let geminiModel = null;
 
 if (apiKey && apiKey !== 'YOUR_GEMINI_API_KEY') {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    geminiModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
   } catch (e) {
     console.warn('[Gemini] Init skipped:', e.message);
   }

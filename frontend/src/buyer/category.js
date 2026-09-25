@@ -92,7 +92,7 @@ export async function resolveOrOverview() {
 export function getCategoryCoverImage(category) {
   if (!category) return '/img/categories/artisan_showcase.jpg';
   const slug = category.slug || 'collection';
-  return category.image_url || category.banner_url || category.banner_image_url || `/img/categories/${slug}.jpg`;
+  return category.image_url || category.cover_image || category.banner_url || category.banner_image_url || `/img/categories/${slug}.jpg`;
 }
 
 export { activeSlug, subParam, urlParams };

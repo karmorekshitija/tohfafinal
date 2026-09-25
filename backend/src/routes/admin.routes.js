@@ -166,7 +166,7 @@ router.patch('/categories/:id/toggle', adminController.toggleCategoryStatus);
 router.post('/categories/:id/toggle', adminController.toggleCategoryStatus);
 router.patch('/categories/:id/status', adminController.toggleCategoryStatus);
 router.post('/categories/:id/status', adminController.toggleCategoryStatus);
-router.delete('/categories/:id', adminController.deleteCategory);
+router.delete('/categories/:id', adminOnly, adminController.deleteCategory);
 router.post('/subcategories', adminController.createSubcategory);
 router.patch('/subcategories/:id', adminController.updateSubcategory);
 router.delete('/subcategories/:id', adminController.deleteSubcategory);

@@ -78,24 +78,9 @@ async function renderOrdersTab() {
       res = await api.get('/api/orders/buyer');
     }
 
-    let orders = Array.isArray(res?.data?.orders)
+    const orders = Array.isArray(res?.data?.orders)
       ? res.data.orders
-      : (Array.isArray(res?.data)
-        ? res.data
-        : (Array.isArray(res?.orders) ? res.orders : null));
-
-    if (orders === null) {
-      try {
-        const fallbackRes = await api.get('/api/orders/buyer');
-        orders = Array.isArray(fallbackRes?.data?.orders)
-          ? fallbackRes.data.orders
-          : (Array.isArray(fallbackRes?.data)
-            ? fallbackRes.data
-            : (Array.isArray(fallbackRes?.orders) ? fallbackRes.orders : []));
-      } catch {
-        orders = [];
-      }
-    }
+      : (Array.isArray(res?.data) ? res.data : []);
 
     if (!orders.length) {
       tabContent.innerHTML = `
@@ -292,7 +277,7 @@ function renderSupportTab() {
       <h3 style="font-family:var(--font-display); font-size:var(--text-lg); color:var(--color-primary); margin-bottom:var(--space-2);">Need help with an artisan order?</h3>
       <p class="text-body" style="margin-bottom:var(--space-4);">Our support team is happy to assist with delivery questions, custom designs, or feedback.</p>
       <div class="flex flex-col gap-3">
-        <a href="mailto:support@thetohfa.in" class="btn btn-secondary btn-full">Email Support: support@thetohfa.in</a>
+        <a href="mailto:tohfa126@gmail.com" class="btn btn-secondary btn-full">Email Support: tohfa126@gmail.com</a>
         <button onclick="openTanyaModal()" class="btn btn-primary btn-full">Ask Tanya — AI Gift Guide 🎁</button>
       </div>
     </div>

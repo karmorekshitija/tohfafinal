@@ -1527,6 +1527,7 @@ async function updateCategory(req, res, next) {
     const {
       name,
       display_name,
+      slug,
       description,
       image_url,
       cover_image,
@@ -1542,7 +1543,7 @@ async function updateCategory(req, res, next) {
 
     const rawName = display_name || name;
     const updatedName = rawName ? rawName.trim() : null;
-    // Decision 1: Category slugs are immutable after creation. Ignore any req.body.slug.
+    const updatedSlug = slug ? slug.trim().toLowerCase() : null;
 
     let activeVal = null;
     if (is_active !== undefined && is_active !== null && is_active !== '') {
@@ -1557,20 +1558,23 @@ async function updateCategory(req, res, next) {
       `UPDATE categories
        SET name             = COALESCE($1, name),
            display_name     = COALESCE($2, display_name, name),
-           description      = COALESCE($3, description),
-           image_url        = COALESCE($4, image_url),
-           banner_image_url = COALESCE($4, banner_image_url, image_url),
-           parent_id        = CASE WHEN $5::boolean THEN $6 ELSE parent_id END,
-           sort_order       = COALESCE($7, sort_order),
-           is_active        = COALESCE($8, is_active),
-           emoji_icon       = COALESCE($9, emoji_icon),
-           icon_emoji       = COALESCE($9, icon_emoji),
+           slug             = COALESCE($3, slug),
+           description      = COALESCE($4, description),
+           image_url        = COALESCE($5, image_url, cover_image),
+           cover_image      = COALESCE($5, cover_image, image_url),
+           banner_image_url = COALESCE($5, banner_image_url, image_url),
+           parent_id        = CASE WHEN $6::boolean THEN $7 ELSE parent_id END,
+           sort_order       = COALESCE($8, sort_order),
+           is_active        = COALESCE($9, is_active),
+           emoji_icon       = COALESCE($10, emoji_icon),
+           icon_emoji       = COALESCE($10, icon_emoji),
            updated_at       = NOW()
-       WHERE id = $10
+       WHERE id = $11
        RETURNING *`,
       [
         updatedName,
         display_name ? display_name.trim() : updatedName,
+        updatedSlug,
         description !== undefined ? description : null,
         newImageUrl,
         req.body.parent_id !== undefined,
@@ -1593,7 +1597,16 @@ async function updateCategory(req, res, next) {
       ipAddress: req.ip
     });
 
-    return res.json({ success: true, data: { ...rows[0], display_name: rows[0].name } });
+    return res.json({
+      success: true,
+      message: 'Category updated successfully',
+      data: {
+        ...rows[0],
+        display_name: rows[0].display_name || rows[0].name,
+        cover_image: rows[0].cover_image || rows[0].image_url,
+        image_url: rows[0].image_url || rows[0].cover_image
+      }
+    });
   } catch (err) {
     next(err);
   }
@@ -1636,16 +1649,70 @@ async function toggleCategoryStatus(req, res, next) {
 async function deleteCategory(req, res, next) {
   try {
     const { id } = req.params;
-    await query('UPDATE categories SET is_active = FALSE WHERE id = $1', [id]);
+
+    // 1. Fetch category to verify existence
+    const { rows: catRows } = await query('SELECT id, name, slug FROM categories WHERE id = $1', [id]);
+    if (!catRows.length) {
+      return res.status(404).json({ success: false, message: 'Category not found.' });
+    }
+    const targetCat = catRows[0];
+
+    // 2. Locate or auto-create "Uncategorized" fallback category
+    let uncategorizedId = null;
+    const { rows: uncatRows } = await query(
+      "SELECT id FROM categories WHERE LOWER(slug) = 'uncategorized' OR LOWER(name) = 'uncategorized' LIMIT 1"
+    );
+
+    if (uncatRows.length > 0) {
+      uncategorizedId = uncatRows[0].id;
+    } else {
+      const { rows: newUncat } = await query(
+        `INSERT INTO categories (name, display_name, slug, description, emoji_icon, icon_emoji, is_active, sort_order)
+         VALUES ('Uncategorized', 'Uncategorized', 'uncategorized', 'Default fallback for products from deleted categories', '📦', '📦', TRUE, 9999)
+         RETURNING id`
+      );
+      uncategorizedId = newUncat[0].id;
+    }
+
+    // 3. Prevent deleting the Uncategorized category itself
+    if (String(id) === String(uncategorizedId)) {
+      return res.status(400).json({ success: false, message: 'Cannot delete the default Uncategorized category.' });
+    }
+
+    // 4. Reassign products linked to this category to Uncategorized
+    const { rowCount: reassignedCount } = await query(
+      'UPDATE products SET category_id = $1 WHERE category_id = $2',
+      [uncategorizedId, id]
+    );
+
+    // 5. Unlink subcategories (set parent_id = NULL)
+    const { rowCount: unlinkedSubcats } = await query(
+      'UPDATE categories SET parent_id = NULL WHERE parent_id = $1',
+      [id]
+    );
+
+    // 6. Delete the category record
+    await query('DELETE FROM categories WHERE id = $1', [id]);
+
+    // 7. Audit Log
     await logAdminAction({
-      adminId: req.user.id,
+      adminId: req.user ? req.user.id : null,
       actionType: 'CATEGORY_DELETED',
       targetEntity: 'categories',
       targetId: id,
-      details: {},
+      details: {
+        categoryName: targetCat.name,
+        reassignedProductsCount: reassignedCount || 0,
+        unlinkedSubcategoriesCount: unlinkedSubcats || 0,
+        uncategorizedId
+      },
       ipAddress: req.ip
     });
-    return res.json({ success: true, message: 'Category deactivated.' });
+
+    return res.json({
+      success: true,
+      message: `Category "${targetCat.name}" deleted successfully. ${reassignedCount || 0} products reassigned to Uncategorized.`
+    });
   } catch (err) {
     next(err);
   }

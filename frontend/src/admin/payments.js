@@ -18,7 +18,12 @@ export async function loadSellerSubscriptions() {
     const json = await res.json();
     if (!res.ok || !json.success) return;
 
-    const { stats, subscriptions } = json.data;
+    const rawSubs = json.data?.subscriptions || json.subscriptions || json.data || [];
+    const subscriptions = Array.isArray(rawSubs) ? rawSubs : [];
+    const stats = json.data?.stats || json.stats || {
+      activePlans: subscriptions.filter(s => s.status === 'ACTIVE').length,
+      expiredPlans: subscriptions.filter(s => s.status === 'EXPIRED').length
+    };
 
     container.innerHTML = `
       <div class="card p-6 mt-6 bg-[#FFF8E7] rounded-2xl border border-outline-variant/30 shadow-sm">

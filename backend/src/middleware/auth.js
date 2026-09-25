@@ -65,4 +65,65 @@ async function authMiddleware(req, res, next) {
   }
 }
 
-module.exports = { authMiddleware };
+/**
+ * Optional auth middleware — for public routes that benefit from knowing who
+ * the caller is when they ARE logged in (e.g. Tanya AI on public buyer pages).
+ *
+ * BEHAVIOUR:
+ *   - No token present   → req.user = null, continues (guest allowed)
+ *   - Valid token        → req.user = decoded payload, continues
+ *   - Invalid/expired    → req.user = null, continues (treats as guest; does NOT block)
+ *
+ * Rate-limiting (tanyaRateLimiter) serves as the primary Denial-of-Wallet
+ * protection in place of hard authentication.
+ */
+async function optionalAuthMiddleware(req, res, next) {
+  req.user = null; // default: unauthenticated / guest
+
+  const authHeader = req.headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next(); // no token — continue as guest
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const secret = process.env.JWT_ACCESS_SECRET;
+    if (!secret) {
+      // Can't verify — proceed as guest rather than crashing a public page
+      return next();
+    }
+
+    const payload = jwt.verify(token, secret);
+
+    // Demo mode passthrough
+    if (
+      process.env.NODE_ENV === 'development' &&
+      process.env.ALLOW_DEMO_LOGIN === 'true' &&
+      payload.id &&
+      String(payload.id).startsWith('d0000000-')
+    ) {
+      req.user = payload;
+      return next();
+    }
+
+    // Instant revocation check — skip silently on error rather than blocking public request
+    try {
+      const { rows } = await query(
+        'SELECT id, role, is_active FROM users WHERE id = $1',
+        [payload.id]
+      );
+      if (rows.length && rows[0].is_active !== false && rows[0].is_active !== 0) {
+        req.user = payload;
+      }
+    } catch {
+      // DB error during optional check — continue as guest
+    }
+  } catch {
+    // Invalid / expired token — continue as guest, not an error for a public route
+  }
+
+  next();
+}
+
+module.exports = { authMiddleware, optionalAuthMiddleware };

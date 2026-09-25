@@ -194,7 +194,7 @@ async function listCategories(req, res, next) {
   try {
     const { rows } = await query(
       `SELECT c.id, c.name, c.display_name, c.slug, c.emoji_icon, c.icon_emoji,
-              c.description, c.image_url, c.banner_image_url, c.is_featured,
+              c.description, COALESCE(c.image_url, c.cover_image, c.banner_image_url) AS image_url, c.cover_image, c.banner_image_url, c.is_featured,
               c.parent_id, c.sort_order,
               (SELECT COUNT(*) FROM products p 
                WHERE (p.category_id = c.id OR p.category_id IN (SELECT id FROM categories WHERE parent_id = c.id AND is_active = TRUE))
@@ -202,7 +202,7 @@ async function listCategories(req, res, next) {
               ) AS product_count
        FROM categories c
        WHERE c.is_active = TRUE
-       ORDER BY c.sort_order ASC, c.id ASC`
+       ORDER BY c.sort_order ASC, c.name ASC, c.id ASC`
     );
 
     if (rows && rows.length > 0) {
@@ -211,7 +211,7 @@ async function listCategories(req, res, next) {
 
       rows.forEach(row => {
         if (!row.parent_id) {
-          const img = row.image_url || '/img/categories/artisan_showcase.jpg';
+          const img = row.image_url || row.cover_image || row.banner_image_url || '/img/categories/artisan_showcase.jpg';
           const emoji = row.emoji_icon || row.icon_emoji || '🏺';
           categoriesMap[row.id] = {
             id: row.id,
@@ -223,6 +223,7 @@ async function listCategories(req, res, next) {
             description: row.description || '',
             product_count: parseInt(row.product_count || 0, 10),
             image_url: img,
+            cover_image: img,
             banner_image_url: row.banner_image_url || img,
             banner_url: row.banner_image_url || img,
             is_featured: !!row.is_featured,
@@ -273,7 +274,7 @@ async function getCategoryBySlug(req, res, next) {
     // Look up category by exact slug with is_active = TRUE
     const { rows } = await query(
       `SELECT id, name, display_name, slug, description, emoji_icon, icon_emoji,
-              image_url, banner_image_url, parent_id, sort_order, is_active
+              COALESCE(image_url, cover_image, banner_image_url) AS image_url, cover_image, banner_image_url, parent_id, sort_order, is_active
        FROM categories
        WHERE slug = $1 AND is_active = TRUE`,
       [slug]
@@ -295,7 +296,7 @@ async function getCategoryBySlug(req, res, next) {
       // Subcategory requested: load its active parent
       const { rows: parentRows } = await query(
         `SELECT id, name, display_name, slug, description, emoji_icon, icon_emoji,
-                image_url, banner_image_url, parent_id, sort_order, is_active
+                COALESCE(image_url, cover_image, banner_image_url) AS image_url, cover_image, banner_image_url, parent_id, sort_order, is_active
          FROM categories
          WHERE id = $1 AND is_active = TRUE`,
         [matchedRow.parent_id]
@@ -354,7 +355,7 @@ async function getCategoryBySlug(req, res, next) {
     const rootProductCount = parseInt(countRows[0]?.total_count || 0, 10);
 
     const emoji = rootCategoryRow.emoji_icon || rootCategoryRow.icon_emoji || '🏺';
-    const img = rootCategoryRow.image_url || '/img/categories/artisan_showcase.jpg';
+    const img = rootCategoryRow.image_url || rootCategoryRow.cover_image || rootCategoryRow.banner_image_url || '/img/categories/artisan_showcase.jpg';
     const banner = rootCategoryRow.banner_image_url || img;
 
     return res.json({
@@ -368,6 +369,7 @@ async function getCategoryBySlug(req, res, next) {
           description: rootCategoryRow.description || '',
           emoji_icon: emoji,
           image_url: img,
+          cover_image: img,
           banner_image_url: banner,
           banner_url: banner,
           product_count: rootProductCount,
@@ -1089,17 +1091,13 @@ async function createProduct(req, res, next) {
     const userRole = String(req.user?.role || '').toUpperCase();
     if (userRole === 'ADMIN' || userRole === 'MASTER_ADMIN') {
       sellerId = req.headers['x-seller-id'] || req.headers['x-acting-seller-id'] || req.body?.seller_id || req.query?.seller_id;
-    }
-    if (!sellerId && userRole === 'SELLER') {
-      const { rows: sellerRows } = await query(
-        'SELECT id, user_id FROM sellers WHERE user_id = $1 LIMIT 1',
-        [req.user.id]
-      );
-      if (sellerRows.length > 0) sellerId = sellerRows[0].id;
+    } else if (userRole === 'SELLER') {
+      const { rows } = await query('SELECT id FROM sellers WHERE user_id = $1 LIMIT 1', [req.user.id]);
+      if (rows.length > 0) sellerId = rows[0].id;
       if (!sellerId) sellerId = req.user.id;
     }
     if (!sellerId) {
-      return res.status(400).json({ success: false, message: 'Valid seller/shop identifier required' });
+      return res.status(400).json({ success: false, message: 'Valid seller ID required' });
     }
 
     // Resolve sellerId to valid user_id if sellers table ID was provided (for FK constraint)
