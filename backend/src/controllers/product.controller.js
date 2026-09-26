@@ -1748,6 +1748,18 @@ async function uploadImages(req, res, next) {
       inserted.push(rows[0]);
     }
 
+    // Sync the denormalized products.images TEXT[] column so the sanitizeProduct
+    // fallback chain (direct_images) stays current. This column is otherwise only
+    // updated by createProduct / updateProduct (JSON body path), not by this endpoint.
+    const { rows: allImgRows } = await query(
+      'SELECT url FROM product_images WHERE product_id = $1 ORDER BY sort_order ASC',
+      [id]
+    );
+    await query(
+      'UPDATE products SET images = $1 WHERE id = $2',
+      [allImgRows.map(r => r.url), id]
+    );
+
     return res.status(201).json({ success: true, data: { images: inserted } });
   } catch (err) {
     next(err);

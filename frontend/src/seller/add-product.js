@@ -646,8 +646,18 @@ async function handleSubmit(e) {
         const formData = new FormData();
         let fileCount = 0;
         for (const p of uploadedPhotos) {
-          if (p.file) {
-            const compressed = await compressImage(p.file);
+          // H1 FIX: Draft-restored photos have file=null because only dataUrls are persisted
+          // to localStorage. Reconstruct the File from the dataUrl so they are not silently skipped.
+          let file = p.file;
+          if (!file && p.dataUrl && p.dataUrl.startsWith('data:')) {
+            try {
+              const fetchRes = await fetch(p.dataUrl);
+              const blob = await fetchRes.blob();
+              file = new File([blob], 'product_image.jpg', { type: blob.type || 'image/jpeg' });
+            } catch (_) { /* skip unrecoverable dataUrl */ }
+          }
+          if (file) {
+            const compressed = await compressImage(file);
             formData.append('images', compressed);
             fileCount++;
           }
@@ -679,11 +689,32 @@ async function handleSubmit(e) {
 
       // Clear draft
       localStorage.removeItem(DRAFT_STORAGE_KEY);
+
+      // H2 FIX: If photos could not be uploaded the product must NOT go live with no images.
+      // Immediately pause it so buyers cannot see it, then instruct the seller.
       if (photoUploadFailed) {
-        alert('Product published, but photo upload failed — please add photos from Edit Product.');
-      } else {
-        alert('Congratulations! Your handcrafted listing has been published to Tohfa.');
+        try {
+          await fetch(`/api/products/${productId}/status`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({ status: 'paused' })
+          });
+        } catch (_) { /* best-effort pause */ }
+        alert(
+          'Your listing was saved but the photo upload failed.\n\n' +
+          'It has been set to Paused so buyers cannot see it yet.\n\n' +
+          'Please open this listing from your catalog, add the photos, then set it back to Active.'
+        );
+        publishBtn.disabled = false;
+        publishBtn.innerHTML = `<span class="material-symbols-outlined text-base">publish</span><span>Publish Listing</span>`;
+        window.location.href = '/seller/catalog.html';
+        return;
       }
+
+      alert('Congratulations! Your handcrafted listing has been published to Tohfa.');
       window.location.href = '/seller/catalog.html';
     } else {
       alert(json.message || 'Failed to publish listing.');

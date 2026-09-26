@@ -1471,7 +1471,7 @@ async function listCategories(req, res, next) {
 async function createCategory(req, res, next) {
   try {
     const rawName = req.body.display_name || req.body.name;
-    const { parent_id = null, sort_order, description = '', emoji_icon, icon_emoji, image_url, banner_image_url, is_active = true } = req.body;
+    const { parent_id = null, sort_order, description = '', emoji_icon, icon_emoji, image_url, cover_image, banner_url, banner_image_url, fallback_image_url, is_active = true } = req.body;
 
     if (!rawName || !rawName.trim()) {
       return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'Category name is required.' });
@@ -1500,8 +1500,8 @@ async function createCategory(req, res, next) {
       : (image_url || cover_image || banner_url || banner_image_url || fallback_image_url || null);
 
     const { rows } = await query(
-      `INSERT INTO categories (name, display_name, slug, description, emoji_icon, icon_emoji, image_url, banner_image_url, parent_id, sort_order, is_active)
-       VALUES ($1, $2, $3, $4, $5, $5, $6, $6, $7, $8, $9)
+      `INSERT INTO categories (name, display_name, slug, description, emoji_icon, icon_emoji, image_url, cover_image, banner_image_url, parent_id, sort_order, is_active)
+       VALUES ($1, $2, $3, $4, $5, $5, $6, $6, $6, $7, $8, $9)
        RETURNING *`,
       [name, name, candidateSlug, description, emoji, newImageUrl, parent_id || null, finalSortOrder, is_active !== false]
     );
