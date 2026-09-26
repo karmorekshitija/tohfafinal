@@ -278,11 +278,12 @@
   function setupBottomNav() {
     const isBuyerPage = path === '/' || path === '' || path.includes('/buyer/') ||
       (!path.includes('/seller/') && !path.includes('/admin/') && !path.includes('/auth/') && (
-        path.includes('home') || path.includes('index') || path.includes('categor') || path.includes('zip-gift') ||
+        path === '/' || path === '' || path.endsWith('/') || path.includes('index') ||
+        path.includes('home') || path.includes('categor') || path.includes('zip-gift') ||
         path.includes('search') || path.includes('product') || path.includes('profile') ||
         path.includes('cart') || path.includes('wishlist') || path.includes('order') ||
         path.includes('occasions') || path.includes('faq') ||
-        path.includes('terms')
+        path.includes('terms') || path.includes('about') || path.includes('contact')
       ));
 
     if (!isBuyerPage) return;
@@ -310,7 +311,7 @@
 
     nav.innerHTML = items.map(item => {
       const isActive = currentClean === item.key ||
-        (item.key === 'home' && (currentClean === '' || currentClean === 'index')) ||
+        (item.key === 'home' && (currentClean === '' || currentClean === 'index' || currentClean === 'home')) ||
         (item.key === 'categories' && (currentClean === 'category' || currentClean === 'categories'));
       const activeColor = isActive ? '#14381F' : 'rgba(28, 28, 28, 0.5)';
       const fontWeight = isActive ? '700' : '400';

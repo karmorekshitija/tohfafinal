@@ -47,6 +47,8 @@ async function autoSyncDatabase() {
     try {
       await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';`);
       await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS images TEXT[] DEFAULT '{}';`);
+      await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url TEXT;`);
+      await query(`UPDATE products SET image_url = images[1] WHERE image_url IS NULL AND images IS NOT NULL AND array_length(images, 1) > 0;`);
       await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS special_packaging_available BOOLEAN DEFAULT TRUE;`);
       await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS preparation_days INT DEFAULT 2;`);
       await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS weight_grams INT DEFAULT 500;`);
@@ -649,7 +651,21 @@ async function autoSyncDatabase() {
       for (const cat of categoryCurations) {
         await query(`
           UPDATE categories 
-          SET display_name = $1, emoji_icon = $2, icon_emoji = $2, image_url = $3, sort_order = $4, is_active = TRUE
+          SET display_name = COALESCE(NULLIF(display_name, ''), $1),
+              emoji_icon = COALESCE(NULLIF(emoji_icon, ''), NULLIF(icon_emoji, ''), $2),
+              icon_emoji = COALESCE(NULLIF(icon_emoji, ''), NULLIF(emoji_icon, ''), $2),
+              image_url = CASE 
+                WHEN image_url IS NULL OR TRIM(image_url) = '' OR image_url = '/img/categories/artisan_showcase.jpg' 
+                THEN $3 
+                ELSE image_url 
+              END,
+              cover_image = CASE
+                WHEN cover_image IS NULL OR TRIM(cover_image) = '' 
+                THEN COALESCE(image_url, $3)
+                ELSE cover_image
+              END,
+              sort_order = COALESCE(sort_order, $4),
+              is_active = TRUE
           WHERE slug = $5
         `, [cat.name, cat.emoji, cat.img, cat.order, cat.slug]);
       }

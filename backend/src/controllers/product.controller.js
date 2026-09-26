@@ -17,7 +17,12 @@ function uniqueImageUrls(values) {
     if (typeof value === 'string') return value;
     return value?.url || value?.image_url || value?.imagePath || value?.img_url || null;
   }).filter((url) => {
-    if (!url) return false;
+    if (!url || typeof url !== 'string') return false;
+    if (url.startsWith('data:')) {
+      if (seen.has(url)) return false;
+      seen.add(url);
+      return true;
+    }
     const normalizedUrl = url
       .split('?')[0]
       .replace(/\.(jpe?g|png|webp)$/i, '')
@@ -124,6 +129,10 @@ function dedupeAlternateFormatImages(list) {
   for (const item of list) {
     const url = typeof item === 'string' ? item : (item?.url || item?.imagePath || item?.path || item?.img_url || item?.image_url || '');
     if (!url) continue;
+    if (url.startsWith('data:')) {
+      map.set(url, item);
+      continue;
+    }
     const clean = url.split('?')[0];
     const lastSlash = clean.lastIndexOf('/');
     const dir = lastSlash !== -1 ? clean.substring(0, lastSlash).toLowerCase() : '';
@@ -236,13 +245,17 @@ async function listCategories(req, res, next) {
 
       rows.forEach(row => {
         if (row.parent_id && categoriesMap[row.parent_id]) {
+          const subImg = row.image_url || row.cover_image || row.banner_image_url || null;
           categoriesMap[row.parent_id].subcategories.push({
             id: row.id,
             name: row.name,
             display_name: row.display_name || row.name,
             slug: row.slug,
             sort_order: row.sort_order,
-            product_count: parseInt(row.product_count || 0, 10)
+            product_count: parseInt(row.product_count || 0, 10),
+            image_url: subImg,
+            cover_image: subImg,
+            banner_image_url: row.banner_image_url || subImg
           });
         }
       });
@@ -506,14 +519,14 @@ async function listProducts(req, res, next) {
               ) AS occasions,
               COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
               COALESCE(
-                json_agg(pi ORDER BY pi.sort_order) FILTER (WHERE pi.id IS NOT NULL),
+                json_agg(pi ORDER BY pi.sort_order ASC NULLS LAST, pi.id ASC) FILTER (WHERE pi.id IS NOT NULL),
                 '[]'
               ) AS product_images${ratingsSelect}
        FROM products p
        LEFT JOIN categories c ON c.id = p.category_id
        LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
        LEFT JOIN sellers s ON s.user_id = p.seller_id
-       LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
+       LEFT JOIN product_images pi ON pi.product_id = p.id
        WHERE ${where}
        GROUP BY p.id, sp.store_name, s.store_name, p.special_packaging_available, c.name, c.slug
        ORDER BY ${checkFeatured ? 'p.is_sponsored DESC, p.view_count DESC, ' : ''}p.created_at DESC
@@ -570,13 +583,13 @@ async function forYouFeed(req, res, next) {
                 p.special_packaging_available, p.slug,
                 COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
                 COALESCE(
-                  json_agg(pi ORDER BY pi.sort_order) FILTER (WHERE pi.id IS NOT NULL),
+                  json_agg(pi ORDER BY pi.sort_order ASC NULLS LAST, pi.id ASC) FILTER (WHERE pi.id IS NOT NULL),
                   '[]'
                 ) AS product_images
          FROM products p
          LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
          LEFT JOIN sellers s ON s.user_id = p.seller_id
-         LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
+         LEFT JOIN product_images pi ON pi.product_id = p.id
          WHERE (p.status = 'active' OR p.is_active = TRUE)
            AND (
              sp.verification_status = 'verified'
@@ -610,13 +623,13 @@ async function forYouFeed(req, res, next) {
                 p.special_packaging_available, p.slug,
                 COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
                 COALESCE(
-                  json_agg(pi ORDER BY pi.sort_order) FILTER (WHERE pi.id IS NOT NULL),
+                  json_agg(pi ORDER BY pi.sort_order ASC NULLS LAST, pi.id ASC) FILTER (WHERE pi.id IS NOT NULL),
                   '[]'
                 ) AS product_images
          FROM products p
          LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
          LEFT JOIN sellers s ON s.user_id = p.seller_id
-         LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
+         LEFT JOIN product_images pi ON pi.product_id = p.id
          WHERE (p.status = 'active' OR p.is_active = TRUE)
            AND (
              sp.verification_status = 'verified'
@@ -657,13 +670,13 @@ async function getSponsoredProducts(req, res, next) {
               COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
               COALESCE(sp.subscription_plan, s.subscription_plan, 'basic') AS subscription_plan,
               COALESCE(
-                json_agg(pi ORDER BY pi.sort_order) FILTER (WHERE pi.id IS NOT NULL),
+                json_agg(pi ORDER BY pi.sort_order ASC NULLS LAST, pi.id ASC) FILTER (WHERE pi.id IS NOT NULL),
                 '[]'
               ) AS images
        FROM products p
        LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
        LEFT JOIN sellers s ON s.user_id = p.seller_id
-       LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
+       LEFT JOIN product_images pi ON pi.product_id = p.id
        WHERE (p.status = 'active' OR p.is_active = TRUE)
          AND p.is_sponsored = TRUE
          AND (
@@ -702,13 +715,13 @@ async function getSponsoredProducts(req, res, next) {
                 COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
                 COALESCE(sp.subscription_plan, s.subscription_plan, 'basic') AS subscription_plan,
                 COALESCE(
-                  json_agg(pi ORDER BY pi.sort_order) FILTER (WHERE pi.id IS NOT NULL),
+                  json_agg(pi ORDER BY pi.sort_order ASC NULLS LAST, pi.id ASC) FILTER (WHERE pi.id IS NOT NULL),
                   '[]'
                 ) AS images
          FROM products p
          LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
          LEFT JOIN sellers s ON s.user_id = p.seller_id
-         LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
+         LEFT JOIN product_images pi ON pi.product_id = p.id
          WHERE (p.status = 'active' OR p.is_active = TRUE)
            AND NOT (p.id::text = ANY($1::text[]))
            AND (
@@ -754,13 +767,13 @@ async function getTrendingProducts(req, res, next) {
               p.special_packaging_available, p.slug,
               COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
               COALESCE(
-                json_agg(pi ORDER BY pi.sort_order) FILTER (WHERE pi.id IS NOT NULL),
+                json_agg(pi ORDER BY pi.sort_order ASC NULLS LAST, pi.id ASC) FILTER (WHERE pi.id IS NOT NULL),
                 '[]'
               ) AS images
        FROM products p
        LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
        LEFT JOIN sellers s ON s.user_id = p.seller_id
-       LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
+       LEFT JOIN product_images pi ON pi.product_id = p.id
        WHERE (p.status = 'active' OR p.is_active = TRUE)
          AND (
            sp.verification_status = 'verified'
@@ -850,14 +863,14 @@ async function searchProducts(req, res, next) {
               c.name AS category_name,
               COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
               COALESCE(
-                json_agg(pi ORDER BY pi.sort_order) FILTER (WHERE pi.id IS NOT NULL),
+                json_agg(pi ORDER BY pi.sort_order ASC NULLS LAST, pi.id ASC) FILTER (WHERE pi.id IS NOT NULL),
                 '[]'
               ) AS images
        FROM products p
        LEFT JOIN categories c ON c.id = p.category_id
        LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
        LEFT JOIN sellers s ON s.user_id = p.seller_id
-       LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
+       LEFT JOIN product_images pi ON pi.product_id = p.id
        WHERE (p.status = 'active' OR p.is_active = TRUE)
          AND (
            sp.verification_status = 'verified'
@@ -1043,11 +1056,11 @@ async function getSellerProducts(req, res, next) {
               COALESCE(p.preparation_days, 2) AS preparation_days,
               COALESCE(p.weight_grams, 500) AS weight_grams,
               COALESCE(
-                json_agg(pi ORDER BY pi.sort_order) FILTER (WHERE pi.id IS NOT NULL),
+                json_agg(pi ORDER BY pi.sort_order ASC NULLS LAST, pi.id ASC) FILTER (WHERE pi.id IS NOT NULL),
                 '[]'
               ) AS images
        FROM products p
-       LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
+       LEFT JOIN product_images pi ON pi.product_id = p.id
        WHERE ${where}
        GROUP BY p.id
        ORDER BY p.created_at DESC
@@ -1558,12 +1571,14 @@ async function updateProduct(req, res, next) {
 
       let sortOrder = 0;
       const seenImageKeys = new Set();
+      const finalUrls = [];
       for (const image of sortedPhotos) {
         const url = uniqueImageUrls([image])[0];
         if (!url || typeof url !== 'string' || url.startsWith('blob:')) continue;
         const imageKey = url.split('?')[0].replace(/\.(jpe?g|png|webp)$/i, '').toLowerCase();
         if (!imageKey || seenImageKeys.has(imageKey)) continue;
         seenImageKeys.add(imageKey);
+        finalUrls.push(url);
 
         const assignedOrder = sortOrder++;
         await query(
@@ -1573,6 +1588,11 @@ async function updateProduct(req, res, next) {
           [id, url, assignedOrder]
         );
       }
+
+      await query(
+        'UPDATE products SET images = $1, image_url = $2, updated_at = NOW() WHERE id = $3',
+        [finalUrls, finalUrls[0] || null, id]
+      );
     }
 
     // If variants array is provided, replace variants
@@ -1606,7 +1626,46 @@ async function updateProduct(req, res, next) {
       }
     }
 
-    return res.json({ success: true, data: { product: sanitizeProduct(rows[0]) } });
+    const { rows: freshRows } = await query(
+      `SELECT p.id, p.name, p.slug, p.description, p.base_price, p.stock_quantity, p.low_stock_threshold, p.category_id,
+              p.tags, p.images AS direct_images, p.images, p.image_url,
+              p.customization_mode, p.is_customizable, p.customization_schema,
+              p.status, p.view_count, p.seller_id, p.is_sponsored, p.is_bestseller,
+              p.special_packaging_available,
+              COALESCE(p.preparation_days, 2) AS preparation_days,
+              COALESCE(p.weight_grams, 500) AS weight_grams,
+              p.created_at, p.updated_at,
+              c.name AS category_name, c.slug AS category_slug,
+              COALESCE(
+                (SELECT json_agg(pi ORDER BY pi.sort_order ASC NULLS LAST, pi.id ASC)
+                 FROM product_images pi WHERE pi.product_id = p.id),
+                '[]'
+              ) AS product_images,
+              COALESCE(
+                (SELECT json_agg(
+                  json_build_object(
+                    'id', pv.id,
+                    'product_id', pv.product_id,
+                    'variant_name', pv.variant_name,
+                    'color_name', pv.color_name,
+                    'color_hex', pv.color_hex,
+                    'size', pv.size,
+                    'additional_price', pv.additional_price,
+                    'stock_qty', pv.stock_qty,
+                    'image_url', pv.image_url,
+                    'images', COALESCE(pv.images, CASE WHEN pv.image_url IS NOT NULL THEN ARRAY[pv.image_url] ELSE '{}'::text[] END)
+                  ) ORDER BY pv.id ASC
+                ) FROM product_variants pv WHERE pv.product_id = p.id),
+                '[]'
+              ) AS variants
+       FROM products p
+       LEFT JOIN categories c ON c.id = p.category_id
+       WHERE p.id = $1`,
+      [id]
+    );
+
+    const returnProduct = freshRows.length ? freshRows[0] : rows[0];
+    return res.json({ success: true, data: { product: sanitizeProduct(returnProduct) } });
   } catch (err) {
     next(err);
   }
@@ -1751,17 +1810,18 @@ async function uploadImages(req, res, next) {
       inserted.push(rows[0]);
     }
 
-    // Sync the denormalized products.images TEXT[] column so the sanitizeProduct
-    // fallback chain (direct_images) stays current. This column is otherwise only
-    // updated by createProduct / updateProduct (JSON body path), not by this endpoint.
-    const { rows: allImgRows } = await query(
-      'SELECT url FROM product_images WHERE product_id = $1 ORDER BY sort_order ASC',
+    // Sync all images back to products.images and products.image_url
+    const { rows: allImages } = await query(
+      'SELECT url FROM product_images WHERE product_id = $1 ORDER BY sort_order ASC, created_at ASC',
       [id]
     );
-    await query(
-      'UPDATE products SET images = $1 WHERE id = $2',
-      [allImgRows.map(r => r.url), id]
-    );
+    const allUrls = allImages.map(r => r.url).filter(Boolean);
+    if (allUrls.length > 0) {
+      await query(
+        'UPDATE products SET images = $1, image_url = $2, updated_at = NOW() WHERE id = $3',
+        [allUrls, allUrls[0], id]
+      );
+    }
 
     return res.status(201).json({ success: true, data: { images: inserted } });
   } catch (err) {
@@ -1933,11 +1993,11 @@ async function getLowStockProducts(req, res, next) {
     const { rows } = await query(
       `SELECT p.id, p.name, p.base_price, p.stock_quantity, p.low_stock_threshold, p.status,
               COALESCE(
-                json_agg(pi ORDER BY pi.sort_order) FILTER (WHERE pi.id IS NOT NULL),
+                json_agg(pi ORDER BY pi.sort_order ASC NULLS LAST, pi.id ASC) FILTER (WHERE pi.id IS NOT NULL),
                 '[]'
               ) AS images
        FROM products p
-       LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
+       LEFT JOIN product_images pi ON pi.product_id = p.id
        WHERE p.seller_id = $1 
          AND p.status != 'deleted'
          AND p.stock_quantity <= p.low_stock_threshold

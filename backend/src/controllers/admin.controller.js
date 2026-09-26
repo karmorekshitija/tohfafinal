@@ -1182,14 +1182,22 @@ async function createProduct(req, res, next) {
 
     if (rawImagesList.length > 0) {
       let sortOrder = 0;
+      const finalUrls = [];
       for (const img of rawImagesList) {
         const url = typeof img === 'string' ? img : (img?.url || img?.imagePath || img?.img_url || img?.image_url || '');
         if (url) {
+          finalUrls.push(url);
           await query(
             'INSERT INTO product_images (product_id, url, sort_order) VALUES ($1, $2, $3)',
             [newProduct.id, url, sortOrder++]
           );
         }
+      }
+      if (finalUrls.length > 0) {
+        await query(
+          'UPDATE products SET images = $1, image_url = $2, updated_at = NOW() WHERE id = $3',
+          [finalUrls, finalUrls[0], newProduct.id]
+        );
       }
     }
 
@@ -1292,15 +1300,23 @@ async function updateProduct(req, res, next) {
       await query('DELETE FROM product_images WHERE product_id = $1', [id]);
       let sortOrder = 0;
       const cleanImages = dedupeAlternateFormatImages(images);
+      const finalClean = [];
       for (const img of cleanImages) {
         const url = typeof img === 'string' ? img : (img?.url || '');
         if (url) {
+          finalClean.push(url);
           await query(
             `INSERT INTO product_images (product_id, url, sort_order)
              VALUES ($1, $2, $3)`,
             [id, url, sortOrder++]
           );
         }
+      }
+      if (finalClean.length > 0) {
+        await query(
+          'UPDATE products SET images = $1, image_url = $2, updated_at = NOW() WHERE id = $3',
+          [finalClean, finalClean[0], id]
+        );
       }
     } else if (image_url) {
       await query(
@@ -1309,6 +1325,10 @@ async function updateProduct(req, res, next) {
          ON CONFLICT DO NOTHING`,
         [id, image_url]
       ).catch(() => {});
+      await query(
+        'UPDATE products SET images = $1, image_url = $2, updated_at = NOW() WHERE id = $3',
+        [[image_url], image_url, id]
+      );
     }
 
     if (Array.isArray(variants)) {
@@ -1471,7 +1491,19 @@ async function listCategories(req, res, next) {
 async function createCategory(req, res, next) {
   try {
     const rawName = req.body.display_name || req.body.name;
-    const { parent_id = null, sort_order, description = '', emoji_icon, icon_emoji, image_url, cover_image, banner_url, banner_image_url, fallback_image_url, is_active = true } = req.body;
+    const {
+      parent_id = null,
+      sort_order,
+      description = '',
+      emoji_icon,
+      icon_emoji,
+      image_url,
+      cover_image,
+      banner_url,
+      banner_image_url,
+      fallback_image_url,
+      is_active = true
+    } = req.body;
 
     if (!rawName || !rawName.trim()) {
       return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'Category name is required.' });
@@ -1843,7 +1875,25 @@ async function deleteCoupon(req, res, next) {
 
 async function listBanners(req, res, next) {
   try {
-    const { rows } = await query('SELECT * FROM banners ORDER BY sort_order ASC');
+    const { rows } = await query('SELECT * FROM banners WHERE is_active = TRUE ORDER BY sort_order ASC');
+    const topBanner = rows.length > 0 ? rows[0] : null;
+
+    if (req.originalUrl && req.originalUrl.includes('ui-settings')) {
+      return res.json({
+        success: true,
+        data: {
+          banners: rows,
+          home_seasonal_banner: topBanner ? {
+            id: topBanner.id,
+            content_url: topBanner.image_url,
+            image_url: topBanner.image_url,
+            label: topBanner.alt_text || 'Special Seasonal Showcase',
+            link_url: topBanner.link_url
+          } : null
+        }
+      });
+    }
+
     return res.json({ success: true, data: rows });
   } catch (err) {
     next(err);
