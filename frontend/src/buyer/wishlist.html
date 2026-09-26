@@ -531,35 +531,29 @@
 <script>
 async function handleFooterSellerLink(e) {
   if (e) e.preventDefault();
-  const isMobile = window.innerWidth < 768;
   const token = sessionStorage.getItem('tohfa_access_token');
-  if (!token) {
-    sessionStorage.setItem('tohfa_redirect_seller', 'true');
-    sessionStorage.setItem('tohfa_return_to', window.location.pathname + window.location.search); window.location.href = '/auth/login.html';
-    return;
-  }
-
-  try {
-    const res = await fetch('/api/profile/me', {
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json'
-      }
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.success) {
-        const role = data.data.role;
-        if (role === 'seller') {
-          window.location.href = '/seller/dashboard.html';
-          return;
+  if (token) {
+    try {
+      const res = await fetch('/api/profile/me', {
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.success) {
+          const role = data.data.role;
+          if (role === 'seller') {
+            window.location.href = '/seller/dashboard.html';
+            return;
+          }
         }
       }
+    } catch(err) {
+      console.error("Error checking seller status:", err);
     }
-  } catch(err) {
-    console.error("Error checking seller status:", err);
   }
-  
   window.location.href = '/auth/signup-seller.html';
 }
 

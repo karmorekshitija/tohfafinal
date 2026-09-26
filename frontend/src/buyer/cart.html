@@ -210,10 +210,6 @@
               <span>Place Order &amp; Pay</span>
               <span id="btn-total" class="font-data-price text-sm border-l border-white/30 pl-2.5 ml-1">₹0.00</span>
             </button>
-            <button id="btn-test-pay" onclick="placeOrder(true)" class="w-full bg-amber-800 hover:bg-amber-900 text-white py-2.5 rounded-full font-semibold text-xs font-['DM_Sans'] transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
-              <span class="material-symbols-outlined text-sm">bolt</span>
-              <span>Instant Test Order (Bypass Razorpay Modal)</span>
-            </button>
 
             <!-- Trust badges below button -->
             <div class="p-3 bg-[#1A3A32]/5 rounded-xl border border-[#1A3A32]/10 text-xs text-[#1A3A32]/80 space-y-1">
@@ -910,8 +906,26 @@
         }
     }
 
-    // Place Order & Pay
-    async function placeOrder(isTestPay = false) {
+    // Ensure Razorpay SDK is loaded
+    async function ensureRazorpayLoaded() {
+        if (window.Razorpay) return true;
+        return new Promise(resolve => {
+            const existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+            if (existing) {
+                existing.addEventListener('load', () => resolve(true));
+                existing.addEventListener('error', () => resolve(false));
+                return;
+            }
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.head.appendChild(script);
+        });
+    }
+
+    // Place Order & Pay via Razorpay
+    async function placeOrder() {
         const token = authStorage.getToken();
         if (!token) {
             window.location.href = '/buyer/checkout.html?mode=guest';
@@ -925,6 +939,7 @@
         }
 
         const btn = document.getElementById('btn-place-order');
+        const summaryTotalText = document.getElementById('summary-total')?.innerText || '₹0.00';
         btn.disabled = true;
         btn.innerHTML = `<span>Processing...</span>`;
 
@@ -938,114 +953,97 @@
                 const itemNames = exceeded.map(x => x.name).join(', ');
                 alert(`Fulfillment capacity exceeded for: ${itemNames || 'some items'}. Please request a reschedule for these products individually from their product pages or adjust their quantities in the cart.`);
                 btn.disabled = false;
-                const totalText = document.getElementById('summary-total')?.innerText || '';
-                btn.innerHTML = `<span>Place Order & Pay</span><span id="btn-total" class="font-data-price text-sm border-l border-solid border-white/40 pl-3 ml-3">${totalText}</span>`;
+                btn.innerHTML = `<span>Place Order & Pay</span><span id="btn-total" class="font-data-price text-sm border-l border-solid border-white/40 pl-3 ml-3">${summaryTotalText}</span>`;
                 return;
             }
 
+            // Create internal order record
             const res = await apiClient.post('/orders', { address_id: selectedAddressId });
-            if (res.data && res.data.success) {
-                const order = res.data.data?.order || {};
-                const orderId = order.id;
-                const orderRef = order.order_ref || `TH-${String(order.id || '').slice(0, 8).toUpperCase()}`;
-                
-                if (isTestPay) {
-                    btn.innerHTML = `<span>Confirming Test Payment...</span>`;
-                    const testRes = await apiClient.post('/payments/test-pay', { order_id: orderId, orderId: orderId });
-                    if (testRes.data && testRes.data.success) {
-                        window.location.href = `payment-success.html?order_ref=${orderRef}&order_id=${orderId}`;
-                        return;
-                    }
-                }
-
-                const initRes = await apiClient.post('/payments/create-order', { orderId: orderId });
-                if (initRes.data && initRes.data.success) {
-                    const payData = initRes.data.data;
-                    
-                    // Fallback to test-pay in local dev mode when Razorpay placeholder keys are used
-                    const isMockGateway = !payData.razorpayKeyId ||
-                        payData.razorpayKeyId === 'rzp_test_placeholder' ||
-                        payData.razorpayKeyId === 'YOUR_RAZORPAY_KEY_ID' ||
-                        String(payData.razorpayKeyId).includes('placeholder') ||
-                        String(payData.razorpayKeyId).includes('YOUR_') ||
-                        String(payData.razorpay_order_id || '').startsWith('order_mock_');
-
-                    if (isMockGateway) {
-                        btn.innerHTML = `<span>Confirming Test Payment...</span>`;
-                        const testRes = await apiClient.post('/payments/test-pay', { orderId: orderId, order_id: orderId });
-                        if (testRes.data && testRes.data.success) {
-                            window.location.href = `payment-success.html?order_ref=${orderRef}&order_id=${orderId}`;
-                            return;
-                        }
-                    }
-
-                    const options = {
-                        key: payData.razorpayKeyId,
-                        amount: payData.amount_paise || payData.amount,
-                        currency: payData.currency || 'INR',
-                        order_id: payData.razorpay_order_id,
-                        name: "Tohfa Artisan Studio",
-                        description: `Order Ref: ${orderRef}`,
-                        prefill: payData.prefill,
-                        handler: async function (response) {
-                            // Helper: attempt verify, retry once on 401 (token refresh)
-                            async function doVerify() {
-                                return apiClient.post('/payments/verify', {
-                                    orderId: orderId,
-                                    order_id: orderId,
-                                    razorpay_payment_id: response.razorpay_payment_id,
-                                    razorpay_order_id: response.razorpay_order_id,
-                                    razorpay_signature: response.razorpay_signature
-                                });
-                            }
-
-                            try {
-                                let verifyRes;
-                                try {
-                                    verifyRes = await doVerify();
-                                } catch (firstErr) {
-                                    if (firstErr.response?.status === 401) {
-                                        await new Promise(r => setTimeout(r, 800));
-                                        verifyRes = await doVerify();
-                                    } else {
-                                        throw firstErr;
-                                    }
-                                }
-
-                                const success = verifyRes?.data?.success ?? verifyRes?.success;
-                                if (success) {
-                                    window.location.href = `payment-success.html?order_ref=${orderRef}&order_id=${orderId}`;
-                                } else {
-                                    window.location.href = `payment-failure.html?order_ref=${orderRef}&reason=verify_failed`;
-                                }
-                            } catch (verifyErr) {
-                                console.error("Verify payment error:", verifyErr);
-                                const reason = verifyErr.response?.data?.message || verifyErr.message || 'unknown';
-                                window.location.href = `payment-failure.html?order_ref=${orderRef}&reason=${encodeURIComponent(reason)}`;
-                            }
-                        },
-                        modal: {
-                            ondismiss: function () {
-                                btn.disabled = false;
-                                btn.innerHTML = `<span>Place Order & Pay</span><span id="btn-total" class="font-data-price text-sm border-l border-solid border-white/40 pl-3 ml-3">${formatPaise(Math.round(payData.amount * 100))}</span>`;
-                            }
-                        }
-                    };
-
-                    const rzp = new window.Razorpay(options);
-                    rzp.on('payment.failed', function (resp) {
-                        console.error("Payment failed:", resp.error);
-                        const reason = resp.error?.description || resp.error?.reason || 'payment_failed';
-                        window.location.href = `payment-failure.html?order_ref=${orderRef}&reason=${encodeURIComponent(reason)}`;
-                    });
-                    rzp.open();
-                }
+            if (!res.data || !res.data.success) {
+                throw new Error(res.data?.message || 'Failed to initialize order.');
             }
+
+            const order = res.data.data?.order || {};
+            const orderId = order.id;
+            const orderRef = order.order_ref || `TH-${String(order.id || '').slice(0, 8).toUpperCase()}`;
+
+            // Initialize payment details from backend
+            btn.innerHTML = `<span>Opening Razorpay Gateway...</span>`;
+            const initRes = await apiClient.post('/payments/create-order', { orderId: orderId });
+            if (!initRes.data || !initRes.data.success) {
+                throw new Error(initRes.data?.message || 'Payment gateway initialization failed.');
+            }
+
+            const payData = initRes.data.data;
+            const rzpKey = payData.razorpayKeyId || payData.key_id;
+
+            if (!rzpKey) {
+                throw new Error('Payment gateway configuration is missing. Please check Razorpay keys.');
+            }
+
+            // Ensure Razorpay SDK is loaded
+            await ensureRazorpayLoaded();
+            if (!window.Razorpay) {
+                throw new Error('Unable to load Razorpay payment gateway. Please check your internet connection.');
+            }
+
+            const options = {
+                key: rzpKey,
+                amount: payData.amount_paise || payData.amount,
+                currency: payData.currency || 'INR',
+                name: "Tohfa Artisan Studio",
+                description: `Order Ref: ${orderRef}`,
+                prefill: payData.prefill || {},
+                theme: { color: '#1A3A32' },
+                handler: async function (response) {
+                    btn.disabled = true;
+                    btn.innerHTML = `<span>Verifying Payment...</span>`;
+                    try {
+                        const verifyRes = await apiClient.post('/payments/verify', {
+                            orderId: orderId,
+                            order_id: orderId,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_order_id: response.razorpay_order_id || null,
+                            razorpay_signature: response.razorpay_signature || null
+                        });
+
+                        const success = verifyRes?.data?.success ?? verifyRes?.success;
+                        if (success) {
+                            window.location.href = `payment-success.html?order_ref=${encodeURIComponent(orderRef)}&order_id=${encodeURIComponent(orderId)}`;
+                        } else {
+                            window.location.href = `payment-failure.html?order_ref=${encodeURIComponent(orderRef)}&reason=verify_failed`;
+                        }
+                    } catch (verifyErr) {
+                        console.error("Payment verification error:", verifyErr);
+                        const reason = verifyErr.response?.data?.message || verifyErr.message || 'unknown';
+                        window.location.href = `payment-failure.html?order_ref=${encodeURIComponent(orderRef)}&reason=${encodeURIComponent(reason)}`;
+                    }
+                },
+                modal: {
+                    ondismiss: function () {
+                        btn.disabled = false;
+                        btn.innerHTML = `<span>Place Order & Pay</span><span id="btn-total" class="font-data-price text-sm border-l border-solid border-white/40 pl-3 ml-3">${summaryTotalText}</span>`;
+                    }
+                }
+            };
+
+            if (payData.razorpay_order_id) {
+                options.order_id = payData.razorpay_order_id;
+            }
+
+            const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', function (resp) {
+                console.error("Razorpay payment failed:", resp.error);
+                const reason = resp.error?.description || resp.error?.reason || 'payment_failed';
+                window.location.href = `payment-failure.html?order_ref=${encodeURIComponent(orderRef)}&reason=${encodeURIComponent(reason)}`;
+            });
+            rzp.open();
+
         } catch (err) {
-            console.error("Cart checkout order placement failed:", err);
+            console.error("Order placement failed:", err);
             btn.disabled = false;
-            btn.innerHTML = `<span>Place Order & Pay</span><span id="btn-total" class="font-data-price text-sm border-l border-solid border-white/40 pl-3 ml-3">${document.getElementById('summary-total').innerText}</span>`;
-            alert(err.response?.data?.message || "Failed to place order.");
+            btn.innerHTML = `<span>Place Order & Pay</span><span id="btn-total" class="font-data-price text-sm border-l border-solid border-white/40 pl-3 ml-3">${summaryTotalText}</span>`;
+            alert(err.response?.data?.message || err.message || "Failed to place order.");
         }
     }
 
@@ -1142,35 +1140,29 @@
 <script>
 async function handleFooterSellerLink(e) {
   if (e) e.preventDefault();
-  const isMobile = window.innerWidth < 768;
   const token = sessionStorage.getItem('tohfa_access_token');
-  if (!token) {
-    sessionStorage.setItem('tohfa_redirect_seller', 'true');
-    sessionStorage.setItem('tohfa_return_to', window.location.pathname + window.location.search); window.location.href = '/auth/login.html';
-    return;
-  }
-
-  try {
-    const res = await fetch('/api/profile/me', {
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json'
-      }
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.success) {
-        const role = data.data.role;
-        if (role === 'seller') {
-          window.location.href = '/seller/dashboard.html';
-          return;
+  if (token) {
+    try {
+      const res = await fetch('/api/profile/me', {
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.success) {
+          const role = data.data.role;
+          if (role === 'seller') {
+            window.location.href = '/seller/dashboard.html';
+            return;
+          }
         }
       }
+    } catch(err) {
+      console.error("Error checking seller status:", err);
     }
-  } catch(err) {
-    console.error("Error checking seller status:", err);
   }
-  
   window.location.href = '/auth/signup-seller.html';
 }
 

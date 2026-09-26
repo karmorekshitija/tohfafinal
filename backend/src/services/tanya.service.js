@@ -38,7 +38,7 @@ TONE: Warm, helpful, professional, polite. Keep responses concise (under 3-4 sen
 async function getActiveProducts() {
   try {
     const { rows } = await query(
-      `SELECT p.id, p.name, p.base_price AS price, p.slug, c.name AS category_name
+      `SELECT p.id, p.name, p.base_price AS price, p.slug, p.images[1] AS cover_image, c.name AS category_name
        FROM products p
        LEFT JOIN categories c ON p.category_id = c.id
        WHERE p.is_active = TRUE
@@ -50,6 +50,7 @@ async function getActiveProducts() {
       name: p.name,
       base_price: p.price,
       price: p.price,
+      cover_image: p.cover_image || null,
       slug: p.slug,
       category_name: p.category_name || 'Handcrafted Gift'
     }));
@@ -59,14 +60,21 @@ async function getActiveProducts() {
   }
 }
 
+// Fallback models in priority order
+const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-2.5-flash'];
+
 async function chat(userMessage, history = []) {
+  const lowerMessage = (userMessage || '').toLowerCase();
+  const supportKeywords = ['order', 'stuck', 'bug', 'issue', 'problem', 'payment', 'failed', 'refund', 'seller', 'shipping', 'delivery', 'support', 'cancel', 'complaint', 'tracking', 'return', 'exchange', 'dispute'];
+  const isSupportQuery = supportKeywords.some(kw => lowerMessage.includes(kw));
+
+  let activeProducts = [];
   try {
     // ── Catalog retrieval: isolated try/catch so a DB error NEVER kills the chat ──
-    let activeProducts = [];
     let catalogContext = '';
     try {
       const { rows: products } = await query(
-        `SELECT p.id, p.name, p.base_price AS price, p.slug, c.name AS category_name
+        `SELECT p.id, p.name, p.base_price AS price, p.slug, p.images[1] AS cover_image, c.name AS category_name
          FROM products p
          LEFT JOIN categories c ON p.category_id = c.id
          WHERE p.is_active = TRUE
@@ -78,6 +86,7 @@ async function chat(userMessage, history = []) {
         name: p.name,
         base_price: p.price,
         price: p.price,
+        cover_image: p.cover_image || null,
         slug: p.slug,
         category_name: p.category_name || 'Handmade'
       }));
@@ -90,9 +99,6 @@ async function chat(userMessage, history = []) {
       catalogContext = 'Marketplace items: Handmade gifts, candles, hampers, personalized crafts.';
     }
 
-    // getGeminiClient() throws a clear error if the API key is missing or placeholder
-    const ai = getGeminiClient();
-
     const prompt = `
 Live Platform Catalog:
 ${catalogContext}
@@ -104,17 +110,77 @@ If the user is asking for gifts and any catalog items fit, mention 2-3 specific 
 If they are reporting an issue, shipping problem, order query, or any support concern, answer their support request directly and direct them to their Orders tab or tohfa126@gmail.com — do NOT recommend products.
 `;
 
-    const result = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
-      config: { systemInstruction }
-    });
-    const responseText = result.text;
+    let responseText = null;
+    let lastError = null;
 
-    const lowerMessage = userMessage.toLowerCase();
-    const supportKeywords = ['order', 'stuck', 'bug', 'issue', 'problem', 'payment', 'failed', 'refund', 'seller', 'shipping', 'delivery', 'support', 'cancel', 'complaint', 'tracking', 'return', 'exchange', 'dispute'];
-    const isSupportQuery = supportKeywords.some(kw => lowerMessage.includes(kw));
+    try {
+      const ai = getGeminiClient();
 
+      // Try primary model first, then secondary fallback model
+      for (const modelName of GEMINI_MODELS) {
+        try {
+          const result = await ai.models.generateContent({
+            model: modelName,
+            contents: prompt,
+            config: { systemInstruction }
+          });
+          if (result && result.text) {
+            responseText = result.text;
+            break; // Succeeded!
+          }
+        } catch (modelErr) {
+          lastError = modelErr;
+          console.warn(`[Tanya] Model '${modelName}' attempt failed:`, modelErr.message);
+        }
+      }
+    } catch (clientErr) {
+      lastError = clientErr;
+      console.warn('[Tanya] Gemini client initialization error:', clientErr.message);
+    }
+
+    // If all AI models failed or experienced high-demand/service spikes, activate graceful fallback
+    if (!responseText) {
+      console.warn('[Tanya] All Gemini models unavailable. Activating resilient fallback response.');
+
+      if (isSupportQuery) {
+        return {
+          success: true,
+          data: {
+            reply: "I am sorry to hear you are having an issue. For payment, order, or delivery queries, please check the Orders section in your profile or email our support team directly at tohfa126@gmail.com with your order details. We will resolve it for you as quickly as possible.",
+            products: []
+          }
+        };
+      }
+
+      // Gifting query fallback: provide top catalog products
+      if (activeProducts.length > 0) {
+        const fallbackProducts = activeProducts.slice(0, 3).map(p => ({
+          id: p.id,
+          name: p.name,
+          base_price: p.base_price,
+          cover_image: p.cover_image,
+          category_name: p.category_name,
+          link: `/buyer/product.html?id=${p.id}`
+        }));
+        return {
+          success: true,
+          data: {
+            reply: "Namaste! Here are some of our popular handcrafted treasures from the Tohfa catalog. Feel free to browse through them or reach out to us at tohfa126@gmail.com for personalized gifting help.",
+            products: fallbackProducts
+          }
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          reply: "Namaste! I'm Tanya, your Tohfa gift companion. Please explore our handcrafted collection or write to tohfa126@gmail.com for help.",
+          products: []
+        }
+      };
+    }
+
+    // AI generated a response: filter products if shopping vs support
     let matchedProducts = [];
     if (!isSupportQuery) {
       const lowerResponse = responseText.toLowerCase();
@@ -125,6 +191,7 @@ If they are reporting an issue, shipping problem, order query, or any support co
         id: p.id,
         name: p.name,
         base_price: p.base_price,
+        cover_image: p.cover_image,
         category_name: p.category_name,
         link: `/buyer/product.html?id=${p.id}`
       }));
@@ -138,11 +205,15 @@ If they are reporting an issue, shipping problem, order query, or any support co
       }
     };
   } catch (error) {
-    console.error('[Tanya] Gemini API Error:', error.message);
+    console.error('[Tanya] Unexpected Chat Error:', error.message);
     return {
-      success: false,
-      statusCode: 500,
-      message: `Tanya service error: ${error.message}`
+      success: true,
+      data: {
+        reply: isSupportQuery
+          ? "We apologize for the trouble. Please check the Orders tab in your profile or contact tohfa126@gmail.com with your details, and our team will assist you right away."
+          : "Namaste! We are experiencing a brief connection glitch. Please browse our collections above or reach out to tohfa126@gmail.com.",
+        products: []
+      }
     };
   }
 }

@@ -212,7 +212,7 @@ function loadRazorpayScript() {
   });
 }
 
-window.initiatePayment = async (isTestPay = false) => {
+window.initiatePayment = async () => {
   if (!selectedAddressId) {
     showToast('Please select or add a delivery address first.', 'warning');
     return;
@@ -239,21 +239,6 @@ window.initiatePayment = async (isTestPay = false) => {
 
     const firstOrder = orders[0];
 
-    // If instant test mode pay
-    if (isTestPay) {
-      try {
-        await api.post('/api/payments/test-pay', { orderId: firstOrder.id, order_id: firstOrder.id });
-        await api.delete('/api/cart').catch(() => {});
-        window.location.href = `./payment-success.html?orderId=${firstOrder.id}&id=${firstOrder.id}`;
-        return;
-      } catch (tErr) {
-        showToast(tErr.message || 'Test payment failed.', 'error');
-        payBtn.classList.remove('btn-loading');
-        payBtn.disabled = false;
-        return;
-      }
-    }
-
     // 2. Request Razorpay checkout intent
     const payRes = await api.post('/api/payments/create-order', { orderId: firstOrder.id });
     const payData = payRes?.data;
@@ -262,33 +247,16 @@ window.initiatePayment = async (isTestPay = false) => {
       throw new Error('Payment initialization failed.');
     }
 
-    // Fallback to test-pay in local dev mode when Razorpay placeholder keys are used
-    const activeKey = payData.razorpayKeyId || payData.key_id || '';
-    const isMockGateway = !activeKey ||
-      activeKey === 'rzp_test_placeholder' ||
-      activeKey === 'YOUR_RAZORPAY_KEY_ID' ||
-      activeKey.includes('placeholder') ||
-      activeKey.includes('YOUR_') ||
-      String(payData.razorpay_order_id || '').startsWith('order_mock_');
-
-    if (isMockGateway) {
-      console.log('[DEV] Razorpay keys not configured; completing order via test-pay.');
-      showToast('Confirming order payment in development test mode...', 'info');
-      await api.post('/api/payments/test-pay', { orderId: firstOrder.id, order_id: firstOrder.id });
-      await api.delete('/api/cart').catch(() => {});
-      window.location.href = `./payment-success.html?orderId=${firstOrder.id}&id=${firstOrder.id}&order_ref=${firstOrder.order_ref || ''}`;
-      return;
+    const activeKey = payData.razorpayKeyId || payData.key_id;
+    if (!activeKey) {
+      throw new Error('Razorpay payment gateway is not configured.');
     }
 
     // 3. Ensure Razorpay SDK script is loaded
     const sdkReady = await loadRazorpayScript();
 
     if (!sdkReady || !window.Razorpay) {
-      if (payData.razorpayKeyId !== 'rzp_test_placeholder') {
-        showToast('Payment system is loading, please try again in a moment.', 'warning');
-      } else {
-        showToast('[Dev Mode] Razorpay not configured — add real keys to test.', 'info');
-      }
+      showToast('Payment system is loading, please try again in a moment.', 'warning');
       payBtn.classList.remove('btn-loading');
       payBtn.disabled = false;
       return;
@@ -296,25 +264,24 @@ window.initiatePayment = async (isTestPay = false) => {
 
     // 4. Launch Razorpay modal
     const options = {
-      key: payData.razorpayKeyId || payData.key_id,
+      key: activeKey,
       amount: payData.amount_paise || payData.amount, // already in paise from backend
       currency: payData.currency || 'INR',
       name: payData.name || 'Tohfa Gifting',
       description: payData.description || 'Artisan Gift Order',
-      order_id: payData.razorpay_order_id,
       prefill: payData.prefill || {},
       theme: { color: '#14381F' },
       handler: async function (response) {
         try {
           await api.post('/api/payments/verify', {
-            razorpay_order_id: response.razorpay_order_id,
+            razorpay_order_id: response.razorpay_order_id || null,
             razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature,
+            razorpay_signature: response.razorpay_signature || null,
             orderId: firstOrder.id,
           });
 
           await api.delete('/api/cart').catch(() => {});
-          window.location.href = `./payment-success.html?orderId=${firstOrder.id}&id=${firstOrder.id}`;
+          window.location.href = `./payment-success.html?orderId=${firstOrder.id}&id=${firstOrder.id}&order_ref=${firstOrder.order_ref || ''}`;
         } catch (vErr) {
           window.location.href = `./payment-failure.html?orderId=${firstOrder.id}&reason=${encodeURIComponent(vErr.message)}`;
         }
@@ -328,12 +295,8 @@ window.initiatePayment = async (isTestPay = false) => {
       },
     };
 
-    if ((payData.razorpayKeyId || payData.key_id) === 'rzp_test_placeholder') {
-      console.warn('[DEV] Razorpay not configured. Payment simulation skipped. Set real keys to test end-to-end.');
-      showToast('[Dev Mode] Razorpay not configured — payment skipped. Add real keys to test.', 'info');
-      payBtn.classList.remove('btn-loading');
-      payBtn.disabled = false;
-      return;
+    if (payData.razorpay_order_id) {
+      options.order_id = payData.razorpay_order_id;
     }
 
     const rzp = new window.Razorpay(options);

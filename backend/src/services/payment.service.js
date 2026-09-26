@@ -49,26 +49,6 @@ async function createRazorpayOrder(amountINR, orderReference, preferredAccount =
     payment_capture: 1,
   };
 
-  const primaryKeyId = process.env.RAZORPAY_PRIMARY_KEY_ID || process.env.RAZORPAY_KEY_ID;
-  const isPlaceholder = !primaryKeyId || primaryKeyId === 'YOUR_RAZORPAY_KEY_ID' || primaryKeyId === 'rzp_test_placeholder' || primaryKeyId.includes('placeholder') || primaryKeyId.includes('YOUR_');
-  if (isPlaceholder && (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV)) {
-    console.warn('⚠️ [Payment Gateway] Development mode: using mock Razorpay order for local testing');
-    return {
-      id: `order_mock_${Date.now()}`,
-      entity: 'order',
-      amount: amountInPaise,
-      amount_paid: 0,
-      amount_due: amountInPaise,
-      currency: 'INR',
-      receipt: String(orderReference).substring(0, 40),
-      status: 'created',
-      attempts: 0,
-      created_at: Math.floor(Date.now() / 1000),
-      gatewayAccount: 'primary',
-      keyId: 'rzp_test_placeholder',
-    };
-  }
-
   const hasSecondary = razorpay.isSecondaryConfigured();
 
   if (preferredAccount === 'secondary' && hasSecondary) {
@@ -121,10 +101,18 @@ async function createRazorpayOrder(amountINR, orderReference, preferredAccount =
           primaryError: primaryErr.message,
           secondaryError: secErr.message,
         });
-        throw new Error(`Payment gateway unavailable: ${primaryErr.message}`);
       }
     }
-    throw primaryErr;
+
+    console.warn('[Payment Gateway] Server-side Razorpay order creation failed:', primaryErr.message || primaryErr);
+    const creds = razorpay.getAccountCredentials('primary');
+    return {
+      id: null,
+      gatewayAccount: 'primary',
+      keyId: creds.keyId,
+      amount: amountInPaise,
+      currency: 'INR',
+    };
   }
 }
 

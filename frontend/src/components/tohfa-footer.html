@@ -18,7 +18,7 @@
       <!-- Brand column -->
       <div class="col-span-2">
         <h2 style="font-family: 'Playfair Display', serif; font-size: 36px; font-style: italic; color: #FAF6EE; margin-bottom: 8px;">
-          Tohfa.
+          <a href="/buyer/home.html" class="no-underline text-[#FAF6EE] hover:opacity-90 transition-opacity">Tohfa.</a>
         </h2>
         <p style="font-family: 'DM Sans', sans-serif; color: #FAF6EE; margin-bottom: 6px; font-weight: 500; font-size: 14px;">
           Thoughtful Gifting, Made Effortless.
@@ -34,7 +34,7 @@
           Company
         </h3>
         <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
-          <li><a href="#" onclick="openAboutModal(event)" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">About Us</a></li>
+          <li><a href="/buyer/about.html" onclick="openAboutModal(event)" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">About Us</a></li>
           <li><a href="/buyer/terms-conditions.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Terms of Service</a></li>
         </ul>
       </div>
@@ -56,7 +56,7 @@
           Support
         </h3>
         <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs sm:text-sm">
-          <li><a href="#" onclick="handleFooterContactClick(event)" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Contact Us</a></li>
+          <li><a href="/buyer/contact.html" onclick="handleFooterContactClick(event)" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Contact Us</a></li>
           <li><a href="/buyer/returns.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">Returns &amp; Refunds</a></li>
           <li><a href="/buyer/faq.html" class="transition-colors hover:text-[#A8BFA5] text-[#FAF6EE] no-underline">FAQs</a></li>
         </ul>
@@ -74,7 +74,7 @@
   <div class="block md:hidden px-4 pt-6 pb-6 relative z-10">
     <div class="mb-4">
       <h2 style="font-family: 'Playfair Display', serif; font-size: 24px; font-style: italic; color: #FAF6EE; margin-bottom: 2px;">
-        Tohfa<span style="opacity: 0.6;">.</span>
+        <a href="/buyer/home.html" class="no-underline text-[#FAF6EE]">Tohfa<span style="opacity: 0.6;">.</span></a>
       </h2>
       <p style="font-family: 'DM Sans', sans-serif; color: rgba(255,248,231,0.7); font-size: 12px; line-height: 1.4;">
         Thoughtful Gifting, Made Effortless.
@@ -89,7 +89,7 @@
           Company
         </h3>
         <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
-          <li><a href="#" onclick="openAboutModal(event)" class="text-[#FAF6EE]/90 no-underline">About Us</a></li>
+          <li><a href="/buyer/about.html" onclick="openAboutModal(event)" class="text-[#FAF6EE]/90 no-underline">About Us</a></li>
           <li><a href="/buyer/terms-conditions.html" class="text-[#FAF6EE]/90 no-underline">Terms of Service</a></li>
         </ul>
       </div>
@@ -102,7 +102,7 @@
         <ul class="flex flex-col gap-2 list-none p-0 m-0 text-xs">
           <li><a href="/auth/signup-seller.html" onclick="handleFooterSellerLink(event)" class="text-[#FAF6EE]/90 no-underline">Sell on Tohfa</a></li>
           <li><a href="/seller/dashboard.html" class="text-[#FAF6EE]/90 no-underline">Seller Studio</a></li>
-          <li><a href="#" onclick="handleFooterContactClick(event)" class="text-[#FAF6EE]/90 no-underline">Contact Us</a></li>
+          <li><a href="/buyer/contact.html" onclick="handleFooterContactClick(event)" class="text-[#FAF6EE]/90 no-underline">Contact Us</a></li>
           <li><a href="/buyer/returns.html" class="text-[#FAF6EE]/90 no-underline">Returns &amp; Refunds</a></li>
           <li><a href="/buyer/faq.html" class="text-[#FAF6EE]/90 no-underline">FAQs</a></li>
         </ul>
@@ -119,29 +119,25 @@
 <script>
 async function handleFooterSellerLink(e) {
   if (e) e.preventDefault();
-  const token = sessionStorage.getItem('tohfa_access_token');
-  if (!token) {
-    sessionStorage.setItem('tohfa_redirect_seller', 'true');
-    sessionStorage.setItem('tohfa_return_to', window.location.pathname + window.location.search);
-    window.location.href = '/auth/login.html';
-    return;
-  }
-  try {
-    const res = await fetch('/api/profile/me', {
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json'
+  const token = sessionStorage.getItem('tohfa_access_token') || localStorage.getItem('tohfa_access_token');
+  if (token) {
+    try {
+      const res = await fetch('/api/profile/me', {
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.success && data.data.role === 'seller') {
+          window.location.href = '/seller/dashboard.html';
+          return;
+        }
       }
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.success && data.data.role === 'seller') {
-        window.location.href = '/seller/dashboard.html';
-        return;
-      }
+    } catch(err) {
+      console.error("Error checking seller status:", err);
     }
-  } catch(err) {
-    console.error("Error checking seller status:", err);
   }
   window.location.href = '/auth/signup-seller.html';
 }
@@ -172,7 +168,7 @@ function handleFooterContactClick(e) {
   modal.style.cssText = `
     background: #FFF8E7;
     border-radius: 20px;
-    padding: 48px 44px;
+    padding: 44px 36px 32px;
     max-width: 480px;
     width: 100%;
     box-shadow: 0 24px 60px rgba(0,0,0,0.22);
@@ -253,7 +249,7 @@ function handleFooterContactClick(e) {
         <svg width="17" height="17" fill="none" viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z" stroke="#FFF8E7" stroke-width="1.8" stroke-linejoin="round"/><path d="m2 6 10 7 10-7" stroke="#FFF8E7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         tohfa126@gmail.com
       </a>
-      <a href="tel:8882923640" style="
+      <a href="tel:+917851073458" style="
         display: flex;
         align-items: center;
         justify-content: center;
@@ -270,7 +266,13 @@ function handleFooterContactClick(e) {
         border: 2px solid #14381F;
       ">
         <svg width="17" height="17" fill="none" viewBox="0 0 24 24"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24 11.47 11.47 0 0 0 3.58.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.47 11.47 0 0 0 .57 3.58 1 1 0 0 1-.25 1.02l-2.2 2.19Z" stroke="#14381F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        888-2923-640
+        +91 78510 73458
+      </a>
+    </div>
+
+    <div style="margin-top: 18px;">
+      <a href="/buyer/contact.html" style="font-size: 13px; color: #14381F; opacity: 0.8; text-decoration: underline; font-weight: 500;">
+        Visit full Help &amp; Contact page &rarr;
       </a>
     </div>
   `;
@@ -278,13 +280,24 @@ function handleFooterContactClick(e) {
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
 
+  function closeContact() {
+    overlay.remove();
+    document.removeEventListener('keydown', handleContactEsc);
+  }
+
+  function handleContactEsc(event) {
+    if (event.key === 'Escape') closeContact();
+  }
+
   // Close on close button click
-  document.getElementById('tohfa-contact-close').addEventListener('click', () => overlay.remove());
+  document.getElementById('tohfa-contact-close').addEventListener('click', closeContact);
 
   // Close when clicking the backdrop (outside modal)
   overlay.addEventListener('click', function(ev) {
-    if (ev.target === overlay) overlay.remove();
+    if (ev.target === overlay) closeContact();
   });
+
+  document.addEventListener('keydown', handleContactEsc);
 }
 
 window.openAboutModal = function(e) {
@@ -374,6 +387,13 @@ if (!window.hasAboutModalEscListener) {
         <span class="material-symbols-outlined text-[16px] text-[#14381F]">school</span>
         <span>IIT Delhi &mdash; Rigour, Problem-Solving, and Network. We are just getting started.</span>
       </p>
+    </div>
+
+    <!-- Link to full About page -->
+    <div class="mt-4 text-center">
+      <a href="/buyer/about.html" class="text-xs font-semibold text-[#14381F]/80 hover:text-[#14381F] underline">
+        Explore our full story on About Us &rarr;
+      </a>
     </div>
   </div>
 </div>
