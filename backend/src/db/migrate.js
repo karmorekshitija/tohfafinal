@@ -47,6 +47,9 @@ const MIGRATION_FILES = [
   path.join(__dirname, 'migrations', '030_seller_subscription_plans.sql'),
   path.join(__dirname, 'migrations', '031_fix_category_parent_hierarchy.sql'),
   path.join(__dirname, 'migrations', '032_special_orders_status_constraint.sql'),
+  path.join(__dirname, 'migrations', '033_fix_missing_order_columns.sql'),
+  path.join(__dirname, 'migrations', '034_categories_cover_image.sql'),
+  path.join(__dirname, 'migrations', '036_fix_product_images_unique_constraint.sql'),
 ];
 
 async function runMigrations() {

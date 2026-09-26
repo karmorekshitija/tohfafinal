@@ -633,23 +633,34 @@ async function autoSyncDatabase() {
       console.warn('⚠️ [Auto-Sync Step 9f - Cart Items Notice]:', err.message);
     }
 
-    // 10. Curate Categories Data (Clean display names, unique icons, and specific artisan images)
+    // 10. Curate Categories Data (Default fallback only, never overwrite admin custom images)
     try {
       const categoryCurations = [
-        { name: 'Candles & Aromatherapy', slug: 'candles-aromatherapy', emoji: '🕯️', img: '/img/categories/candles.jpg', order: 1 },
-        { name: 'Floral & Bouquets', slug: 'floral-bouquets', emoji: '💐', img: '/img/categories/dried_florals.jpg', order: 2 },
-        { name: 'Home Decor & Living', slug: 'home-decor', emoji: '🏡', img: '/img/categories/ceramics.jpg', order: 3 },
-        { name: 'Nails & Beauty', slug: 'nails-beauty', emoji: '💅', img: '/img/categories/custom_portraits.jpg', order: 4 },
-        { name: 'Hair Accessories', slug: 'hair-accessories', emoji: '🎀', img: '/img/categories/journals.jpg', order: 5 },
-        { name: 'Handcrafted Figurines & Art', slug: 'handcrafted-figurines', emoji: '🎨', img: '/img/categories/art_prints.jpg', order: 6 },
-        { name: 'Gifts & Keepsakes', slug: 'gifts-keepsakes', emoji: '🎁', img: '/img/categories/skincare.jpg', order: 7 },
-        { name: 'Jewellery & Wearables', slug: 'jewellery-wearables', emoji: '💍', img: '/img/categories/jewellery.jpg', order: 8 },
+        { name: 'Candles & Aromatherapy', slug: 'candles-aromatherapy', emoji: '🕯️', img: '/img/categories/candles_aromatherapy.jpg', order: 1 },
+        { name: 'Frames', slug: 'frames', emoji: '🏺', img: '/img/categories/frames.jpg', order: 1 },
+        { name: 'Floral & Bouquets', slug: 'floral-bouquets', emoji: '💐', img: '/img/categories/floral_bouquets.jpg', order: 2 },
+        { name: 'Nails & Beauty', slug: 'nails-beauty', emoji: '💅', img: '/img/categories/nails_beauty.jpg', order: 4 },
+        { name: 'Hair Accessories', slug: 'hair-accessories', emoji: '🎀', img: '/img/categories/hair_accessories.jpg', order: 5 },
+        { name: 'Gifts & Keepsakes', slug: 'gifts-keepsakes', emoji: '🎁', img: '/img/categories/gifts_keepsakes.jpg', order: 7 },
       ];
 
       for (const cat of categoryCurations) {
         await query(`
           UPDATE categories 
-          SET display_name = $1, emoji_icon = $2, icon_emoji = $2, image_url = $3, sort_order = $4, is_active = TRUE
+          SET display_name = COALESCE(display_name, $1),
+              emoji_icon = COALESCE(emoji_icon, $2),
+              icon_emoji = COALESCE(icon_emoji, $2),
+              image_url = CASE 
+                WHEN image_url IS NULL OR image_url = '' OR image_url IN ('/img/categories/candles.jpg', '/img/categories/dried_florals.jpg', '/img/categories/custom_portraits.jpg', '/img/categories/journals.jpg', '/img/categories/skincare.jpg') 
+                THEN $3 
+                ELSE image_url 
+              END,
+              cover_image = CASE 
+                WHEN cover_image IS NULL OR cover_image = '' OR cover_image IN ('/img/categories/candles.jpg', '/img/categories/dried_florals.jpg', '/img/categories/custom_portraits.jpg', '/img/categories/journals.jpg', '/img/categories/skincare.jpg') 
+                THEN $3 
+                ELSE cover_image 
+              END,
+              sort_order = COALESCE(sort_order, $4)
           WHERE slug = $5
         `, [cat.name, cat.emoji, cat.img, cat.order, cat.slug]);
       }

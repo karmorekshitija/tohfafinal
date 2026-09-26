@@ -192,7 +192,11 @@ async function resolveCategoryId(rawCategory) {
 // ---------------------------------------------------------------------------
 async function listCategories(req, res, next) {
   try {
+    // Prevent CDN/edge caching — category images are updated via admin panel
+    // and must always reflect the latest DB state on the buyer's website.
+    res.set('Cache-Control', 'no-store, max-age=0');
     const { rows } = await query(
+
       `SELECT c.id, c.name, c.display_name, c.slug, c.emoji_icon, c.icon_emoji,
               c.description, COALESCE(c.image_url, c.cover_image, c.banner_image_url) AS image_url, c.cover_image, c.banner_image_url, c.is_featured,
               c.parent_id, c.sort_order,

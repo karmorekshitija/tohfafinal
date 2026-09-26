@@ -18,7 +18,7 @@
       <style>
         .paper-texture {
             background-color: #FFF8E7;
-            background-image: url(/img/textures/natural-paper.png)
+            background-image: url(/img/textures/natural-paper.png);
         }
         .artisan-watermark {
             position: absolute;
@@ -26,6 +26,37 @@
             opacity: 0.05;
             pointer-events: none;
             z-index: 1;
+        }
+        @keyframes strokeCircle {
+            0% { stroke-dashoffset: 145; }
+            100% { stroke-dashoffset: 0; }
+        }
+        @keyframes strokeCheck {
+            0% { stroke-dashoffset: 36; }
+            100% { stroke-dashoffset: 0; }
+        }
+        .check-circle {
+            stroke-dasharray: 145;
+            stroke-dashoffset: 0;
+            animation: strokeCircle 0.8s ease-out forwards;
+        }
+        .check-path {
+            stroke-dasharray: 36;
+            stroke-dashoffset: 0;
+            animation: strokeCheck 0.6s 0.3s ease-out forwards;
+        }
+        .fade-in-up {
+            animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
@@ -136,49 +167,114 @@
 </header>
 
 <!-- Main Content Area -->
-<main class="flex-grow flex items-center justify-center relative px-margin-mobile z-10 py-xl">
+<main class="flex-grow flex items-center justify-center relative px-4 sm:px-6 md:px-8 z-10 py-10 md:py-16">
 <div class="max-w-xl w-full text-center fade-in-up">
-<!-- Illustration Header -->
-<div class="relative inline-block mb-lg">
-<img alt="Celebration" class="w-64 h-64 mx-auto object-contain" src="/img/celebration.png" loading="lazy">
-<div class="absolute -top-4 -right-4 animate-bounce">
-<span class="material-symbols-outlined text-tertiary !text-xl">auto_awesome</span>
+<!-- Celebration Seal -->
+<div class="relative inline-flex items-center justify-center mb-6">
+  <div class="absolute -inset-4 rounded-full bg-[#14381F]/10 blur-xl animate-pulse"></div>
+  <div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-[#1b3d22] to-[#273328] p-1.5 shadow-xl flex items-center justify-center border-2 border-[#FAF6EE]/40">
+    <div class="w-full h-full rounded-full border border-dashed border-[#FAF6EE]/30 flex items-center justify-center bg-[#273328]/80">
+      <svg class="w-12 h-12 sm:w-14 sm:h-14 text-[#FAF6EE]" viewBox="0 0 52 52" fill="none">
+        <circle class="check-circle" cx="26" cy="26" r="23" stroke="#FAF6EE" stroke-width="2.5" stroke-linecap="round" opacity="0.3" />
+        <path class="check-path" stroke="#FAF6EE" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" d="M14 27l8 8 16-16" />
+      </svg>
+    </div>
+  </div>
+  <span class="material-symbols-outlined absolute -top-1 -right-2 text-[#C85A32] text-xl animate-bounce" style="animation-duration: 2.5s;">sparkles</span>
+  <span class="material-symbols-outlined absolute -bottom-1 -left-2 text-[#D4A373] text-lg animate-pulse" style="animation-duration: 3s;">auto_awesome</span>
 </div>
+
+<!-- Status Badge -->
+<div class="flex justify-center mb-2.5">
+  <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#14381F]/10 border border-[#14381F]/15">
+    <span class="w-2 h-2 rounded-full bg-[#14381F]"></span>
+    <span class="text-[11px] font-semibold tracking-wider text-[#14381F] uppercase font-['DM_Sans']">Payment Verified</span>
+  </div>
 </div>
+
 <!-- Success Message -->
-<h1 class="font-headline-lg-mobile md:text-headline-lg text-primary mb-sm">
-                Order placed ?
-            </h1>
-<p class="text-on-surface-variant font-body-md mb-md max-w-sm mx-auto">
-                The maker has been notified � your gift is on its way.
-            </p>
+<h1 class="font-['Playfair_Display'] text-3xl sm:text-4xl md:text-5xl font-semibold text-[#14381F] tracking-tight mb-2.5">
+  Order Confirmed!
+</h1>
+<p class="text-[#516447] text-sm sm:text-base font-['DM_Sans'] max-w-md mx-auto mb-6 leading-relaxed">
+  The artisan has been notified &mdash; your handcrafted gift is on its way.
+</p>
+
 <!-- Order ID Pill -->
-<div class="inline-flex items-center gap-sm bg-surface-container-low px-md py-xs rounded-full border border-outline-variant mb-4">
-<span class="material-symbols-outlined text-secondary !text-sm">confirmation_number</span>
-<span id="order-ref-text" class="font-data-price text-[13px] text-secondary">#N/A</span>
+<div class="inline-flex items-center gap-2.5 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border border-[#273328]/15 shadow-xs mb-8">
+  <span class="material-symbols-outlined text-[#14381F] text-[18px]">receipt_long</span>
+  <span class="text-xs text-[#516447] font-medium font-['DM_Sans']">Order Reference:</span>
+  <span id="order-ref-text" class="font-['Space_Mono'] font-bold text-xs sm:text-sm text-[#14381F] tracking-wider select-all">#N/A</span>
+</div>
+
+<!-- Fulfillment Steps Indicator -->
+<div class="max-w-lg mx-auto mb-8 bg-white/70 backdrop-blur-sm border border-[#273328]/10 rounded-2xl p-4 sm:p-5 shadow-xs">
+  <div class="grid grid-cols-3 gap-2 relative">
+    <div class="absolute top-4 left-[16%] right-[16%] h-[2px] bg-[#273328]/15 -z-0"></div>
+    <div class="flex flex-col items-center text-center relative z-10">
+      <div class="w-8 h-8 rounded-full bg-[#14381F] text-[#FAF6EE] flex items-center justify-center text-xs font-bold shadow-sm mb-1.5">
+        <span class="material-symbols-outlined text-[16px]">check</span>
+      </div>
+      <span class="text-[11px] sm:text-xs font-bold text-[#14381F] font-['DM_Sans']">Order Placed</span>
+      <span class="text-[10px] text-[#516447] hidden sm:block">Payment verified</span>
+    </div>
+    <div class="flex flex-col items-center text-center relative z-10">
+      <div class="w-8 h-8 rounded-full bg-[#FAF6EE] border-2 border-[#14381F] text-[#14381F] flex items-center justify-center text-xs font-bold shadow-sm mb-1.5">
+        <span class="material-symbols-outlined text-[16px]">brush</span>
+      </div>
+      <span class="text-[11px] sm:text-xs font-bold text-[#14381F] font-['DM_Sans']">Artisan Crafting</span>
+      <span class="text-[10px] text-[#516447] hidden sm:block">In preparation</span>
+    </div>
+    <div class="flex flex-col items-center text-center relative z-10">
+      <div class="w-8 h-8 rounded-full bg-[#FAF6EE] border border-[#273328]/25 text-[#516447]/60 flex items-center justify-center text-xs font-bold mb-1.5">
+        <span class="material-symbols-outlined text-[16px]">local_shipping</span>
+      </div>
+      <span class="text-[11px] sm:text-xs font-medium text-[#516447] font-['DM_Sans']">Dispatched</span>
+      <span class="text-[10px] text-[#516447]/70 hidden sm:block">Track delivery</span>
+    </div>
+  </div>
 </div>
 
 <!-- Consolidated Order Summary Card -->
-<div id="order-summary-card" class="hidden max-w-md mx-auto bg-ivory-card border border-sage/20 rounded-2xl p-6 text-left shadow-sm mb-8 relative overflow-hidden">
-  <h4 class="font-label-caps text-label-caps text-primary tracking-widest uppercase mb-4 text-xs font-bold">ORDER SUMMARY</h4>
-  <div id="order-summary-items" class="space-y-4">
+<div id="order-summary-card" class="hidden max-w-lg mx-auto bg-white/85 backdrop-blur-md border border-[#273328]/15 rounded-2xl p-5 sm:p-6 text-left shadow-sm mb-8 relative overflow-hidden">
+  <div class="flex items-center justify-between pb-3.5 mb-4 border-b border-[#273328]/10">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-[#14381F] text-[18px]">inventory_2</span>
+      <h4 class="font-['DM_Sans'] text-xs font-bold tracking-widest text-[#14381F] uppercase">ORDER SUMMARY</h4>
+    </div>
+    <span class="text-[11px] font-medium text-[#516447] flex items-center gap-1 bg-[#14381F]/5 px-2.5 py-0.5 rounded-full border border-[#14381F]/10">
+      <span class="material-symbols-outlined text-[13px] text-[#14381F]">verified</span> Handcrafted
+    </span>
+  </div>
+  <div id="order-summary-items" class="space-y-3.5">
     <!-- Items populated by JS -->
+  </div>
+  <div class="mt-4 pt-3.5 border-t border-[#273328]/10 flex items-center justify-between text-xs text-[#516447]">
+    <span class="flex items-center gap-1.5">
+      <span class="material-symbols-outlined text-[15px] text-[#14381F]">eco</span>
+      <span>Artisan eco-friendly gift wrap included</span>
+    </span>
+    <span class="font-medium text-[#14381F]">Protected Dispatch</span>
   </div>
 </div>
 
 <!-- Actions -->
-<div class="flex flex-col md:flex-row gap-md justify-center items-center">
-<button id="btn-view-order" class="w-full md:w-auto px-xl py-md bg-primary text-white rounded-lg font-body-md font-bold hover:opacity-90 transform active:scale-95 transition-all shadow-sm">
-                    View order
-                </button>
-<button onclick="window.location.href='/buyer/categories.html'" class="w-full md:w-auto px-xl py-md bg-[#FFF8E7] border border-outline text-primary rounded-lg font-body-md font-bold hover:bg-surface-container-lowest transform active:scale-95 transition-all">
-                    Keep browsing
-                </button>
+<div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center max-w-md mx-auto">
+  <button id="btn-view-order" class="w-full sm:w-auto flex-1 px-6 py-3.5 bg-[#14381F] text-[#FAF6EE] rounded-xl font-['DM_Sans'] text-sm font-bold hover:bg-[#1b4827] active:scale-[0.98] transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+    <span>View Order Details</span>
+    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+  </button>
+  <button onclick="window.location.href='/buyer/categories.html'" class="w-full sm:w-auto flex-1 px-6 py-3.5 bg-white/80 border border-[#273328]/25 text-[#14381F] rounded-xl font-['DM_Sans'] text-sm font-bold hover:bg-white active:scale-[0.98] transition-all shadow-xs flex items-center justify-center gap-2">
+    <span class="material-symbols-outlined text-[18px] text-[#516447]">storefront</span>
+    <span>Keep Browsing</span>
+  </button>
 </div>
+
 <!-- Secondary Context -->
-<div class="mt-xl pt-lg border-t border-outline-variant/30 text-on-surface-variant/60 italic text-sm">
-                We've sent a confirmation email with all the details of your artisan piece.
-            </div>
+<div class="mt-8 pt-6 border-t border-[#273328]/10 text-[#516447] text-xs flex items-center justify-center gap-2 max-w-sm mx-auto">
+  <span class="material-symbols-outlined text-[16px] text-[#8B6E4E]">mail</span>
+  <span>A confirmation email with your invoice details has been sent.</span>
+</div>
 </div>
 </main>
 
@@ -205,14 +301,14 @@
                         itemsContainer.innerHTML = items.map(item => {
                             const imgUrl = item.image_url ? item.image_url : 'https://placehold.co/120x120/f4ede3/516447?text=Handcrafted';
                             return `
-                                <div class="flex gap-4 items-center">
-                                    <div class="w-12 h-12 bg-surface-dim rounded-lg overflow-hidden flex-shrink-0 border border-sage/20">
+                                <div class="flex gap-3.5 items-center p-2 rounded-xl hover:bg-[#FAF6EE]/80 transition-colors">
+                                    <div class="w-14 h-14 bg-[#FAF6EE] rounded-xl overflow-hidden flex-shrink-0 border border-[#273328]/15 shadow-xs">
                                         <img class="w-full h-full object-cover" src="${imgUrl}" alt="${item.product_name}" loading="lazy">
                                     </div>
-                                    <div class="flex-grow">
-                                        <h5 class="text-xs font-semibold text-primary truncate">${item.product_name}</h5>
-                                        <p class="text-[10px] text-on-surface-variant font-mono mt-0.5">Qty ${item.quantity} � ${item.unit_price_paise ? (item.unit_price_paise / 100).toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }) : ''}</p>
-                                        ${item.variant_name ? `<span class="inline-block mt-1 px-2 py-[2px] text-[10px] font-semibold rounded-full bg-primary/10 text-primary border border-primary/20">${item.variant_name}</span>` : ''}
+                                    <div class="flex-grow min-w-0">
+                                        <h5 class="text-xs sm:text-sm font-semibold text-[#14381F] truncate">${item.product_name}</h5>
+                                        <p class="text-[11px] text-[#516447] font-['Space_Mono'] mt-0.5">Qty ${item.quantity} &bull; ${item.unit_price_paise ? (item.unit_price_paise / 100).toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }) : ''}</p>
+                                        ${item.variant_name ? `<span class="inline-block mt-1 px-2 py-0.5 text-[10px] font-medium rounded-md bg-[#14381F]/10 text-[#14381F] border border-[#14381F]/15">${item.variant_name}</span>` : ''}
                                     </div>
                                 </div>
                             `;
