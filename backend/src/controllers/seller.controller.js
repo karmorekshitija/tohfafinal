@@ -13,6 +13,7 @@ const { query, getClient } = require('../config/db');
 const { createNotification } = require('./notification.controller');
 const logisticsService = require('../services/logistics.service');
 const paymentService = require('../services/payment.service');
+const telegramService = require('../services/telegram.service');
 const { PLANS, getPlan, calculateEffectivePrice } = require('../config/plans');
 
 // Strip internal fields (never exposed in public or seller responses)
@@ -738,6 +739,16 @@ async function applyAsSeller(req, res, next) {
     ).catch(() => {});
 
     await client.query('COMMIT');
+
+    // Notify admins via Telegram of the new application
+    telegramService.sendNewSellerApplicationAlert({
+      store_name: finalStoreName,
+      artisan_name: userName,
+      phone: finalPhone || parsedPan || 'N/A', // fallback if needed
+      city: parsedPickup?.city || '',
+      state: parsedPickup?.state || ''
+    }).catch(e => console.error('[Telegram Seller App Alert Error]:', e.message));
+
 
     return res.status(201).json({
       success: true,

@@ -157,7 +157,8 @@ html, body, main, section, .seller-main-panel, .seller-layout-container, seller-
   bottom: 0;
   left: 0;
   right: 0;
-  height: 60px;
+  height: calc(60px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   background-color: #FFF8E7;
   border-top: 1px solid rgba(20, 56, 31, 0.12);
   display: flex;

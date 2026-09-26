@@ -298,7 +298,8 @@
     const nav = document.createElement('nav');
     nav.id = 'tohfa-buyer-bottom-nav';
     nav.className = 'buyer-bottom-nav md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FAF6EE] border-t border-[#14381F]/15 flex items-center justify-around px-2 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]';
-    nav.style.height = '60px';
+    nav.style.height = 'calc(60px + env(safe-area-inset-bottom, 0px))';
+    nav.style.paddingBottom = 'env(safe-area-inset-bottom, 0px)';
 
     const items = [
       { name: 'Home', href: '/buyer/home.html', icon: 'home', key: 'home' },

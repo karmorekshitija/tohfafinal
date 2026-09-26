@@ -754,7 +754,7 @@
 <div id="tohfa-footer"></div>
 
 <!-- Mobile Bottom Navigation Bar -->
-<nav id="tohfa-buyer-bottom-nav" class="buyer-bottom-nav md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FAF6EE] border-t border-[#14381F]/15 flex items-center justify-around px-2 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]" style="height: 60px;">
+<nav id="tohfa-buyer-bottom-nav" class="buyer-bottom-nav md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FAF6EE] border-t border-[#14381F]/15 flex items-center justify-around px-2 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]" style="height: calc(60px + env(safe-area-inset-bottom, 0px)); padding-bottom: env(safe-area-inset-bottom, 0px);">
   <a href="/buyer/home.html" class="flex flex-col items-center justify-center gap-0.5 py-1 min-w-[60px] tap-target transition-transform active:scale-90" style="color: #14381F; text-decoration: none;">
     <span class="material-symbols-outlined" style="font-size: 22px; font-variation-settings: 'FILL' 1;">home</span>
     <span style="font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700;">Home</span>

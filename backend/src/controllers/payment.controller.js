@@ -10,6 +10,7 @@ const paymentService = require('../services/payment.service');
 const logisticsService = require('../services/logistics.service');
 const whatsappService = require('../services/whatsapp.service');
 const bestsellerService = require('../services/bestseller.service');
+const telegramService = require('../services/telegram.service');
 const { query, getClient } = require('../config/db');
 
 /**
@@ -199,20 +200,31 @@ async function verifyPayment(req, res, next) {
     bestsellerService.recomputeForOrder(confirmedOrder.id || orderId).catch(e => console.error('[Bestseller Recompute Error]:', e.message));
 
 
-    // Notify seller via WhatsApp
+    // Notify seller via WhatsApp and Telegram (if special)
     query(
-      `SELECT sp.whatsapp_number, u.name 
+      `SELECT sp.whatsapp_number, u.name, sp.is_admin_managed, sp.store_name 
        FROM seller_profiles sp 
        JOIN users u ON u.id = sp.user_id 
        WHERE sp.user_id = $1`,
       [confirmedOrder.seller_id]
     ).then(({ rows: sellerRows }) => {
-      if (sellerRows.length && sellerRows[0].whatsapp_number) {
-        whatsappService.sendSellerOrderNotification(sellerRows[0].whatsapp_number, {
-          orderId: confirmedOrder.id,
-          buyerName: req.user?.name || 'Customer',
-          amount: confirmedOrder.total_amount,
-        }).catch(e => console.error('[WhatsApp Seller Alert Error]:', e.message));
+      if (sellerRows.length) {
+        const seller = sellerRows[0];
+        if (seller.whatsapp_number) {
+          whatsappService.sendSellerOrderNotification(seller.whatsapp_number, {
+            orderId: confirmedOrder.id,
+            buyerName: req.user?.name || 'Customer',
+            amount: confirmedOrder.total_amount,
+          }).catch(e => console.error('[WhatsApp Seller Alert Error]:', e.message));
+        }
+        
+        if (String(seller.is_admin_managed) === 'true' || seller.is_admin_managed === 1 || seller.is_admin_managed === true) {
+          telegramService.sendSpecialOrderAlert(
+            confirmedOrder, 
+            seller.store_name || seller.name || 'Special Shop', 
+            req.user?.name || 'Customer'
+          ).catch(e => console.error('[Telegram Alert Error]:', e.message));
+        }
       }
     }).catch(e => console.error('[Seller Query Error]:', e.message));
 
