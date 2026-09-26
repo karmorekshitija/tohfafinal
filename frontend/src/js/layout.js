@@ -548,12 +548,15 @@ async function setupCartBadgeListener() {
   try {
     const cart = await api.get('/api/cart');
     let totalItems = 0;
-    if (Array.isArray(cart?.data)) {
-      cart.data.forEach(sellerGroup => {
+    const cartGroups = Array.isArray(cart?.data?.cart) ? cart.data.cart : (Array.isArray(cart?.data) ? cart.data : []);
+    if (cartGroups.length > 0) {
+      cartGroups.forEach(sellerGroup => {
         if (Array.isArray(sellerGroup.items)) {
           totalItems += sellerGroup.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
         }
       });
+    } else if (cart?.data?.item_count != null || cart?.data?.totalItems != null) {
+      totalItems = cart.data.item_count ?? cart.data.totalItems ?? 0;
     }
 
     const desktopBadge = document.getElementById('navCartCount');

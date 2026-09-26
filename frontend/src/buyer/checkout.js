@@ -34,7 +34,7 @@ async function initCheckout() {
 async function loadAddresses() {
   try {
     const res = await api.get('/api/buyer/addresses');
-    savedAddresses = Array.isArray(res?.data) ? res.data : [];
+    savedAddresses = res?.data?.addresses || res?.addresses || (Array.isArray(res?.data) ? res.data : []);
 
     if (!savedAddresses.length) {
       addressListEl.innerHTML = `

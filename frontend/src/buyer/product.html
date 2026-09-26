@@ -1786,7 +1786,7 @@
                     for (const order of orders) {
                         const detailRes = await apiClient.get(`/orders/${order.id}`);
                         if (detailRes.data && detailRes.data.success) {
-                            const orderDetails = detailRes.data.data;
+                            const orderDetails = detailRes.data.data?.order || detailRes.data.data;
                             const hasItem = orderDetails.items?.some(item => String(item.product_id) === String(productId) && !item.is_reviewed);
                             if (hasItem) {
                                 matchedOrderId = order.id;

@@ -86,7 +86,15 @@ router.post('/listings/:id/pause', authMiddleware, sellerOnly, (req, res, next) 
   req.body.status = 'paused';
   return productController.updateProductStatus(req, res, next);
 });
+router.patch('/listings/:id/pause', authMiddleware, sellerOnly, (req, res, next) => {
+  req.body.status = 'paused';
+  return productController.updateProductStatus(req, res, next);
+});
 router.post('/listings/:id/resume', authMiddleware, sellerOnly, (req, res, next) => {
+  req.body.status = 'active';
+  return productController.updateProductStatus(req, res, next);
+});
+router.patch('/listings/:id/resume', authMiddleware, sellerOnly, (req, res, next) => {
   req.body.status = 'active';
   return productController.updateProductStatus(req, res, next);
 });

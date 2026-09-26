@@ -262,7 +262,7 @@
         const json = await res.json();
 
         if (json.success && json.data) {
-          const order = json.data;
+          const order = json.data?.order || json.data;
           const cleanId = (order.id || '').toUpperCase().slice(0, 8);
           document.getElementById('recap-order-id').textContent = `#TOHFA-${cleanId}`;
           document.getElementById('recap-order-amount').textContent = `₹${Number(order.total_amount || 0).toLocaleString('en-IN')}`;

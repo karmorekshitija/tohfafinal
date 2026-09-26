@@ -197,8 +197,8 @@
         if (orderId) {
             try {
                 const oRes = await apiClient.get(`/orders/${orderId}`);
-                if (oRes.data && oRes.data.success && oRes.data.data.items) {
-                    const items = oRes.data.data.items;
+                const items = oRes.data?.data?.order?.items || oRes.data?.data?.items || [];
+                if (oRes.data && oRes.data.success && items.length > 0) {
                     const itemsContainer = document.getElementById('order-summary-items');
                     const summaryCard = document.getElementById('order-summary-card');
                     if (itemsContainer && summaryCard && items.length > 0) {

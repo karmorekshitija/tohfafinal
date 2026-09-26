@@ -131,7 +131,7 @@ async function renderOrdersTab() {
 async function renderAddressesTab() {
   try {
     const res = await api.get('/api/buyer/addresses');
-    const addresses = Array.isArray(res?.data) ? res.data : [];
+    const addresses = res?.data?.addresses || res?.addresses || (Array.isArray(res?.data) ? res.data : []);
 
     tabContent.innerHTML = `
       <div class="flex justify-between items-center" style="margin-bottom:var(--space-4);">
@@ -234,7 +234,7 @@ async function renderCustomizationsTab() {
 async function renderWishlistTab() {
   try {
     const res = await api.get('/api/wishlist');
-    const items = Array.isArray(res?.data) ? res.data : [];
+    const items = res?.data?.wishlist || res?.data?.items || (Array.isArray(res?.data) ? res.data : []);
 
     if (!items.length) {
       tabContent.innerHTML = `

@@ -25,7 +25,7 @@ async function loadOrderDetail() {
 
   try {
     const res = await api.get(`/api/orders/${orderId}`);
-    const order = res?.data;
+    const order = res?.data?.order;
 
     if (!order) {
       container.innerHTML = '<p class="text-body">Order not found.</p>';

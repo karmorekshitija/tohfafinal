@@ -35,16 +35,16 @@ async function loadSellerProfile() {
     renderHero(seller);
     loadSellerProducts();
   } catch (err) {
-    const studioBadgeHtml = s.studio_badge
-    ? '<span class="badge" style="background:#14381F; color:#FFF8E7; font-weight:700; border:1px solid rgba(255,248,231,0.3); font-size:11px; padding:2px 8px; border-radius:12px;">✦ ' + s.studio_badge + '</span>'
-    : '';
-
-  heroEl.innerHTML = `<p class="text-body" style="padding:var(--space-6);">${err.message}</p>`;
+    heroEl.innerHTML = `<p class="text-body" style="padding:var(--space-6);">${err.message}</p>`;
   }
 }
 
 function renderHero(s) {
   document.title = `${s.store_name || s.name} | Tohfa Studio`;
+
+  const studioBadgeHtml = s.studio_badge
+    ? '<span class="badge" style="background:#14381F; color:#FFF8E7; font-weight:700; border:1px solid rgba(255,248,231,0.3); font-size:11px; padding:2px 8px; border-radius:12px;">✦ ' + s.studio_badge + '</span>'
+    : '';
 
   const cleanPhone = s.whatsapp_number ? s.whatsapp_number.replace(/\D/g, '').slice(-10) : '';
   const waBtn = cleanPhone
