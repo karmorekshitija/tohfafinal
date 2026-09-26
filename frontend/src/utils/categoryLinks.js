@@ -29,7 +29,8 @@ const INDEPENDENT_TOP_LEVEL_SLUGS = new Set([
   'textile-arts',
   'hair-accessories',
   'gifts-keepsakes',
-  'handcrafted-figurines'
+  'handcrafted-figurines',
+  'frames'
 ]);
 
 /**
