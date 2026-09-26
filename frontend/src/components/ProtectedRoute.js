@@ -276,9 +276,9 @@
 
   // ── 8. Mobile Bottom Navigation for Buyer pages ──────────────────────────
   function setupBottomNav() {
-    const isBuyerPage = path.includes('/buyer/') ||
+    const isBuyerPage = path === '/' || path === '' || path.includes('/buyer/') ||
       (!path.includes('/seller/') && !path.includes('/admin/') && !path.includes('/auth/') && (
-        path.includes('home') || path.includes('categor') || path.includes('zip-gift') ||
+        path.includes('home') || path.includes('index') || path.includes('categor') || path.includes('zip-gift') ||
         path.includes('search') || path.includes('product') || path.includes('profile') ||
         path.includes('cart') || path.includes('wishlist') || path.includes('order') ||
         path.includes('occasions') || path.includes('faq') ||
