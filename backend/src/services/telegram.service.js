@@ -113,7 +113,7 @@ You can also ask me for:
       // If it's not a command, let the AI handle it!
       else if (text) {
         try {
-          const { GoogleGenerativeAI } = require('@google/generative-ai');
+          const { GoogleGenAI } = require('@google/genai');
           const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
           
           if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY') {
@@ -124,14 +124,16 @@ You can also ask me for:
           // Show "typing" status while AI thinks
           this.bot.sendChatAction(msg.chat.id, 'typing');
 
-          const genAI = new GoogleGenerativeAI(apiKey);
-          const model = genAI.getGenerativeModel({ 
+          const ai = new GoogleGenAI({ apiKey });
+          
+          const result = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
-            systemInstruction: "You are the Tohfa Admin AI Assistant. You help the admins of Tohfa (thetohfa.in) manage their handmade marketplace. Keep responses helpful, concise, and conversational. Do not use markdown like asterisks."
+            contents: text,
+            config: {
+              systemInstruction: "You are the Tohfa Admin AI Assistant. You help the admins of Tohfa (thetohfa.in) manage their handmade marketplace. Keep responses helpful, concise, and conversational. Do not use markdown like asterisks."
+            }
           });
-
-          const result = await model.generateContent(text);
-          const responseText = result.response.text();
+          const responseText = result.text;
           
           await this.bot.sendMessage(msg.chat.id, responseText);
         } catch (e) {

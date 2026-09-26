@@ -329,6 +329,30 @@ if (require.main === module) {
     console.log(`\n🎁 Tohfa v2 Backend running on port ${PORT}`);
     console.log(`   Environment : ${process.env.NODE_ENV || 'development'}`);
     console.log(`   Health check: http://localhost:${PORT}/health\n`);
+    
+    // Diagnostics
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (geminiKey && geminiKey !== 'YOUR_GEMINI_API_KEY') {
+      console.log(`   [Diagnostic] GEMINI_API_KEY loaded: ${geminiKey.substring(0, 6)}...`);
+    } else {
+      console.log(`   [Diagnostic] GEMINI_API_KEY missing or placeholder`);
+    }
+
+    const rzpKey = process.env.RAZORPAY_PRIMARY_KEY_ID || process.env.RAZORPAY_KEY_ID;
+    if (rzpKey) {
+      if (rzpKey.startsWith('rzp_test_')) {
+        console.log(`   [Diagnostic] RAZORPAY_PRIMARY_KEY_ID is TEST mode (${rzpKey.substring(0, 10)}...)`);
+      } else if (rzpKey.startsWith('rzp_live_')) {
+        console.log(`   [Diagnostic] RAZORPAY_PRIMARY_KEY_ID is LIVE mode`);
+      } else {
+        console.log(`   [Diagnostic] RAZORPAY_PRIMARY_KEY_ID format unknown`);
+      }
+    } else {
+      console.log(`   [Diagnostic] RAZORPAY_PRIMARY_KEY_ID missing`);
+    }
+
+    const rzpWebhook = process.env.RAZORPAY_PRIMARY_WEBHOOK_SECRET;
+    console.log(`   [Diagnostic] RAZORPAY_PRIMARY_WEBHOOK_SECRET is ${rzpWebhook ? 'SET' : 'NOT SET'}`);
   });
 }
 

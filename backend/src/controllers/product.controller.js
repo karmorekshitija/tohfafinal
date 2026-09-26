@@ -1284,7 +1284,8 @@ async function createProduct(req, res, next) {
         if (url) {
           await query(
             `INSERT INTO product_images (product_id, url, sort_order)
-             VALUES ($1, $2, $3)`,
+             VALUES ($1, $2, $3)
+             ON CONFLICT (product_id, url) DO NOTHING`,
             [product.id, url, sortOrder++]
           );
         }
@@ -1567,7 +1568,8 @@ async function updateProduct(req, res, next) {
         const assignedOrder = sortOrder++;
         await query(
           `INSERT INTO product_images (product_id, url, sort_order)
-           VALUES ($1, $2, $3)`,
+           VALUES ($1, $2, $3)
+           ON CONFLICT (product_id, url) DO NOTHING`,
           [id, url, assignedOrder]
         );
       }
@@ -1742,6 +1744,7 @@ async function uploadImages(req, res, next) {
       const { rows } = await query(
         `INSERT INTO product_images (product_id, url, sort_order)
          VALUES ($1, $2, $3)
+         ON CONFLICT (product_id, url) DO UPDATE SET sort_order = EXCLUDED.sort_order
          RETURNING id, url, sort_order`,
         [id, filePath, sortOrder++]
       );

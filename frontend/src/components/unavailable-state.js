@@ -25,7 +25,7 @@ function fmt(paise) {
  */
 async function fetchSimilar(productId, limit = 6) {
   try {
-    const res = await fetch(`${API_BASE}/api/products/${productId}/similar?limit=${limit}`);
+    const res = await fetch(`${API_BASE}/api/products/${productId}/recommendations?limit=${limit}`);
     if (!res.ok) return [];
     const data = await res.json();
     return data.data || [];

@@ -255,8 +255,8 @@ async function addToCart(req, res, next) {
     }
 
     const conflictClause = variant_id
-      ? 'ON CONFLICT (buyer_id, product_id, variant_id) WHERE variant_id IS NOT NULL'
-      : 'ON CONFLICT (buyer_id, product_id) WHERE variant_id IS NULL';
+      ? 'ON CONFLICT (buyer_id, product_id, variant_id) WHERE buyer_id IS NOT NULL AND variant_id IS NOT NULL'
+      : 'ON CONFLICT (buyer_id, product_id) WHERE buyer_id IS NOT NULL AND variant_id IS NULL';
     const { rows } = await query(
       `INSERT INTO cart_items (buyer_id, product_id, variant_id, quantity, customization_data, customization_payload)
        VALUES ($1, $2, $3, $4, $5, COALESCE($5::jsonb, '{}'::jsonb))
@@ -341,8 +341,8 @@ async function mergeCart(req, res, next) {
 
       try {
         const conflictClause = variantId
-          ? 'ON CONFLICT (buyer_id, product_id, variant_id) WHERE variant_id IS NOT NULL'
-          : 'ON CONFLICT (buyer_id, product_id) WHERE variant_id IS NULL';
+          ? 'ON CONFLICT (buyer_id, product_id, variant_id) WHERE buyer_id IS NOT NULL AND variant_id IS NOT NULL'
+          : 'ON CONFLICT (buyer_id, product_id) WHERE buyer_id IS NOT NULL AND variant_id IS NULL';
         await query(
           `INSERT INTO cart_items (user_id, buyer_id, product_id, variant_id, quantity, customization_data, customization_payload)
            VALUES ($1, $1, $2, $3, $4, $5, COALESCE($5::jsonb, '{}'::jsonb))

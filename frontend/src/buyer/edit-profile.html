@@ -296,13 +296,40 @@
       saveBtn.innerText = 'Saving...';
 
       const token = sessionStorage.getItem('tohfa_access_token');
+      
+      // Handle avatar upload first if file is selected
+      const fileInput = document.getElementById('avatar-file-input');
+      let finalAvatarUrl = currentAvatarUrl;
+      
+      if (fileInput && fileInput.files && fileInput.files[0]) {
+        try {
+          const fd = new FormData();
+          fd.append('photo', fileInput.files[0]);
+          const avatarRes = await fetch('/api/buyer/profile/avatar', { // alias or me/avatar
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            body: fd
+          });
+          const avatarJson = await avatarRes.json();
+          if (avatarRes.ok && (avatarJson.data?.avatar_url || avatarJson.avatar_url || avatarJson.data?.profile_photo_url)) {
+            finalAvatarUrl = avatarJson.data?.avatar_url || avatarJson.avatar_url || avatarJson.data?.profile_photo_url;
+            currentAvatarUrl = finalAvatarUrl;
+          }
+        } catch (uploadErr) {
+          console.error('Avatar upload error:', uploadErr);
+          alert('Failed to upload profile photo, proceeding with previous photo.');
+        }
+      }
+
       const payload = {
         name: document.getElementById('profile-name').value,
         phone: document.getElementById('profile-phone').value,
         city: document.getElementById('profile-city').value,
         state: document.getElementById('profile-state').value,
         bio: document.getElementById('profile-bio').value,
-        profile_photo_url: currentAvatarUrl
+        profile_photo_url: finalAvatarUrl
       };
 
       try {

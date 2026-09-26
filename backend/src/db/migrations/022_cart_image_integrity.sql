@@ -1,66 +1,45 @@
--- Migration 022: repair nullable cart uniqueness and protect product image URLs.
--- Existing duplicate rows must be reconciled before these indexes can be created.
+-- Migration 022: Cart uniqueness fix and image integrity
 
-ALTER TABLE cart_items
-  DROP CONSTRAINT IF EXISTS cart_items_buyer_id_product_id_variant_id_key;
+-- 1. Deduplicate product images based on URL
+DELETE FROM product_images
+WHERE id IN (
+  SELECT id
+  FROM (
+    SELECT id, ROW_NUMBER() OVER (PARTITION BY product_id, url ORDER BY created_at DESC) as rn
+    FROM product_images
+  ) t
+  WHERE t.rn > 1
+);
 
--- Merge duplicate cart rows deterministically before enforcing uniqueness.
-WITH ranked AS (
-  SELECT id,
-         FIRST_VALUE(id) OVER (
-           PARTITION BY buyer_id, product_id, variant_id
-           ORDER BY created_at NULLS LAST, id
-         ) AS keeper_id,
-         ROW_NUMBER() OVER (
-           PARTITION BY buyer_id, product_id, variant_id
-           ORDER BY created_at NULLS LAST, id
-         ) AS row_number
-  FROM cart_items
-),
-totals AS (
-  SELECT keeper_id, SUM(ci.quantity) AS extra_quantity
-  FROM ranked r
-  JOIN cart_items ci ON ci.id = r.id
-  WHERE r.row_number > 1
-  GROUP BY keeper_id
-)
-UPDATE cart_items keeper
-SET quantity = keeper.quantity + totals.extra_quantity
-FROM totals
-WHERE keeper.id = totals.keeper_id;
+-- Ensure a unique index on product_images
+CREATE UNIQUE INDEX IF NOT EXISTS idx_product_images_unique_url ON product_images (product_id, url);
 
-DELETE FROM cart_items duplicate
-USING (
-  SELECT id,
-         ROW_NUMBER() OVER (
-           PARTITION BY buyer_id, product_id, variant_id
-           ORDER BY created_at NULLS LAST, id
-         ) AS row_number
-  FROM cart_items
-) ranked
-WHERE duplicate.id = ranked.id
-  AND ranked.row_number > 1;
+-- 2. Cart items UNIQUE constraint handling
+DELETE FROM cart_items
+WHERE id IN (
+  SELECT id
+  FROM (
+    SELECT id, ROW_NUMBER() OVER (
+      PARTITION BY buyer_id, cart_id, product_id, COALESCE(variant_id, -1)
+      ORDER BY updated_at DESC
+    ) as rn
+    FROM cart_items
+  ) t
+  WHERE t.rn > 1
+);
 
--- Keep the earliest product image row for each exact product/URL pair.
-DELETE FROM product_images duplicate
-USING (
-  SELECT id,
-         ROW_NUMBER() OVER (
-           PARTITION BY product_id, url
-           ORDER BY sort_order, created_at, id
-         ) AS row_number
-  FROM product_images
-) ranked
-WHERE duplicate.id = ranked.id
-  AND ranked.row_number > 1;
-
-CREATE UNIQUE INDEX IF NOT EXISTS uq_cart_items_buyer_product_no_variant
-  ON cart_items (buyer_id, product_id)
-  WHERE variant_id IS NULL;
-
-CREATE UNIQUE INDEX IF NOT EXISTS uq_cart_items_buyer_product_variant
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cart_items_buyer_prod_var
   ON cart_items (buyer_id, product_id, variant_id)
-  WHERE variant_id IS NOT NULL;
+  WHERE buyer_id IS NOT NULL AND variant_id IS NOT NULL;
 
-CREATE UNIQUE INDEX IF NOT EXISTS uq_product_images_product_url
-  ON product_images (product_id, url);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cart_items_buyer_prod_null_var
+  ON cart_items (buyer_id, product_id)
+  WHERE buyer_id IS NOT NULL AND variant_id IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cart_items_cart_prod_var
+  ON cart_items (cart_id, product_id, variant_id)
+  WHERE cart_id IS NOT NULL AND variant_id IS NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cart_items_cart_prod_null_var
+  ON cart_items (cart_id, product_id)
+  WHERE cart_id IS NOT NULL AND variant_id IS NULL;

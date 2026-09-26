@@ -86,36 +86,6 @@
       "permanent": true
     },
     {
-      "source": "/buyer/returns",
-      "destination": "/returns",
-      "permanent": true
-    },
-    {
-      "source": "/buyer/returns.html",
-      "destination": "/returns",
-      "permanent": true
-    },
-    {
-      "source": "/buyer/privacy",
-      "destination": "/privacy",
-      "permanent": true
-    },
-    {
-      "source": "/buyer/privacy.html",
-      "destination": "/privacy",
-      "permanent": true
-    },
-    {
-      "source": "/buyer/terms-conditions",
-      "destination": "/terms-conditions",
-      "permanent": true
-    },
-    {
-      "source": "/buyer/terms-conditions.html",
-      "destination": "/terms-conditions",
-      "permanent": true
-    },
-    {
       "source": "/customised-gifts",
       "destination": "/customized-gifts",
       "permanent": true

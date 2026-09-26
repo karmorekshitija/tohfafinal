@@ -4,18 +4,18 @@
  */
 'use strict';
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenAI } = require('@google/genai');
 const { query } = require('../config/db');
 
-function getGeminiModel() {
+function getGeminiClient() {
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY') {
     throw new Error('GEMINI_API_KEY is not configured in environment variables. Set GEMINI_API_KEY or GOOGLE_API_KEY in .env and restart the server.');
   }
-  const genAI = new GoogleGenerativeAI(apiKey);
-  return genAI.getGenerativeModel({
-    model: 'gemini-2.5-flash',
-    systemInstruction: `
+  return new GoogleGenAI({ apiKey });
+}
+
+const systemInstruction = `
 You are "Tanya", the AI Concierge for Tohfa (thetohfa.in) - an online marketplace for authentic Indian handmade, customized, and artisanal gifts.
 
 YOUR BEHAVIOR:
@@ -33,14 +33,12 @@ CRITICAL RULE: Never recommend gift products when the user is reporting an issue
 FORMATTING: Never use Markdown formatting in your responses. Do not use asterisks (*) for bold or italic text. If you want to list items, use standard hyphens (-) instead.
 
 TONE: Warm, helpful, professional, polite. Keep responses concise (under 3-4 sentences unless detailed recommendations are asked).
-`
-  });
-}
+`;
 
 async function getActiveProducts() {
   try {
     const { rows } = await query(
-      `SELECT p.id, p.name, COALESCE(p.base_price, p.price, 0) AS price, p.slug, c.name AS category_name
+      `SELECT p.id, p.name, p.base_price AS price, p.slug, c.name AS category_name
        FROM products p
        LEFT JOIN categories c ON p.category_id = c.id
        WHERE p.is_active = TRUE
@@ -68,7 +66,7 @@ async function chat(userMessage, history = []) {
     let catalogContext = '';
     try {
       const { rows: products } = await query(
-        `SELECT p.id, p.name, COALESCE(p.base_price, p.price, 0) AS price, p.slug, c.name AS category_name
+        `SELECT p.id, p.name, p.base_price AS price, p.slug, c.name AS category_name
          FROM products p
          LEFT JOIN categories c ON p.category_id = c.id
          WHERE p.is_active = TRUE
@@ -92,8 +90,8 @@ async function chat(userMessage, history = []) {
       catalogContext = 'Marketplace items: Handmade gifts, candles, hampers, personalized crafts.';
     }
 
-    // getGeminiModel() throws a clear error if the API key is missing or placeholder
-    const model = getGeminiModel();
+    // getGeminiClient() throws a clear error if the API key is missing or placeholder
+    const ai = getGeminiClient();
 
     const prompt = `
 Live Platform Catalog:
@@ -106,8 +104,12 @@ If the user is asking for gifts and any catalog items fit, mention 2-3 specific 
 If they are reporting an issue, shipping problem, order query, or any support concern, answer their support request directly and direct them to their Orders tab or tohfa126@gmail.com — do NOT recommend products.
 `;
 
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
+    const result = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents: prompt,
+      config: { systemInstruction }
+    });
+    const responseText = result.text;
 
     const lowerMessage = userMessage.toLowerCase();
     const supportKeywords = ['order', 'stuck', 'bug', 'issue', 'problem', 'payment', 'failed', 'refund', 'seller', 'shipping', 'delivery', 'support', 'cancel', 'complaint', 'tracking', 'return', 'exchange', 'dispute'];
