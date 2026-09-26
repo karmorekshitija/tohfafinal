@@ -145,7 +145,7 @@ async function forgotPassword(req, res, next) {
     const rawToken = crypto.randomBytes(32).toString('hex');
     await authService.setPasswordResetToken(user.id, rawToken);
 
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/reset-password.html?token=${rawToken}`;
+    const resetUrl = `${process.env.FRONTEND_URL || 'https://thetohfa.in'}/auth/reset-password.html?token=${rawToken}`;
     await emailService.sendPasswordResetEmail(user.email, resetUrl);
 
     return res.status(200).json({
@@ -218,7 +218,7 @@ async function googleAuth(req, res, next) {
  * Google redirects here after user approves. Exchanges code for user, issues JWT, redirects to frontend.
  */
 async function googleCallback(req, res) {
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const frontendUrl = process.env.FRONTEND_URL || 'https://thetohfa.in';
   const { code, error } = req.query;
 
   if (error || !code) {
