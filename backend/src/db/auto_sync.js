@@ -515,6 +515,12 @@ async function autoSyncDatabase() {
       await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS vacation_mode BOOLEAN DEFAULT FALSE;`);
       await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS store_visibility BOOLEAN DEFAULT TRUE;`);
       await query(`UPDATE seller_profiles SET capacity_limit = COALESCE(daily_order_limit, daily_capacity_max, 50) WHERE capacity_limit IS NULL;`);
+      await query(`
+        UPDATE seller_profiles
+        SET capacity_limit = 1000
+        WHERE (seller_type = 'special' OR is_admin_managed = TRUE OR is_tohfa_original = TRUE OR store_name IN ('The Candle Story', 'Nails Diva', 'Crochet Lady'))
+          AND (capacity_limit IS NULL OR capacity_limit < 1000);
+      `);
       await query(`UPDATE seller_profiles SET vacation_mode = (vacation_mode_active = 1) WHERE vacation_mode IS NULL AND vacation_mode_active IS NOT NULL;`);
       await query(`UPDATE seller_profiles SET store_visibility = (is_accepting_orders = 1) WHERE store_visibility IS NULL AND is_accepting_orders IS NOT NULL;`);
 
