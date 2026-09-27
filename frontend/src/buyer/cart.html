@@ -644,13 +644,14 @@
             return;
         }
 
+        const isGuestId = typeof id === 'string' && id.startsWith('guest-');
         const token = authStorage.getToken();
-        if (!token) {
+        if (!token || isGuestId) {
             const guestCartRaw = sessionStorage.getItem('tohfa_guest_cart') || localStorage.getItem('tohfa_guest_cart');
             if (guestCartRaw) {
                 try {
                     let items = JSON.parse(guestCartRaw) || [];
-                    const it = items.find((x, i) => (x.id === id || `guest-${i}` === id));
+                    const it = items.find((x, i) => (x.id === id || `guest-${i}` === id || String(x.product_id || x.productId) === String(id)));
                     if (it) it.quantity = newQty;
                     sessionStorage.setItem('tohfa_guest_cart', JSON.stringify(items));
                     localStorage.setItem('tohfa_guest_cart', JSON.stringify(items));
@@ -676,13 +677,14 @@
     }
 
     async function removeItem(id) {
+        const isGuestId = typeof id === 'string' && id.startsWith('guest-');
         const token = authStorage.getToken();
-        if (!token) {
+        if (!token || isGuestId) {
             const guestCartRaw = sessionStorage.getItem('tohfa_guest_cart') || localStorage.getItem('tohfa_guest_cart');
             if (guestCartRaw) {
                 try {
                     let items = JSON.parse(guestCartRaw) || [];
-                    items = items.filter((x, i) => (x.id !== id && `guest-${i}` !== id));
+                    items = items.filter((x, i) => (x.id !== id && `guest-${i}` !== id && String(x.product_id || x.productId) !== String(id)));
                     sessionStorage.setItem('tohfa_guest_cart', JSON.stringify(items));
                     localStorage.setItem('tohfa_guest_cart', JSON.stringify(items));
                     await loadGuestCart();
@@ -698,7 +700,8 @@
             }
         } catch (err) {
             console.error("Failed to delete item:", err);
-            alert("Failed to remove item from basket.");
+            const msg = err.response?.data?.message || err.message || "Failed to remove item from basket.";
+            alert(msg);
         }
     }
 

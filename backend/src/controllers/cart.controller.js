@@ -375,7 +375,7 @@ async function mergeCart(req, res, next) {
 // ---------------------------------------------------------------------------
 async function updateCartItem(req, res, next) {
   try {
-    const itemId = req.params.itemId || req.params.id || req.body.itemId || req.body.item_id || req.body.id;
+    const itemId = req.params.itemId || req.params.id || req.body.itemId || req.body.item_id || req.body.id || req.body.product_id;
     const buyerId = req.user.id;
     const {
       quantity,
@@ -396,20 +396,37 @@ async function updateCartItem(req, res, next) {
 
     if (quantity !== undefined && finalCustomization !== undefined) {
       const qty = Math.max(1, parseInt(quantity, 10) || 1);
-      updateQuery = `UPDATE cart_items SET quantity = $1, customization_data = $2 WHERE id = $3 AND (buyer_id = $4 OR user_id = $4) RETURNING *`;
-      params = [qty, jsonCustomization, itemId, buyerId];
+      updateQuery = `UPDATE cart_items SET quantity = $1, customization_data = $2
+        WHERE (id::text = $3 OR product_id::text = $3)
+          AND (buyer_id::text = $4 OR user_id::text = $4 OR cart_id IN (SELECT id FROM carts WHERE user_id::text = $4))
+        RETURNING *`;
+      params = [qty, jsonCustomization, String(itemId), String(buyerId)];
     } else if (quantity !== undefined) {
       const qty = Math.max(1, parseInt(quantity, 10) || 1);
-      updateQuery = `UPDATE cart_items SET quantity = $1 WHERE id = $2 AND (buyer_id = $3 OR user_id = $3) RETURNING *`;
-      params = [qty, itemId, buyerId];
+      updateQuery = `UPDATE cart_items SET quantity = $1
+        WHERE (id::text = $2 OR product_id::text = $2)
+          AND (buyer_id::text = $3 OR user_id::text = $3 OR cart_id IN (SELECT id FROM carts WHERE user_id::text = $3))
+        RETURNING *`;
+      params = [qty, String(itemId), String(buyerId)];
     } else if (finalCustomization !== undefined) {
-      updateQuery = `UPDATE cart_items SET customization_data = $1 WHERE id = $2 AND (buyer_id = $3 OR user_id = $3) RETURNING *`;
-      params = [jsonCustomization, itemId, buyerId];
+      updateQuery = `UPDATE cart_items SET customization_data = $1
+        WHERE (id::text = $2 OR product_id::text = $2)
+          AND (buyer_id::text = $3 OR user_id::text = $3 OR cart_id IN (SELECT id FROM carts WHERE user_id::text = $3))
+        RETURNING *`;
+      params = [jsonCustomization, String(itemId), String(buyerId)];
     } else {
       return res.status(400).json({ success: false, message: 'Quantity or customization data required for update.' });
     }
 
-    const { rows } = await query(updateQuery, params);
+    let rows;
+    try {
+      const resQuery = await query(updateQuery, params);
+      rows = resQuery.rows;
+    } catch (dbErr) {
+      const fallbackQuery = updateQuery.replace(/ OR cart_id IN \(SELECT id FROM carts WHERE user_id::text = \$\d\)/g, '');
+      const resQuery = await query(fallbackQuery, params);
+      rows = resQuery.rows;
+    }
 
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'Cart item not found.' });
@@ -430,15 +447,36 @@ async function updateCartItem(req, res, next) {
 // ---------------------------------------------------------------------------
 async function removeCartItem(req, res, next) {
   try {
-    const itemId = req.params.itemId || req.params.id;
+    const itemId = req.params.itemId || req.params.id || req.body.itemId || req.body.item_id || req.body.id || req.body.product_id;
     const buyerId = req.user.id;
 
-    const { rowCount } = await query(
-      'DELETE FROM cart_items WHERE id = $1 AND (buyer_id = $2 OR user_id = $2)',
-      [itemId, buyerId]
-    );
+    if (!itemId) {
+      return res.status(400).json({ success: false, message: 'Cart item ID is required.' });
+    }
 
-    if (!rowCount) {
+    let deleteResult;
+    try {
+      deleteResult = await query(
+        `DELETE FROM cart_items
+         WHERE (id::text = $1 OR product_id::text = $1)
+           AND (
+             buyer_id::text = $2
+             OR user_id::text = $2
+             OR cart_id IN (SELECT id FROM carts WHERE user_id::text = $2)
+           )`,
+        [String(itemId), String(buyerId)]
+      );
+    } catch (dbErr) {
+      // Fallback if carts table or cart_id column does not exist
+      deleteResult = await query(
+        `DELETE FROM cart_items
+         WHERE (id::text = $1 OR product_id::text = $1)
+           AND (buyer_id::text = $2 OR user_id::text = $2)`,
+        [String(itemId), String(buyerId)]
+      );
+    }
+
+    if (!deleteResult.rowCount) {
       return res.status(404).json({ success: false, message: 'Cart item not found.' });
     }
 
@@ -454,7 +492,17 @@ async function removeCartItem(req, res, next) {
 async function clearCart(req, res, next) {
   try {
     const buyerId = req.user.id;
-    await query('DELETE FROM cart_items WHERE buyer_id = $1 OR user_id = $1', [buyerId]);
+    try {
+      await query(
+        `DELETE FROM cart_items
+         WHERE buyer_id::text = $1
+            OR user_id::text = $1
+            OR cart_id IN (SELECT id FROM carts WHERE user_id::text = $1)`,
+        [String(buyerId)]
+      );
+    } catch (_) {
+      await query('DELETE FROM cart_items WHERE buyer_id::text = $1 OR user_id::text = $1', [String(buyerId)]);
+    }
     return res.json({ success: true, data: { message: 'Cart cleared.' } });
   } catch (err) {
     next(err);

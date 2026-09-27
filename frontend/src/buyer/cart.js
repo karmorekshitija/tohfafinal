@@ -104,16 +104,23 @@ export async function loadCart() {
 
     if (itemsContainer) {
       itemsContainer.innerHTML = items.map(item => `
-        <div class="cart-item flex gap-4 p-4 bg-white/80 border border-[#1A3A32]/15 rounded-2xl items-center" id="cart-item-${item.id}">
-          <img src="${item.image_url || item.primary_image || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&q=80'}" class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl object-cover flex-shrink-0 border border-[#1A3A32]/10" alt="${item.product_name || item.name}" loading="lazy">
-          <div class="cart-item__info flex-1 min-w-0">
-            <h4 class="cart-item__title font-headline-lg text-base font-semibold text-[#1A3A32] truncate" style="font-family: 'Playfair Display', serif;">${item.product_name || item.name}</h4>
-            <div class="cart-item__seller text-xs text-[#1A3A32]/70 font-['DM_Sans'] mt-0.5">by ${item.seller_name || 'Artisan'}</div>
-            <div class="cart-item__price font-data-price font-bold text-[#1A3A32] mt-1">${formatPrice(item.price_paise !== undefined ? item.price_paise / 100 : (item.price || item.unit_price || 0))}</div>
+        <div class="cart-item flex gap-4 p-4 bg-white/80 border border-[#1A3A32]/15 rounded-2xl items-center justify-between" id="cart-item-${item.id}">
+          <div class="flex gap-4 items-center min-w-0 flex-1">
+            <img src="${item.image_url || item.primary_image || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&q=80'}" class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl object-cover flex-shrink-0 border border-[#1A3A32]/10" alt="${item.product_name || item.name}" loading="lazy">
+            <div class="cart-item__info flex-1 min-w-0">
+              <h4 class="cart-item__title font-headline-lg text-base font-semibold text-[#1A3A32] truncate" style="font-family: 'Playfair Display', serif;">${item.product_name || item.name}</h4>
+              <div class="cart-item__seller text-xs text-[#1A3A32]/70 font-['DM_Sans'] mt-0.5">by ${item.seller_name || 'Artisan'}</div>
+              <div class="cart-item__price font-data-price font-bold text-[#1A3A32] mt-1">${formatPrice(item.price_paise !== undefined ? item.price_paise / 100 : (item.price || item.unit_price || 0))}</div>
+            </div>
           </div>
-          <div class="cart-item__qty flex items-center gap-2 bg-[#1A3A32]/5 px-3 py-1.5 rounded-full text-xs font-semibold text-[#1A3A32]">
-            <span>Qty:</span>
-            <span class="font-bold">${item.quantity || 1}</span>
+          <div class="flex items-center gap-3">
+            <div class="cart-item__qty flex items-center gap-2 bg-[#1A3A32]/5 px-3 py-1.5 rounded-full text-xs font-semibold text-[#1A3A32]">
+              <span>Qty:</span>
+              <span class="font-bold">${item.quantity || 1}</span>
+            </div>
+            <button onclick="removeCartItem('${item.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors cursor-pointer border-none bg-transparent" title="Remove item">
+              ✕
+            </button>
           </div>
         </div>
       `).join('');
@@ -124,5 +131,15 @@ export async function loadCart() {
     if (checkoutBtn) checkoutBtn.disabled = true;
   }
 }
+
+window.removeCartItem = async (id) => {
+  try {
+    await api.delete(`/api/cart/items/${id}`);
+    showToast('Item removed from basket', 'info');
+    await loadCart();
+  } catch (err) {
+    showToast(err.message || 'Failed to remove item', 'error');
+  }
+};
 
 document.addEventListener('DOMContentLoaded', loadCart);
