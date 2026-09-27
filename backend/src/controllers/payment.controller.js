@@ -263,6 +263,13 @@ async function verifyPayment(req, res, next) {
  * Instant test mode payment confirmation helper
  */
 async function testPay(req, res, next) {
+  if (process.env.NODE_ENV === 'production' || process.env.ALLOW_TEST_PAY !== 'true') {
+    return res.status(403).json({
+      success: false,
+      message: 'Test payment bypass is disabled in this environment. Please complete payment through Razorpay.',
+    });
+  }
+
   const client = await getClient();
   try {
     const orderId = req.body.orderId || req.body.order_id;

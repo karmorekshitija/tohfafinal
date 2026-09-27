@@ -117,6 +117,18 @@ Refund Flagged
 <label class="text-accent-caps text-text-faint">To</label>
 <input id="to-date-input" class="bg-[#FFF8E7] border border-[rgba(20,56,31,0.2)] rounded-lg px-4 py-2 text-body-sm focus:ring-primary focus:border-primary outline-none" type="date"/>
 </div>
+<div class="flex items-center gap-3">
+<label for="shop-filter" class="text-accent-caps text-text-faint">Shop Type</label>
+<select id="shop-filter" class="bg-[#FFF8E7] border border-[rgba(20,56,31,0.2)] rounded-lg px-3 py-2 text-body-sm text-text-default focus:ring-primary focus:border-primary outline-none cursor-pointer">
+  <option value="all" selected>All Orders</option>
+  <option value="artisans">Regular Artisans Only</option>
+  <option value="special">Special Shops Only</option>
+</select>
+</div>
+<label class="flex items-center gap-2 cursor-pointer select-none text-body-sm text-text-default">
+<input type="checkbox" id="include-special-toggle" checked class="w-4 h-4 rounded text-primary focus:ring-primary accent-[#14381F] cursor-pointer"/>
+<span>Include Special Shops</span>
+</label>
 <div class="ml-auto relative w-full max-w-xs">
 <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-text-faint">search</span>
 <input id="search-input" class="w-full bg-[#FFF8E7] border border-[rgba(20,56,31,0.2)] rounded-lg pl-10 pr-4 py-2 text-body-sm focus:ring-primary focus:border-primary outline-none" placeholder="Search order ID or buyer..." type="text"/>
@@ -200,6 +212,7 @@ let currentStatus = 'all';
 let fromDate = '';
 let toDate = '';
 let searchQuery = '';
+let shopFilter = 'all';
 let currentPage = 1;
 let loadedOrders = [];
 
@@ -208,17 +221,22 @@ const refundModal = document.getElementById('refund-modal');
 
 async function fetchOrders() {
   try {
-    const res = await adminApiClient.get('/admin/orders', {
-      params: {
-        status: currentStatus,
-        from_date: fromDate,
-        to_date: toDate,
-        search: searchQuery,
-        exclude_special: true,
-        page: currentPage,
-        per_page: 20
-      }
-    });
+    const params = {
+      status: currentStatus,
+      from_date: fromDate,
+      to_date: toDate,
+      search: searchQuery,
+      page: currentPage,
+      per_page: 20
+    };
+
+    if (shopFilter === 'artisans') {
+      params.exclude_special = true;
+    } else if (shopFilter === 'special') {
+      params.special_only = true;
+    }
+
+    const res = await adminApiClient.get('/admin/orders', { params });
 
     if (res.data?.success) {
       const { orders, total, page, per_page, total_pages, refund_flagged_count } = res.data.data;
@@ -299,7 +317,10 @@ function renderOrders(orders) {
         <button class="font-bold hover:underline text-left cursor-pointer" onclick="DetailModal.showOrder('${order.order_id}')">${order.order_id}</button>
       </td>
       <td class="px-6 py-4 font-body-sm font-bold text-text-default">${order.buyer_name}</td>
-      <td class="px-6 py-4 font-body-sm text-[#5A4A38]">${order.seller_name}</td>
+      <td class="px-6 py-4 font-body-sm text-[#5A4A38]">
+        ${order.seller_name}
+        ${order.is_admin_managed ? '<span class="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-800 border border-amber-300">Special</span>' : ''}
+      </td>
       <td class="px-6 py-4 font-data-price text-primary">${order.amount_display || formatPaise(order.amount_paise)}</td>
       <td class="px-6 py-4">
         <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${statusClass}">${order.status.replace(/_/g, ' ')}</span>
@@ -418,6 +439,32 @@ document.getElementById('to-date-input').addEventListener('change', (e) => {
   currentPage = 1;
   fetchOrders();
 });
+
+// Shop Type / Special orders filter
+const shopFilterEl = document.getElementById('shop-filter');
+const includeSpecialToggle = document.getElementById('include-special-toggle');
+
+if (shopFilterEl) {
+  shopFilterEl.addEventListener('change', (e) => {
+    shopFilter = e.target.value;
+    if (includeSpecialToggle) {
+      includeSpecialToggle.checked = (shopFilter !== 'artisans');
+    }
+    currentPage = 1;
+    fetchOrders();
+  });
+}
+
+if (includeSpecialToggle) {
+  includeSpecialToggle.addEventListener('change', (e) => {
+    shopFilter = e.target.checked ? 'all' : 'artisans';
+    if (shopFilterEl) {
+      shopFilterEl.value = shopFilter;
+    }
+    currentPage = 1;
+    fetchOrders();
+  });
+}
 
 // Status filters
 const statusFilters = [

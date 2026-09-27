@@ -240,12 +240,12 @@ async function getSellerOrders(req, res, next) {
     const limitNum = Math.min(50, parseInt(limit, 10) || 20);
     const offset   = (pageNum - 1) * limitNum;
 
-    const conditions = ['o.seller_id = $1'];
+    const conditions = ['(so.seller_id = $1 OR so.seller_id::text = $1::text)'];
     const params = [sellerId];
 
-    if (status) {
+    if (status && status !== 'all') {
       params.push(status);
-      conditions.push(`o.status = $${params.length}`);
+      conditions.push(`(so.status = $${params.length} OR o.status = $${params.length})`);
     }
 
     const where = conditions.join(' AND ');
@@ -255,23 +255,30 @@ async function getSellerOrders(req, res, next) {
     const offsetIdx = params.length;
 
     const { rows } = await query(
-      `SELECT o.id, o.buyer_id, o.total_amount, o.status, o.created_at,
+      `SELECT o.id, o.id AS parent_order_id, so.id AS seller_order_id,
+              o.buyer_id, so.subtotal AS total_amount, (so.subtotal * 100) AS total_paise,
+              so.status, o.payment_status, so.payout_status, so.created_at,
               u.name AS buyer_name,
               COALESCE(
                 (SELECT json_agg(oi)
-                 FROM order_items oi WHERE oi.order_id = o.id),
+                 FROM order_items oi
+                 WHERE oi.seller_order_id = so.id OR (oi.order_id = o.id AND oi.seller_order_id IS NULL)),
                 '[]'
               ) AS items
-       FROM orders o
+       FROM seller_orders so
+       JOIN orders o ON o.id = so.order_id
        LEFT JOIN users u ON u.id = o.buyer_id
        WHERE ${where}
-       ORDER BY o.created_at DESC
+       ORDER BY so.created_at DESC
        LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
       params
     );
 
     const { rows: countRows } = await query(
-      `SELECT COUNT(*) AS total FROM orders o WHERE ${where}`,
+      `SELECT COUNT(*) AS total
+       FROM seller_orders so
+       JOIN orders o ON o.id = so.order_id
+       WHERE ${where}`,
       params.slice(0, params.length - 2)
     );
 
@@ -279,7 +286,7 @@ async function getSellerOrders(req, res, next) {
       success: true,
       data: {
         orders: rows,
-        total: parseInt(countRows[0].total, 10),
+        total: parseInt(countRows[0]?.total || 0, 10),
         page: pageNum,
         limit: limitNum,
       },
@@ -408,8 +415,12 @@ async function getOrderById(req, res, next) {
     const { rows } = await query(
       `SELECT o.id, COALESCE(o.order_ref, 'TOHFA-' || UPPER(SUBSTRING(o.id::text, 1, 8))) AS order_ref,
               o.buyer_id, o.seller_id, o.address_id, o.total_amount, o.total_amount AS amount_paid,
+              COALESCE(o.total_paise, ROUND(o.total_amount * 100)) AS total_paise,
+              COALESCE(o.subtotal_paise, ROUND((o.total_amount - COALESCE(o.shipping_amount, 0)) * 100)) AS subtotal_paise,
+              COALESCE(o.shipping_paise, ROUND(COALESCE(o.shipping_amount, 0) * 100)) AS shipping_paise,
               o.status, o.payment_status, o.created_at,
               COALESCE(o.studio_notes, '') AS notes,
+              o.shipping_address AS shipping_address_snapshot,
               COALESCE(a.line1 || CASE WHEN a.city IS NOT NULL THEN ', ' || a.city ELSE '' END, '') AS shipping_address,
               u.name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone,
               sp.store_name, (COALESCE(sp.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
@@ -420,10 +431,13 @@ async function getOrderById(req, res, next) {
                   'product_id', oi.product_id,
                   'variant_id', oi.variant_id,
                   'quantity', oi.quantity,
-                  'unit_price', COALESCE(oi.unit_price_paise / 100.0, 0),
+                  'unit_price', COALESCE(oi.unit_price_paise / 100.0, oi.unit_price, 0),
+                  'unit_price_paise', COALESCE(oi.unit_price_paise, ROUND(oi.unit_price * 100), 0),
                   'product_name', COALESCE(p.name, 'Handcrafted Item'),
                   'variant_name', COALESCE(oi.variant_name, pv.variant_name),
                   'customization_text', '',
+                  'customization_details', COALESCE(oi.customization_details, '{}'::jsonb),
+                  'customization_data', COALESCE(oi.customization_data, '{}'::jsonb),
                   'image_url', COALESCE(
                     (SELECT pi.url FROM product_images pi WHERE pi.product_id = oi.product_id ORDER BY pi.sort_order LIMIT 1),
                     (p.images)[1],
@@ -449,6 +463,24 @@ async function getOrderById(req, res, next) {
     }
 
     const order = rows[0];
+
+    // Build structured ship_to address object for frontend rendering
+    let snap = {};
+    if (typeof order.shipping_address_snapshot === 'string') {
+      try { snap = JSON.parse(order.shipping_address_snapshot); } catch {}
+    } else if (order.shipping_address_snapshot && typeof order.shipping_address_snapshot === 'object') {
+      snap = order.shipping_address_snapshot;
+    }
+
+    order.ship_to = {
+      full_name: order.address_name || snap.full_name || snap.name || snap.recipient_name || order.buyer_name || 'N/A',
+      line1: order.line1 || snap.line1 || snap.address_line1 || '',
+      line2: order.line2 || snap.line2 || snap.address_line2 || '',
+      city: order.city || snap.city || '',
+      state: order.state || snap.state || '',
+      pincode: order.pincode || snap.pincode || '',
+      phone: order.address_phone || snap.phone || ''
+    };
 
     // Authorization check
     if (role === 'buyer' && order.buyer_id !== userId) {

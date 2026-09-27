@@ -1120,7 +1120,7 @@
     }
     // ---------------------------------------------------------------------
 
-    async function placeOrder(isTestPay = false) {
+    async function placeOrder() {
         const token = authStorage.getToken();
         if (!token) {
             const emailInput = document.getElementById('guest-email-input') || document.getElementById('guest-email');
@@ -1182,37 +1182,11 @@
                     orderRef = result.order_ref;
                 }
                 // -------------------------------------------------------------
-                
-                if (isTestPay) {
-                    btn.innerHTML = `<span>Confirming Test Payment...</span>`;
-                    const testRes = await apiClient.post('/payments/test-pay', { order_id: orderId, orderId: orderId });
-                    if (testRes.data && testRes.data.success) {
-                        window.location.href = `payment-success.html?order_ref=${orderRef}&order_id=${orderId}`;
-                        return;
-                    }
-                }
 
                 // Task 15: Payment Flow
                 const initRes = await apiClient.post('/payments/create-order', { orderId: orderId });
                 if (initRes.data && initRes.data.success) {
                     const payData = initRes.data.data;
-                    
-                    // Fallback to test-pay in local dev mode when Razorpay placeholder keys are used
-                    const isMockGateway = !payData.razorpayKeyId ||
-                        payData.razorpayKeyId === 'rzp_test_placeholder' ||
-                        payData.razorpayKeyId === 'YOUR_RAZORPAY_KEY_ID' ||
-                        String(payData.razorpayKeyId).includes('placeholder') ||
-                        String(payData.razorpayKeyId).includes('YOUR_') ||
-                        String(payData.razorpay_order_id || '').startsWith('order_mock_');
-
-                    if (isMockGateway) {
-                        btn.innerHTML = `<span>Confirming Test Payment...</span>`;
-                        const testRes = await apiClient.post('/payments/test-pay', { orderId: orderId, order_id: orderId });
-                        if (testRes.data && testRes.data.success) {
-                            window.location.href = `payment-success.html?order_ref=${orderRef}&order_id=${orderId}`;
-                            return;
-                        }
-                    }
 
                     const options = {
                         key: payData.razorpayKeyId,

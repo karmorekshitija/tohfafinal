@@ -345,8 +345,8 @@
                             </div>
 
                             <!-- Wishlist toggle button -->
-                            <button id="wishlist-toggle-btn" class="absolute top-4 right-4 p-3 bg-[#FAF6EE]/90 backdrop-blur-md rounded-full shadow-md hover:scale-105 active:scale-95 transition-all text-[#14381F] focus:outline-none z-10 border border-[#14381F]/10">
-                                <span id="wishlist-icon" class="material-symbols-outlined text-2xl">favorite</span>
+                            <button id="wishlist-toggle-btn" class="absolute top-3 right-3 sm:top-4 sm:right-4 w-10 h-10 min-w-0 min-h-0 flex items-center justify-center p-0 bg-[#FAF6EE]/90 backdrop-blur-md rounded-full shadow-md hover:scale-105 active:scale-95 transition-all text-[#14381F] focus:outline-none z-10 border border-[#14381F]/10">
+                                <span id="wishlist-icon" class="material-symbols-outlined text-[20px] sm:text-[22px]">favorite</span>
                             </button>
                         </div>
 
@@ -1660,19 +1660,21 @@
         function updateWishlistButtonUI() {
             const wishlistIcon = document.getElementById('wishlist-icon');
             const wishlistBtn = document.getElementById('wishlist-toggle-btn');
+            if (!wishlistBtn || !wishlistIcon) return;
             const isOwner = currentUser && product && product.seller && currentUser.id === product.seller.id;
+            const baseClass = "absolute top-3 right-3 sm:top-4 sm:right-4 w-10 h-10 min-w-0 min-h-0 flex items-center justify-center p-0 bg-[#FAF6EE]/90 backdrop-blur-md rounded-full shadow-md transition-all focus:outline-none z-10 border border-[#14381F]/10";
             if (isOwner) {
                 wishlistIcon.style.fontVariationSettings = "'FILL' 0";
-                wishlistBtn.className = "absolute top-6 right-6 p-3 bg-[#FFF8E7]/90 backdrop-blur-md rounded-full shadow-md transition-all text-outline opacity-50 cursor-not-allowed focus:outline-none";
+                wishlistBtn.className = `${baseClass} text-outline opacity-50 cursor-not-allowed`;
                 wishlistBtn.disabled = true;
                 return;
             }
             if (isWishlisted) {
                 wishlistIcon.style.fontVariationSettings = "'FILL' 1";
-                wishlistBtn.className = "absolute top-6 right-6 p-3 bg-[#FFF8E7]/90 backdrop-blur-md rounded-full shadow-md hover:scale-105 active:scale-95 transition-all text-red-600 focus:outline-none";
+                wishlistBtn.className = `${baseClass} hover:scale-105 active:scale-95 text-red-600`;
             } else {
                 wishlistIcon.style.fontVariationSettings = "'FILL' 0";
-                wishlistBtn.className = "absolute top-6 right-6 p-3 bg-[#FFF8E7]/90 backdrop-blur-md rounded-full shadow-md hover:scale-105 active:scale-95 transition-all text-outline hover:text-primary focus:outline-none";
+                wishlistBtn.className = `${baseClass} hover:scale-105 active:scale-95 text-[#14381F] hover:text-[#285C3A]`;
             }
         }
 

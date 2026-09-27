@@ -77,20 +77,24 @@ async function getSellerSummary(req, res, next) {
       is_approved: 1,
     };
 
-    // Order stats
+    // Order stats (Bug #3: Join through seller_orders for multi-vendor revenue & count)
     const { rows: orderStats } = await query(
       `SELECT 
-         COUNT(id) AS total_orders,
-         COALESCE(SUM(total_amount), 0) AS total_revenue,
-         COALESCE(AVG(total_amount), 0) AS avg_order_value
-       FROM orders
-       WHERE seller_id = $1 AND payment_status = 'paid'`,
+         COUNT(so.id) AS total_orders,
+         COALESCE(SUM(so.subtotal), 0) AS total_revenue,
+         COALESCE(AVG(so.subtotal), 0) AS avg_order_value
+       FROM seller_orders so
+       JOIN orders o ON o.id = so.order_id
+       WHERE so.seller_id = $1 AND o.payment_status = 'paid'`,
       [sellerId]
     );
 
-    // Pending / new orders
+    // Pending / new orders (Bug #3: Join through seller_orders)
     const { rows: pendingStats } = await query(
-      `SELECT COUNT(id) AS pending_orders FROM orders WHERE seller_id = $1 AND status IN ('pending', 'confirmed', 'processing')`,
+      `SELECT COUNT(so.id) AS pending_orders
+       FROM seller_orders so
+       JOIN orders o ON o.id = so.order_id
+       WHERE so.seller_id = $1 AND (so.status IN ('order_placed', 'pending', 'confirmed', 'processing') OR o.status IN ('pending', 'confirmed', 'processing'))`,
       [sellerId]
     );
 
@@ -111,26 +115,29 @@ async function getSellerSummary(req, res, next) {
       threshold: p.low_stock_threshold || 5,
     }));
 
-    // Recent orders (latest 5)
+    // Recent orders (latest 5) (Bug #3: Join through seller_orders and use seller_orders.subtotal)
     const { rows: recentOrderRows } = await query(
-      `SELECT o.id, o.total_amount, o.status, o.created_at,
+      `SELECT so.id, o.id AS parent_order_id, so.subtotal AS total_amount, so.status, so.created_at,
               COALESCE(u.name, 'Buyer') AS buyer_name,
               COALESCE(
                 (SELECT p2.name FROM order_items oi2 
                  JOIN products p2 ON p2.id = oi2.product_id 
-                 WHERE oi2.order_id = o.id LIMIT 1),
+                 WHERE oi2.seller_order_id = so.id OR (oi2.order_id = o.id AND oi2.seller_order_id IS NULL)
+                 LIMIT 1),
                 'Handcrafted Creation'
               ) AS item_title,
               COALESCE(
                 (SELECT pi.url FROM order_items oi
                  JOIN product_images pi ON pi.product_id = oi.product_id AND pi.sort_order = 0
-                 WHERE oi.order_id = o.id LIMIT 1),
+                 WHERE oi.seller_order_id = so.id OR (oi.order_id = o.id AND oi.seller_order_id IS NULL)
+                 LIMIT 1),
                 NULL
               ) AS item_image
-       FROM orders o
+       FROM seller_orders so
+       JOIN orders o ON o.id = so.order_id
        LEFT JOIN users u ON u.id = o.buyer_id
-       WHERE o.seller_id = $1
-       ORDER BY o.created_at DESC
+       WHERE so.seller_id = $1
+       ORDER BY so.created_at DESC
        LIMIT 5`,
       [sellerId]
     ).catch(() => ({ rows: [] }));
@@ -138,6 +145,8 @@ async function getSellerSummary(req, res, next) {
     const recentOrders = recentOrderRows.map(o => ({
       id: o.id,
       internal_id: o.id,
+      seller_order_id: o.id,
+      parent_order_id: o.parent_order_id,
       item_title: o.item_title,
       item_image: o.item_image,
       buyer_name: o.buyer_name,
@@ -260,7 +269,7 @@ async function getAdminStats(req, res, next) {
 
     // Active (approved) sellers
     const { rows: sellers } = await query(
-      `SELECT COUNT(id) AS total_sellers FROM seller_profiles WHERE (is_approved = TRUE OR is_approved = 1 OR verification_status = 'verified')`
+      `SELECT COUNT(id) AS total_sellers FROM seller_profiles WHERE (is_approved::text IN ('true', 't', '1') OR verification_status = 'verified')`
     );
 
     // Registered buyers
@@ -272,7 +281,7 @@ async function getAdminStats(req, res, next) {
     const { rows: pending } = await query(
       `SELECT COUNT(id) AS pending_applications
        FROM seller_profiles
-       WHERE (is_approved = FALSE OR is_approved = 0 OR is_approved IS NULL) AND rejection_reason IS NULL`
+       WHERE (is_approved IS NULL OR is_approved::text IN ('false', 'f', '0')) AND rejection_reason IS NULL`
     );
 
     return res.json({

@@ -353,6 +353,24 @@ if (require.main === module) {
 
     const rzpWebhook = process.env.RAZORPAY_PRIMARY_WEBHOOK_SECRET;
     console.log(`   [Diagnostic] RAZORPAY_PRIMARY_WEBHOOK_SECRET is ${rzpWebhook ? 'SET' : 'NOT SET'}`);
+
+    if (rzpKey && !rzpKey.includes('placeholder') && !rzpKey.includes('YOUR_')) {
+      const razorpayConfig = require('./src/config/razorpay');
+      try {
+        const client = razorpayConfig.getClient('primary');
+        client.orders.create({ amount: 100, currency: 'INR', receipt: 'boot_probe', payment_capture: 1 })
+          .then(() => console.log('   [Diagnostic] Razorpay API Status: ✅ CONNECTED & READY (Keys Valid)'))
+          .catch(err => {
+            if (err.statusCode === 401 || err.status === 401) {
+              console.warn('   [Diagnostic] Razorpay API Status: ❌ AUTHENTICATION FAILED (401). Update RAZORPAY_PRIMARY_KEY_ID and RAZORPAY_PRIMARY_KEY_SECRET in .env with matching keys from Razorpay Dashboard.');
+            } else {
+              console.warn('   [Diagnostic] Razorpay API Status: ⚠️ ' + (err.error?.description || err.message));
+            }
+          });
+      } catch (probeErr) {
+        console.warn('   [Diagnostic] Razorpay probe check error:', probeErr.message);
+      }
+    }
   });
 }
 

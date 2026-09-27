@@ -597,12 +597,30 @@ async function getOwnProfile(req, res, next) {
     }
     const userProfile = rows[0];
     const avatarUrl = userProfile.profile_photo_url || '/img/default-avatar.png';
+
+    // Bug #2: Compute active orders count and saved addresses count
+    const [orderCountResult, addressCountResult] = await Promise.all([
+      query(
+        `SELECT COUNT(*)::int AS count FROM orders WHERE (buyer_id = $1 OR user_id = $1) AND (status NOT IN ('delivered', 'cancelled') OR status IS NULL)`,
+        [userId]
+      ).catch(() => ({ rows: [{ count: 0 }] })),
+      query(
+        `SELECT COUNT(*)::int AS count FROM addresses WHERE user_id = $1`,
+        [userId]
+      ).catch(() => ({ rows: [{ count: 0 }] })),
+    ]);
+
+    const activeOrdersCount = parseInt(orderCountResult.rows[0]?.count || 0, 10);
+    const addressCount = parseInt(addressCountResult.rows[0]?.count || 0, 10);
+
     const normalized = {
       ...userProfile,
       display_name: userProfile.name,
       avatar_url: avatarUrl,
       profile_photo_url: avatarUrl,
       profile_photo: avatarUrl,
+      active_orders_count: activeOrdersCount,
+      address_count: addressCount,
     };
     return res.json({ success: true, data: { ...normalized, profile: normalized } });
   } catch (err) {

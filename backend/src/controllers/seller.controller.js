@@ -829,7 +829,7 @@ async function getDashboardMetrics(req, res, next) {
       `SELECT
          COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN so.subtotal ELSE 0 END), 0) AS all_revenue,
          COUNT(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS all_orders,
-         COUNT(CASE WHEN LOWER(COALESCE(so.status, '')) IN ('pending', 'confirmed', 'crafting', 'packed', 'processing') THEN 1 END) AS pending_orders
+         COUNT(CASE WHEN LOWER(COALESCE(so.status, '')) IN ('order_placed', 'pending', 'confirmed', 'crafting', 'packed', 'processing') THEN 1 END) AS pending_orders
        FROM seller_orders so
        JOIN orders o ON o.id = so.order_id
        WHERE (so.seller_id = $1 OR so.seller_id::text = $1::text)`,
@@ -844,7 +844,7 @@ async function getDashboardMetrics(req, res, next) {
        FROM seller_orders so
        JOIN orders o ON o.id = so.order_id
        WHERE (so.seller_id = $1 OR so.seller_id::text = $1::text)
-         AND so.created_at >= NOW() - ($2 || ' days')erval`,
+         AND so.created_at >= NOW() - ($2 || ' days')::INTERVAL`,
       [sellerId, days]
     ).catch(() => ({ rows: [{ curr_revenue: 0, curr_orders: 0 }] }));
 
@@ -856,8 +856,8 @@ async function getDashboardMetrics(req, res, next) {
        FROM seller_orders so
        JOIN orders o ON o.id = so.order_id
        WHERE (so.seller_id = $1 OR so.seller_id::text = $1::text)
-         AND so.created_at >= NOW() - ($2 || ' days')erval * 2
-         AND so.created_at < NOW() - ($2 || ' days')erval`,
+         AND so.created_at >= NOW() - ($2 || ' days')::INTERVAL * 2
+         AND so.created_at < NOW() - ($2 || ' days')::INTERVAL`,
       [sellerId, days]
     ).catch(() => ({ rows: [{ prev_revenue: 0, prev_orders: 0 }] }));
 
@@ -933,18 +933,18 @@ async function getDashboardMetrics(req, res, next) {
                 ))
                 FROM order_items oi
                 LEFT JOIN products p ON p.id = oi.product_id
-                WHERE oi.seller_order_id = so.id),
+                WHERE oi.seller_order_id = so.id OR (oi.order_id = o.id AND oi.seller_order_id IS NULL)),
                 '[]'
               ) AS items
        FROM seller_orders so
        JOIN orders o ON o.id = so.order_id
        LEFT JOIN users u ON u.id = o.buyer_id
        LEFT JOIN addresses a ON a.id = o.address_id
-       WHERE so.seller_id = $1
+       WHERE (so.seller_id = $1 OR so.seller_id::text = $1::text)
        ORDER BY so.created_at DESC
        LIMIT 5`,
       [sellerId]
-    );
+    ).catch(() => ({ rows: [] }));
 
     const formattedRecentOrders = recentOrderRows.map(o => {
       const items = Array.isArray(o.items) ? o.items : [];
@@ -969,17 +969,19 @@ async function getDashboardMetrics(req, res, next) {
       };
     });
 
-    // 4. Sales & Visits Chart for requested period
+    // 4. Sales & Visits Chart for requested period (joins through seller_orders)
     const { rows: dailyData } = await query(
-      `SELECT DATE(created_at) AS date,
-              COALESCE(SUM(CASE WHEN payment_status = 'paid' AND status != 'cancelled' THEN total_amount ELSE 0 END), 0) AS revenue,
-              COUNT(CASE WHEN status != 'cancelled' THEN 1 END) AS orders_count
-       FROM orders
-       WHERE seller_id = $1 AND created_at >= NOW() - ($2 || ' days')erval
-       GROUP BY DATE(created_at)
+      `SELECT DATE(so.created_at) AS date,
+              COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN so.subtotal ELSE 0 END), 0) AS revenue,
+              COUNT(CASE WHEN LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS orders_count
+       FROM seller_orders so
+       JOIN orders o ON o.id = so.order_id
+       WHERE (so.seller_id = $1 OR so.seller_id::text = $1::text)
+         AND so.created_at >= NOW() - ($2 || ' days')::INTERVAL
+       GROUP BY DATE(so.created_at)
        ORDER BY date ASC`,
       [sellerId, days]
-    );
+    ).catch(() => ({ rows: [] }));
 
     // Build complete daily date sequence
     const chartLabels = [];
@@ -1333,7 +1335,7 @@ async function getSellerOrders(req, res, next) {
         LOWER(u.email) LIKE $${sIdx} OR
         CAST(o.id AS TEXT) LIKE $${sIdx} OR
         CAST(so.id AS TEXT) LIKE $${sIdx} OR
-        LOWER(COALESCE(so.tracking_id, '')) LIKE $${sIdx}
+        LOWER(COALESCE(so.awb_number, o.tracking_id, '')) LIKE $${sIdx}
       )`);
     }
 
@@ -1346,9 +1348,9 @@ async function getSellerOrders(req, res, next) {
     const { rows } = await query(
       `SELECT o.id AS parent_order_id, o.buyer_id, so.seller_id,
               so.subtotal AS total_amount, (so.subtotal * 100) AS total_paise,
-              so.id AS id, o.order_ref, o.order_type, o.customization, o.customization_summary,
+              so.id AS id, o.order_ref, NULL AS order_type, NULL AS customization, o.customization_details AS customization_summary,
               so.status, o.payment_status, so.payout_status,
-              so.tracking_id, so.tracking_url, o.notes, o.studio_notes, so.delivered_at, so.created_at, so.updated_at,
+              COALESCE(so.awb_number, o.tracking_id) AS tracking_id, COALESCE(so.tracking_url, o.tracking_url) AS tracking_url, o.notes, o.studio_notes, so.delivered_at, so.created_at, o.updated_at,
               u.name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone,
               a.line1 AS delivery_line1, a.line2 AS delivery_line2, a.city AS delivery_city,
               a.state AS delivery_state, a.pincode AS delivery_pincode,
@@ -1478,8 +1480,8 @@ async function getSellerOrderDetail(req, res, next) {
 
     // IDOR Check: Ensure order exists and belongs to this seller
     const { rows: orderCheck } = await query(
-      `SELECT so.id, so.seller_id FROM seller_orders so JOIN orders o ON o.id = so.order_id WHERE so.id::text = $1 OR o.order_ref = $1`,
-      [String(id)]
+      `SELECT so.id, so.seller_id FROM seller_orders so JOIN orders o ON o.id = so.order_id WHERE so.id::text = $1 OR (o.id::text = $1 AND (so.seller_id = $2 OR so.seller_id::text = $2::text)) OR o.order_ref = $1`,
+      [String(id), String(sellerId)]
     );
     if (!orderCheck.length) {
       return res.status(404).json({ success: false, message: 'Order not found.' });
@@ -1494,7 +1496,7 @@ async function getSellerOrderDetail(req, res, next) {
 
     const { rows } = await query(
       `SELECT o.id AS parent_order_id, so.id AS id, o.buyer_id, so.seller_id, o.address_id, so.subtotal AS total_amount, so.status, o.payment_status,
-              so.payout_status, so.tracking_id, so.tracking_url, o.notes, o.studio_notes, so.delivered_at, so.created_at, so.updated_at,
+              so.payout_status, COALESCE(so.awb_number, o.tracking_id) AS tracking_id, COALESCE(so.tracking_url, o.tracking_url) AS tracking_url, o.notes, o.studio_notes, so.delivered_at, so.created_at, o.updated_at,
               u.name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone,
               sp.store_name, sp.whatsapp_number AS seller_whatsapp, sp.pickup_address,
               a.name AS recipient_name, a.phone AS recipient_phone,
@@ -1523,8 +1525,8 @@ async function getSellerOrderDetail(req, res, next) {
        LEFT JOIN users u ON u.id = o.buyer_id
        LEFT JOIN seller_profiles sp ON sp.user_id = so.seller_id
        LEFT JOIN addresses a ON a.id = o.address_id
-       WHERE so.id::text = $1 OR o.order_ref = $1`,
-      [String(id)]
+       WHERE so.id::text = $1 OR (o.id::text = $1 AND (so.seller_id = $2 OR so.seller_id::text = $2::text)) OR o.order_ref = $1`,
+      [String(id), String(sellerId)]
     );
 
     if (!rows.length) {
