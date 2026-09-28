@@ -31,5 +31,6 @@ router.get('/:id', orderController.getOrderById);
 router.patch('/:id/status', sellerOrAdmin, orderController.updateOrderStatus);
 router.patch('/:id', sellerOrAdmin, orderController.updateOrderStatus);
 router.post('/:id/cancel', orderController.cancelOrder);
+router.delete('/:id/unconfirmed', orderController.purgeUnconfirmedOrder);
 
 module.exports = router;

@@ -239,6 +239,24 @@ async function verifyPayment(req, res, next) {
       ]
     ).catch(e => console.error('[Notification Insert Error]:', e.message));
 
+    // In-app notification for seller(s) on confirmed payment
+    query(
+      `SELECT seller_id, id AS seller_order_id FROM seller_orders WHERE order_id = $1`,
+      [confirmedOrder.id || orderId]
+    ).then(({ rows: sOrders }) => {
+      sOrders.forEach(so => {
+        query(
+          `INSERT INTO notifications (user_id, type, title, body, meta)
+           VALUES ($1, 'new_order', 'New Order Received! 🎁', $2, $3)`,
+          [
+            so.seller_id,
+            `You have a confirmed sub-order #${String(so.seller_order_id).slice(0, 8)} in Order #${String(confirmedOrder.id || orderId).slice(0, 8)}.`,
+            JSON.stringify({ order_id: confirmedOrder.id || orderId, seller_order_id: so.seller_order_id })
+          ]
+        ).catch(() => {});
+      });
+    }).catch(e => console.error('[Seller Notification Error]:', e.message));
+
     return res.json({
       success: true,
       data: {

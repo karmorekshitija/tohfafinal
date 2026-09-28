@@ -163,7 +163,7 @@ export function updateKPIs(orders, totalCount) {
   const revEl = document.getElementById('kpi-total-revenue');
   if (revEl) revEl.textContent = formatCurrency(totalRev);
 
-  const pending = orders.filter(o => (o.status || '').toLowerCase() === 'pending' || (o.status || '').toLowerCase() === 'processing').length;
+  const pending = orders.filter(o => ['confirmed', 'processing', 'in_production'].includes((o.status || '').toLowerCase())).length;
   const pendingEl = document.getElementById('kpi-pending-orders');
   if (pendingEl) pendingEl.textContent = pending;
 

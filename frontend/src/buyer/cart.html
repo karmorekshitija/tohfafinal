@@ -989,27 +989,36 @@
                                 if (success) {
                                     window.location.href = `payment-success.html?order_ref=${orderRef}&order_id=${orderId}`;
                                 } else {
-                                    window.location.href = `payment-failure.html?order_ref=${orderRef}&reason=verify_failed`;
+                                    await apiClient.delete(`/orders/${orderId}/unconfirmed`).catch(() => {});
+                                    alert("Payment Failed - Can't Place Order");
+                                    btn.disabled = false;
+                                    btn.innerHTML = `<span>Place Order & Pay</span><span id="btn-total" class="font-data-price text-sm border-l border-solid border-white/40 pl-3 ml-3">${document.getElementById('summary-total')?.innerText || ''}</span>`;
                                 }
                             } catch (verifyErr) {
                                 console.error("Verify payment error:", verifyErr);
-                                const reason = verifyErr.response?.data?.message || verifyErr.message || 'unknown';
-                                window.location.href = `payment-failure.html?order_ref=${orderRef}&reason=${encodeURIComponent(reason)}`;
+                                await apiClient.delete(`/orders/${orderId}/unconfirmed`).catch(() => {});
+                                alert("Payment Failed - Can't Place Order");
+                                btn.disabled = false;
+                                btn.innerHTML = `<span>Place Order & Pay</span><span id="btn-total" class="font-data-price text-sm border-l border-solid border-white/40 pl-3 ml-3">${document.getElementById('summary-total')?.innerText || ''}</span>`;
                             }
                         },
                         modal: {
-                            ondismiss: function () {
+                            ondismiss: async function () {
+                                await apiClient.delete(`/orders/${orderId}/unconfirmed`).catch(() => {});
                                 btn.disabled = false;
                                 btn.innerHTML = `<span>Place Order & Pay</span><span id="btn-total" class="font-data-price text-sm border-l border-solid border-white/40 pl-3 ml-3">${formatPaise(Math.round(payData.amount * 100))}</span>`;
+                                alert("Payment Failed - Can't Place Order");
                             }
                         }
                     };
 
                     const rzp = new window.Razorpay(options);
-                    rzp.on('payment.failed', function (resp) {
+                    rzp.on('payment.failed', async function (resp) {
                         console.error("Payment failed:", resp.error);
-                        const reason = resp.error?.description || resp.error?.reason || 'payment_failed';
-                        window.location.href = `payment-failure.html?order_ref=${orderRef}&reason=${encodeURIComponent(reason)}`;
+                        await apiClient.delete(`/orders/${orderId}/unconfirmed`).catch(() => {});
+                        alert("Payment Failed - Can't Place Order");
+                        btn.disabled = false;
+                        btn.innerHTML = `<span>Place Order & Pay</span><span id="btn-total" class="font-data-price text-sm border-l border-solid border-white/40 pl-3 ml-3">${document.getElementById('summary-total')?.innerText || ''}</span>`;
                     });
                     rzp.open();
                 }

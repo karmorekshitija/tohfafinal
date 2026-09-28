@@ -2625,11 +2625,12 @@ async function getSpecialOrders(req, res, next) {
       LEFT JOIN sellers sel ON o.seller_id = sel.id OR o.seller_id = sel.user_id
       LEFT JOIN order_items oi ON o.id = oi.order_id
       LEFT JOIN products p ON oi.product_id = p.id
-      WHERE o.is_special = TRUE 
+      WHERE (o.is_special = TRUE 
          OR o.shop_id IN (SELECT id FROM shops WHERE is_special = TRUE)
          OR sp.is_admin_managed::text IN ('true', 't', '1')
          OR sel.is_admin_managed::text IN ('true', 't', '1')
-         OR sp.seller_type = 'special'
+         OR sp.seller_type = 'special')
+        AND (o.payment_status = 'paid' OR LOWER(o.status) NOT IN ('pending', 'awaiting_payment'))
       GROUP BY o.id, u.id, s.id, s.shop_name, sp.id, sel.id
       ORDER BY o.created_at DESC;
     `);

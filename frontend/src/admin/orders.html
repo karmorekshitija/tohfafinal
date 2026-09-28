@@ -98,7 +98,7 @@ Review flagged <span class="material-symbols-outlined text-[16px]">arrow_forward
 <div class="bg-bg-primary p-6 rounded-2xl border border-outline-variant/30 shadow-[rgba(61,107,79,0.08)_0px_2px_8px] space-y-6">
 <div id="filter-buttons-container" class="flex flex-wrap items-center gap-3">
 <button id="filter-all" class="px-5 py-2 rounded-full font-label-btn text-white bg-primary transition-colors">All</button>
-<button id="filter-pending" class="px-5 py-2 rounded-full font-label-btn text-text-muted bg-[#FFF8E7] hover:bg-sage-soft/30 transition-colors">Pending</button>
+<button id="filter-confirmed" class="px-5 py-2 rounded-full font-label-btn text-text-muted bg-[#FFF8E7] hover:bg-sage-soft/30 transition-colors">Confirmed</button>
 <button id="filter-processing" class="px-5 py-2 rounded-full font-label-btn text-text-muted bg-[#FFF8E7] hover:bg-sage-soft/30 transition-colors">Processing</button>
 <button id="filter-shipped" class="px-5 py-2 rounded-full font-label-btn text-text-muted bg-[#FFF8E7] hover:bg-sage-soft/30 transition-colors">Shipped</button>
 <button id="filter-delivered" class="px-5 py-2 rounded-full font-label-btn text-text-muted bg-[#FFF8E7] hover:bg-sage-soft/30 transition-colors">Delivered</button>
@@ -469,7 +469,7 @@ if (includeSpecialToggle) {
 // Status filters
 const statusFilters = [
   { id: 'filter-all', status: 'all' },
-  { id: 'filter-pending', status: 'pending' },
+  { id: 'filter-confirmed', status: 'confirmed' },
   { id: 'filter-processing', status: 'processing' },
   { id: 'filter-shipped', status: 'shipped' },
   { id: 'filter-delivered', status: 'delivered' },

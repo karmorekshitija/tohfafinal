@@ -379,29 +379,12 @@ async function placeOrders(buyerId, addressId, cartItemIds, options = {}) {
 
         allOrderItemsCreated.push(itemRows[0]);
       }
-
-      // Notify seller
-      await createNotification(
-        sellerId,
-        'new_order',
-        'New Order Received! 🎁',
-        `You have a new sub-order #${String(sellerOrder.id).slice(0, 8)} in Order #${String(parentOrder.id).slice(0, 8)}.`,
-        { order_id: parentOrder.id, seller_order_id: sellerOrder.id }
-      ).catch(() => {});
     }
 
     // 6. Cart items are intentionally NOT deleted here.
     //    They are cleared only after payment is successfully verified (in payment.service.js → markOrderPaid).
     //    This ensures items remain in the cart if payment fails so the buyer can retry.
-
-    // 7. Notify buyer
-    await createNotification(
-      buyerId,
-      'order_placed',
-      'Order Placed Successfully! 🎉',
-      `Your order #${String(parentOrder.id).slice(0, 8).toUpperCase()} for ₹${parentOrder.total_amount} has been placed. Complete payment to begin crafting.`,
-      { order_id: parentOrder.id }
-    ).catch(() => {});
+    // Note: Notifications are dispatched only after payment is verified (in payment.service.js / payment.controller.js)
 
     await client.query('COMMIT');
   } catch (err) {

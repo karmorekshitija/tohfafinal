@@ -97,6 +97,35 @@ async function handleRazorpayWebhook(req, res) {
                 }).catch(e => console.error('[Webhook WhatsApp]:', e.message));
               }
             }).catch(e => console.error('[Webhook Seller Lookup Error]:', e.message));
+
+            // In-app notification for buyer
+            query(
+              `INSERT INTO notifications (user_id, type, title, body, meta)
+               VALUES ($1, 'order_confirmed', 'Order Confirmed!', $2, $3)`,
+              [
+                confirmedOrder.buyer_id,
+                `Your payment for Order #${String(confirmedOrder.id).slice(0, 8)} was successful. The artisan has started preparing it.`,
+                JSON.stringify({ orderId: confirmedOrder.id }),
+              ]
+            ).catch(() => {});
+
+            // In-app notification for seller(s)
+            query(
+              `SELECT seller_id, id AS seller_order_id FROM seller_orders WHERE order_id = $1`,
+              [confirmedOrder.id]
+            ).then(({ rows: sOrders }) => {
+              sOrders.forEach(so => {
+                query(
+                  `INSERT INTO notifications (user_id, type, title, body, meta)
+                   VALUES ($1, 'new_order', 'New Order Received! 🎁', $2, $3)`,
+                  [
+                    so.seller_id,
+                    `You have a confirmed sub-order #${String(so.seller_order_id).slice(0, 8)} in Order #${String(confirmedOrder.id).slice(0, 8)}.`,
+                    JSON.stringify({ order_id: confirmedOrder.id, seller_order_id: so.seller_order_id })
+                  ]
+                ).catch(() => {});
+              });
+            }).catch(() => {});
           } else {
             await client.query('COMMIT');
           }

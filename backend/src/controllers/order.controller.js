@@ -158,7 +158,10 @@ async function getBuyerOrders(req, res, next) {
     const limitNum = Math.min(50, parseInt(limit, 10) || 20);
     const offset   = (pageNum - 1) * limitNum;
 
-    const conditions = ['o.buyer_id = $1'];
+    const conditions = [
+      'o.buyer_id = $1',
+      "(o.payment_status = 'paid' OR LOWER(o.status) NOT IN ('pending', 'awaiting_payment'))"
+    ];
     const params = [buyerId];
 
     if (status) {
@@ -240,7 +243,10 @@ async function getSellerOrders(req, res, next) {
     const limitNum = Math.min(50, parseInt(limit, 10) || 20);
     const offset   = (pageNum - 1) * limitNum;
 
-    const conditions = ['(so.seller_id = $1 OR so.seller_id::text = $1::text)'];
+    const conditions = [
+      '(so.seller_id = $1 OR so.seller_id::text = $1::text)',
+      "(o.payment_status = 'paid' OR LOWER(o.status) NOT IN ('pending', 'awaiting_payment'))"
+    ];
     const params = [sellerId];
 
     if (status && status !== 'all') {
@@ -309,6 +315,9 @@ async function getAdminOrders(req, res, next) {
 
     const conditions = [];
     const params = [];
+
+    // Orders must be confirmed and paid to register in the admin panel
+    conditions.push("(o.payment_status = 'paid' OR LOWER(o.status) NOT IN ('pending', 'awaiting_payment'))");
 
     // Filter by status only when it is a specific real status (not 'all' or empty)
     if (status && status.toLowerCase() !== 'all' && status.trim() !== '') {
@@ -1049,6 +1058,36 @@ async function rejectRefund(req, res, next) {
   }
 }
 
+/**
+ * DELETE /api/orders/:id/unconfirmed — purge an abandoned, unconfirmed staging order
+ */
+async function purgeUnconfirmedOrder(req, res, next) {
+  try {
+    const buyerId = req.user.id;
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Order ID is required.' });
+    }
+
+    const { rowCount } = await query(
+      `DELETE FROM orders 
+       WHERE id = $1 AND (buyer_id = $2 OR user_id = $2) 
+         AND (payment_status = 'unpaid' OR payment_status = 'pending') 
+         AND LOWER(status) = 'pending'`,
+      [id, buyerId]
+    );
+
+    return res.json({
+      success: true,
+      purged: rowCount > 0,
+      message: rowCount > 0 ? 'Unconfirmed order purged.' : 'No matching unconfirmed order found.'
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   placeOrder,
   createOrder: placeOrder,
@@ -1059,6 +1098,7 @@ module.exports = {
   getOrderById,
   updateOrderStatus,
   cancelOrder,
+  purgeUnconfirmedOrder,
   listRefundRequests,
   approveRefund,
   rejectRefund,

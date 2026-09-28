@@ -55,6 +55,12 @@ export async function mergeGuestCart() {
 }
 
 export async function loadCart() {
+  const cartAlert = sessionStorage.getItem('tohfa_cart_alert');
+  if (cartAlert) {
+    sessionStorage.removeItem('tohfa_cart_alert');
+    showToast(cartAlert, 'error');
+  }
+
   await mergeGuestCart();
 
   try {

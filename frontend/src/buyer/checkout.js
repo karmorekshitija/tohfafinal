@@ -283,14 +283,19 @@ window.initiatePayment = async () => {
           await api.delete('/api/cart').catch(() => {});
           window.location.href = `./payment-success.html?orderId=${firstOrder.id}&id=${firstOrder.id}`;
         } catch (vErr) {
-          window.location.href = `./payment-failure.html?orderId=${firstOrder.id}&reason=${encodeURIComponent(vErr.message)}`;
+          console.error('Payment verification failed:', vErr);
+          await api.delete(`/api/orders/${firstOrder.id}/unconfirmed`).catch(() => {});
+          sessionStorage.setItem('tohfa_cart_alert', "Payment Failed - Can't Place Order");
+          window.location.href = './cart.html';
         }
       },
       modal: {
-        ondismiss: function () {
+        ondismiss: async function () {
           payBtn.classList.remove('btn-loading');
           payBtn.disabled = false;
-          showToast('Payment window was closed.', 'info');
+          await api.delete(`/api/orders/${firstOrder.id}/unconfirmed`).catch(() => {});
+          sessionStorage.setItem('tohfa_cart_alert', "Payment Failed - Can't Place Order");
+          window.location.href = './cart.html';
         },
       },
     };
@@ -304,17 +309,17 @@ window.initiatePayment = async () => {
     }
 
     const rzp = new window.Razorpay(options);
-    rzp.on('payment.failed', function (response) {
-      const reason = response.error?.description || response.error?.reason || 'Payment failed';
-      showToast(`Payment failed: ${reason}`, 'error');
-      payBtn.classList.remove('btn-loading');
-      payBtn.disabled = false;
+    rzp.on('payment.failed', async function (response) {
+      console.error('Razorpay payment failed:', response.error);
+      await api.delete(`/api/orders/${firstOrder.id}/unconfirmed`).catch(() => {});
+      sessionStorage.setItem('tohfa_cart_alert', "Payment Failed - Can't Place Order");
+      window.location.href = './cart.html';
     });
     rzp.open();
   } catch (err) {
-    showToast(err.message || 'Payment initiation failed.', 'error');
-    payBtn.classList.remove('btn-loading');
-    payBtn.disabled = false;
+    console.error('Payment initiation error:', err);
+    sessionStorage.setItem('tohfa_cart_alert', "Payment Failed - Can't Place Order");
+    window.location.href = './cart.html';
   }
 };
 
