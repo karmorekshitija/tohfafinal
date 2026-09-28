@@ -11,6 +11,7 @@ const paymentService = require('../services/payment.service');
 const logisticsService = require('../services/logistics.service');
 const whatsappService = require('../services/whatsapp.service');
 const bestsellerService = require('../services/bestseller.service');
+const whatsappCloudService = require('../services/whatsappCloud.service');
 
 const razorpay = require('../config/razorpay');
 
@@ -132,7 +133,27 @@ function verifyWhatsAppWebhook(req, res) {
 
 function receiveWhatsAppEvent(req, res) {
   console.log(JSON.stringify(req.body));
-  return res.status(200).send('EVENT_RECEIVED');
+  res.status(200).send('EVENT_RECEIVED');
+
+  try {
+    if (process.env.WHATSAPP_AUTOREPLY_ENABLED !== 'true') {
+      return;
+    }
+
+    const message = req.body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+    if (!message) {
+      return;
+    }
+
+    if (message.type === 'text') {
+      whatsappCloudService.sendTextMessage(
+        message.from,
+        "Thanks for messaging Tohfa! We've received your message and will get back to you soon."
+      );
+    }
+  } catch (err) {
+    console.error('[WhatsApp Autoreply Error]:', err.message);
+  }
 }
 
 module.exports = {
