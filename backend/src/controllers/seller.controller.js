@@ -1736,7 +1736,7 @@ async function updateSellerOrderStatus(req, res, next) {
 
     let updateQuery = `UPDATE orders
                        SET status = $1,
-                           delivered_at = CASE WHEN $1 = 'delivered' THEN NOW()::text ELSE delivered_at END,
+                           delivered_at = CASE WHEN LOWER($1) = 'delivered' THEN NOW() ELSE delivered_at END,
                            updated_at = NOW()`;
     let queryParams = [status];
 

@@ -563,7 +563,7 @@ async function forceUpdateOrderStatus(req, res, next) {
       UPDATE orders
       SET status = COALESCE($1::text, status),
           studio_notes = CASE WHEN $2::text != '' THEN $2::text ELSE studio_notes END,
-          delivered_at = CASE WHEN $1::text = 'delivered' THEN NOW()::text ELSE delivered_at END,
+          delivered_at = CASE WHEN LOWER($1::text) = 'delivered' THEN NOW() ELSE delivered_at END,
           updated_at = NOW()
       WHERE id::text = $3::text OR order_ref = $3::text
       RETURNING *, COALESCE(studio_notes, '') AS notes
@@ -580,8 +580,8 @@ async function forceUpdateOrderStatus(req, res, next) {
       await query(`
         UPDATE seller_orders
         SET status = $1::text,
-            delivered_at = CASE WHEN $1::text = 'delivered' THEN NOW()::text ELSE delivered_at END
-        WHERE order_id = $2::int
+            delivered_at = CASE WHEN LOWER($1::text) = 'delivered' THEN NOW() ELSE delivered_at END
+        WHERE order_id::text = $2::text
       `, [status, updatedOrder.id]).catch(() => {});
 
       // Notify buyer
