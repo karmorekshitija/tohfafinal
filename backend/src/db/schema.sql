@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS users (
   cover_photo_url        TEXT,
   full_name              TEXT,
   display_name           TEXT,
+  whatsapp_marketing_opt_in BOOLEAN NOT NULL DEFAULT FALSE,
+  whatsapp_marketing_opt_in_at TIMESTAMPTZ,
   created_at             TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -395,6 +397,10 @@ CREATE TABLE IF NOT EXISTS orders (
   delivered_at        TIMESTAMPTZ,
   tracking_id         TEXT,
   tracking_url        TEXT,
+  courier             VARCHAR(100),
+  dispatched_at       TIMESTAMPTZ,
+  shipment_status     VARCHAR(50) DEFAULT 'unbooked',
+  shipment_error      TEXT,
   notes               TEXT,
   studio_notes        TEXT,
   order_ref           TEXT,
@@ -407,6 +413,8 @@ CREATE INDEX IF NOT EXISTS idx_orders_user_id   ON orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_buyer_id  ON orders(buyer_id);
 CREATE INDEX IF NOT EXISTS idx_orders_seller_id ON orders(seller_id);
 CREATE INDEX IF NOT EXISTS idx_orders_status    ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_tracking_id ON orders(tracking_id);
+CREATE INDEX IF NOT EXISTS idx_orders_shipment_status ON orders(shipment_status);
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
 
 -- =============================================================================
@@ -426,12 +434,14 @@ CREATE TABLE IF NOT EXISTS seller_orders (
   tracking_url         TEXT,
   payout_status        VARCHAR(50) DEFAULT 'unsettled' CHECK (payout_status IN ('unsettled', 'holding', 'eligible', 'paid', 'completed', 'pending')),
   delivered_at         TIMESTAMP WITH TIME ZONE,
-  created_at           TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created_at           TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at           TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_seller_orders_order_id  ON seller_orders(order_id);
-CREATE INDEX IF NOT EXISTS idx_seller_orders_seller_id ON seller_orders(seller_id);
-CREATE INDEX IF NOT EXISTS idx_seller_orders_status    ON seller_orders(status);
+CREATE INDEX IF NOT EXISTS idx_seller_orders_order_id   ON seller_orders(order_id);
+CREATE INDEX IF NOT EXISTS idx_seller_orders_seller_id  ON seller_orders(seller_id);
+CREATE INDEX IF NOT EXISTS idx_seller_orders_status     ON seller_orders(status);
+CREATE INDEX IF NOT EXISTS idx_seller_orders_awb_number ON seller_orders(awb_number);
 
 -- =============================================================================
 -- 10. ORDER ITEMS & CUSTOMIZATION SNAPSHOT
@@ -714,6 +724,50 @@ CREATE INDEX IF NOT EXISTS idx_reports_created_at ON reports(created_at DESC);
 
 
 -- =============================================================================
+-- WHATSAPP OUTBOX & OPT-OUTS
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS whatsapp_outbox (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  kind                TEXT NOT NULL CHECK (kind IN ('seller_new_order', 'buyer_quote', 'buyer_proof', 'occasion_reminder', 'autoreply')),
+  idempotency_key     TEXT NOT NULL,
+  recipient_user_id   UUID REFERENCES users(id) ON DELETE SET NULL,
+  intended_to         TEXT,
+  sent_to             TEXT,
+  template_name       TEXT,
+  variables           JSONB,
+  status              TEXT NOT NULL DEFAULT 'pending' CHECK (status IN (
+    'pending','sending','sent','delivered','read','failed',
+    'suppressed','manual_pending','manual_done',
+    'invalid_number','opted_out','no_consent'
+  )),
+  attempts            INT NOT NULL DEFAULT 0,
+  next_attempt_at     TIMESTAMPTZ DEFAULT NOW(),
+  provider_message_id TEXT,
+  error_code          TEXT,
+  error_message       TEXT,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  sent_at             TIMESTAMPTZ,
+  delivered_at        TIMESTAMPTZ,
+  owner_email_status  TEXT DEFAULT 'pending',
+  owner_email_attempts INT NOT NULL DEFAULT 0,
+  owner_emailed_at    TIMESTAMPTZ,
+  escalated_at        TIMESTAMPTZ,
+  manual_done_at      TIMESTAMPTZ
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_whatsapp_outbox_idempotency_key ON whatsapp_outbox(idempotency_key);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_outbox_status_next_attempt ON whatsapp_outbox(status, next_attempt_at);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_outbox_provider_message_id ON whatsapp_outbox(provider_message_id);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_outbox_status_created ON whatsapp_outbox(status, created_at);
+
+CREATE TABLE IF NOT EXISTS whatsapp_opt_outs (
+  phone10             TEXT PRIMARY KEY,
+  opted_out_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+
+-- =============================================================================
 -- UPDATED_AT TRIGGER FUNCTION
 -- =============================================================================
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -730,7 +784,8 @@ DECLARE
 BEGIN
   FOREACH t IN ARRAY ARRAY[
     'users', 'seller_profiles', 'products',
-    'open_customization_configs', 'orders', 'customization_requests', 'payments', 'seller_payouts'
+    'open_customization_configs', 'orders', 'customization_requests', 'payments', 'seller_payouts',
+    'whatsapp_outbox'
   ] LOOP
     EXECUTE format(
       'DROP TRIGGER IF EXISTS trg_%s_updated_at ON %s;

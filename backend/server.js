@@ -252,20 +252,68 @@ app.post('/api/messages/:id', _notImplemented);
 // ---------------------------------------------------------------------------
 // CRON TRIGGER ROUTE (Vercel Crons & External Schedulers)
 // ---------------------------------------------------------------------------
+const crypto = require('crypto');
+const nodeCron = require('node-cron');
 const { startOccasionCron, processOccasionReminders } = require('./src/services/occasion.service');
 const bestsellerService = require('./src/services/bestseller.service');
+const whatsappOutboxService = require('./src/services/whatsappOutbox.service');
+const ownerNotifyService = require('./src/services/ownerNotify.service');
+
+function checkCronAuth(req, res) {
+  const cronSecret = process.env.CRON_SECRET;
+  const isProd = process.env.NODE_ENV === 'production';
+
+  if (!cronSecret) {
+    if (isProd) {
+      res.status(503).json({ success: false, message: 'Cron secret is not configured on this server.' });
+      return false;
+    }
+    return true;
+  }
+
+  const authHeader = req.headers['authorization'] || '';
+  const expected = `Bearer ${cronSecret}`;
+  const bufAuth = Buffer.from(authHeader);
+  const bufExpected = Buffer.from(expected);
+
+  if (bufAuth.length === bufExpected.length && crypto.timingSafeEqual(bufAuth, bufExpected)) {
+    return true;
+  }
+
+  res.status(401).json({ success: false, message: 'Unauthorized cron request.' });
+  return false;
+}
 
 app.get('/api/cron/reminders', async (req, res) => {
-  const cronSecret = process.env.CRON_SECRET;
-  const authHeader = req.headers['authorization'] || '';
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}` && req.headers['x-vercel-cron'] !== '1') {
-    return res.status(401).json({ success: false, message: 'Unauthorized cron request.' });
-  }
+  if (!checkCronAuth(req, res)) return;
   try {
     await processOccasionReminders();
     res.json({ success: true, message: 'Occasion reminder scan completed.' });
   } catch (err) {
     console.error('[Cron/reminders] Error:', err.message);
+    res.status(500).json({ success: false, message: 'Cron job failed. Check server logs.' });
+  }
+});
+
+app.get('/api/cron/whatsapp', async (req, res) => {
+  if (!checkCronAuth(req, res)) return;
+  try {
+    const outboxResults = await whatsappOutboxService.processOutbox();
+    const manualResults = await ownerNotifyService.processManualQueue();
+    res.json({
+      success: true,
+      message: 'WhatsApp outbox processed successfully.',
+      data: {
+        processed: outboxResults.processed || 0,
+        sent: outboxResults.sent || 0,
+        failed: outboxResults.failed || 0,
+        retried: outboxResults.retried || 0,
+        ownerEmailsSent: manualResults.ownerEmailsSent || 0,
+        escalated: manualResults.escalated || 0,
+      },
+    });
+  } catch (err) {
+    console.error('[Cron/whatsapp] Error:', err.message);
     res.status(500).json({ success: false, message: 'Cron job failed. Check server logs.' });
   }
 });
@@ -307,12 +355,26 @@ app.use('/api/*', (req, res) => {
 app.use(errorHandler);
 
 // ---------------------------------------------------------------------------
-// CRON SCHEDULER — Occasion reminders & Bestseller recomputation
+// CRON SCHEDULER — Occasion reminders, Bestsellers & WhatsApp Outbox Dispatcher
 // Only initialize persistent node-cron in traditional server environments (not Vercel)
 // ---------------------------------------------------------------------------
 if (!process.env.VERCEL && process.env.ENABLE_CRON !== 'false') {
   startOccasionCron();
   bestsellerService.startBestsellerCron();
+
+  // Run WhatsApp outbox dispatcher every minute (Asia/Kolkata)
+  nodeCron.schedule('* * * * *', async () => {
+    try {
+      await whatsappOutboxService.processOutbox();
+    } catch (err) {
+      console.error('[WhatsApp Outbox Cron Error]:', err.message);
+    }
+    try {
+      await ownerNotifyService.processManualQueue();
+    } catch (err) {
+      console.error('[Owner Notify Cron Error]:', err.message);
+    }
+  }, { timezone: 'Asia/Kolkata' });
 }
 
 // ---------------------------------------------------------------------------

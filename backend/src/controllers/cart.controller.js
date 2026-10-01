@@ -206,15 +206,25 @@ async function addToCart(req, res, next) {
       return res.status(400).json({ success: false, message: 'product_id is required.' });
     }
 
-    // Verify product is active
+    // Verify product is active and artisan is not on vacation
     const { rows: pRows } = await query(
-      `SELECT id, name, stock_quantity
-       FROM products
-       WHERE id = $1 AND status = 'active' AND is_active = TRUE`,
+      `SELECT p.id, p.name, p.stock_quantity, p.seller_id,
+              COALESCE(sp.vacation_mode_active, CASE WHEN sp.vacation_mode = TRUE THEN 1 ELSE 0 END, 0) AS vacation_mode_active,
+              COALESCE(sp.vacation_message, '') AS vacation_message
+       FROM products p
+       LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
+       WHERE p.id = $1 AND p.status = 'active' AND (p.is_active IS NULL OR p.is_active = TRUE)`,
       [product_id]
     );
     if (!pRows.length) {
       return res.status(404).json({ success: false, message: 'Product not found or not active.' });
+    }
+
+    if (pRows[0].vacation_mode_active === 1) {
+      return res.status(400).json({
+        success: false,
+        message: pRows[0].vacation_message || 'This artisan studio is currently on vacation and not accepting new orders.'
+      });
     }
 
     let availableStock = Number(pRows[0].stock_quantity || 0);

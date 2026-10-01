@@ -12,7 +12,7 @@ const webhookController = require('../controllers/webhook.controller');
 
 router.post('/razorpay', express.raw({ type: 'application/json' }), webhookController.handleRazorpayWebhook);
 router.get('/whatsapp', webhookController.verifyWhatsAppWebhook);
-router.post('/whatsapp', express.json(), webhookController.receiveWhatsAppEvent);
+router.post('/whatsapp', express.raw({ type: 'application/json' }), webhookController.receiveWhatsAppEvent);
 
 module.exports = router;
 

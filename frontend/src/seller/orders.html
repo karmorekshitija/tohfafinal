@@ -338,8 +338,8 @@
                             ${statusBadge(status)}
                         </div>
                         <div class="col-span-2 flex justify-center" onclick="event.stopPropagation();">
-                            <a href="/api/seller/orders/${id}/label" download class="flex items-center gap-1 bg-[#14381F] text-white hover:bg-[#14381F]/90 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider transition-all duration-200 active:scale-95">
-                                <span class="material-symbols-outlined text-xs">download</span> Label
+                            <a href="/api/logistics/label/${id}?format=html" target="_blank" rel="noopener" class="flex items-center gap-1 bg-[#14381F] text-white hover:bg-[#14381F]/90 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider transition-all duration-200 active:scale-95">
+                                <span class="material-symbols-outlined text-xs">print</span> Label
                             </a>
                         </div>
                     </div>
@@ -639,12 +639,42 @@
                     </div>
                 </div>
 
-                <!-- Shiprocket integration -->
-                <div class="border-b border-outline-variant/30 pb-4">
-                    <button id="generate-shiprocket-btn-${internalId}" class="w-full bg-secondary-container text-primary font-bold py-2.5 rounded-lg text-xs font-label-caps uppercase tracking-wider hover:opacity-90 transition-all">
-                        Generate Shiprocket Label
-                    </button>
-                </div>
+                <!-- Logistics & Shipping Label Section -->
+                ${o.is_admin_managed ? `
+                    <div class="border-b border-outline-variant/30 pb-4">
+                        <div class="bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 p-3 rounded-lg text-xs flex items-start gap-2">
+                            <span class="material-symbols-outlined text-sm mt-0.5 text-amber-600">verified_user</span>
+                            <div>
+                                <p class="font-bold">Tohfa Special Shop</p>
+                                <p class="opacity-90">Fulfillment for this shop is managed directly by Tohfa Admin.</p>
+                            </div>
+                        </div>
+                    </div>
+                ` : (o.tracking_number || o.tracking_id) ? `
+                    <div class="border-b border-outline-variant/30 pb-4 flex flex-col gap-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-on-surface">Courier Waybill (AWB):</span>
+                            <span class="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded select-all">${escapeHtml(o.tracking_number || o.tracking_id)}</span>
+                        </div>
+                        <div class="flex gap-2 mt-1">
+                            <a href="/api/logistics/label/${internalId}?format=html" target="_blank" rel="noopener" class="flex-1 text-center bg-secondary-container text-primary font-bold py-2 rounded-lg text-xs uppercase tracking-wider hover:opacity-90 transition-all flex items-center justify-center gap-1">
+                                <span class="material-symbols-outlined text-xs">print</span> Print Label
+                            </a>
+                            ${(o.tracking_url) ? `
+                            <a href="${escapeHtml(o.tracking_url)}" target="_blank" rel="noopener" class="flex-1 text-center border border-primary text-primary font-bold py-2 rounded-lg text-xs uppercase tracking-wider hover:bg-secondary-container/20 transition-all flex items-center justify-center gap-1">
+                                <span class="material-symbols-outlined text-xs">open_in_new</span> Track
+                            </a>
+                            ` : ''}
+                        </div>
+                    </div>
+                ` : `
+                    <div class="border-b border-outline-variant/30 pb-4 flex flex-col gap-2">
+                        <button id="generate-ithink-btn-${internalId}" class="w-full bg-secondary-container text-primary font-bold py-2.5 rounded-lg text-xs font-label-caps uppercase tracking-wider hover:opacity-90 transition-all flex items-center justify-center gap-1">
+                            <span class="material-symbols-outlined text-sm">local_shipping</span> Generate Shipping Label (iThink)
+                        </button>
+                        <div id="ithink-error-${internalId}" class="hidden text-xs text-error p-2 bg-error/10 border border-error/20 rounded"></div>
+                    </div>
+                `}
 
                 <!-- Update status forms -->
                 <div class="flex flex-col gap-4 border-b border-outline-variant/30 pb-4">
@@ -696,20 +726,47 @@
                 </div>
             `;
 
-            // Generate Shiprocket Label handler
-            document.getElementById(`generate-shiprocket-btn-${internalId}`).addEventListener('click', () => {
-                alert('Generate Shiprocket Label placeholder');
-            });
+            // Generate iThink Label handler
+            const ithinkBtn = document.getElementById(`generate-ithink-btn-${internalId}`);
+            if (ithinkBtn) {
+                ithinkBtn.addEventListener('click', async () => {
+                    const errDiv = document.getElementById(`ithink-error-${internalId}`);
+                    if (errDiv) errDiv.classList.add('hidden');
+                    ithinkBtn.disabled = true;
+                    ithinkBtn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> Generating Waybill…';
+                    try {
+                        const r = await fetch(`${API_BASE_URL}/api/seller/orders/${internalId}/awb`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+                        });
+                        const d = await r.json();
+                        if (!r.ok || !d.success) {
+                            throw new Error(d.message || 'Failed to generate shipping label via iThink.');
+                        }
+                        if (d.data?.manual_fulfillment_required) {
+                            showToast('This order requires manual admin fulfillment.', 'info');
+                        } else {
+                            showToast(`AWB #${d.data?.awb || d.data?.tracking_id} generated!`, 'success');
+                        }
+                        toggleSlideOver(false);
+                        loadOrders();
+                    } catch (err) {
+                        if (errDiv) {
+                            errDiv.textContent = err.message;
+                            errDiv.classList.remove('hidden');
+                        }
+                        showToast(err.message, 'error');
+                        ithinkBtn.disabled = false;
+                        ithinkBtn.innerHTML = '<span class="material-symbols-outlined text-sm">local_shipping</span> Generate Shipping Label (iThink)';
+                    }
+                });
+            }
 
             // Quick status action buttons handler
             document.querySelectorAll('.status-action-btn').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     const status = btn.dataset.status;
                     let tracking_id = o.tracking_number || o.tracking_id || '';
-                    if (status === 'dispatched' && !tracking_id) {
-                        tracking_id = prompt('Enter Tracking ID for shipping:');
-                        if (!tracking_id) return;
-                    }
                     try {
                         const r = await fetch(`${API_BASE_URL}/api/seller/orders/${internalId}/status`, {
                             method: 'PATCH',
@@ -779,12 +836,21 @@
                 const tn  = document.getElementById(`tracking-input-${internalId}`).value.trim();
                 const btn = document.getElementById(`add-tracking-btn-${internalId}`);
                 if (!tn) { showToast('Please enter a tracking number', 'error'); return; }
+
+                let overwrite = false;
+                if (o.tracking_number && o.tracking_number !== tn) {
+                    if (!confirm(`This order already has tracking ID (${o.tracking_number}). Are you sure you want to overwrite it?`)) {
+                        return;
+                    }
+                    overwrite = true;
+                }
+
                 btn.disabled = true; btn.textContent = 'Saving…';
                 try {
                     const r = await fetch(`${API_BASE_URL}/api/seller/orders/${internalId}/tracking`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ tracking_number: tn })
+                        body: JSON.stringify({ tracking_number: tn, overwrite })
                     });
                     const d = await r.json();
                     if (!r.ok) throw new Error(d.message || 'Failed to update tracking ID.');
@@ -897,7 +963,7 @@
 
             let tracking_id = '';
             if (status === 'dispatched') {
-                tracking_id = prompt('Enter tracking ID for shipping (or leave empty to auto-generate):') || 'TRK-AUTO';
+                tracking_id = prompt('Enter courier tracking ID for dispatch (optional):') || '';
             }
 
             let successCount = 0;

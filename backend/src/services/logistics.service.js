@@ -3,21 +3,26 @@
  * File: backend/src/services/logistics.service.js
  * Role: Integrates with iThink Logistics API for automated waybill creation,
  *       multi-origin seller fulfillment, real-time pincode serviceability checks,
- *       and parcel tracking. Special / curated sellers are handled according
- *       to platform architecture.
+ *       and parcel tracking. Tohfa Special / curated shops (is_admin_managed = true)
+ *       are strictly excluded and handled manually by admin.
  */
 'use strict';
 
-const { ithinkRequest } = require('../config/ithink');
+const { ithinkRequest, isIThinkEnabled } = require('../config/ithink');
 const { query } = require('../config/db');
 const { createNotification } = require('../controllers/notification.controller');
+let ownerNotifyService = null;
+try {
+  ownerNotifyService = require('./ownerNotify.service');
+} catch (_) {}
 
 /**
  * Check if seller is regular (eligible for iThink) or special (manual handling)
  * @param {string} sellerId - user_id of the seller
- * @returns {Promise<boolean>} true if regular, false if special
+ * @returns {Promise<boolean>} true if regular, false if special/admin-managed
  */
 async function isEligibleForIThink(sellerId) {
+  if (!sellerId) return false;
   try {
     const { rows } = await query(
       `SELECT (COALESCE(sp.is_admin_managed::text, s.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed
@@ -28,20 +33,29 @@ async function isEligibleForIThink(sellerId) {
       [sellerId]
     );
     if (!rows.length) return false;
+    // Fails closed: if is_admin_managed is true, not eligible for iThink
     return !rows[0].is_admin_managed;
   } catch (err) {
-    console.error('[Logistics] Failed to check seller type:', err.message);
+    console.error('[iThink] Failed to check seller eligibility (failing closed):', err.message);
     return false;
   }
 }
 
 /**
- * Create a shipment booking via iThink Logistics (BUG-07 Multi-Origin Fulfillment)
+ * Create a shipment booking via iThink Logistics (Multi-Origin Fulfillment)
  * Dynamically queries the seller's verified pickup_address from seller_profiles.
+ * 
+ * Rules:
+ * 1. Tohfa Special Shops (is_admin_managed = true) return manual_fulfillment_required without touching iThink.
+ * 2. If tracking_id already exists, returns existing tracking idempotently.
+ * 3. Never produces mock tracking numbers in production.
+ * 4. Errors leave order status unchanged, record shipment_error, and notify admin.
+ *
  * @param {Object|string} orderOrId - Full order record or order ID
+ * @param {Object} [options] - Booking options (e.g. fromPayment: boolean)
  * @returns {Promise<Object>}
  */
-async function createShipment(orderOrId) {
+async function createShipment(orderOrId, options = {}) {
   let order = orderOrId;
   if (!order || typeof order === 'string' || typeof order === 'number') {
     const { rows: orderRows } = await query('SELECT * FROM orders WHERE id = $1', [orderOrId]);
@@ -54,8 +68,56 @@ async function createShipment(orderOrId) {
   }
 
   if (!order || !order.seller_id) {
-    const err = new Error('Invalid order provided for shipment.');
+    const err = new Error('Invalid order: missing seller identifier.');
     err.status = 400;
+    throw err;
+  }
+
+  // 1. HARD GATE: Special Shop check
+  const eligible = await isEligibleForIThink(order.seller_id);
+  if (!eligible) {
+    console.log(`[iThink] Order ${order.id} belongs to Tohfa Special Shop. Manual fulfillment required; skipping automated courier booking.`);
+    return {
+      success: true,
+      manual_fulfillment_required: true,
+      message: 'Order belongs to a Tohfa Special / Admin-managed shop. Manual courier dispatch is required.',
+      order,
+    };
+  }
+
+  // 2. IDEMPOTENCY: If order already has a tracking ID from iThink, return it immediately
+  if (order.tracking_id) {
+    console.log(`[iThink] Order ${order.id} already has tracking ID ${order.tracking_id}. Returning existing shipment.`);
+    return {
+      success: true,
+      idempotent: true,
+      waybill: order.tracking_id,
+      tracking_id: order.tracking_id,
+      tracking_url: order.tracking_url || `https://ithinklogistics.com/track/${encodeURIComponent(order.tracking_id)}`,
+      courier: order.courier || 'iThink Logistics',
+      order,
+    };
+  }
+
+  // 3. BOOKING TIMING CHECK: If invoked from payment verification and auto-book on payment is disabled
+  if (options.fromPayment && process.env.ITHINK_AUTO_BOOK_ON_PAYMENT !== 'true') {
+    console.log(`[iThink] Order ${order.id} payment confirmed. Courier booking deferred until artisan packs the order in Seller Studio.`);
+    return {
+      success: true,
+      deferred: true,
+      message: 'Courier booking deferred until order is packed.',
+      order,
+    };
+  }
+
+  // 4. FEATURE FLAG CHECK
+  const isEnabled = isIThinkEnabled();
+  const isDevMock = (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) && process.env.MOCK_LOGISTICS === 'true';
+
+  if (!isEnabled && !isDevMock) {
+    const err = new Error('iThink Logistics integration is currently disabled (ITHINK_ENABLED=false). Manual tracking entry is required.');
+    err.status = 503;
+    err.code = 'ITHINK_DISABLED';
     throw err;
   }
 
@@ -66,7 +128,7 @@ async function createShipment(orderOrId) {
   );
   const address = addrRows[0] || {};
 
-  // Fetch seller store details & multi-origin pickup address from seller_profiles / sellers
+  // Fetch seller store details & multi-origin pickup address
   const { rows: sellerRows } = await query(
     `SELECT u.name, u.phone,
             COALESCE(sp.store_name, sel.store_name, u.name) AS store_name,
@@ -111,68 +173,139 @@ async function createShipment(orderOrId) {
   }
 
   let trackingId = null;
+  let courierName = 'iThink Logistics';
   let logisticsResponse = null;
 
-  try {
-    const payload = {
-      order_id: String(order.id).substring(0, 30),
-      payment_method: order.payment_status === 'paid' ? 'prepaid' : 'cod',
-      total_amount: Number(order.total_amount) || 0,
-      customer_name: address.name || 'Customer',
-      customer_phone: address.phone || '',
-      customer_address: `${address.line1 || ''} ${address.line2 || ''}`.trim(),
-      customer_city: address.city || '',
-      customer_state: address.state || '',
-      customer_pincode: address.pincode || '',
-      pickup_store_name: seller.store_name || seller.name || 'Tohfa Artisan',
-      pickup_name: pickup.contact_name || seller.name || seller.store_name || 'Tohfa Artisan',
-      pickup_phone: pickup.contact_phone || seller.whatsapp_number || seller.phone || '',
-      pickup_address: `${pickupLine1} ${pickup.line2 || ''}`.trim(),
-      pickup_city: pickupCity,
-      pickup_state: pickup.state || '',
-      pickup_pincode: pickupPincode,
-      weight_in_grams: 500,
-    };
+  // 5. CALL ITHINK API (Or DEV MOCK IF EXPLICITLY ENABLED IN DEV)
+  if (isEnabled) {
+    try {
+      // TODO(verify against iThink docs): Confirm exact payload parameter names & warehouse address handling
+      const payload = {
+        order_id: String(order.order_ref || order.id),
+        order_reference_id: String(order.id),
+        payment_method: order.payment_status === 'paid' ? 'prepaid' : 'cod',
+        total_amount: Number(order.total_amount) || 0,
+        customer_name: address.name || address.full_name || 'Customer',
+        customer_phone: address.phone || '',
+        customer_address: `${address.line1 || ''} ${address.line2 || ''}`.trim(),
+        customer_city: address.city || '',
+        customer_state: address.state || '',
+        customer_pincode: address.pincode || '',
+        pickup_store_name: seller.store_name || seller.name || 'Tohfa Artisan Workshop',
+        pickup_name: pickup.contact_name || seller.name || seller.store_name || 'Tohfa Artisan',
+        pickup_phone: pickup.contact_phone || seller.whatsapp_number || seller.phone || '',
+        pickup_address: `${pickupLine1} ${pickup.line2 || ''}`.trim(),
+        pickup_city: pickupCity,
+        pickup_state: pickup.state || '',
+        pickup_pincode: pickupPincode,
+        weight_in_grams: 500,
+      };
 
-    logisticsResponse = await ithinkRequest('/order/add', 'POST', payload);
-    trackingId = logisticsResponse.waybill || logisticsResponse.tracking_id || logisticsResponse.awb_number || logisticsResponse.data?.awb_number;
-  } catch (apiErr) {
-    console.warn('[Logistics API fallback]: Using mock dispatch waybill identifier.', apiErr.message);
-  }
+      // TODO(verify against iThink docs): Check endpoint path /order/add.json vs /order/add
+      logisticsResponse = await ithinkRequest('/order/add.json', 'POST', payload)
+        .catch(() => ithinkRequest('/order/add', 'POST', payload));
 
-  // Fallback AWB format if sandbox API is unreachable or mocked
-  if (!trackingId) {
+      trackingId = logisticsResponse.waybill || 
+                   logisticsResponse.tracking_id || 
+                   logisticsResponse.awb_number || 
+                   logisticsResponse.data?.awb_number ||
+                   logisticsResponse.data?.[0]?.awb_number;
+
+      courierName = logisticsResponse.courier_name || 
+                    logisticsResponse.data?.courier_name || 
+                    logisticsResponse.data?.[0]?.courier_name || 
+                    'iThink Logistics';
+
+      if (!trackingId) {
+        const errorMsg = logisticsResponse.message || logisticsResponse.html_message || 'iThink Logistics did not return an AWB / waybill identifier.';
+        throw new Error(errorMsg);
+      }
+    } catch (apiErr) {
+      console.error(`[iThink] Shipment booking failed for order ${order.id}:`, apiErr.message);
+
+      // Record error on the order, leave status unchanged
+      await query(
+        `UPDATE orders
+         SET shipment_status = 'failed',
+             shipment_error = $1,
+             updated_at = NOW()
+         WHERE id = $2`,
+        [apiErr.message.substring(0, 500), order.id]
+      ).catch(() => {});
+
+      // Alert admin via email
+      if (ownerNotifyService && typeof ownerNotifyService.sendMail === 'function' && process.env.OWNER_NOTIFY_EMAIL) {
+        ownerNotifyService.sendMail(
+          process.env.OWNER_NOTIFY_EMAIL,
+          `[Tohfa Logistics Alert] iThink Booking Failed for Order #${String(order.id).slice(0, 8)}`,
+          `<h3>Logistics Booking Failure</h3>
+           <p><strong>Order ID:</strong> ${order.id}</p>
+           <p><strong>Seller Store:</strong> ${seller.store_name}</p>
+           <p><strong>Error:</strong> ${apiErr.message}</p>
+           <p>The order status has NOT been modified. Please review the iThink dashboard or contact the artisan.</p>`
+        ).catch(e => console.warn('[iThink] Failed to send admin alert email:', e.message));
+      }
+
+      throw apiErr;
+    }
+  } else if (isDevMock) {
+    // DEV-ONLY mock behind explicit MOCK_LOGISTICS=true
+    console.warn(`[iThink DEV MOCK] Simulating booking for order ${order.id} in development.`);
     const randomHex = Math.random().toString(36).substring(2, 8).toUpperCase();
-    trackingId = `ITL-${randomHex}${Date.now().toString().slice(-4)}`;
+    trackingId = `DEV-ITL-${randomHex}${Date.now().toString().slice(-4)}`;
+    courierName = 'iThink Sandbox Logistics';
   }
 
-  const trackingUrl = `https://ithinklogistics.com/track/${trackingId}`;
+  const trackingUrl = `https://ithinklogistics.com/track/${encodeURIComponent(trackingId)}`;
 
-  // Update order status to shipped with tracking details
+  // 6. ATOMIC IDEMPOTENT UPDATE: Set status = 'shipped' only if tracking_id IS NULL
   const { rows: updatedOrders } = await query(
     `UPDATE orders 
-     SET status = 'shipped', tracking_id = $1, tracking_url = $2, updated_at = NOW() 
-     WHERE id = $3
+     SET status = 'shipped',
+         tracking_id = $1,
+         tracking_url = $2,
+         courier = $3,
+         shipment_status = 'booked',
+         shipment_error = NULL,
+         dispatched_at = COALESCE(dispatched_at, NOW()),
+         updated_at = NOW() 
+     WHERE id = $4 AND tracking_id IS NULL
      RETURNING *`,
-    [trackingId, trackingUrl, order.id]
+    [trackingId, trackingUrl, courierName, order.id]
   );
 
-  // Notify buyer
+  const finalOrder = updatedOrders[0] || order;
+
+  // 7. Update seller_orders tracking details
+  await query(
+    `UPDATE seller_orders
+     SET awb_number = $1,
+         courier_name = $2,
+         tracking_url = $3,
+         status = 'shipped',
+         updated_at = NOW()
+     WHERE (order_id = $4 OR id = $4) AND (awb_number IS NULL OR awb_number = '')`,
+    [trackingId, courierName, trackingUrl, order.id]
+  ).catch(e => console.warn('[iThink] Non-fatal seller_orders update notice:', e.message));
+
+  // 8. Notify buyer of real dispatch
   if (order.buyer_id) {
     await createNotification(
       order.buyer_id,
       'order_shipped',
       'Order Shipped! 🚀',
-      `Your handcrafted gift has been dispatched with waybill tracking #${trackingId}.`,
-      { order_id: order.id, tracking_id: trackingId, tracking_url: trackingUrl }
-    ).catch(e => console.warn('[Logistics] Notification trigger failed:', e.message));
+      `Your handcrafted gift has been dispatched with ${courierName} tracking #${trackingId}.`,
+      { order_id: order.id, tracking_id: trackingId, tracking_url: trackingUrl, courier: courierName }
+    ).catch(e => console.warn('[iThink] Buyer notification trigger failed:', e.message));
   }
 
   return {
+    success: true,
     waybill: trackingId,
     tracking_id: trackingId,
     tracking_url: trackingUrl,
-    order: updatedOrders[0] || order,
+    courier: courierName,
+    order: finalOrder,
     details: logisticsResponse,
   };
 }
@@ -191,7 +324,9 @@ function calculateEstimatedDelivery(preparationDays = 2, courierTransitDays = 3)
 }
 
 /**
- * Check delivery serviceability for a given destination pincode (BUG-08)
+ * Check delivery serviceability for a given destination pincode
+ * Maintains 100% backward compatibility with existing public contract.
+ *
  * @param {string} pincode - 6 digit destination pincode
  * @param {Object} [options] - Optional params like pickup_pincode, weight, preparation_days
  * @returns {Promise<Object>}
@@ -210,31 +345,40 @@ async function checkServiceability(pincode, options = {}) {
   const weight = options.weight || 500;
   const prepDays = Number(options.preparation_days !== undefined ? options.preparation_days : 2);
 
-  try {
-    const response = await ithinkRequest('/rate/serviceability', 'POST', {
-      pickup_pincode: pickupPincode,
-      delivery_pincode: cleanPin,
-      weight_in_grams: weight,
-    });
+  // If live iThink is enabled, query their rate/serviceability endpoint
+  if (isIThinkEnabled()) {
+    try {
+      // TODO(verify against iThink docs): Endpoint name /rate/serviceability.json vs /rate/serviceability
+      const response = await ithinkRequest('/rate/serviceability.json', 'POST', {
+        pickup_pincode: pickupPincode,
+        delivery_pincode: cleanPin,
+        weight_in_grams: weight,
+      }).catch(() => ithinkRequest('/rate/serviceability', 'POST', {
+        pickup_pincode: pickupPincode,
+        delivery_pincode: cleanPin,
+        weight_in_grams: weight,
+      }));
 
-    if (response && (response.status === 'success' || response.serviceable)) {
-      const transitDays = Number(response.estimated_days || 3);
-      return {
-        serviceable: true,
-        pincode: cleanPin,
-        couriers: response.data || [
-          { name: 'Delhivery Surface', type: 'Standard', estimated_days: 4, cod_available: true },
-          { name: 'BlueDart Express', type: 'Express', estimated_days: 2, cod_available: true },
-        ],
-        estimated_delivery_days: transitDays,
-        estimated_delivery_date: calculateEstimatedDelivery(prepDays, transitDays),
-        preparation_days: prepDays,
-        cod_available: response.cod_available !== undefined ? response.cod_available : true,
-        message: 'Delivery is available to your location.',
-      };
+      if (response && (response.status === 'success' || response.serviceable)) {
+        const transitDays = Number(response.estimated_days || 3);
+        return {
+          serviceable: true,
+          pincode: cleanPin,
+          source: 'ithink',
+          couriers: response.data || [
+            { name: 'Delhivery Surface', type: 'Standard', estimated_days: 4, cod_available: true },
+            { name: 'BlueDart Express', type: 'Express', estimated_days: 2, cod_available: true },
+          ],
+          estimated_delivery_days: transitDays,
+          estimated_delivery_date: calculateEstimatedDelivery(prepDays, transitDays),
+          preparation_days: prepDays,
+          cod_available: response.cod_available !== undefined ? response.cod_available : true,
+          message: 'Delivery is available to your location.',
+        };
+      }
+    } catch (err) {
+      console.warn('[iThink] Serviceability API offline or error:', err.message);
     }
-  } catch (err) {
-    console.warn('[Logistics Serviceability API fallback]:', err.message);
   }
 
   // Reliable offline validator for standard Indian postal codes (PINs starting 1-8)
@@ -246,6 +390,7 @@ async function checkServiceability(pincode, options = {}) {
     return {
       serviceable: true,
       pincode: cleanPin,
+      source: 'estimated',
       couriers: [
         { name: 'Delhivery Surface', type: 'Standard', estimated_days: 4, cod_available: true },
         { name: 'BlueDart Express', type: 'Express', estimated_days: 2, cod_available: true },
@@ -262,6 +407,7 @@ async function checkServiceability(pincode, options = {}) {
   return {
     serviceable: false,
     pincode: cleanPin,
+    source: 'estimated',
     message: 'Delivery is currently not available for this postal code.',
   };
 }
@@ -271,17 +417,32 @@ async function checkServiceability(pincode, options = {}) {
  * @param {string} trackingId
  */
 async function trackShipment(trackingId) {
-  try {
-    if (!trackingId) throw new Error('Tracking ID is required');
-    const result = await ithinkRequest(`/tracking/${trackingId}`, 'GET');
-    return result;
-  } catch (err) {
-    return {
-      tracking_id: trackingId,
-      status: 'In Transit',
-      message: 'Tracking details will refresh once scanned at nearest logistics hub.',
-    };
+  if (!trackingId) {
+    const err = new Error('Tracking ID is required');
+    err.status = 400;
+    throw err;
   }
+
+  if (isIThinkEnabled()) {
+    try {
+      // TODO(verify against iThink docs): Endpoint /tracking/track.json or /tracking/:id
+      const result = await ithinkRequest(`/tracking/${encodeURIComponent(trackingId)}`, 'GET');
+      return {
+        tracking_id: trackingId,
+        source: 'ithink',
+        ...result,
+      };
+    } catch (err) {
+      console.warn(`[iThink] Live tracking error for ${trackingId}:`, err.message);
+    }
+  }
+
+  return {
+    tracking_id: trackingId,
+    status: 'In Transit',
+    source: 'estimated',
+    message: 'Tracking details will refresh once scanned by courier at nearest hub.',
+  };
 }
 
 /**
@@ -310,14 +471,16 @@ async function generateSellerAWB(orderId, sellerId) {
     throw err;
   }
 
-  const shipment = await createShipment(order);
+  // Book shipment (fromPayment: false allows explicit seller booking)
+  const shipment = await createShipment(order, { fromPayment: false });
 
   return {
     success: true,
-    awb: shipment.waybill,
+    awb: shipment.waybill || shipment.tracking_id,
     tracking_id: shipment.tracking_id,
     tracking_url: shipment.tracking_url,
-    label_url: `/api/logistics/label/${order.id}`,
+    courier: shipment.courier || 'iThink Logistics',
+    label_url: `/api/logistics/label/${order.id}?format=html`,
     order: shipment.order,
   };
 }
@@ -329,7 +492,7 @@ async function generateSellerAWB(orderId, sellerId) {
  */
 async function getShippingLabel(orderId, sellerId) {
   const { rows } = await query(
-    `SELECT o.id, o.status, o.tracking_id, o.tracking_url, o.total_amount, o.created_at,
+    `SELECT o.id, o.status, o.tracking_id, o.tracking_url, o.courier, o.total_amount, o.created_at,
             u.name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone,
             a.name AS recipient_name, a.phone AS recipient_phone,
             a.line1 AS delivery_line1, a.line2 AS delivery_line2, a.city AS delivery_city,
@@ -383,8 +546,9 @@ async function getShippingLabel(orderId, sellerId) {
   return {
     order_id: orderData.id,
     order_ref: `TOHFA-${String(orderData.id).substring(0, 8).toUpperCase()}`,
-    tracking_id: orderData.tracking_id || `ITL-${String(orderData.id).substring(0, 8).toUpperCase()}`,
-    tracking_url: orderData.tracking_url || `https://ithinklogistics.com/track/${orderData.tracking_id || ''}`,
+    tracking_id: orderData.tracking_id || 'PENDING',
+    tracking_url: orderData.tracking_url || '',
+    courier: orderData.courier || 'iThink Logistics',
     status: orderData.status,
     total_amount: orderData.total_amount,
     created_at: orderData.created_at,
@@ -420,4 +584,3 @@ module.exports = {
   generateSellerAWB,
   getShippingLabel,
 };
-

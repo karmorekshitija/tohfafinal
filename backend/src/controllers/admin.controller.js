@@ -14,6 +14,7 @@ const bestsellerService = require('../services/bestseller.service');
 const { logAdminAction } = require('../services/audit.service');
 const { createNotification } = require('./notification.controller');
 const { slugify, isReservedSlug } = require('../utils/slug');
+const { maskPhone } = require('../utils/phone');
 
 // ---------------------------------------------------------------------------
 // 1. DASHBOARD & LIVE PLATFORM STATS
@@ -2116,6 +2117,285 @@ async function createSpecialShop(req, res, next) {
   }
 }
 
+/**
+ * Create a standard artisan / regular seller account with custom credentials directly from admin panel.
+ * Pre-approves the seller and sets up their wallet, studio settings, plan, and permissions
+ * while keeping is_admin_managed = FALSE and seller_type = 'regular'.
+ */
+async function createRegularSeller(req, res, next) {
+  const client = await db.getClient();
+  try {
+    const {
+      name,
+      full_name,
+      store_name,
+      shop_name,
+      email,
+      username,
+      password,
+      phone,
+      slug,
+      bio,
+      craft_specialty,
+      specialty,
+      commission_rate,
+      plan,
+      subscription_plan,
+      pickup_address,
+      bank_details
+    } = req.body;
+
+    const artisanName = (name || full_name || store_name || shop_name || '').trim();
+    const finalStoreName = (store_name || shop_name || artisanName || 'Artisan Studio').trim();
+
+    if (!finalStoreName) {
+      return res.status(400).json({ success: false, message: 'Store / Brand Name is required.' });
+    }
+
+    if (!password || String(password).trim().length < 6) {
+      return res.status(400).json({ success: false, message: 'Password is required and must be at least 6 characters.' });
+    }
+
+    // Determine email / login identifier
+    const rawIdentifier = (email || username || '').trim();
+    if (!rawIdentifier) {
+      return res.status(400).json({ success: false, message: 'Email or Username is required for seller login.' });
+    }
+
+    // If identifier contains @, use it as email; otherwise treat as username and append @thetohfa.in
+    const cleanEmail = rawIdentifier.includes('@')
+      ? rawIdentifier.toLowerCase()
+      : `${rawIdentifier.toLowerCase().replace(/[^a-z0-9_.-]/g, '')}@thetohfa.in`;
+
+    const cleanPhone = phone ? String(phone).replace(/[\s\-\+\(\)]/g, '').slice(-10) : null;
+    const cleanBio = bio || (craft_specialty || specialty ? `Artisan specializing in ${craft_specialty || specialty}` : '');
+
+    // Slug generation
+    const baseSlug = (slug || finalStoreName).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') || 'artisan';
+    let cleanSlug = baseSlug;
+
+    // Check slug conflict and make unique if needed
+    const { rows: existingSlug } = await query('SELECT id FROM sellers WHERE slug = $1', [cleanSlug]);
+    if (existingSlug.length > 0) {
+      cleanSlug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
+    }
+
+    // Plan & Commission
+    const selectedPlan = ['basic', 'pro', 'max'].includes(String(plan || subscription_plan).toLowerCase())
+      ? String(plan || subscription_plan).toLowerCase()
+      : 'basic';
+    const renewsAt = selectedPlan === 'basic' ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const commRate = (commission_rate !== undefined && commission_rate !== null && commission_rate !== '')
+      ? parseFloat(commission_rate)
+      : 10.00;
+
+    // Address & Bank details
+    const formattedAddress = (typeof pickup_address === 'object' && pickup_address !== null && Object.keys(pickup_address).length > 0)
+      ? JSON.stringify(pickup_address)
+      : (typeof pickup_address === 'string' && pickup_address.trim() ? pickup_address.trim() : '{}');
+
+    const formattedBank = (typeof bank_details === 'object' && bank_details !== null && Object.keys(bank_details).length > 0)
+      ? JSON.stringify(bank_details)
+      : (typeof bank_details === 'string' && bank_details.trim() ? bank_details.trim() : '{}');
+
+    // Onboarding completion check
+    const hasAddress = pickup_address && (pickup_address.city || pickup_address.address_line1 || pickup_address.address);
+    const hasBank = bank_details && (bank_details.account_number || bank_details.accountNumber || bank_details.upi_id);
+    const isOnboardingCompleted = Boolean(hasAddress && hasBank);
+
+    const bcrypt = require('bcrypt');
+    const passwordHash = await bcrypt.hash(String(password).trim(), 12);
+
+    await client.query('BEGIN');
+
+    // 1. User creation or role update
+    const { rows: existingUser } = await client.query(
+      'SELECT id, role FROM users WHERE LOWER(TRIM(email)) = $1 OR ($2::text IS NOT NULL AND phone = $2)',
+      [cleanEmail, cleanPhone]
+    );
+
+    let userId;
+    if (existingUser.length > 0) {
+      const user = existingUser[0];
+      if (user.role === 'seller') {
+        await client.query('ROLLBACK');
+        return res.status(409).json({
+          success: false,
+          message: `A seller account with login identifier "${cleanEmail}" already exists.`
+        });
+      }
+      userId = user.id;
+      await client.query(
+        `UPDATE users
+         SET role = 'seller', is_active = TRUE, name = $1, full_name = $1, display_name = $1, password_hash = $2, phone = COALESCE(phone, $3), updated_at = NOW()
+         WHERE id = $4`,
+        [artisanName, passwordHash, cleanPhone, userId]
+      );
+    } else {
+      const { rows: newUser } = await client.query(
+        `INSERT INTO users (name, full_name, display_name, email, phone, password_hash, role, is_active)
+         VALUES ($1, $1, $1, $2, $3, $4, 'seller', TRUE)
+         RETURNING id`,
+        [artisanName, cleanEmail, cleanPhone, passwordHash]
+      );
+      userId = newUser[0].id;
+    }
+
+    // 2. Master sellers row (is_admin_managed = FALSE, is_approved = TRUE, verification_status = 'verified')
+    const { rows: sellerRows } = await client.query(
+      `INSERT INTO sellers (
+         user_id, store_name, slug, bio,
+         pickup_address, bank_details, commission_rate,
+         verification_status, kyc_status, is_active, is_approved,
+         is_admin_managed, subscription_plan, subscription_status,
+         subscription_renews_at, onboarding_completed, created_at, updated_at
+       ) VALUES (
+         $1, $2, $3, $4,
+         $5, $6, $7,
+         'verified', 'VERIFIED', TRUE, TRUE,
+         FALSE, $8, 'active',
+         $9, $10, NOW(), NOW()
+       )
+       ON CONFLICT (user_id) DO UPDATE SET
+         store_name = EXCLUDED.store_name,
+         slug = EXCLUDED.slug,
+         bio = EXCLUDED.bio,
+         pickup_address = CASE WHEN EXCLUDED.pickup_address::text != '{}' THEN EXCLUDED.pickup_address ELSE sellers.pickup_address END,
+         bank_details = CASE WHEN EXCLUDED.bank_details::text != '{}' THEN EXCLUDED.bank_details ELSE sellers.bank_details END,
+         commission_rate = EXCLUDED.commission_rate,
+         verification_status = 'verified',
+         kyc_status = 'VERIFIED',
+         is_active = TRUE,
+         is_approved = TRUE,
+         is_admin_managed = FALSE,
+         subscription_plan = EXCLUDED.subscription_plan,
+         subscription_status = 'active',
+         subscription_renews_at = EXCLUDED.subscription_renews_at,
+         onboarding_completed = EXCLUDED.onboarding_completed,
+         updated_at = NOW()
+       RETURNING id`,
+      [
+        userId, finalStoreName, cleanSlug, cleanBio,
+        formattedAddress, formattedBank, commRate,
+        selectedPlan, renewsAt, isOnboardingCompleted
+      ]
+    );
+    const sellerId = sellerRows[0]?.id;
+
+    // 3. Backward-compatible seller_profiles row
+    const { rows: spRows } = await client.query(
+      `INSERT INTO seller_profiles (
+         user_id, store_name, slug, bio, seller_type,
+         verification_status, is_approved, is_active, is_admin_managed,
+         commission_rate, pickup_address, bank_details,
+         onboarding_completed, subscription_plan, applied_at, approved_at,
+         created_at, updated_at
+       ) VALUES (
+         $1, $2, $3, $4, 'regular',
+         'verified', TRUE, TRUE, FALSE,
+         $5, $6, $7,
+         $8, $9, NOW(), NOW(),
+         NOW(), NOW()
+       )
+       ON CONFLICT (user_id) DO UPDATE SET
+         store_name = EXCLUDED.store_name,
+         slug = EXCLUDED.slug,
+         bio = EXCLUDED.bio,
+         seller_type = 'regular',
+         verification_status = 'verified',
+         is_approved = TRUE,
+         is_active = TRUE,
+         is_admin_managed = FALSE,
+         commission_rate = EXCLUDED.commission_rate,
+         pickup_address = CASE WHEN EXCLUDED.pickup_address::text != '{}' THEN EXCLUDED.pickup_address ELSE seller_profiles.pickup_address END,
+         bank_details = CASE WHEN EXCLUDED.bank_details::text != '{}' THEN EXCLUDED.bank_details ELSE seller_profiles.bank_details END,
+         onboarding_completed = EXCLUDED.onboarding_completed,
+         subscription_plan = EXCLUDED.subscription_plan,
+         approved_at = NOW(),
+         updated_at = NOW()
+       RETURNING *`,
+      [
+        userId, finalStoreName, cleanSlug, cleanBio,
+        commRate, formattedAddress, formattedBank,
+        isOnboardingCompleted, selectedPlan
+      ]
+    );
+
+    // 4. Wallet row (so Payouts tab works immediately)
+    if (sellerId) {
+      await client.query(
+        `INSERT INTO wallets (seller_id, user_id, balance, holding_balance, currency, created_at, updated_at)
+         VALUES ($1, $2, 0.00, 0.00, 'INR', NOW(), NOW())
+         ON CONFLICT (seller_id) DO UPDATE SET user_id = EXCLUDED.user_id`,
+        [sellerId, userId]
+      );
+    }
+
+    await client.query('COMMIT');
+
+    // 5. Audit Log
+    await logAdminAction({
+      adminId: req.user.id,
+      actionType: 'NORMAL_SELLER_CREATED_BY_ADMIN',
+      targetEntity: 'sellers',
+      targetId: userId,
+      details: {
+        store_name: finalStoreName,
+        slug: cleanSlug,
+        email: cleanEmail,
+        plan: selectedPlan,
+        is_admin_managed: false,
+        commission_rate: commRate
+      },
+      ipAddress: req.ip
+    }).catch(() => {});
+
+    // 6. Notification & Welcome Email
+    await createNotification(
+      userId,
+      'seller_approved',
+      'Welcome to Tohfa Studio! 🎉',
+      'Your artisan seller account has been registered and verified by administration. Log in to manage products, courier pickup addresses, and payouts.'
+    ).catch(() => {});
+
+    const { sendSellerApprovalEmail } = emailService;
+    if (sendSellerApprovalEmail) {
+      sendSellerApprovalEmail(cleanEmail, { sellerName: artisanName, storeName: finalStoreName }).catch(() => {});
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: `Artisan seller account "${finalStoreName}" created successfully.`,
+      data: {
+        user_id: userId,
+        seller_id: sellerId,
+        store_name: finalStoreName,
+        slug: cleanSlug,
+        email: cleanEmail,
+        username: rawIdentifier,
+        role: 'seller',
+        seller_type: 'regular',
+        is_admin_managed: false,
+        is_approved: true,
+        verification_status: 'verified',
+        subscription_plan: selectedPlan,
+        commission_rate: commRate,
+        onboarding_completed: isOnboardingCompleted,
+        login_credentials: {
+          identifier: rawIdentifier.includes('@') ? cleanEmail : rawIdentifier,
+          email: cleanEmail,
+          password: String(password).trim()
+        }
+      }
+    });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    next(err);
+  } finally {
+    client.release();
+  }
+}
+
 async function updateSpecialShop(req, res, next) {
   try {
     const shopId = req.params.id || req.params.sellerId;
@@ -2695,7 +2975,148 @@ async function updateSpecialOrderStatus(req, res, next) {
   }
 }
 
+/**
+ * GET /api/admin/whatsapp/outbox
+ * Read-only view of WhatsApp outbox audit logs with masked phone numbers
+ */
+async function getWhatsAppOutbox(req, res, next) {
+  try {
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200);
+    const { status, kind } = req.query;
+
+    const conditions = [];
+    const params = [];
+
+    if (status) {
+      params.push(status);
+      conditions.push(`status = $${params.length}`);
+    }
+
+    if (kind) {
+      params.push(kind);
+      conditions.push(`kind = $${params.length}`);
+    }
+
+    params.push(limit);
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const { rows } = await query(
+      `SELECT id, kind, idempotency_key, recipient_user_id,
+              intended_to, sent_to, template_name, variables,
+              status, attempts, next_attempt_at, provider_message_id,
+              error_code, error_message, created_at, updated_at, sent_at, delivered_at
+       FROM whatsapp_outbox
+       ${whereClause}
+       ORDER BY created_at DESC
+       LIMIT $${params.length}`,
+      params
+    );
+
+    const safeRows = rows.map((r) => ({
+      ...r,
+      intended_to: maskPhone(r.intended_to),
+      sent_to: maskPhone(r.sent_to),
+    }));
+
+    return res.json({
+      success: true,
+      data: {
+        total: safeRows.length,
+        outbox: safeRows,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/admin/whatsapp/outbox/:id/done  (admin-authenticated)
+// Marks a manual_pending WhatsApp outbox row as manual_done.
+// ---------------------------------------------------------------------------
+async function markWhatsAppOutboxDone(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!id || typeof id !== 'string' || !/^[0-9a-f-]{36}$/i.test(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid outbox ID.' });
+    }
+    const { rows } = await query(
+      `UPDATE whatsapp_outbox
+       SET status = 'manual_done', manual_done_at = NOW(), updated_at = NOW()
+       WHERE id = $1 AND status = 'manual_pending'
+       RETURNING id, status, kind, intended_to`,
+      [id]
+    );
+    if (!rows.length) {
+      // Check if already done
+      const { rows: existing } = await query(
+        `SELECT id, status FROM whatsapp_outbox WHERE id = $1`,
+        [id]
+      );
+      if (existing.length && existing[0].status === 'manual_done') {
+        return res.json({ success: true, message: 'Already marked as sent.', data: existing[0] });
+      }
+      return res.status(404).json({ success: false, message: 'Row not found or not in manual_pending status.' });
+    }
+    return res.json({ success: true, message: 'Marked as sent.', data: rows[0] });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/admin/whatsapp/outbox/:id/done?token=<hmac>  (public, token-protected)
+// One-click "Mark as Sent" from owner email link.
+// ---------------------------------------------------------------------------
+async function markWhatsAppOutboxDoneByToken(req, res) {
+  const { id } = req.params;
+  const { token } = req.query;
+
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    return res.status(200).send('<html><body><h1>Link not configured</h1><p>CRON_SECRET is not set on this server. Use the admin panel instead.</p></body></html>');
+  }
+
+  try {
+    const crypto = require('crypto');
+    const expected = crypto.createHmac('sha256', cronSecret).update(String(id)).digest('hex').slice(0, 32);
+    const bufToken = Buffer.from(typeof token === 'string' ? token : '');
+    const bufExpected = Buffer.from(expected);
+    const valid = bufToken.length === bufExpected.length && crypto.timingSafeEqual(bufToken, bufExpected);
+
+    if (!valid) {
+      return res.status(200).send('<html><body><h1>\u274C Invalid Link</h1><p>This link is invalid or has expired. Please use the admin panel.</p></body></html>');
+    }
+
+    const { rows: existing } = await query(
+      `SELECT id, status FROM whatsapp_outbox WHERE id = $1`,
+      [id]
+    );
+    if (!existing.length) {
+      return res.status(200).send('<html><body><h1>Not found</h1><p>This outbox entry no longer exists.</p></body></html>');
+    }
+    if (existing[0].status === 'manual_done') {
+      return res.status(200).send('<html><body style="font-family:Arial,sans-serif;max-width:500px;margin:60px auto;text-align:center;"><h1>\u2705 Already Marked as Sent</h1><p>This task was already confirmed. You can close this tab.</p><p style="color:#888;font-size:13px;">Team Tohfa</p></body></html>');
+    }
+
+    await query(
+      `UPDATE whatsapp_outbox
+       SET status = 'manual_done', manual_done_at = NOW(), updated_at = NOW()
+       WHERE id = $1`,
+      [id]
+    );
+
+    return res.status(200).send('<html><body style="font-family:Arial,sans-serif;max-width:500px;margin:60px auto;text-align:center;"><h1>\u2705 Marked as Sent</h1><p>The WhatsApp task has been confirmed. You can close this tab.</p><p style="color:#888;font-size:13px;">Team Tohfa</p></body></html>');
+  } catch (err) {
+    console.error('[Admin] markWhatsAppOutboxDoneByToken error:', err.message);
+    return res.status(200).send('<html><body><h1>Error</h1><p>Something went wrong. Please use the admin panel.</p></body></html>');
+  }
+}
+
 module.exports = {
+  getWhatsAppOutbox,
+  markWhatsAppOutboxDone,
+  markWhatsAppOutboxDoneByToken,
   getPlatformStats,
   listSellers,
   getAllSellers: listSellers,
@@ -2746,6 +3167,8 @@ module.exports = {
   createReport,
   listSpecialShops,
   createSpecialShop,
+  createRegularSeller,
+  createSeller: createRegularSeller,
   updateSpecialShop,
   switchSessionToSpecialShop,
   getRevenueBreakdown,

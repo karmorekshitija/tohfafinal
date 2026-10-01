@@ -38,8 +38,9 @@ router.get('/store-config', authMiddleware, sellerOnly, sellerController.getOwnS
 router.put('/store-config', authMiddleware, sellerOnly, sellerController.updateStoreConfig);
 router.patch('/store-config', authMiddleware, sellerOnly, sellerController.updateStoreConfig);
 router.patch('/status', authMiddleware, sellerOnly, sellerController.toggleVacationMode);
-router.post('/zai-mode', authMiddleware, sellerOnly, sellerController.updateStoreConfig);
-router.put('/zai-mode', authMiddleware, sellerOnly, sellerController.updateStoreConfig);
+router.post('/zai-mode', authMiddleware, sellerOnly, sellerController.toggleZaiMode);
+router.put('/zai-mode', authMiddleware, sellerOnly, sellerController.toggleZaiMode);
+router.post('/change-password', authMiddleware, sellerOnly, sellerController.changeSellerPassword);
 
 // Addresses (Studio dispatch/business address)
 router.get('/addresses', authMiddleware, sellerOnly, buyerController.getAddresses);
@@ -143,8 +144,8 @@ router.get('/reviews', authMiddleware, sellerOnly, (req, res, next) => {
   return reviewController.getSellerReviews(req, res, next);
 });
 router.post('/reviews/:id/reply', authMiddleware, sellerOnly, reviewController.replyToReview);
-router.get('/review-settings', authMiddleware, sellerOnly, (req, res) => res.json({ success: true, data: {} }));
-router.post('/review-settings', authMiddleware, sellerOnly, (req, res) => res.json({ success: true, message: 'Settings saved' }));
+router.get('/review-settings', authMiddleware, sellerOnly, sellerController.getReviewSettings);
+router.post('/review-settings', authMiddleware, sellerOnly, sellerController.saveReviewSettings);
 
 // Follow / Unfollow artisan
 router.post('/follow', authMiddleware, sellerController.followSeller);

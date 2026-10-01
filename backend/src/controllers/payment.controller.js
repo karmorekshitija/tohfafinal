@@ -10,7 +10,7 @@ const paymentService = require('../services/payment.service');
 const logisticsService = require('../services/logistics.service');
 const whatsappService = require('../services/whatsapp.service');
 const bestsellerService = require('../services/bestseller.service');
-const telegramService = require('../services/telegram.service');
+const ownerNotifyService = require('../services/ownerNotify.service');
 const { query, getClient } = require('../config/db');
 
 /**
@@ -196,34 +196,69 @@ async function verifyPayment(req, res, next) {
     const confirmedOrder = result.order;
 
     // Trigger logistics & notifications post-commit (errors here must not fail the verified payment)
-    logisticsService.createShipment(confirmedOrder).catch(e => console.error('[Logistics Dispatch Error]:', e.message));
+    logisticsService.createShipment(confirmedOrder, { fromPayment: true }).catch(e => console.error('[Logistics Dispatch Error]:', e.message));
     bestsellerService.recomputeForOrder(confirmedOrder.id || orderId).catch(e => console.error('[Bestseller Recompute Error]:', e.message));
 
 
-    // Notify seller via WhatsApp and Telegram (if special)
+    // Notify seller(s) via WhatsApp (and admin email if special)
     query(
-      `SELECT sp.whatsapp_number, u.name, sp.is_admin_managed, sp.store_name 
-       FROM seller_profiles sp 
-       JOIN users u ON u.id = sp.user_id 
-       WHERE sp.user_id = $1`,
-      [confirmedOrder.seller_id]
-    ).then(({ rows: sellerRows }) => {
-      if (sellerRows.length) {
-        const seller = sellerRows[0];
+      `SELECT so.id AS seller_order_id,
+              so.seller_id,
+              so.subtotal,
+              u.name,
+              COALESCE(sp.whatsapp_number, s.whatsapp_number, u.phone) AS whatsapp_number,
+              (COALESCE(sp.is_admin_managed::text, s.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
+              COALESCE(sp.store_name, s.store_name, u.name) AS store_name
+       FROM seller_orders so
+       JOIN users u ON u.id = so.seller_id
+       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+       LEFT JOIN sellers s ON s.user_id = u.id
+       WHERE so.order_id = $1`,
+      [confirmedOrder.id]
+    ).then(async ({ rows: sellerOrderRows }) => {
+      let sellersToNotify = sellerOrderRows;
+
+      // Fallback to confirmedOrder.seller_id if no sub-orders exist
+      if (!sellersToNotify.length && confirmedOrder.seller_id) {
+        const { rows: fallbackRows } = await query(
+          `SELECT NULL AS seller_order_id,
+                  u.id AS seller_id,
+                  $2::numeric AS subtotal,
+                  u.name,
+                  COALESCE(sp.whatsapp_number, s.whatsapp_number, u.phone) AS whatsapp_number,
+                  (COALESCE(sp.is_admin_managed::text, s.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
+                  COALESCE(sp.store_name, s.store_name, u.name) AS store_name
+           FROM users u
+           LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+           LEFT JOIN sellers s ON s.user_id = u.id
+           WHERE u.id = $1`,
+          [confirmedOrder.seller_id, confirmedOrder.total_amount]
+        );
+        sellersToNotify = fallbackRows;
+      }
+
+      for (const seller of sellersToNotify) {
         if (seller.whatsapp_number) {
           whatsappService.sendSellerOrderNotification(seller.whatsapp_number, {
             orderId: confirmedOrder.id,
+            sellerOrderId: seller.seller_order_id || null,
+            sellerId: seller.seller_id,
+            recipientUserId: seller.seller_id,
             buyerName: req.user?.name || 'Customer',
-            amount: confirmedOrder.total_amount,
+            amount: seller.subtotal || confirmedOrder.total_amount,
           }).catch(e => console.error('[WhatsApp Seller Alert Error]:', e.message));
         }
-        
-        if (String(seller.is_admin_managed) === 'true' || seller.is_admin_managed === 1 || seller.is_admin_managed === true) {
-          telegramService.sendSpecialOrderAlert(
-            confirmedOrder, 
-            seller.store_name || seller.name || 'Special Shop', 
-            req.user?.name || 'Customer'
-          ).catch(e => console.error('[Telegram Alert Error]:', e.message));
+
+        if (seller.is_admin_managed) {
+          // Admin alert for special orders
+          ownerNotifyService.sendAdminAlertEmail('special_order', {
+            id: confirmedOrder.id,
+            orderId: String(confirmedOrder.id).slice(0, 8),
+            shopName: seller.store_name || seller.name || 'Special Shop',
+            buyerName: req.user?.name || 'Customer',
+            amount: seller.subtotal || confirmedOrder.total_amount,
+            link: 'https://thetohfa.in/admin/special-orders.html',
+          }).catch(() => {});
         }
       }
     }).catch(e => console.error('[Seller Query Error]:', e.message));
@@ -317,7 +352,7 @@ async function testPay(req, res, next) {
 
     await client.query('COMMIT');
 
-    logisticsService.createShipment(result.order).catch(() => {});
+    logisticsService.createShipment(result.order, { fromPayment: true }).catch(() => {});
     bestsellerService.recomputeForOrder(order.id).catch(() => {});
 
     return res.json({

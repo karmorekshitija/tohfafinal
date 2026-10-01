@@ -514,6 +514,7 @@ async function autoSyncDatabase() {
       await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS capacity_limit INT DEFAULT 50;`);
       await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS vacation_mode BOOLEAN DEFAULT FALSE;`);
       await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS store_visibility BOOLEAN DEFAULT TRUE;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS review_settings JSONB DEFAULT '{"enabled": true, "delay_days_after_del": 3}';`);
       await query(`UPDATE seller_profiles SET capacity_limit = COALESCE(daily_order_limit, daily_capacity_max, 50) WHERE capacity_limit IS NULL;`);
       await query(`
         UPDATE seller_profiles
@@ -758,6 +759,85 @@ async function autoSyncDatabase() {
       }
     } catch (adminErr) {
       console.warn('⚠️ [Admin Ensure Notice]:', adminErr.message);
+    }
+
+    // 14. Ensure WhatsApp Outbox & Opt-Outs Tables
+    try {
+      await query(`
+        CREATE TABLE IF NOT EXISTS whatsapp_outbox (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          kind TEXT NOT NULL CHECK (kind IN ('seller_new_order', 'buyer_quote', 'buyer_proof', 'occasion_reminder', 'autoreply')),
+          idempotency_key TEXT NOT NULL,
+          recipient_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+          intended_to TEXT,
+          sent_to TEXT,
+          template_name TEXT,
+          variables JSONB,
+          status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'sending', 'sent', 'delivered', 'read', 'failed', 'suppressed', 'invalid_number', 'opted_out', 'no_consent')),
+          attempts INT NOT NULL DEFAULT 0,
+          next_attempt_at TIMESTAMPTZ DEFAULT NOW(),
+          provider_message_id TEXT,
+          error_code TEXT,
+          error_message TEXT,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          sent_at TIMESTAMPTZ,
+          delivered_at TIMESTAMPTZ
+        );
+      `);
+      await query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_whatsapp_outbox_idempotency_key ON whatsapp_outbox(idempotency_key);`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_whatsapp_outbox_status_next_attempt ON whatsapp_outbox(status, next_attempt_at);`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_whatsapp_outbox_provider_message_id ON whatsapp_outbox(provider_message_id);`);
+
+      await query(`
+        CREATE TABLE IF NOT EXISTS whatsapp_opt_outs (
+          phone10 TEXT PRIMARY KEY,
+          opted_out_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `);
+
+      await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_marketing_opt_in BOOLEAN NOT NULL DEFAULT FALSE;`);
+      await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_marketing_opt_in_at TIMESTAMPTZ;`);
+
+      // Manual-mode tracking columns
+      await query(`ALTER TABLE whatsapp_outbox ADD COLUMN IF NOT EXISTS owner_email_status TEXT DEFAULT 'pending';`);
+      await query(`ALTER TABLE whatsapp_outbox ADD COLUMN IF NOT EXISTS owner_email_attempts INT NOT NULL DEFAULT 0;`);
+      await query(`ALTER TABLE whatsapp_outbox ADD COLUMN IF NOT EXISTS owner_emailed_at TIMESTAMPTZ;`);
+      await query(`ALTER TABLE whatsapp_outbox ADD COLUMN IF NOT EXISTS escalated_at TIMESTAMPTZ;`);
+      await query(`ALTER TABLE whatsapp_outbox ADD COLUMN IF NOT EXISTS manual_done_at TIMESTAMPTZ;`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_whatsapp_outbox_status_created ON whatsapp_outbox(status, created_at);`);
+      await query(`ALTER TABLE whatsapp_outbox DROP CONSTRAINT IF EXISTS whatsapp_outbox_status_check;`);
+      await query(`
+        ALTER TABLE whatsapp_outbox ADD CONSTRAINT whatsapp_outbox_status_check
+          CHECK (status IN (
+            'pending','sending','sent','delivered','read','failed',
+            'suppressed','manual_pending','manual_done',
+            'invalid_number','opted_out','no_consent'
+          ));
+      `);
+
+      console.log('✅ [Auto-Sync Step 14] WhatsApp outbox & marketing opt-in schema ensured');
+    } catch (waErr) {
+      console.warn('⚠️ [Auto-Sync Step 14 - WhatsApp Notice]:', waErr.message);
+    }
+
+    // 15. Logistics fulfillment columns (iThink / manual dispatch safety)
+    try {
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS courier VARCHAR(100);`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS dispatched_at TIMESTAMPTZ;`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipment_status VARCHAR(50) DEFAULT 'unbooked';`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipment_error TEXT;`);
+
+      await query(`ALTER TABLE seller_orders ADD COLUMN IF NOT EXISTS courier_name VARCHAR(100);`);
+      await query(`ALTER TABLE seller_orders ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();`);
+
+      await query(`CREATE INDEX IF NOT EXISTS idx_orders_tracking_id ON orders(tracking_id);`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_orders_shipment_status ON orders(shipment_status);`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_seller_orders_awb_number ON seller_orders(awb_number);`);
+
+      console.log('✅ [Auto-Sync Step 15] Logistics fulfillment columns ensured');
+    } catch (logisticsErr) {
+      console.warn('⚠️ [Auto-Sync Step 15 - Logistics Notice]:', logisticsErr.message);
     }
 
     console.log('✅ Database schema and catalog auto-sync complete!');

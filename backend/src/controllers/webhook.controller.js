@@ -12,6 +12,9 @@ const logisticsService = require('../services/logistics.service');
 const whatsappService = require('../services/whatsapp.service');
 const bestsellerService = require('../services/bestseller.service');
 const whatsappCloudService = require('../services/whatsappCloud.service');
+const whatsappConfig = require('../config/whatsapp');
+const whatsappOutboxService = require('../services/whatsappOutbox.service');
+const { maskPhone, getPhone10 } = require('../utils/phone');
 
 const razorpay = require('../config/razorpay');
 
@@ -82,21 +85,66 @@ async function handleRazorpayWebhook(req, res) {
             const confirmedOrder = result.order;
 
             // Async post-commit triggers
-            logisticsService.createShipment(confirmedOrder).catch(e => console.error('[Webhook Logistics]:', e.message));
+            logisticsService.createShipment(confirmedOrder, { fromPayment: true }).catch(e => console.error('[Webhook Logistics]:', e.message));
             bestsellerService.recomputeForOrder(confirmedOrder.id).catch(e => console.error('[Webhook Bestseller Error]:', e.message));
 
-            query(
-              'SELECT whatsapp_number FROM seller_profiles WHERE user_id = $1',
-              [confirmedOrder.seller_id]
-            ).then(({ rows: sRows }) => {
-              if (sRows.length && sRows[0].whatsapp_number) {
-                whatsappService.sendSellerOrderNotification(sRows[0].whatsapp_number, {
-                  orderId: confirmedOrder.id,
-                  buyerName: 'Customer',
-                  amount: confirmedOrder.total_amount,
-                }).catch(e => console.error('[Webhook WhatsApp]:', e.message));
+            // Notify seller(s) via WhatsApp
+            (async () => {
+              try {
+                let buyerName = 'Customer';
+                if (confirmedOrder.buyer_id) {
+                  const { rows: bRows } = await query('SELECT name FROM users WHERE id = $1', [confirmedOrder.buyer_id]);
+                  if (bRows.length && bRows[0].name) {
+                    buyerName = bRows[0].name;
+                  }
+                }
+
+                const { rows: sellerOrderRows } = await query(
+                  `SELECT so.id AS seller_order_id,
+                          so.seller_id,
+                          so.subtotal,
+                          COALESCE(sp.whatsapp_number, s.whatsapp_number, u.phone) AS whatsapp_number
+                   FROM seller_orders so
+                   JOIN users u ON u.id = so.seller_id
+                   LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+                   LEFT JOIN sellers s ON s.user_id = u.id
+                   WHERE so.order_id = $1`,
+                  [confirmedOrder.id]
+                );
+
+                let sellersToNotify = sellerOrderRows;
+
+                if (!sellersToNotify.length && confirmedOrder.seller_id) {
+                  const { rows: fallbackRows } = await query(
+                    `SELECT NULL AS seller_order_id,
+                            u.id AS seller_id,
+                            $2::numeric AS subtotal,
+                            COALESCE(sp.whatsapp_number, s.whatsapp_number, u.phone) AS whatsapp_number
+                     FROM users u
+                     LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+                     LEFT JOIN sellers s ON s.user_id = u.id
+                     WHERE u.id = $1`,
+                    [confirmedOrder.seller_id, confirmedOrder.total_amount]
+                  );
+                  sellersToNotify = fallbackRows;
+                }
+
+                for (const seller of sellersToNotify) {
+                  if (seller.whatsapp_number) {
+                    whatsappService.sendSellerOrderNotification(seller.whatsapp_number, {
+                      orderId: confirmedOrder.id,
+                      sellerOrderId: seller.seller_order_id || null,
+                      sellerId: seller.seller_id,
+                      recipientUserId: seller.seller_id,
+                      buyerName,
+                      amount: seller.subtotal || confirmedOrder.total_amount,
+                    }).catch(e => console.error('[Webhook WhatsApp]:', e.message));
+                  }
+                }
+              } catch (err) {
+                console.error('[Webhook Seller Lookup Error]:', err.message);
               }
-            }).catch(e => console.error('[Webhook Seller Lookup Error]:', e.message));
+            })();
 
             // In-app notification for buyer
             query(
@@ -153,35 +201,119 @@ function verifyWhatsAppWebhook(req, res) {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
+  const expectedToken = whatsappConfig.VERIFY_TOKEN;
 
-  if (mode === 'subscribe' && token === process.env.WHATSAPP_VERIFY_TOKEN) {
-    return res.status(200).send(challenge);
+  if (mode === 'subscribe' && token && expectedToken) {
+    const bufA = Buffer.from(String(token));
+    const bufB = Buffer.from(String(expectedToken));
+    if (bufA.length === bufB.length && crypto.timingSafeEqual(bufA, bufB)) {
+      return res.status(200).send(challenge);
+    }
   }
   return res.sendStatus(403);
 }
 
 function receiveWhatsAppEvent(req, res) {
-  console.log(JSON.stringify(req.body));
+  const signatureHeader = req.headers['x-hub-signature-256'];
+  const appSecret = whatsappConfig.APP_SECRET;
+
+  if (!appSecret || !signatureHeader || typeof signatureHeader !== 'string' || !signatureHeader.startsWith('sha256=')) {
+    return res.status(401).send('Unauthorized: Missing or invalid signature');
+  }
+
+  const rawBody = Buffer.isBuffer(req.body)
+    ? req.body
+    : Buffer.from(typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {}));
+
+  const expectedHmac = 'sha256=' + crypto.createHmac('sha256', appSecret).update(rawBody).digest('hex');
+
+  const bufSig = Buffer.from(signatureHeader);
+  const bufExpected = Buffer.from(expectedHmac);
+
+  if (bufSig.length !== bufExpected.length || !crypto.timingSafeEqual(bufSig, bufExpected)) {
+    return res.status(401).send('Unauthorized: Signature mismatch');
+  }
+
+  // Signature is valid: acknowledge with 200 immediately
   res.status(200).send('EVENT_RECEIVED');
 
+  // If master flag is OFF, acknowledge and stop
+  if (!whatsappConfig.isEnabled()) {
+    return;
+  }
+
+  let payload;
   try {
-    if (process.env.WHATSAPP_AUTOREPLY_ENABLED !== 'true') {
-      return;
-    }
+    payload = JSON.parse(rawBody.toString('utf8'));
+  } catch (err) {
+    console.error('[WhatsApp Webhook] Invalid JSON payload received:', err.message);
+    return;
+  }
 
-    const message = req.body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-    if (!message) {
-      return;
-    }
+  try {
+    const entries = Array.isArray(payload.entry) ? payload.entry : [];
+    for (const entry of entries) {
+      const changes = Array.isArray(entry.changes) ? entry.changes : [];
+      for (const change of changes) {
+        const val = change.value;
+        if (!val) continue;
 
-    if (message.type === 'text') {
-      whatsappCloudService.sendTextMessage(
-        message.from,
-        "Thanks for messaging Tohfa! We've received your message and will get back to you soon."
-      );
+        // 1. Status updates
+        const statuses = Array.isArray(val.statuses) ? val.statuses : [];
+        for (const st of statuses) {
+          console.log(`[WhatsApp Webhook] Status update: ${st.status} for msg ${maskPhone(st.id)}`);
+          whatsappOutboxService.applyStatusUpdate({
+            providerMessageId: st.id,
+            status: st.status,
+            errorCode: st.errors?.[0]?.code,
+            errorMessage: st.errors?.[0]?.message || st.errors?.[0]?.title,
+            timestamp: st.timestamp,
+          });
+        }
+
+        // 2. Inbound messages
+        const messages = Array.isArray(val.messages) ? val.messages : [];
+        const metadata = val.metadata;
+        const selfPhone = metadata?.display_phone_number;
+
+        for (const msg of messages) {
+          // Ignore messages sent by own number
+          if (selfPhone && msg.from === selfPhone) continue;
+
+          if (msg.type === 'text') {
+            const rawText = msg.text?.body?.trim() || '';
+            const cleaned = rawText.toUpperCase();
+
+            console.log(`[WhatsApp Webhook] Inbound text from ${maskPhone(msg.from)}`);
+
+            if (cleaned === 'STOP' || cleaned === 'UNSUBSCRIBE') {
+              whatsappOutboxService.addOptOut(msg.from);
+            } else if (cleaned === 'START') {
+              whatsappOutboxService.removeOptOut(msg.from);
+            } else if (whatsappConfig.AUTOREPLY_ENABLED) {
+              const phone10 = getPhone10(msg.from);
+              if (phone10) {
+                // Today's date in IST
+                const nowIST = new Date(Date.now() + 5.5 * 3600 * 1000);
+                const dateKey = nowIST.toISOString().slice(0, 10);
+                const idempotencyKey = `autoreply:${phone10}:${dateKey}`;
+                const autoReplyText = "Thanks for messaging Tohfa! We've received your message and will get back to you soon.";
+
+                whatsappOutboxService.enqueue({
+                  kind: 'autoreply',
+                  idempotencyKey,
+                  rawPhone: msg.from,
+                  variables: { text: autoReplyText },
+                  requiresMarketingOptIn: false,
+                }).catch((e) => console.error('[WhatsApp Autoreply Error]:', e.message));
+              }
+            }
+          }
+        }
+      }
     }
   } catch (err) {
-    console.error('[WhatsApp Autoreply Error]:', err.message);
+    console.error('[WhatsApp Webhook Event Error]:', err.message);
   }
 }
 
