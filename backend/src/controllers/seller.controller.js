@@ -10,10 +10,11 @@
 'use strict';
 
 const { query, getClient } = require('../config/db');
+const bcrypt = require('bcrypt');
 const { createNotification } = require('./notification.controller');
 const logisticsService = require('../services/logistics.service');
 const paymentService = require('../services/payment.service');
-const telegramService = require('../services/telegram.service');
+const ownerNotifyService = require('../services/ownerNotify.service');
 const { PLANS, getPlan, calculateEffectivePrice } = require('../config/plans');
 
 // Strip internal fields (never exposed in public or seller responses)
@@ -596,6 +597,167 @@ async function toggleVacationMode(req, res, next) {
 }
 
 // ---------------------------------------------------------------------------
+// POST/PUT /api/seller/zai-mode — toggle ZAI AI automated review reply mode
+// Does NOT touch vacation mode or is_active!
+// ---------------------------------------------------------------------------
+async function toggleZaiMode(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const { enabled, zai_mode, zai_mode_enabled } = req.body;
+    let isZai = true;
+    if (enabled !== undefined) {
+      isZai = Boolean(enabled === true || enabled === 1 || enabled === '1' || enabled === 'true');
+    } else if (zai_mode !== undefined) {
+      isZai = Boolean(zai_mode === true || zai_mode === 1 || zai_mode === '1' || zai_mode === 'true');
+    } else if (zai_mode_enabled !== undefined) {
+      isZai = Boolean(zai_mode_enabled === true || zai_mode_enabled === 1 || zai_mode_enabled === '1' || zai_mode_enabled === 'true');
+    }
+
+    await query(
+      `UPDATE seller_profiles
+       SET zai_mode_enabled = $1, updated_at = NOW()
+       WHERE user_id = $2`,
+      [isZai ? 1 : 0, userId]
+    );
+
+    return res.json({
+      success: true,
+      message: isZai ? 'ZAI Auto-Reply Mode activated.' : 'ZAI Auto-Reply Mode deactivated.',
+      data: {
+        zai_mode_enabled: isZai,
+        enabled: isZai
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/seller/review-settings — get automated review reply settings
+// ---------------------------------------------------------------------------
+async function getReviewSettings(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const { rows } = await query(
+      `SELECT review_settings, zai_mode_enabled FROM seller_profiles WHERE user_id = $1`,
+      [userId]
+    ).catch(() => ({ rows: [] }));
+
+    let settings = rows[0]?.review_settings;
+    if (typeof settings === 'string') {
+      try { settings = JSON.parse(settings); } catch {}
+    }
+    if (!settings || typeof settings !== 'object') {
+      settings = {
+        enabled: true,
+        delay_days_after_del: 3
+      };
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        ...settings,
+        zai_mode_enabled: Boolean(rows[0]?.zai_mode_enabled)
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/seller/review-settings — save automated review reply settings
+// ---------------------------------------------------------------------------
+async function saveReviewSettings(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const { enabled, delay_days_after_del } = req.body;
+
+    const currentSettings = {
+      enabled: enabled !== 0 && enabled !== false && enabled !== '0' && enabled !== 'false',
+      delay_days_after_del: Math.max(1, Math.min(30, parseInt(delay_days_after_del || '3', 10)))
+    };
+
+    await query(
+      `UPDATE seller_profiles
+       SET review_settings = $1, updated_at = NOW()
+       WHERE user_id = $2`,
+      [JSON.stringify(currentSettings), userId]
+    );
+
+    return res.json({
+      success: true,
+      message: 'Review settings saved successfully.',
+      data: currentSettings
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/seller/change-password — update seller account password
+// ---------------------------------------------------------------------------
+async function changeSellerPassword(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const { current_password, new_password } = req.body;
+
+    if (!current_password || !new_password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password and new password are required.'
+      });
+    }
+
+    if (String(new_password).length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 8 characters long.'
+      });
+    }
+
+    const { rows: userRows } = await query(
+      'SELECT id, password_hash FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (!userRows.length) {
+      return res.status(404).json({
+        success: false,
+        message: 'User account not found.'
+      });
+    }
+
+    const currentHash = userRows[0].password_hash;
+    if (currentHash) {
+      const isMatch = await bcrypt.compare(String(current_password), currentHash);
+      if (!isMatch) {
+        return res.status(400).json({
+          success: false,
+          message: 'Current password is incorrect.'
+        });
+      }
+    }
+
+    const newHash = await bcrypt.hash(String(new_password).trim(), 10);
+    await query(
+      'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+      [newHash, userId]
+    );
+
+    return res.json({
+      success: true,
+      message: 'Password updated successfully.'
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // POST /api/seller/apply  — create sellers + seller_profiles rows (onboarding)
 // ---------------------------------------------------------------------------
 async function applyAsSeller(req, res, next) {
@@ -740,14 +902,16 @@ async function applyAsSeller(req, res, next) {
 
     await client.query('COMMIT');
 
-    // Notify admins via Telegram of the new application
-    telegramService.sendNewSellerApplicationAlert({
-      store_name: finalStoreName,
-      artisan_name: userName,
-      phone: finalPhone || parsedPan || 'N/A', // fallback if needed
+    // Notify admins of the new application
+    ownerNotifyService.sendAdminAlertEmail('seller_application', {
+      id: finalStoreName,
+      storeName: finalStoreName,
+      artisanName: userName,
+      phone: finalPhone || 'N/A',
       city: parsedPickup?.city || '',
-      state: parsedPickup?.state || ''
-    }).catch(e => console.error('[Telegram Seller App Alert Error]:', e.message));
+      state: parsedPickup?.state || '',
+      link: 'https://thetohfa.in/admin/sellers.html?tab=applications',
+    }).catch(() => {});
 
 
     return res.status(201).json({
@@ -894,9 +1058,10 @@ async function getDashboardMetrics(req, res, next) {
       orderValueChangePct = 100;
     }
 
-    // Conversion rate: (currOrders / GREATEST(totalViews, currOrders, 1)) * 100
+    // Conversion rate: (currOrders / GREATEST(periodViews, currOrders, 1)) * 100
     let conversionRate = 0;
-    const viewBase = Math.max(totalViews, currOrders, 1);
+    const scaledPeriodViews = totalViews > 0 ? Math.max(Math.ceil((totalViews / 365) * days), currOrders) : currOrders;
+    const viewBase = Math.max(scaledPeriodViews, currOrders, 1);
     if (currOrders > 0) {
       conversionRate = parseFloat(((currOrders / viewBase) * 100).toFixed(1));
     }
@@ -917,7 +1082,7 @@ async function getDashboardMetrics(req, res, next) {
       `SELECT o.id AS parent_order_id, so.id AS id, so.subtotal, so.subtotal AS total_amount, so.status, so.created_at, o.payment_status, so.payout_status,
               COALESCE(u.name, 'Valued Buyer') AS buyer_name,
               u.email AS buyer_email,
-              COALESCE(a.city, 'India') AS shipping_city,
+              COALESCE(NULLIF(TRIM(o.shipping_address->>'city'), ''), NULLIF(TRIM(a.city), ''), 'India') AS shipping_city,
               COALESCE(
                 (SELECT json_agg(json_build_object(
                   'id', oi.id,
@@ -1323,8 +1488,15 @@ async function getSellerOrders(req, res, next) {
     const params = [sellerId];
 
     if (status && status !== 'all') {
-      params.push(status);
-      conditions.push(`so.status = $${params.length}`);
+      const st = String(status).toLowerCase().trim();
+      if (st === 'in_production' || st === 'crafting' || st === 'processing') {
+        conditions.push(`LOWER(so.status) IN ('in_production', 'crafting', 'processing')`);
+      } else if (st === 'pending' || st === 'unfulfilled') {
+        conditions.push(`LOWER(so.status) IN ('pending', 'unfulfilled', 'confirmed', 'order_placed')`);
+      } else {
+        params.push(st);
+        conditions.push(`LOWER(so.status) = $${params.length}`);
+      }
     }
 
     if (search && search.trim()) {
@@ -1352,8 +1524,11 @@ async function getSellerOrders(req, res, next) {
               so.status, o.payment_status, so.payout_status,
               COALESCE(so.awb_number, o.tracking_id) AS tracking_id, COALESCE(so.tracking_url, o.tracking_url) AS tracking_url, o.notes, o.studio_notes, so.delivered_at, so.created_at, o.updated_at,
               u.name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone,
-              a.line1 AS delivery_line1, a.line2 AS delivery_line2, a.city AS delivery_city,
-              a.state AS delivery_state, a.pincode AS delivery_pincode,
+              COALESCE(NULLIF(TRIM(o.shipping_address->>'line1'), ''), NULLIF(TRIM(a.line1), '')) AS delivery_line1,
+              COALESCE(NULLIF(TRIM(o.shipping_address->>'line2'), ''), NULLIF(TRIM(a.line2), '')) AS delivery_line2,
+              COALESCE(NULLIF(TRIM(o.shipping_address->>'city'), ''), NULLIF(TRIM(a.city), ''), 'India') AS delivery_city,
+              COALESCE(NULLIF(TRIM(o.shipping_address->>'state'), ''), NULLIF(TRIM(a.state), '')) AS delivery_state,
+              COALESCE(NULLIF(TRIM(o.shipping_address->>'pincode'), ''), NULLIF(TRIM(a.pincode), '')) AS delivery_pincode,
               COALESCE(
                 (SELECT json_agg(json_build_object(
                   'id', oi.id,
@@ -2583,12 +2758,15 @@ async function getOrderLabel(req, res, next) {
   try {
     const { id } = req.params;
     const sellerId = req.user.id;
+    if (req.query.format === 'html') {
+      return res.redirect(`/api/logistics/label/${id}?format=html`);
+    }
     const labelData = await logisticsService.getShippingLabel(id, req.user.role === 'admin' ? null : sellerId);
     return res.json({
       success: true,
       data: {
         label: labelData,
-        label_url: `/api/logistics/label/${id}`,
+        label_url: `/api/logistics/label/${id}?format=html`,
       },
     });
   } catch (err) {
@@ -2613,7 +2791,7 @@ async function generateOrderAWB(req, res, next) {
         message: err.message,
         data: {
           manual_fulfillment_required: true,
-          label_url: `/api/logistics/label/${req.params.id}`,
+          label_url: `/api/logistics/label/${req.params.id}?format=html`,
         }
       });
     }
@@ -2717,13 +2895,21 @@ async function updateOrderTracking(req, res, next) {
     const sellerId = req.user.id;
     const role = req.user.role;
     const trackingNumber = req.body.tracking_number || req.body.tracking_id || req.body.trackingId || req.body.awb_number;
-    const courier = req.body.courier || req.body.carrier || 'iThink Logistics';
+    const courier = (req.body.courier || req.body.carrier || '').trim() || 'Manual Dispatch';
 
     if (!trackingNumber) {
       return res.status(400).json({ success: false, message: 'Tracking number is required.' });
     }
 
-    const trackingUrl = req.body.tracking_url || `https://ithinklogistics.com/track/${encodeURIComponent(trackingNumber)}`;
+    // Default tracking URL only if courier is explicitly iThink, or if tracking_url was provided
+    let trackingUrl = req.body.tracking_url;
+    if (!trackingUrl) {
+      if (courier.toLowerCase().includes('ithink')) {
+        trackingUrl = `https://ithinklogistics.com/track/${encodeURIComponent(trackingNumber)}`;
+      } else {
+        trackingUrl = '';
+      }
+    }
 
     // Verify order exists and belongs to seller (or admin)
     const { rows: existingRows } = await query(
@@ -2744,6 +2930,15 @@ async function updateOrderTracking(req, res, next) {
     }
 
     const order = existingRows[0];
+
+    // Protect against accidentally overwriting an active iThink AWB without explicit overwrite flag
+    if (order.tracking_id && order.shipment_status === 'booked' && !req.body.overwrite) {
+      return res.status(409).json({
+        success: false,
+        message: `Order already has an automated courier waybill (${order.tracking_id}). Pass overwrite: true if you must replace it manually.`,
+      });
+    }
+
     const newStatus = ['pending', 'confirmed', 'crafting', 'packed'].includes(order.status) ? 'shipped' : order.status;
 
     const { rows } = await query(
@@ -2752,7 +2947,8 @@ async function updateOrderTracking(req, res, next) {
            courier = $2,
            tracking_url = $3,
            status = $4,
-           dispatched_at = COALESCE(dispatched_at, NOW()::text),
+           shipment_status = 'manual',
+           dispatched_at = COALESCE(dispatched_at, NOW()),
            updated_at = NOW()
        WHERE id = $5
        RETURNING *`,
@@ -2761,11 +2957,14 @@ async function updateOrderTracking(req, res, next) {
 
     await query(
       `UPDATE seller_orders
-       SET tracking_url = $1,
+       SET awb_number = $1,
+           courier_name = $2,
+           tracking_url = $3,
+           status = $4,
            updated_at = NOW()
-       WHERE order_id = $2 OR id = $2`,
-      [trackingUrl, order.id]
-    ).catch(() => {});
+       WHERE order_id = $5 OR id = $5`,
+      [trackingNumber, courier, trackingUrl, newStatus, order.id]
+    ).catch(e => console.warn('[Order Tracking] Non-fatal seller_orders update notice:', e.message));
 
     const updatedOrder = rows[0] || order;
     if (updatedOrder) {
@@ -2940,7 +3139,7 @@ async function bulkDiscountListings(req, res, next) {
            discount_percentage = $2,
            sale_price = CASE 
              WHEN $1 = 1 AND $3::numeric IS NOT NULL 
-             THEN ROUND(base_price * $3::numeric, 2) 
+             THEN ROUND(COALESCE(base_price, price, 0) * $3::numeric, 2) 
              ELSE NULL 
            END,
            updated_at = NOW()
@@ -2991,7 +3190,7 @@ async function bulkDiscountAllListings(req, res, next) {
            discount_percentage = $2,
            sale_price = CASE 
              WHEN $1 = 1 AND $3::numeric IS NOT NULL 
-             THEN ROUND(base_price * $3::numeric, 2) 
+             THEN ROUND(COALESCE(base_price, price, 0) * $3::numeric, 2) 
              ELSE NULL 
            END,
            updated_at = NOW()
@@ -3719,5 +3918,9 @@ module.exports = {
   verifySubscriptionPayment,
   downgradeSubscription,
   toggleProductSponsor,
+  toggleZaiMode,
+  getReviewSettings,
+  saveReviewSettings,
+  changeSellerPassword,
 };
 

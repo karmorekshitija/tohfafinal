@@ -318,16 +318,60 @@
     // Password change
     document.getElementById('password-change-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const currP = document.getElementById('curr-password').value;
       const newP = document.getElementById('new-password').value;
       const confP = document.getElementById('confirm-password').value;
+
+      if (!currP) {
+        alert('Please enter your current password.');
+        return;
+      }
 
       if (newP !== confP) {
         alert('New passwords do not match.');
         return;
       }
 
-      alert('Password updated successfully.');
-      document.getElementById('password-change-form').reset();
+      if (newP.length < 8) {
+        alert('New password must be at least 8 characters long.');
+        return;
+      }
+
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const origText = submitBtn ? submitBtn.textContent : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Updating...';
+      }
+
+      try {
+        const res = await fetch('/api/seller/change-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            current_password: currP,
+            new_password: newP
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          alert('Password updated successfully!');
+          document.getElementById('password-change-form').reset();
+        } else {
+          alert(data.message || 'Failed to update password. Please check your current password.');
+        }
+      } catch (err) {
+        alert('Network error while updating password. Please try again.');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = origText;
+        }
+      }
     });
   </script>
 </body>

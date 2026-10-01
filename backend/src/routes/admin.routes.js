@@ -28,6 +28,9 @@ router.get('/banners', adminController.listBanners);
 // User report creation
 router.post('/reports', authMiddleware, adminController.createReport);
 
+// Public token-based one-click "Mark as Sent" from owner email link
+router.get('/whatsapp/outbox/:id/done', adminController.markWhatsAppOutboxDoneByToken);
+
 // All other endpoints require Admin privilege
 router.use(authMiddleware, adminOnly);
 
@@ -40,12 +43,16 @@ router.get('/dashboard/top-products', analyticsController.getPlatformTopProducts
 router.get('/dashboard/seller-activity', adminController.listSellers);
 router.get('/audit-logs', adminController.listAuditLogs);
 router.get('/audit-logs/:id/diff', adminController.getAuditLogDiff);
+router.get('/whatsapp/outbox', adminController.getWhatsAppOutbox);
+router.post('/whatsapp/outbox/:id/done', adminController.markWhatsAppOutboxDone);
 
 // 2. Sellers & KYC Authority
 router.get("/plans/overview", adminController.getPlansOverview);
 router.patch("/sellers/:id/plan", adminController.updateSellerPlan);
 router.put("/sellers/:id/plan", adminController.updateSellerPlan);
 router.get('/sellers', adminController.listSellers);
+router.post('/sellers', adminController.createRegularSeller || adminController.createSeller);
+router.post('/sellers/create', adminController.createRegularSeller || adminController.createSeller);
 router.get('/sellers/:sellerId', adminController.getSellerDetail);
 router.get('/sellers/:id', adminController.getSellerDetail);
 router.patch('/sellers/:id/verify-kyc', adminOnly, adminController.verifySellerKyc || adminController.verifySellerKYC);

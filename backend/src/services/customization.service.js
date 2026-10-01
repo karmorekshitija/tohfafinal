@@ -196,6 +196,8 @@ async function uploadProof(orderItemId, sellerId, proofImageUrl, notes = '') {
       sellerStoreName: item.store_name || 'Artisan',
       productName: item.product_name,
       proofImageUrl,
+      orderItemId,
+      recipientUserId: item.buyer_id,
     }).catch(e => console.error('[WhatsApp Error]', e.message));
   }
 

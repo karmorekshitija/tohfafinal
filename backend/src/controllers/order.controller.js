@@ -359,7 +359,7 @@ async function getAdminOrders(req, res, next) {
               COALESCE(o.total_paise, o.total_amount * 100) AS amount_paise,
               o.total_amount AS amount_paid,
               '₹' || o.total_amount AS amount_display,
-              o.status, o.payment_status, o.created_at,
+              o.status, o.payment_status, o.tracking_id, o.tracking_url, o.courier, o.dispatched_at, o.created_at,
               COALESCE(o.studio_notes, '') AS notes,
               COALESCE(a.line1 || CASE WHEN a.city IS NOT NULL THEN ', ' || a.city ELSE '' END, '') AS shipping_address,
               COALESCE(u.name, 'Valued Buyer') AS buyer_name,
@@ -427,7 +427,7 @@ async function getOrderById(req, res, next) {
               COALESCE(o.total_paise, ROUND(o.total_amount * 100)) AS total_paise,
               COALESCE(o.subtotal_paise, ROUND((o.total_amount - COALESCE(o.shipping_amount, 0)) * 100)) AS subtotal_paise,
               COALESCE(o.shipping_paise, ROUND(COALESCE(o.shipping_amount, 0) * 100)) AS shipping_paise,
-              o.status, o.payment_status, o.created_at,
+              o.status, o.payment_status, o.tracking_id, o.tracking_url, o.courier, o.dispatched_at, o.shipment_status, o.created_at,
               COALESCE(o.studio_notes, '') AS notes,
               o.shipping_address AS shipping_address_snapshot,
               COALESCE(a.line1 || CASE WHEN a.city IS NOT NULL THEN ', ' || a.city ELSE '' END, '') AS shipping_address,
@@ -472,6 +472,7 @@ async function getOrderById(req, res, next) {
     }
 
     const order = rows[0];
+    order.tracking_number = order.tracking_id || null;
 
     // Build structured ship_to address object for frontend rendering
     let snap = {};

@@ -188,6 +188,7 @@ function renderProductUI(p) {
 
   const isCustomizable = p.is_customizable || p.is_customized || (p.customization_mode && p.customization_mode !== 'none') || p.listing_type === 'custom';
   const isOutOfStock = !isCustomizable && (p.status === 'sold_out' || (p.stock_quantity !== undefined && p.stock_quantity !== null && Number(p.stock_quantity) <= 0));
+  const isVacation = p.seller_vacation_mode === 1 || p.seller_vacation_mode === true;
 
   container.innerHTML = `
     <!-- Left: Gallery & Style Selector -->
@@ -234,6 +235,15 @@ function renderProductUI(p) {
       ${fixedMarkup}
       ${openCustomizationMarkup}
 
+      ${isVacation ? `
+        <div style="margin-top: var(--space-4); padding: var(--space-3) var(--space-4); background: #FFF3CD; border: 1px solid #FFE69C; border-radius: var(--radius-md); color: #856404; font-size: var(--text-xs); line-height: 1.5; display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 18px;">🏖️</span>
+          <div>
+            <strong>Artisan Studio on Break:</strong> ${escapeHtml(p.seller_vacation_message || 'This artisan is currently on creative vacation and not accepting orders. Dispatches will resume upon return.')}
+          </div>
+        </div>
+      ` : ''}
+
       <!-- Delivery Estimator (BUY-08) -->
       <div class="card" style="padding: var(--space-4); margin-top: var(--space-4); background: rgba(20,56,31,0.03); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
         <div style="font-weight: 600; font-size: var(--text-sm); margin-bottom: var(--space-2); color: var(--color-primary); display: flex; align-items: center; gap: 6px;">
@@ -248,11 +258,11 @@ function renderProductUI(p) {
 
       <!-- Actions -->
       <div class="flex flex-col gap-3" style="margin-top: var(--space-6);">
-        <button id="addToCartBtn" class="btn btn-primary btn-full" ${isOutOfStock ? 'disabled style="opacity:0.6; cursor:not-allowed;"' : ''} onclick="executeAddToCart()">
-          ${isOutOfStock ? 'Out of Stock' : 'Add to Cart 🛍️'}
+        <button id="addToCartBtn" class="btn btn-primary btn-full" ${(isOutOfStock || isVacation) ? 'disabled style="opacity:0.6; cursor:not-allowed;"' : ''} onclick="executeAddToCart()">
+          ${isOutOfStock ? 'Out of Stock' : (isVacation ? 'Studio on Vacation' : 'Add to Cart 🛍️')}
         </button>
-        <button id="buyNowBtn" class="btn btn-secondary btn-full" ${isOutOfStock ? 'disabled style="opacity:0.6; cursor:not-allowed;"' : ''} onclick="executeBuyNow()">
-          ${isOutOfStock ? 'Currently Unavailable' : 'Buy Now'}
+        <button id="buyNowBtn" class="btn btn-secondary btn-full" ${(isOutOfStock || isVacation) ? 'disabled style="opacity:0.6; cursor:not-allowed;"' : ''} onclick="executeBuyNow()">
+          ${isOutOfStock ? 'Currently Unavailable' : (isVacation ? 'Orders Paused' : 'Buy Now')}
         </button>
         ${whatsappMarkup}
       </div>
@@ -268,8 +278,28 @@ function renderProductUI(p) {
   // Show mobile bottom CTA
   if (stickyCta) {
     stickyCta.style.display = 'flex';
-    document.getElementById('stickyAddToCartBtn').onclick = executeAddToCart;
-    document.getElementById('stickyBuyNowBtn').onclick = executeBuyNow;
+    const stickyAdd = document.getElementById('stickyAddToCartBtn');
+    const stickyBuy = document.getElementById('stickyBuyNowBtn');
+    if (stickyAdd) {
+      if (isVacation) {
+        stickyAdd.disabled = true;
+        stickyAdd.textContent = 'On Vacation';
+        stickyAdd.style.opacity = '0.6';
+        stickyAdd.style.cursor = 'not-allowed';
+      } else {
+        stickyAdd.onclick = executeAddToCart;
+      }
+    }
+    if (stickyBuy) {
+      if (isVacation) {
+        stickyBuy.disabled = true;
+        stickyBuy.textContent = 'Orders Paused';
+        stickyBuy.style.opacity = '0.6';
+        stickyBuy.style.cursor = 'not-allowed';
+      } else {
+        stickyBuy.onclick = executeBuyNow;
+      }
+    }
   }
 }
 
