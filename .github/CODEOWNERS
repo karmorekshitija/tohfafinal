@@ -1,0 +1,41 @@
+# =============================================================================
+# TOHFA — CODEOWNERS (Auto-Review Protection)
+# =============================================================================
+# Any Pull Request that touches the files/folders listed below will
+# AUTOMATICALLY require a review from @karmorekshitija before it can be merged.
+# This acts as a second checkpoint — even if you forget the lock, GitHub blocks it.
+#
+# To intentionally edit buyer/admin/backend: create a PR, GitHub will remind you
+# that these are protected zones by requesting your own review.
+# =============================================================================
+
+# --- BUYER WEBSITE (Protected — Live & Working) ---
+frontend/src/buyer/               @karmorekshitija
+frontend/src/auth/                @karmorekshitija
+frontend/dist/buyer/              @karmorekshitija
+frontend/dist/auth/               @karmorekshitija
+
+# --- ADMIN PANEL (Protected — Live & Working) ---
+frontend/src/admin/               @karmorekshitija
+frontend/dist/admin/              @karmorekshitija
+
+# --- SHARED COMPONENTS used by buyer/admin ---
+frontend/src/components/          @karmorekshitija
+frontend/dist/components/         @karmorekshitija
+
+# --- BACKEND API (Protected — Do NOT touch) ---
+backend/routes/                   @karmorekshitija
+backend/controllers/              @karmorekshitija
+backend/db/                       @karmorekshitija
+backend/middleware/               @karmorekshitija
+backend/config/                   @karmorekshitija
+
+# --- DEPLOYMENT CONFIG (Protected) ---
+vercel.json                       @karmorekshitija
+
+# --- PUBLIC BUYER HTML PAGES (Protected — SEO + live) ---
+frontend/dist/index.html          @karmorekshitija
+frontend/dist/about.html          @karmorekshitija
+frontend/dist/contact.html        @karmorekshitija
+frontend/dist/categories.html     @karmorekshitija
+frontend/dist/faq.html            @karmorekshitija
