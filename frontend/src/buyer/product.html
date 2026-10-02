@@ -1467,9 +1467,14 @@
                     // Show/hide qty selector and modify button
                     const qtySelector = document.getElementById('qty-selector-container');
                     const addToCartBtn = document.getElementById('add-to-cart-btn');
+                    const mainImg = document.getElementById('main-product-image');
+                    const verticalThumbs = document.getElementById('product-vertical-thumbs');
                     if (isSoldOut) {
                         if (qtySelector) qtySelector.style.display = 'none';
                         if (addToCartBtn) addToCartBtn.style.display = 'none';
+                        if (mainImg) mainImg.classList.add('is-out-of-stock');
+                        if (mainImg?.parentElement) mainImg.parentElement.classList.add('is-out-of-stock');
+                        if (verticalThumbs) verticalThumbs.classList.add('is-out-of-stock');
                     } else {
                         if (qtySelector) qtySelector.style.display = 'flex';
                         if (addToCartBtn) {
@@ -1477,6 +1482,9 @@
                             addToCartBtn.querySelector('span.material-symbols-outlined').innerText = 'shopping_bag';
                             addToCartBtn.querySelector('span:last-child').innerText = hasCustomOptions ? 'Add to Cart (Personalised)' : 'Add to Cart';
                         }
+                        if (mainImg) mainImg.classList.remove('is-out-of-stock');
+                        if (mainImg?.parentElement) mainImg.parentElement.classList.remove('is-out-of-stock');
+                        if (verticalThumbs) verticalThumbs.classList.remove('is-out-of-stock');
                     }
 
                     // Stock badge
@@ -2281,7 +2289,9 @@
                        <span class="material-symbols-outlined text-[15px] transition-all ${p.is_wishlisted ? 'fill-icon text-red-500' : 'text-secondary'}" style="font-variation-settings: 'FILL' ${p.is_wishlisted ? 1 : 0};">favorite</span>
                    </button>`;
 
-            const isCustom = p.is_customized || p.listing_type === 'custom';
+            const isCustom = p.is_customized || p.listing_type === 'custom' || p.customization_mode === 'fixed' || p.customization_mode === 'open' || Boolean(p.is_customizable);
+            const recStock = p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : (p.stock !== undefined ? p.stock : null));
+            const isOutOfStock = !isCustom && (p.status === 'sold_out' || (recStock !== null && recStock <= 0));
             const actionBtnHtml = isOwner
                 ? `<button class="w-full bg-[#14381F]/15 text-[#605e57] py-1.5 rounded-lg font-semibold opacity-50 cursor-not-allowed text-xs" disabled onclick="event.stopPropagation();">
                        Own Product
@@ -2298,7 +2308,7 @@
             const avgRating = parseFloat(p.avg_rating || 5.0);
 
             return `
-                <div class="group bg-white border border-[#14381F]/15 rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-300 flex gap-3 cursor-pointer relative" onclick="window.location.href='product.html?id=${p.id}'">
+                <div class="group bg-white border border-[#14381F]/15 rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-300 flex gap-3 cursor-pointer relative ${isOutOfStock ? 'is-out-of-stock' : ''}" onclick="window.location.href='product.html?id=${p.id}'">
                     <!-- Left: Thumbnail Image -->
                     <div class="relative w-20 sm:w-24 self-stretch flex-shrink-0 overflow-hidden rounded-xl bg-[#FAF6EE] border border-[#14381F]/10">
                         <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="${imageUrl}" alt="${p.name}" loading="lazy" />

@@ -44,9 +44,13 @@ function renderSimilarCard(product) {
   const seller = product.seller_name || '';
   const rating = product.avg_rating ? product.avg_rating.toFixed(1) : '';
 
+  const isCustom = product.listing_type === 'custom' || product.customization_mode === 'fixed' || product.customization_mode === 'open' || Boolean(product.is_customizable);
+  const stock = product.stock_qty !== undefined ? product.stock_qty : (product.stock_quantity !== undefined ? product.stock_quantity : (product.stock !== undefined ? product.stock : null));
+  const isOutOfStock = !isCustom && (product.status === 'sold_out' || (stock !== null && stock <= 0));
+
   return `
     <a href="/buyer/product.html?id=${product.id}"
-       class="tohfa-similar-card"
+       class="tohfa-similar-card ${isOutOfStock ? 'is-out-of-stock' : ''}"
        style="flex:0 0 160px;max-width:160px;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.08);background:#fff;text-decoration:none;color:inherit;display:block;transition:box-shadow 0.2s ease,transform 0.2s ease;"
        onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.12)';this.style.transform='translateY(-2px)'"
        onmouseout="this.style.boxShadow='none';this.style.transform='none'">

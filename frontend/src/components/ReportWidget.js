@@ -680,8 +680,11 @@
       wrapper.className = 'tohfa-chat-recommendations-wrapper';
 
       products.forEach(p => {
+        const isCustom = p.listing_type === 'custom' || p.customization_mode === 'fixed' || p.customization_mode === 'open' || Boolean(p.is_customizable);
+        const stock = p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : (p.stock !== undefined ? p.stock : null));
+        const isOutOfStock = !isCustom && (p.status === 'sold_out' || (stock !== null && stock <= 0));
         const card = document.createElement('a');
-        card.className = 'tohfa-chat-product-card';
+        card.className = `tohfa-chat-product-card ${isOutOfStock ? 'is-out-of-stock' : ''}`;
         card.href = p.link || `/buyer/product.html?id=${p.id}`;
 
         const imgUrl = p.image_url || '/img/placeholder-product.png';

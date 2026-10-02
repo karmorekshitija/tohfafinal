@@ -705,7 +705,9 @@
                            <span class="material-symbols-outlined text-[15px] sm:text-[17px] transition-all ${isWishlisted ? 'fill-icon text-red-500' : 'text-[#14381F]'}" style="font-variation-settings: 'FILL' ${isWishlisted ? 1 : 0};">favorite</span>
                        </button>`;
 
-                const isCustomized = p.listing_type === 'custom' || p.customization_mode === 'fixed' || p.customization_mode === 'open';
+                const isCustomized = p.listing_type === 'custom' || p.customization_mode === 'fixed' || p.customization_mode === 'open' || Boolean(p.is_customizable);
+                const stock = p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : (p.stock !== undefined ? p.stock : null));
+                const isOutOfStock = !isCustomized && (p.status === 'sold_out' || (stock !== null && stock <= 0));
                 const addToCartBtnHtml = isOwner
                     ? `<button class="w-full bg-[#14381F]/20 text-[#605e57] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold opacity-50 cursor-not-allowed text-[11px] sm:text-xs" disabled onclick="event.stopPropagation();">
                            Own Product
@@ -721,7 +723,7 @@
                 const sellerName = p.seller_name || p.store_name || (p.seller?.seller_name) || (p.seller?.store_name) || 'Artisan';
 
                 return `
-                    <a href="/buyer/product.html?id=${p.id}" class="group bg-[#FAF6EE] border border-[rgba(20,56,31,0.15)] rounded-xl p-2.5 sm:p-3 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative block no-underline text-inherit" data-product-id="${p.id}">
+                    <a href="/buyer/product.html?id=${p.id}" class="group bg-[#FAF6EE] border border-[rgba(20,56,31,0.15)] rounded-xl p-2.5 sm:p-3 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative block no-underline text-inherit ${isOutOfStock ? 'is-out-of-stock' : ''}" data-product-id="${p.id}">
                         <div>
                             <div class="relative aspect-square overflow-hidden rounded-lg bg-[#FAF6EE] mb-2 sm:mb-2.5">
                                 ${ribbonHtml}
@@ -1201,7 +1203,9 @@
                            <span class="material-symbols-outlined text-[15px] sm:text-[17px] transition-all ${isWishlisted ? 'fill-icon text-red-500' : 'text-[#14381F]'}" style="font-variation-settings: 'FILL' ${isWishlisted ? 1 : 0};">favorite</span>
                        </button>`;
 
-                const isCustomized = p.listing_type === 'custom';
+                const isCustomized = p.listing_type === 'custom' || p.customization_mode === 'fixed' || p.customization_mode === 'open' || Boolean(p.is_customizable);
+                const stock = p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : (p.stock !== undefined ? p.stock : null));
+                const isOutOfStock = !isCustomized && (p.status === 'sold_out' || (stock !== null && stock <= 0));
                 const addToCartBtnHtml = isOwner
                     ? `<button class="w-full bg-[#14381F]/20 text-[#605e57] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold opacity-50 cursor-not-allowed text-[11px] sm:text-xs" disabled onclick="event.stopPropagation();">
                            Own Product
@@ -1215,7 +1219,7 @@
                            </button>`;
 
                 return `
-                    <a href="/buyer/product.html?id=${p.id}" class="group bg-[#FAF6EE] border border-[rgba(20,56,31,0.15)] rounded-xl p-2.5 sm:p-3 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative block no-underline text-inherit" data-product-id="${p.id}">
+                    <a href="/buyer/product.html?id=${p.id}" class="group bg-[#FAF6EE] border border-[rgba(20,56,31,0.15)] rounded-xl p-2.5 sm:p-3 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative block no-underline text-inherit ${isOutOfStock ? 'is-out-of-stock' : ''}" data-product-id="${p.id}">
                         <div>
                             <div class="relative aspect-square overflow-hidden rounded-lg bg-[#FAF6EE] mb-2 sm:mb-2.5">
                                 ${ribbonHtml}
@@ -1333,7 +1337,9 @@
                                    <span class="material-symbols-outlined text-[15px] sm:text-[17px] transition-all ${isWishlisted ? 'fill-icon text-red-500' : 'text-secondary'}" style="font-variation-settings: 'FILL' ${isWishlisted ? 1 : 0};">favorite</span>
                                </button>`;
 
-                        const isCustomized = p.listing_type === 'custom';
+                        const isCustomized = p.listing_type === 'custom' || p.customization_mode === 'fixed' || p.customization_mode === 'open' || Boolean(p.is_customizable);
+                        const stock = p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : (p.stock !== undefined ? p.stock : null));
+                        const isOutOfStock = !isCustomized && (p.status === 'sold_out' || (stock !== null && stock <= 0));
                         const addToCartBtnHtml = isOwner
                             ? `<button class="w-full bg-[#14381F]/20 text-[#605e57] py-2 rounded-lg font-semibold opacity-50 cursor-not-allowed text-sm" disabled onclick="event.stopPropagation();">
                                    Own Product
@@ -1347,7 +1353,7 @@
                                    </button>`;
 
                         return `
-                            <a href="/buyer/product.html?id=${p.id}" class="group bg-[#FFF8E7] border border-[#c3c8c1] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative block no-underline text-inherit">
+                            <a href="/buyer/product.html?id=${p.id}" class="group bg-[#FFF8E7] border border-[#c3c8c1] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative block no-underline text-inherit ${isOutOfStock ? 'is-out-of-stock' : ''}">
                                 <div>
                                     <div class="relative aspect-square overflow-hidden rounded-xl bg-surface-container-lowest mb-4">
                                         ${ribbonHtml}
