@@ -963,14 +963,16 @@
                     return;
                 }
 
-                // Support both axios wrapper shape (response.data.success)
-                // and raw response shape (response.success)
-                const payload = response.data || response;
-                const isSuccess = payload?.success === true || payload?.data?.product || payload?.product;
+                // apiClient (axios) auto-unwraps json.data before returning.
+                // Backend sends: { success: true, data: { product: {...} } }
+                // apiClient returns: { product: {...}, success: true }  ← already unwrapped
+                // So response IS the payload — never add a second .data layer.
+                const payload = response;
+                const isSuccess = payload?.success === true || !!payload?.product;
 
                 if (isSuccess) {
-                    // Unwrap product from nested or flat response
-                    product = payload.data?.product || payload.data || payload.product || payload;
+                    // response.product is the product (apiClient already stripped the data wrapper)
+                    product = payload?.product || payload;
 
                     // Ensure we actually have a product object with an id
                     if (!product || (!product.id && !product.slug)) {
@@ -981,6 +983,15 @@
 
                     maxStock = product.stock_qty || product.stock_quantity || 0;
                     isWishlisted = !!product.is_wishlisted;
+
+                    // Guard: backend returns all non-deleted products (status NOT IN 'deleted').
+                    // 'inactive' and 'draft' products must not render as purchasable —
+                    // they are removed from listings but still fetchable by direct ID.
+                    if (product.status === 'inactive' || product.status === 'draft') {
+                        console.warn('[loadProduct] Product not publicly available:', productId, product.status);
+                        showErrorState();
+                        return;
+                    }
 
                     // Update UI Info & Social Metadata
                     document.title = `${product.name} | Tohfa`;
@@ -1658,7 +1669,12 @@
                     showErrorState();
                 }
             } catch (err) {
-                console.error("Failed to load product details:", err);
+                console.error('[loadProduct] Error loading product:', {
+                    productId,
+                    status: err?.status || err?.response?.status || 'unknown',
+                    message: err?.message,
+                    data: err?.data || err?.response?.data
+                });
                 showErrorState();
             }
         }
