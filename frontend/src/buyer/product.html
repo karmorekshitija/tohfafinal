@@ -1469,13 +1469,11 @@
                     const addToCartBtn = document.getElementById('add-to-cart-btn');
                     if (isSoldOut) {
                         if (qtySelector) qtySelector.style.display = 'none';
-                        if (addToCartBtn) {
-                            addToCartBtn.querySelector('span.material-symbols-outlined').innerText = 'chat';
-                            addToCartBtn.querySelector('span:last-child').innerText = 'Chat with Seller';
-                        }
+                        if (addToCartBtn) addToCartBtn.style.display = 'none';
                     } else {
                         if (qtySelector) qtySelector.style.display = 'flex';
                         if (addToCartBtn) {
+                            addToCartBtn.style.display = '';
                             addToCartBtn.querySelector('span.material-symbols-outlined').innerText = 'shopping_bag';
                             addToCartBtn.querySelector('span:last-child').innerText = hasCustomOptions ? 'Add to Cart (Personalised)' : 'Add to Cart';
                         }
@@ -1921,28 +1919,7 @@
             }
             if (product && product.holiday_mode_active) return;
 
-            if (isSoldOut) {
-                if (!requireAuth({ type: 'start_chat', productId: String(productId).trim() })) {
-                    return;
-                }
-                const btn = document.getElementById('add-to-cart-btn');
-                btn.disabled = true;
-                btn.querySelector('span:last-child').innerText = 'Starting chat...';
-                try {
-                    const res = await apiClient.post('/conversations', {
-                        listing_id: String(productId).trim(),
-                        product_type_tag: 'sold_out'
-                    });
-                    const convId = res.data.conversation_id;
-                    window.location.href = `/buyer/chat.html?conversationId=${convId}`;
-                } catch (e) {
-                    console.error("Failed to start chat for sold-out item:", e);
-                } finally {
-                    btn.disabled = false;
-                    btn.querySelector('span:last-child').innerText = 'Chat with Seller';
-                }
-                return;
-            }
+            if (isSoldOut) return;
 
             if (!requireAuth({ type: 'add_to_cart', productId: String(productId).trim(), quantity: qty })) {
                 return;
