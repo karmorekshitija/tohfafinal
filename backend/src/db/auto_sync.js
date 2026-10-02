@@ -513,6 +513,8 @@ async function autoSyncDatabase() {
       // Seller profiles compatibility fields (Bug 3)
       await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS capacity_limit INT DEFAULT 50;`);
       await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS vacation_mode BOOLEAN DEFAULT FALSE;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS vacation_mode_active INT DEFAULT 0;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS vacation_message TEXT DEFAULT '';`);
       await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS store_visibility BOOLEAN DEFAULT TRUE;`);
       await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS review_settings JSONB DEFAULT '{"enabled": true, "delay_days_after_del": 3}';`);
       await query(`UPDATE seller_profiles SET capacity_limit = COALESCE(daily_order_limit, daily_capacity_max, 50) WHERE capacity_limit IS NULL;`);

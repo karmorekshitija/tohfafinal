@@ -4,7 +4,7 @@
  *  LAYER: Frontend — Seller Studio Shared Components
  *  PURPOSE: Responsive custom elements (<seller-layout>, <seller-sidebar>, <seller-topbar>)
  *           with Pine #14381F theme and mobile navigation.
- *  LAST_POLISHED: 2026-08-23
+ *  LAST_POLISHED: 2026-10-02
  * ═══════════════════════════════════════════════════
  */
 
@@ -25,28 +25,19 @@
       margin: 0 !important;
       padding: 0 !important;
     }
-    
-    h1, h2, h3, h4, h5, h6, .font-headline, .font-headline-lg, .font-headline-md, .font-headline-sm {
+
+    h1, h2, h3, h4, h5, h6,
+    .font-headline, .font-headline-lg, .font-headline-md, .font-headline-sm {
       font-family: 'Playfair Display', serif !important;
     }
 
     /* Scrollbar customization */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(20, 56, 31, 0.15);
-      border-radius: 10px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #14381F;
-    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(20, 56, 31, 0.18); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #14381F; }
 
-    /* Component specific classes */
+    /* ── Sidebar link styles ────────────────────────────────────────────────── */
     .sidebar-link {
       display: flex;
       flex-direction: column;
@@ -71,6 +62,7 @@
       opacity: 1 !important;
     }
 
+    /* ── Layout shells ──────────────────────────────────────────────────────── */
     seller-layout {
       display: block !important;
       width: 100% !important;
@@ -85,12 +77,12 @@
       background-color: #FFF8E7 !important;
     }
 
+    /* Desktop: sidebar occupies fixed 130px column */
     seller-sidebar {
       display: block !important;
       width: 130px !important;
       flex-shrink: 0 !important;
       z-index: 50 !important;
-      transition: transform 0.3s ease-in-out !important;
     }
 
     .seller-main-panel {
@@ -131,21 +123,34 @@
       backdrop-filter: blur(8px) !important;
     }
 
+    /* ── Mobile breakpoint (≤ 1023px) ──────────────────────────────────────── */
     @media (max-width: 1023px) {
-      seller-sidebar {
+
+      /*
+       * TASK 2 FIX: target the inner <aside> only.
+       * Previously both this file and responsive.css applied transforms to
+       * different elements (seller-sidebar vs seller-sidebar aside), causing
+       * the slide-in to never work. Single source of truth here.
+       */
+      seller-sidebar aside {
         position: fixed !important;
         left: 0 !important;
         top: 0 !important;
         height: 100vh !important;
+        width: 220px !important;
         transform: translateX(-100%) !important;
+        transition: transform 0.3s ease-in-out !important;
+        z-index: 200 !important;
       }
-      
-      seller-sidebar.active {
+
+      /* .active toggled on <seller-sidebar> by the hamburger JS below */
+      seller-sidebar.active aside {
         transform: translateX(0) !important;
       }
 
       .seller-main-panel {
         margin-left: 0 !important;
+        /* top: 68px topbar + bottom: 80px for bottom nav */
         padding: 68px 16px 80px 16px !important;
         height: auto !important;
         max-height: none !important;
@@ -156,6 +161,88 @@
         left: 0 !important;
         padding-left: 16px !important;
         padding-right: 16px !important;
+      }
+    }
+
+    /* ── TASK 3: Sidebar backdrop overlay ──────────────────────────────────── */
+    #seller-sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.45);
+      z-index: 150;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    #seller-sidebar-backdrop.active {
+      display: block;
+      opacity: 1;
+    }
+
+    /* ── TASK 4: Mobile bottom navigation bar ──────────────────────────────── */
+    /* Hidden on desktop */
+    .seller-bottom-nav { display: none; }
+
+    @media (max-width: 1023px) {
+      .seller-bottom-nav {
+        display: flex !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: 64px !important;
+        background-color: #14381F !important;
+        border-top: 1px solid rgba(255, 248, 231, 0.12) !important;
+        align-items: center !important;
+        justify-content: space-around !important;
+        z-index: 100 !important;
+        box-shadow: 0 -4px 16px rgba(20, 56, 31, 0.25) !important;
+        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+      }
+
+      .seller-bottom-nav-link {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 1 !important;
+        height: 100% !important;
+        color: rgba(255, 248, 231, 0.5) !important;
+        text-decoration: none !important;
+        gap: 3px !important;
+        transition: color 0.15s ease !important;
+        -webkit-tap-highlight-color: transparent !important;
+      }
+
+      .seller-bottom-nav-link.active {
+        color: #FFF8E7 !important;
+      }
+
+      .seller-bottom-nav-link .snav-icon-wrap {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 14px !important;
+        padding: 2px 10px !important;
+        transition: background-color 0.15s ease !important;
+      }
+
+      .seller-bottom-nav-link.active .snav-icon-wrap {
+        background-color: rgba(255, 248, 231, 0.15) !important;
+      }
+
+      .seller-bottom-nav-link .snav-icon {
+        font-size: 22px !important;
+        line-height: 1 !important;
+      }
+
+      .seller-bottom-nav-link .snav-label {
+        font-family: 'DM Sans', sans-serif !important;
+        font-size: 9px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.06em !important;
+        line-height: 1 !important;
       }
     }
   `;
@@ -358,20 +445,26 @@ class SellerTopBar extends HTMLElement {
         .catch(() => {});
     }
 
+    // ── TASK 2 FIX + TASK 3: Hamburger toggles sidebar + backdrop ─────────
     const hamburgerBtn = this.querySelector('#seller-hamburger-btn');
     if (hamburgerBtn) {
       hamburgerBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         const sidebar = document.querySelector('seller-sidebar');
+        const backdrop = document.getElementById('seller-sidebar-backdrop');
         if (sidebar) {
-          sidebar.classList.toggle('active');
-        }
-      });
-      
-      document.addEventListener('click', (e) => {
-        const sidebar = document.querySelector('seller-sidebar');
-        if (sidebar && sidebar.classList.contains('active') && !sidebar.contains(e.target) && !hamburgerBtn.contains(e.target)) {
-          sidebar.classList.remove('active');
+          const isOpen = sidebar.classList.toggle('active');
+          if (backdrop) {
+            if (isOpen) {
+              backdrop.style.display = 'block';
+              // Trigger reflow for transition
+              backdrop.offsetHeight;
+              backdrop.classList.add('active');
+            } else {
+              backdrop.classList.remove('active');
+              setTimeout(() => { backdrop.style.display = 'none'; }, 300);
+            }
+          }
         }
       });
     }
@@ -435,11 +528,58 @@ class SellerLayout extends HTMLElement {
         mainPanel.appendChild(child);
       });
 
+      // ── TASK 3: Backdrop overlay ──────────────────────────────────────────
+      const backdrop = document.createElement('div');
+      backdrop.id = 'seller-sidebar-backdrop';
+      backdrop.setAttribute('aria-hidden', 'true');
+      backdrop.addEventListener('click', () => {
+        const sidebarEl = document.querySelector('seller-sidebar');
+        if (sidebarEl) sidebarEl.classList.remove('active');
+        backdrop.classList.remove('active');
+        setTimeout(() => { backdrop.style.display = 'none'; }, 300);
+      });
+
+      // ── TASK 4: Mobile bottom navigation bar ─────────────────────────────
+      const isAdminSwitched = Boolean(sessionStorage.getItem('tohfa_admin_switch_context'));
+      const bottomNav = document.createElement('nav');
+      bottomNav.className = 'seller-bottom-nav';
+      bottomNav.setAttribute('aria-label', 'Studio navigation');
+
+      const navItems = [
+        { tab: ['home', 'dashboard'], icon: 'home',              label: 'Home',     href: '/seller/dashboard.html' },
+        { tab: ['catalog'],           icon: 'inventory_2',       label: 'Catalog',  href: '/seller/catalog.html'   },
+        ...(!isAdminSwitched ? [
+          { tab: ['orders'],          icon: 'shopping_bag',      label: 'Orders',   href: '/seller/orders.html'    },
+          { tab: ['payments','payouts'],icon: 'payments',        label: 'Payouts',  href: '/seller/payouts.html'   },
+        ] : []),
+        { tab: ['profile','settings'],icon: 'settings',          label: 'Settings', href: '/seller/profile-settings.html' },
+      ];
+
+      navItems.forEach(item => {
+        const isActive = item.tab.includes(activeTab);
+        const link = document.createElement('a');
+        link.href = item.href;
+        link.className = `seller-bottom-nav-link${isActive ? ' active' : ''}`;
+        link.setAttribute('aria-label', item.label);
+        link.innerHTML = `
+          <span class="snav-icon-wrap">
+            <span class="material-symbols-outlined snav-icon"
+              style="font-variation-settings:'FILL' ${isActive ? 1 : 0},'wght' 400,'GRAD' 0,'opsz' 24;">
+              ${item.icon}
+            </span>
+          </span>
+          <span class="snav-label">${item.label}</span>
+        `;
+        bottomNav.appendChild(link);
+      });
+
       container.appendChild(sidebar);
       container.appendChild(mainPanel);
 
       this.innerHTML = '';
       this.appendChild(container);
+      document.body.appendChild(backdrop);
+      document.body.appendChild(bottomNav);
     };
 
     if (document.readyState === 'loading') {
@@ -566,4 +706,3 @@ window.handleDeleteProduct = async function(e, productId, productTitle) {
     return false;
   }
 };
-

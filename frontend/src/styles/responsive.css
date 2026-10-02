@@ -207,11 +207,14 @@ html, body, main, section, .seller-main-panel, .seller-layout-container, seller-
 
 /* ==========================================================================
    Seller Studio UI overrides (max-width: 1023px)
+   NOTE: seller-sidebar aside transform/position rules are exclusively managed
+   in seller-components.js (injectGlobalStyles). Do NOT add sidebar transform
+   rules here to avoid CSS specificity conflicts.
    ========================================================================== */
 @media (max-width: 1023px) {
   .seller-main-panel {
     margin-left: 0 !important;
-    padding: 80px 16px 80px 16px !important;
+    padding: 68px 16px 80px 16px !important;
     height: auto !important;
     max-height: none !important;
     overflow-y: visible !important;
@@ -222,16 +225,8 @@ html, body, main, section, .seller-main-panel, .seller-layout-container, seller-
     padding-left: 16px !important;
     padding-right: 16px !important;
   }
-
-  seller-sidebar aside {
-    transform: translateX(-100%);
-    transition: transform 0.3s ease-in-out;
-  }
-  
-  seller-sidebar.active aside {
-    transform: translateX(0) !important;
-  }
 }
+
 
 /* ==========================================================================
    Global Footer adjustments

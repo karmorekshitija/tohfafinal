@@ -29,10 +29,10 @@
             stroke-dasharray: 100;
             stroke-dashoffset: 100;
         }
-        /* Custom scrollbar to match the studio aesthetic */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #FFF8E7; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(20, 56, 31, 0.18); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(20, 56, 31, 0.45); }
     </style>
 </head>
 <body class="bg-[#FFF8E7] text-on-background font-body-md overflow-x-hidden">
@@ -79,7 +79,7 @@
     <!-- KPI Row -->
     <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-lg mb-xl">
       <!-- KPI 1 -->
-      <div class="bg-surface border border-outline-variant/30 rounded-xl p-md shadow-sm relative overflow-hidden group">
+      <div class="bg-[#F7F1E1] border border-outline-variant/40 rounded-xl p-md shadow-md relative overflow-hidden group">
         <p class="font-label-caps text-label-caps text-on-surface-variant/70 mb-sm">Total Orders</p>
         <div class="flex items-baseline gap-sm">
           <span id="kpi-orders" class="font-data-price text-[32px] text-on-surface">—</span>
@@ -87,14 +87,14 @@
         </div>
       </div>
       <!-- KPI 2 -->
-      <div class="bg-surface border border-outline-variant/30 rounded-xl p-md shadow-sm relative overflow-hidden group">
+      <div class="bg-[#F7F1E1] border border-outline-variant/40 rounded-xl p-md shadow-md relative overflow-hidden group">
         <p class="font-label-caps text-label-caps text-on-surface-variant/70 mb-sm">Conversion</p>
         <div class="flex items-baseline gap-sm">
           <span id="kpi-conversion" class="font-data-price text-[32px] text-on-surface">—</span>
         </div>
       </div>
       <!-- KPI 3 -->
-      <div class="bg-surface border border-outline-variant/30 rounded-xl p-md shadow-sm relative overflow-hidden group">
+      <div class="bg-[#F7F1E1] border border-outline-variant/40 rounded-xl p-md shadow-md relative overflow-hidden group">
         <p class="font-label-caps text-label-caps text-on-surface-variant/70 mb-sm">Revenue</p>
         <div class="flex items-baseline gap-sm">
           <span id="kpi-revenue" class="font-data-price text-[32px] text-on-surface">—</span>
@@ -102,13 +102,14 @@
         </div>
       </div>
       <!-- KPI 4 -->
-      <div class="bg-surface border border-outline-variant/30 rounded-xl p-md shadow-sm relative overflow-hidden group">
+      <div class="bg-[#F7F1E1] border border-outline-variant/40 rounded-xl p-md shadow-md relative overflow-hidden group">
         <p class="font-label-caps text-label-caps text-on-surface-variant/70 mb-sm">Pending Orders</p>
         <div class="flex items-baseline gap-sm">
           <span id="kpi-pending-orders" class="font-data-price text-[32px] text-on-surface">—</span>
         </div>
       </div>
     </section>
+
 
     <!-- 1. Low Stock Alerts -->
     <section class="bg-surface border border-outline-variant/30 rounded-xl p-lg shadow-sm relative overflow-hidden">
@@ -155,24 +156,27 @@
           View All <span class="material-symbols-outlined text-sm">arrow_forward</span>
         </a>
       </div>
-      <div class="bg-surface border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm">
-        <table class="w-full text-left border-collapse" id="recent-orders-table">
-          <thead class="bg-surface-container-highest/30">
-            <tr>
-              <th class="px-lg py-md font-label-caps text-label-caps text-on-surface-variant/60">Product</th>
-              <th class="px-lg py-md font-label-caps text-label-caps text-on-surface-variant/60">Buyer</th>
-              <th class="px-lg py-md font-label-caps text-label-caps text-on-surface-variant/60">Amount</th>
-              <th class="px-lg py-md font-label-caps text-label-caps text-on-surface-variant/60">Status</th>
-              <th class="px-lg py-md font-label-caps text-label-caps text-on-surface-variant/60">Label</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-outline-variant/20" id="recent-orders-body">
-            <!-- Dynamically Populated -->
-          </tbody>
-        </table>
+      <div class="bg-[#F7F1E1] border border-outline-variant/40 rounded-xl overflow-hidden shadow-md">
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[600px] text-left border-collapse" id="recent-orders-table">
+            <thead class="bg-surface-container-highest/30">
+              <tr>
+                <th class="px-lg py-md font-label-caps text-label-caps text-on-surface-variant/60">Product</th>
+                <th class="px-lg py-md font-label-caps text-label-caps text-on-surface-variant/60">Buyer</th>
+                <th class="px-lg py-md font-label-caps text-label-caps text-on-surface-variant/60">Amount</th>
+                <th class="px-lg py-md font-label-caps text-label-caps text-on-surface-variant/60">Status</th>
+                <th class="px-lg py-md font-label-caps text-label-caps text-on-surface-variant/60">Label</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/20" id="recent-orders-body">
+              <!-- Dynamically Populated -->
+            </tbody>
+          </table>
+        </div>
         <p id="orders-empty" class="hidden text-center text-on-surface-variant py-8 text-sm italic">No recent orders received. Start listing!</p>
       </div>
     </section>
+
 
     <!-- 4. Quick Actions -->
     <section class="bg-surface border border-outline-variant/30 rounded-xl p-lg shadow-sm relative overflow-hidden">
