@@ -934,7 +934,9 @@
              <span class="material-symbols-outlined text-[15px] sm:text-[17px] transition-all ${isWishlisted ? 'text-[#C85A32]' : 'text-[#14381F]'}" style="font-variation-settings: 'FILL' ${isWishlisted ? 1 : 0};">favorite</span>
            </button>`;
 
-      const isCustomized = p.listing_type === 'custom' || (p.customization_mode && p.customization_mode !== 'none');
+      const isCustomized = p.listing_type === 'custom' || (p.customization_mode && p.customization_mode !== 'none') || Boolean(p.is_customizable);
+      const stock = p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : (p.stock !== undefined ? p.stock : null));
+      const isOutOfStock = !isCustomized && (p.status === 'sold_out' || (stock !== null && stock <= 0));
       const actionBtnHtml = isOwner
         ? `<button class="w-full bg-[#14381F]/15 text-[#587A5B] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold opacity-60 cursor-not-allowed text-[11px] sm:text-xs" disabled onclick="event.stopPropagation();">
              Own Product
@@ -948,7 +950,7 @@
              </button>`;
 
       return `
-        <a href="/buyer/product.html?id=${p.id}" class="product-card group bg-[#FAF6EE] border border-[rgba(20,56,31,0.15)] rounded-xl p-2.5 sm:p-3 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative no-underline text-inherit ${isCarousel ? 'w-[220px] sm:w-[260px] flex-shrink-0 snap-start' : ''}">
+        <a href="/buyer/product.html?id=${p.id}" class="product-card group bg-[#FAF6EE] border border-[rgba(20,56,31,0.15)] rounded-xl p-2.5 sm:p-3 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative no-underline text-inherit ${isCarousel ? 'w-[220px] sm:w-[260px] flex-shrink-0 snap-start' : ''} ${isOutOfStock ? 'is-out-of-stock' : ''}">
           <div>
             <div class="relative aspect-square overflow-hidden rounded-lg bg-[#FAF6EE] mb-2 sm:mb-2.5">
               ${ribbonHtml}

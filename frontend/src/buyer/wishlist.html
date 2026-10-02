@@ -366,7 +366,9 @@
                                <span class="material-symbols-outlined active-heart text-[15px] sm:text-[17px] text-primary" style="font-variation-settings: 'FILL' 1;">favorite</span>
                            </button>`;
 
-                    const isCustomized = item.listing_type === 'custom';
+                    const isCustomized = item.listing_type === 'custom' || item.customization_mode === 'fixed' || item.customization_mode === 'open' || Boolean(item.is_customizable);
+                    const stock = item.stock_qty !== undefined ? item.stock_qty : (item.stock_quantity !== undefined ? item.stock_quantity : (item.stock !== undefined ? item.stock : null));
+                    const isOutOfStock = !isCustomized && (item.status === 'sold_out' || (stock !== null && stock <= 0));
                     const addToCartBtnHtml = isOwner
                         ? `<button class="w-full py-sm px-md border border-secondary text-secondary font-body-md text-body-md rounded-lg opacity-50 cursor-not-allowed bg-[#14381F]/20 mt-auto" disabled onclick="event.stopPropagation();">
                                Own Product
@@ -380,7 +382,7 @@
                                </button>`;
 
                     return `
-                        <div class="bg-[#FFF8E7] p-lg rounded-xl border border-outline-variant hover:shadow-[0_8px_30px_rgb(58,51,40,0.08)] transition-all group flex flex-col justify-between cursor-pointer" onclick="window.location.href='/buyer/product.html?id=${item.product_id}'">
+                        <div class="bg-[#FFF8E7] p-lg rounded-xl border border-outline-variant hover:shadow-[0_8px_30px_rgb(58,51,40,0.08)] transition-all group flex flex-col justify-between cursor-pointer ${isOutOfStock ? 'is-out-of-stock' : ''}" onclick="window.location.href='/buyer/product.html?id=${item.product_id}'">
                             <div>
                                 <div class="relative aspect-square overflow-hidden rounded-lg mb-md">
                                     <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="${imgUrl}" alt="${item.name}" loading="lazy">
@@ -497,8 +499,11 @@
             grid.innerHTML = products.slice(0, 4).map(p => {
                 const img = p.image_url || (Array.isArray(p.images) && p.images[0]?.url ? p.images[0].url : '/img/categories/artisan_showcase.jpg');
                 const pricePaise = p.price_paise !== undefined ? p.price_paise : (p.base_price ? Math.round(p.base_price * 100) : 0);
+                const isCustom = p.listing_type === 'custom' || p.customization_mode === 'fixed' || p.customization_mode === 'open' || Boolean(p.is_customizable);
+                const stock = p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : (p.stock !== undefined ? p.stock : null));
+                const isOutOfStock = !isCustom && (p.status === 'sold_out' || (stock !== null && stock <= 0));
                 return `
-                    <a href="/buyer/product.html?id=${p.id}" class="bg-[#FFF8E7] p-3 rounded-xl border border-outline-variant hover:shadow-md transition-all group flex flex-col justify-between no-underline text-inherit block">
+                    <a href="/buyer/product.html?id=${p.id}" class="bg-[#FFF8E7] p-3 rounded-xl border border-outline-variant hover:shadow-md transition-all group flex flex-col justify-between no-underline text-inherit block ${isOutOfStock ? 'is-out-of-stock' : ''}">
                         <div>
                             <div class="relative aspect-square overflow-hidden rounded-lg mb-2 bg-white/60">
                                 <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="${img}" alt="${p.name}" loading="lazy">

@@ -409,10 +409,12 @@ export function renderTanya() {
           products.forEach(p => {
             const price = p.base_price || p.price;
             const priceStr = price ? `₹${Number(price).toLocaleString('en-IN')}` : '';
-            const imgSrc = p.cover_image || '/img/placeholder-product.png';
+            const isCustom = p.listing_type === 'custom' || p.customization_mode === 'fixed' || p.customization_mode === 'open' || Boolean(p.is_customizable);
+            const stock = p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : (p.stock !== undefined ? p.stock : null));
+            const isOutOfStock = !isCustom && (p.status === 'sold_out' || (stock !== null && stock <= 0));
             const card = document.createElement('a');
             card.href = p.link || `/buyer/product.html?id=${p.id}`;
-            card.className = 'tanya-product-card';
+            card.className = `tanya-product-card ${isOutOfStock ? 'is-out-of-stock' : ''}`;
             card.innerHTML = `
               <div class="tanya-product-card__img-wrap">
                 <img

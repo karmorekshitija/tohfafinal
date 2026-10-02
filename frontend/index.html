@@ -959,7 +959,10 @@
   function createProductCard(product, extraClasses = '') {
     const card = document.createElement('a');
     card.href = `/buyer/product.html?id=${product.id}`;
-    card.className = `group rounded-xl border flex flex-col justify-between overflow-hidden cursor-pointer transition-shadow duration-300 hover:shadow-md bg-[#FAF6EE] border-[rgba(20,56,31,0.15)] no-underline text-inherit ${extraClasses}`;
+    const isCustom = product.listing_type === 'custom' || product.customization_mode === 'fixed' || product.customization_mode === 'open' || Boolean(product.is_customizable);
+    const stock = product.stock_qty !== undefined ? product.stock_qty : (product.stock_quantity !== undefined ? product.stock_quantity : (product.stock !== undefined ? product.stock : null));
+    const isOutOfStock = !isCustom && (product.status === 'sold_out' || (stock !== null && stock <= 0));
+    card.className = `group rounded-xl border flex flex-col justify-between overflow-hidden cursor-pointer transition-shadow duration-300 hover:shadow-md bg-[#FAF6EE] border-[rgba(20,56,31,0.15)] no-underline text-inherit ${isOutOfStock ? 'is-out-of-stock' : ''} ${extraClasses}`;
 
     const ribbonHtml = getRibbonHtml(product);
     const rawPrice = product.price_paise !== undefined && product.price_paise !== null

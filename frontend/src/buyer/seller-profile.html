@@ -1286,7 +1286,7 @@
 
             const card = document.createElement('div');
             card.setAttribute('data-href', `/buyer/product.html?id=${p.id}`);
-            card.className = "group bg-[#FAF6EE] border border-[rgba(20,56,31,0.15)] rounded-xl p-2.5 sm:p-3 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between relative cursor-pointer text-inherit";
+            card.className = `group bg-[#FAF6EE] border border-[rgba(20,56,31,0.15)] rounded-xl p-2.5 sm:p-3 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between relative cursor-pointer text-inherit ${isSoldOut ? 'is-out-of-stock' : ''}`;
 
             card.innerHTML = `
                 <div>
@@ -1295,7 +1295,7 @@
                         <img src="${safeImageUrl(p.image_url || p.images?.[0])}" alt="${escapeHtml(p.name)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-lg" loading="lazy" onerror="this.onerror=null; this.src='/img/ceramic_bowls.jpg';" />
                         ${wishlistBtnHtml}
                         ${isSoldOut ? `
-                            <div class="absolute bottom-2 left-2 bg-red-100 text-red-700 px-2 py-0.5 rounded shadow-xs text-[9px] font-semibold uppercase tracking-wider z-10">
+                            <div class="sold-out-badge absolute bottom-2 left-2 bg-red-100 text-red-700 px-2 py-0.5 rounded shadow-xs text-[9px] font-semibold uppercase tracking-wider z-10">
                                 Sold Out
                             </div>
                         ` : ''}

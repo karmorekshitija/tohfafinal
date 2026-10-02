@@ -17,3 +17,17 @@
     background-color: #FFF8E7 !important;
   }
 }
+
+/* Out-of-stock product visual treatment */
+.is-out-of-stock {
+  filter: grayscale(100%);
+}
+.is-out-of-stock img,
+img.is-out-of-stock {
+  filter: grayscale(100%);
+  opacity: 0.85;
+}
+.is-out-of-stock .sold-out-badge,
+.is-out-of-stock #product-stock-badge {
+  filter: none;
+}
