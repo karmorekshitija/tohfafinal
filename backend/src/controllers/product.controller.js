@@ -930,8 +930,8 @@ async function getProduct(req, res, next) {
                 '{}'::text[]
               ) AS occasions,
               COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name, COALESCE(s.photo_url, u.profile_photo_url) AS profile_photo,
-              COALESCE(sp.vacation_mode_active, CASE WHEN sp.vacation_mode = TRUE THEN 1 ELSE 0 END, 0) AS seller_vacation_mode,
-              COALESCE(sp.vacation_message, '') AS seller_vacation_message,
+              COALESCE(CASE WHEN sp.vacation_mode = TRUE THEN 1 ELSE 0 END, 0) AS seller_vacation_mode,
+              '' AS seller_vacation_message,
               COALESCE(
                 (SELECT json_agg(pi ORDER BY pi.sort_order)
                  FROM product_images pi WHERE pi.product_id = p.id),
