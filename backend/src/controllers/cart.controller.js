@@ -209,8 +209,8 @@ async function addToCart(req, res, next) {
     // Verify product is active and artisan is not on vacation
     const { rows: pRows } = await query(
       `SELECT p.id, p.name, p.stock_quantity, p.seller_id,
-              COALESCE(sp.vacation_mode_active, CASE WHEN sp.vacation_mode = TRUE THEN 1 ELSE 0 END, 0) AS vacation_mode_active,
-              COALESCE(sp.vacation_message, '') AS vacation_message
+              COALESCE(CASE WHEN sp.vacation_mode = TRUE THEN 1 ELSE 0 END, 0) AS vacation_mode_active,
+              '' AS vacation_message
        FROM products p
        LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
        WHERE p.id = $1 AND p.status = 'active' AND (p.is_active IS NULL OR p.is_active = TRUE)`,
