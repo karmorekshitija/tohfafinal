@@ -9,6 +9,7 @@
 const db = require('../config/db');
 const { query } = db;
 const emailService = require('../services/email.service');
+const ownerNotifyService = require('../services/ownerNotify.service');
 const paymentService = require('../services/payment.service');
 const bestsellerService = require('../services/bestseller.service');
 const { logAdminAction } = require('../services/audit.service');
@@ -240,21 +241,18 @@ async function verifySellerKyc(req, res, next) {
     }
 
     // Update seller KYC and approval status atomically in sellers table
+    const approvedInt = isApproved ? 1 : 0;
     const { rows: updatedSellers } = await query(
-      `UPDATE sellers 
-       SET kyc_status = $1::varchar, 
-           is_approved = $2::boolean, 
-           status = $3::varchar, 
-           verification_status = CASE WHEN $1::text = 'VERIFIED' THEN 'verified' ELSE 'rejected' END,
-           kyc_remarks = COALESCE($4::text, kyc_remarks),
-           rejection_reason = CASE WHEN $1::text = 'REJECTED' THEN COALESCE($4::text, rejection_reason) ELSE NULL END,
-           commission_rate = COALESCE($5::numeric, commission_rate),
-           verified_at = CASE WHEN $1::text = 'VERIFIED' THEN NOW() ELSE NULL END,
-           approved_at = CASE WHEN $1::text = 'VERIFIED' THEN NOW() ELSE approved_at END,
-           updated_at = NOW() 
-       WHERE id::text = $6::text OR user_id::text = $6::text 
+      `UPDATE sellers
+       SET is_approved = $1::int,
+           verification_status = CASE WHEN $2::text = 'VERIFIED' THEN 'verified' ELSE 'rejected' END,
+           rejection_reason = CASE WHEN $2::text = 'REJECTED' THEN COALESCE($3::text, rejection_reason) ELSE NULL END,
+           commission_rate = COALESCE($4::numeric, commission_rate),
+           approved_at = CASE WHEN $2::text = 'VERIFIED' THEN NOW() ELSE approved_at END,
+           updated_at = NOW()
+       WHERE id::text = $5::text OR user_id::text = $5::text
        RETURNING *;`,
-      [normStatus, isApproved, sellerStatus, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, String(id)]
+      [approvedInt, normStatus, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, String(id)]
     );
 
     let sellerRecord = updatedSellers[0];
@@ -263,15 +261,15 @@ async function verifySellerKyc(req, res, next) {
       // Fallback: check seller_profiles or users table
       const { rows: profiles } = await query(
         `UPDATE seller_profiles
-         SET is_approved = $1,
-             verification_status = CASE WHEN $1 THEN 'verified' ELSE 'rejected' END,
-             rejection_reason = CASE WHEN NOT $1 THEN $2 ELSE NULL END,
+         SET is_approved = $1::int,
+             verification_status = CASE WHEN $1::int = 1 THEN 'verified' ELSE 'rejected' END,
+             rejection_reason = CASE WHEN $1::int = 0 THEN $2 ELSE NULL END,
              commission_rate = COALESCE($3, commission_rate),
-             approved_at = CASE WHEN $1 THEN NOW() ELSE approved_at END,
+             approved_at = CASE WHEN $1::int = 1 THEN NOW() ELSE approved_at END,
              updated_at = NOW()
          WHERE id::text = $4::text OR user_id::text = $4::text
          RETURNING *;`,
-        [isApproved, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, String(id)]
+        [approvedInt, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, String(id)]
       );
 
       if (profiles.length === 0) {
@@ -282,14 +280,14 @@ async function verifySellerKyc(req, res, next) {
       // Sync seller_profiles table in parallel
       await query(
         `UPDATE seller_profiles
-         SET is_approved = $1,
-             verification_status = CASE WHEN $1 THEN 'verified' ELSE 'rejected' END,
-             rejection_reason = CASE WHEN NOT $1 THEN $2 ELSE NULL END,
+         SET is_approved = $1::int,
+             verification_status = CASE WHEN $1::int = 1 THEN 'verified' ELSE 'rejected' END,
+             rejection_reason = CASE WHEN $1::int = 0 THEN $2 ELSE NULL END,
              commission_rate = COALESCE($3, commission_rate),
-             approved_at = CASE WHEN $1 THEN NOW() ELSE approved_at END,
+             approved_at = CASE WHEN $1::int = 1 THEN NOW() ELSE approved_at END,
              updated_at = NOW()
          WHERE id::text = $4::text OR user_id::text = $4::text;`,
-        [isApproved, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, String(id)]
+        [approvedInt, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, String(id)]
       ).catch(() => {});
     }
 
@@ -327,7 +325,7 @@ async function verifySellerKyc(req, res, next) {
       const { rows: userRows } = await query('SELECT name, email FROM users WHERE id::text = $1::text', [String(userId)]).catch(() => ({ rows: [] }));
       const sellerUser = userRows[0] || {};
       const storeName = sellerRecord.store_name || 'Artisan Studio';
-      await emailService.sendSellerApprovalEmail(sellerUser.email, storeName).catch(() => {});
+      await emailService.sendSellerApprovalEmail(sellerUser.email, { sellerName: sellerUser.name || storeName, storeName }).catch(() => {});
       await createNotification(
         userId,
         'seller_approved',
@@ -338,7 +336,7 @@ async function verifySellerKyc(req, res, next) {
       const { rows: userRows } = await query('SELECT name, email FROM users WHERE id::text = $1::text', [String(userId)]).catch(() => ({ rows: [] }));
       const sellerUser = userRows[0] || {};
       const storeName = sellerRecord.store_name || 'Artisan Studio';
-      await emailService.sendSellerRejectionEmail(sellerUser.email, storeName, kycRemarks).catch(() => {});
+      await emailService.sendSellerRejectionEmail(sellerUser.email, { sellerName: sellerUser.name || storeName, rejectionReason: kycRemarks }).catch(() => {});
       await createNotification(
         userId,
         'seller_rejected',
@@ -2022,8 +2020,12 @@ async function createSpecialShop(req, res, next) {
     const cleanEmail = (email || `${cleanSlug}@thetohfa.in`).toLowerCase().trim();
     const cleanPhone = phone ? String(phone).trim() : null;
 
+    const initialPassword = (req.body.password && String(req.body.password).trim().length >= 6)
+      ? String(req.body.password).trim()
+      : 'TofaSpecialAdmin@2026!';
+
     const bcrypt = require('bcrypt');
-    const dummyHash = await bcrypt.hash('TofaSpecialAdmin@2026!', 10);
+    const dummyHash = await bcrypt.hash(initialPassword, 10);
 
     await client.query('BEGIN');
 
@@ -2100,6 +2102,46 @@ async function createSpecialShop(req, res, next) {
       details: { store_name, slug: cleanSlug, email: cleanEmail },
       ipAddress: req.ip
     });
+
+    // In-app notification for the special seller user
+    await createNotification(
+      userId,
+      'seller_approved',
+      'Welcome to Tohfa Special! 🎉',
+      `Your Tohfa Special studio shop "${store_name}" has been configured and is live.`
+    ).catch(() => {});
+
+    // 1. Welcome Email to the Special Seller / Shop Manager
+    const loginUrl = `${process.env.FRONTEND_URL || 'https://thetohfa.in'}/auth/login.html`;
+    if (emailService && typeof emailService.sendSellerAccountCreatedEmail === 'function') {
+      emailService.sendSellerAccountCreatedEmail(cleanEmail, {
+        sellerName: store_name,
+        storeName: store_name,
+        identifier: cleanEmail,
+        password: initialPassword,
+        plan: 'Special Studio',
+        sellerType: 'special',
+        slug: cleanSlug,
+        loginUrl
+      }).catch((err) => console.error('[Email] Failed to send special seller welcome email:', err.message));
+    }
+
+    // 2. Alert Email to Platform Owner / Admin
+    const parsedPickup = typeof pickup_address === 'object' && pickup_address !== null ? pickup_address : {};
+    if (ownerNotifyService && typeof ownerNotifyService.sendAdminAlertEmail === 'function') {
+      ownerNotifyService.sendAdminAlertEmail('seller_created', {
+        id: store_name,
+        storeName: store_name,
+        artisanName: store_name,
+        email: cleanEmail,
+        phone: cleanPhone,
+        plan: 'Special Studio',
+        sellerType: 'special',
+        city: parsedPickup.city || '',
+        state: parsedPickup.state || '',
+        link: `${process.env.FRONTEND_URL || 'https://thetohfa.in'}/admin/sellers.html?tab=special`
+      }).catch(() => {});
+    }
 
     return res.status(201).json({
       success: true,
@@ -2227,14 +2269,14 @@ async function createRegularSeller(req, res, next) {
       userId = user.id;
       await client.query(
         `UPDATE users
-         SET role = 'seller', is_active = TRUE, name = $1, full_name = $1, display_name = $1, password_hash = $2, phone = COALESCE(phone, $3), updated_at = NOW()
+         SET role = 'seller', is_active = 1, name = $1, full_name = $1, display_name = $1, password_hash = $2, phone = COALESCE(phone, $3), updated_at = NOW()
          WHERE id = $4`,
         [artisanName, passwordHash, cleanPhone, userId]
       );
     } else {
       const { rows: newUser } = await client.query(
         `INSERT INTO users (name, full_name, display_name, email, phone, password_hash, role, is_active)
-         VALUES ($1, $1, $1, $2, $3, $4, 'seller', TRUE)
+         VALUES ($1, $1, $1, $2, $3, $4, 'seller', 1)
          RETURNING id`,
         [artisanName, cleanEmail, cleanPhone, passwordHash]
       );
@@ -2246,14 +2288,14 @@ async function createRegularSeller(req, res, next) {
       `INSERT INTO sellers (
          user_id, store_name, slug, bio,
          pickup_address, bank_details, commission_rate,
-         verification_status, kyc_status, is_active, is_approved,
+         verification_status, is_active, is_approved,
          is_admin_managed, subscription_plan, subscription_status,
          subscription_renews_at, onboarding_completed, created_at, updated_at
        ) VALUES (
          $1, $2, $3, $4,
          $5, $6, $7,
-         'verified', 'VERIFIED', TRUE, TRUE,
-         FALSE, $8, 'active',
+         'verified', 1, 1,
+         0, $8, 'active',
          $9, $10, NOW(), NOW()
        )
        ON CONFLICT (user_id) DO UPDATE SET
@@ -2264,10 +2306,9 @@ async function createRegularSeller(req, res, next) {
          bank_details = CASE WHEN EXCLUDED.bank_details::text != '{}' THEN EXCLUDED.bank_details ELSE sellers.bank_details END,
          commission_rate = EXCLUDED.commission_rate,
          verification_status = 'verified',
-         kyc_status = 'VERIFIED',
-         is_active = TRUE,
-         is_approved = TRUE,
-         is_admin_managed = FALSE,
+         is_active = 1,
+         is_approved = 1,
+         is_admin_managed = 0,
          subscription_plan = EXCLUDED.subscription_plan,
          subscription_status = 'active',
          subscription_renews_at = EXCLUDED.subscription_renews_at,
@@ -2292,7 +2333,7 @@ async function createRegularSeller(req, res, next) {
          created_at, updated_at
        ) VALUES (
          $1, $2, $3, $4, 'regular',
-         'verified', TRUE, TRUE, FALSE,
+         'verified', 1, 1, 0,
          $5, $6, $7,
          $8, $9, NOW(), NOW(),
          NOW(), NOW()
@@ -2303,9 +2344,9 @@ async function createRegularSeller(req, res, next) {
          bio = EXCLUDED.bio,
          seller_type = 'regular',
          verification_status = 'verified',
-         is_approved = TRUE,
-         is_active = TRUE,
-         is_admin_managed = FALSE,
+         is_approved = 1,
+         is_active = 1,
+         is_admin_managed = 0,
          commission_rate = EXCLUDED.commission_rate,
          pickup_address = CASE WHEN EXCLUDED.pickup_address::text != '{}' THEN EXCLUDED.pickup_address ELSE seller_profiles.pickup_address END,
          bank_details = CASE WHEN EXCLUDED.bank_details::text != '{}' THEN EXCLUDED.bank_details ELSE seller_profiles.bank_details END,
@@ -2350,7 +2391,7 @@ async function createRegularSeller(req, res, next) {
       ipAddress: req.ip
     }).catch(() => {});
 
-    // 6. Notification & Welcome Email
+    // 6. Notification & Welcome Email to Seller
     await createNotification(
       userId,
       'seller_approved',
@@ -2358,9 +2399,36 @@ async function createRegularSeller(req, res, next) {
       'Your artisan seller account has been registered and verified by administration. Log in to manage products, courier pickup addresses, and payouts.'
     ).catch(() => {});
 
-    const { sendSellerApprovalEmail } = emailService;
-    if (sendSellerApprovalEmail) {
-      sendSellerApprovalEmail(cleanEmail, { sellerName: artisanName, storeName: finalStoreName }).catch(() => {});
+    const loginUrl = `${process.env.FRONTEND_URL || 'https://thetohfa.in'}/auth/login.html`;
+    if (emailService && typeof emailService.sendSellerAccountCreatedEmail === 'function') {
+      emailService.sendSellerAccountCreatedEmail(cleanEmail, {
+        sellerName: artisanName,
+        storeName: finalStoreName,
+        identifier: rawIdentifier.includes('@') ? cleanEmail : rawIdentifier,
+        password: String(password).trim(),
+        plan: selectedPlan,
+        sellerType: 'regular',
+        loginUrl
+      }).catch((e) => console.error('[Email] Error sending regular seller created email:', e.message));
+    } else if (emailService && typeof emailService.sendSellerApprovalEmail === 'function') {
+      emailService.sendSellerApprovalEmail(cleanEmail, { sellerName: artisanName, storeName: finalStoreName }).catch(() => {});
+    }
+
+    // 7. Alert Email to Platform Owner / Admin
+    const parsedPickup = typeof pickup_address === 'object' && pickup_address !== null ? pickup_address : {};
+    if (ownerNotifyService && typeof ownerNotifyService.sendAdminAlertEmail === 'function') {
+      ownerNotifyService.sendAdminAlertEmail('seller_created', {
+        id: finalStoreName,
+        storeName: finalStoreName,
+        artisanName: artisanName,
+        email: cleanEmail,
+        phone: cleanPhone,
+        plan: selectedPlan,
+        sellerType: 'regular',
+        city: parsedPickup.city || '',
+        state: parsedPickup.state || '',
+        link: `${process.env.FRONTEND_URL || 'https://thetohfa.in'}/admin/sellers.html`
+      }).catch(() => {});
     }
 
     return res.status(201).json({

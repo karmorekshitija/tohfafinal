@@ -91,6 +91,59 @@
         </button>
       </div>
     `;
+
+    const header = document.querySelector('header');
+    const titleEl = header && header.querySelector('h2');
+    if (header && titleEl && !document.getElementById('admin-menu-btn')) {
+      const btn = document.createElement('button');
+      btn.id = 'admin-menu-btn';
+      btn.type = 'button';
+      btn.setAttribute('aria-label', 'Open menu');
+      btn.className = 'admin-mobile-only';
+      btn.style.cssText = 'align-items:center;justify-content:center;padding:6px;background:none;border:0;cursor:pointer;color:#14381F;';
+      btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:26px">menu</span>';
+
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;align-items:center;gap:8px;';
+      titleEl.parentNode.insertBefore(wrap, titleEl);
+      wrap.appendChild(btn);
+      wrap.appendChild(titleEl);
+
+      const backdrop = document.createElement('div');
+      backdrop.id = 'admin-backdrop';
+      backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:45;display:none;';
+      document.body.appendChild(backdrop);
+      aside.style.zIndex = '50';
+
+      const setOpen = (open) => {
+        aside.classList.toggle('active', open);
+        backdrop.style.display = open ? 'block' : 'none';
+      };
+      btn.addEventListener('click', () => setOpen(!aside.classList.contains('active')));
+      backdrop.addEventListener('click', () => setOpen(false));
+      aside.addEventListener('click', (e) => { if (e.target.closest('a')) setOpen(false); });
+    }
+
+    if (!document.getElementById('admin-bottom-bar')) {
+      const items = [
+        ['Dashboard', '/admin/dashboard.html', 'dashboard'],
+        ['Sellers',   '/admin/sellers.html',   'storefront'],
+        ['Products',  '/admin/products.html',  'inventory_2'],
+        ['Orders',    '/admin/orders.html',    'receipt_long'],
+        ['Payouts', '/admin/payouts.html', 'payments'],
+      ];
+      const p = window.location.pathname.replace(/\.html$/, '');
+      const bar = document.createElement('nav');
+      bar.id = 'admin-bottom-bar';
+      bar.className = 'admin-mobile-only';
+      bar.style.cssText = 'position:fixed;left:0;right:0;bottom:0;height:64px;z-index:40;background:#FFF8E7;border-top:1px solid rgba(20,56,31,.15);justify-content:space-around;align-items:center;';
+      bar.innerHTML = items.map(([n, h, i]) => {
+        const on = p === h.replace(/\.html$/, '');
+        return `<a href="${h}" style="display:flex;flex-direction:column;align-items:center;font-size:10px;text-decoration:none;color:${on ? '#14381F' : 'rgba(0,0,0,.55)'};font-weight:${on ? 700 : 500};">
+          <span class="material-symbols-outlined" style="font-size:24px">${i}</span>${n}</a>`;
+      }).join('');
+      document.body.appendChild(bar);
+    }
   }
 
   // Expose admin logout globally

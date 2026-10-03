@@ -33,6 +33,63 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #FFF8E7; border-radius: 10px; }
+
+        /* Mobile Card Layout for Dashboard Recent Orders */
+        @media (max-width: 1023px) {
+            #recent-orders-table, 
+            #recent-orders-table thead, 
+            #recent-orders-table tbody, 
+            #recent-orders-table tr, 
+            #recent-orders-table td {
+                display: block !important;
+                width: 100% !important;
+            }
+            #recent-orders-table thead {
+                display: none !important;
+            }
+            #recent-orders-table tr {
+                background: #FFF8E7 !important;
+                border: 1px solid rgba(20, 56, 31, 0.12) !important;
+                border-radius: 12px !important;
+                padding: 14px 16px !important;
+                margin-bottom: 12px !important;
+                box-shadow: 0 2px 8px rgba(20, 56, 31, 0.04) !important;
+                display: grid !important;
+                grid-template-columns: 1fr auto !important;
+                gap: 6px 12px !important;
+                align-items: center !important;
+            }
+            #recent-orders-table td {
+                padding: 4px 0 !important;
+                border: none !important;
+            }
+            #recent-orders-table td:nth-child(1) {
+                grid-column: 1 / -1 !important;
+            }
+            #recent-orders-table td:nth-child(2) {
+                grid-column: 1 !important;
+            }
+            #recent-orders-table td:nth-child(4) {
+                grid-column: 2 !important;
+                text-align: right !important;
+                display: flex !important;
+                justify-content: flex-end !important;
+            }
+            #recent-orders-table td:nth-child(3) {
+                grid-column: 1 !important;
+                font-weight: 700 !important;
+                font-size: 15px !important;
+                padding-top: 6px !important;
+                border-top: 1px dashed rgba(20, 56, 31, 0.1) !important;
+            }
+            #recent-orders-table td:nth-child(5) {
+                grid-column: 2 !important;
+                display: flex !important;
+                justify-content: flex-end !important;
+                padding-top: 6px !important;
+                border-top: 1px dashed rgba(20, 56, 31, 0.1) !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-[#FFF8E7] text-on-background font-body-md overflow-x-hidden">
@@ -75,7 +132,7 @@
       Gathering studio records...
   </div>
 
-  <div id="dashboard-content" class="hidden flex flex-col gap-xl">
+  <div id="dashboard-content" class="hidden flex flex-col gap-xl pb-24 lg:pb-0">
     <!-- KPI Row -->
     <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-lg mb-xl">
       <!-- KPI 1 -->

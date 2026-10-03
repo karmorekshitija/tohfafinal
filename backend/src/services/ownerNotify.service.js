@@ -699,6 +699,21 @@ async function sendAdminAlertEmail(type, data) {
 <strong>Location:</strong> ${esc(loc)}</p>
 <p><a href="${esc(data.link || 'https://thetohfa.in/admin/sellers.html?tab=applications')}">Review Application</a></p>`;
       text = `New Seller Application\nStore: ${data.storeName}\nArtisan: ${data.artisanName}\nPhone: ${data.phone}\nLocation: ${loc}\n${data.link}`;
+    } else if (type === 'seller_created') {
+      const isSpecial = data.sellerType === 'special';
+      const typeLabel = isSpecial ? 'TOHFA Special Shop' : 'Normal Artisan Seller';
+      subject = `[Tohfa Admin] New Seller Created: ${data.storeName || 'New Store'} (${typeLabel})`;
+      const loc = [data.city, data.state].filter(Boolean).join(', ') || 'N/A';
+      html = `<h2>\uD83C\uDF81 New Seller Created by Admin</h2>
+<p><strong>Store:</strong> ${esc(data.storeName || 'N/A')}<br>
+<strong>Type:</strong> ${esc(typeLabel)}<br>
+<strong>Artisan / Contact:</strong> ${esc(data.artisanName || data.storeName || 'N/A')}<br>
+<strong>Login Email:</strong> ${esc(data.email || 'N/A')}<br>
+<strong>Phone:</strong> ${esc(data.phone || 'N/A')}<br>
+<strong>Plan:</strong> ${esc(data.plan ? String(data.plan).toUpperCase() : 'N/A')}<br>
+<strong>Location:</strong> ${esc(loc)}</p>
+<p><a href="${esc(data.link || 'https://thetohfa.in/admin/sellers.html')}">View in Admin Panel</a></p>`;
+      text = `New Seller Created by Admin\nStore: ${data.storeName}\nType: ${typeLabel}\nEmail: ${data.email}\nPhone: ${data.phone || 'N/A'}\nPlan: ${data.plan || 'N/A'}\nLocation: ${loc}\n${data.link || 'https://thetohfa.in/admin/sellers.html'}`;
     } else {
       return;
     }

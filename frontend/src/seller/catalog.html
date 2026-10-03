@@ -47,11 +47,12 @@
 
 <!-- Mobile Style Overrides -->
 <style>
-  @media (max-width: 768px) {
+  @media (max-width: 1023px) {
     /* Reflow table to card layouts */
     table, thead, tbody, tr, td {
       display: block !important;
       width: 100% !important;
+      min-width: 0 !important;
     }
     thead {
       display: none !important;
@@ -68,19 +69,20 @@
       border: none !important;
       padding: 6px 0 !important;
     }
-    /* Force action button group and discount cell elements to layout horizontally */
+    /* Force action button group and discount cell elements to layout horizontally with wrap */
     td:last-child > div, td:nth-child(4) > div {
       display: flex !important;
       flex-direction: row !important;
       align-items: center !important;
       justify-content: flex-start !important;
-      gap: 12px !important;
+      gap: 10px !important;
       margin-top: 0 !important;
+      flex-wrap: wrap !important;
     }
     /* Make buttons tappable with min touch target */
-    .sponsor-btn, .edit-btn, .pause-btn, .delete-btn {
-      min-width: 44px !important;
-      min-height: 44px !important;
+    .sponsor-btn, .edit-btn, .pause-btn, .delete-btn, .add-color-btn {
+      min-width: 40px !important;
+      min-height: 40px !important;
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
@@ -96,6 +98,10 @@
       background: rgba(20,56,31,0.2) !important;
       color: white !important;
     }
+    .add-color-btn:hover {
+      background: rgba(20,56,31,0.15) !important;
+      color: #14381F !important;
+    }
     .pause-btn:hover {
       background: #7B5EA7 !important;
       color: white !important;
@@ -104,7 +110,7 @@
       background: #e53e3e !important;
       color: white !important;
     }
-    .edit-btn:active, .pause-btn:active, .delete-btn:active {
+    .edit-btn:active, .pause-btn:active, .delete-btn:active, .add-color-btn:active {
       transform: scale(0.95) !important;
     }
     /* Ensure discount inputs are properly sized and not clipped */
@@ -162,7 +168,7 @@
           <span class="material-symbols-outlined text-sm">add</span> New Listing
         </button>
         <!-- Search Input -->
-        <div class="relative flex items-center bg-[#FFF8E7] border border-[#FFF8E7] rounded-full px-4 py-1.5 focus-within:border-primary transition-colors w-64">
+        <div class="relative flex items-center bg-[#FFF8E7] border border-[#FFF8E7] rounded-full px-4 py-1.5 focus-within:border-primary transition-colors w-full sm:w-64">
           <span class="material-symbols-outlined text-on-surface-variant text-lg mr-2">search</span>
           <input id="search-input" class="bg-transparent border-none outline-none text-body-sm w-full focus:ring-0" placeholder="Search entries..." type="text"/>
         </div>
@@ -177,7 +183,7 @@
   </div>
 
   <!-- Main Grid Content -->
-  <div class="max-w-[1440px] mx-auto px-margin-desktop space-y-8 pb-12">
+  <div class="max-w-[1440px] mx-auto px-margin-desktop space-y-8 pb-28 lg:pb-12">
     <!-- Main Table Container -->
     <div class="w-full space-y-8 min-w-0">
       <!-- Filter & Sort Row -->
@@ -259,7 +265,7 @@
 
       <!-- Table View -->
       <div id="listings-table-container" class="hidden bg-[#FFF8E7]/60 rounded-xl border border-sage/20 shadow-sm overflow-x-auto">
-        <table class="w-full text-left border-collapse min-w-[800px]">
+        <table class="w-full text-left border-collapse lg:min-w-[800px]">
           <thead>
             <tr class="bg-surface-container-low/40 border-b border-sage/20">
               <th class="py-4 px-3 w-12 text-center">

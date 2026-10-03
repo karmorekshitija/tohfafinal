@@ -54,6 +54,8 @@
         border-bottom: 2px solid transparent;
         color: #717971;
         outline: none;
+        white-space: nowrap;
+        flex-shrink: 0;
     }
     .tab-btn.active {
         border-bottom-color: #14381F;
@@ -96,7 +98,7 @@
 <aside data-sidebar="admin"></aside>
 
 <!-- TopNavBar -->
-<header class="fixed top-0 right-0 w-[calc(100%-256px)] h-[60px] bg-surface-ivory border-b border-outline-variant flex justify-between items-center px-8 z-40">
+<header class="fixed top-0 right-0 w-[calc(100%-256px)] h-[60px] bg-[#FFF8E7] border-b border-outline-variant flex justify-between items-center px-8 z-40">
   <h2 class="font-headline-md text-headline-md italic text-primary">Sellers</h2>
   <div class="flex items-center gap-6">
     <button class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
@@ -124,7 +126,7 @@
   </section>
 
   <!-- Tab Bar Layout -->
-  <div class="flex border-b border-sage-border mb-8">
+  <div class="flex border-b border-sage-border mb-8 overflow-x-auto">
     <button id="tab-active-sellers" class="tab-btn active focus:outline-none">Active Sellers</button>
     <button id="tab-special-shops" class="tab-btn focus:outline-none flex items-center gap-1.5">
       <span>✨ TOHFA Special Shops</span>
@@ -148,8 +150,8 @@
       </div>
     </div>
     <!-- Data Table Section -->
-    <div class="bg-[#FFF8E7] rounded-xl overflow-hidden border border-sage-border shadow-sm mb-8">
-      <table class="w-full text-left border-collapse">
+    <div class="bg-[#FFF8E7] rounded-xl overflow-x-auto border border-sage-border shadow-sm mb-8">
+      <table class="w-full text-left border-collapse min-w-[900px]">
         <thead>
           <tr class="bg-parchment border-b border-sage-border">
             <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase">Avatar + Name</th>
@@ -196,8 +198,8 @@
     </div>
 
     <!-- Data Table Section -->
-    <div class="bg-[#FFF8E7] rounded-xl overflow-hidden border border-sage-border shadow-sm mb-8">
-      <table class="w-full text-left border-collapse">
+    <div class="bg-[#FFF8E7] rounded-xl overflow-x-auto border border-sage-border shadow-sm mb-8">
+      <table class="w-full text-left border-collapse min-w-[900px]">
         <thead>
           <tr class="bg-parchment border-b border-sage-border">
             <th class="px-6 py-4 font-accent-caps text-[10px] tracking-[0.15em] text-text-muted uppercase">Shop Name & Brand</th>
