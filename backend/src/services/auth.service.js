@@ -456,7 +456,12 @@ async function login(data) {
     }
   }
 
-  const loginEmail = normalizeEmail(email || identifier || (username && username.includes('@') ? username : (username ? `${username}@thetohfa.in` : '')));
+  const rawLoginId = (email || identifier || username || '').toString().trim();
+  const loginEmail = normalizeEmail(
+    rawLoginId && !rawLoginId.includes('@') && !detectedPhone
+      ? `${rawLoginId}@thetohfa.in`
+      : rawLoginId
+  );
   const loginPhone = detectedPhone;
 
   // ---------------------------------------------------------------------------

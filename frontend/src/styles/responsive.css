@@ -183,7 +183,7 @@ html, body, main, section, .seller-main-panel, .seller-layout-container, seller-
 @media (max-width: 1023px) {
   main.ml-64, main.ml-60 {
     margin-left: 0 !important;
-    padding: 16px !important;
+    padding: 72px 16px 96px 16px !important;
   }
 
   header.fixed.top-0.right-0 {
@@ -390,3 +390,7 @@ button.toggle-wishlist-btn {
     scroll-behavior: auto !important;
   }
 }
+
+.admin-mobile-only { display: none; }
+@media (max-width: 1023px) { .admin-mobile-only { display: flex; } }
+

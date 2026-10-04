@@ -47,6 +47,80 @@
         .skeleton { background: linear-gradient(90deg, #FFF8E7 25%, #f3e6d6 50%, #FFF8E7 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; }
         @keyframes shimmer { 0%{background-position:-200px 0} 100%{background-position:200px 0} }
         @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.7;transform:scale(1.15)} }
+
+        /* Mobile Card Layout for Orders */
+        @media (max-width: 1023px) {
+            #orders-table-wrap > div {
+                min-width: 0 !important;
+                width: 100% !important;
+            }
+            .order-row {
+                display: grid !important;
+                grid-template-columns: 28px 1fr auto !important;
+                align-items: center !important;
+                gap: 8px 12px !important;
+                padding: 14px 16px !important;
+                border-radius: 14px !important;
+            }
+            .order-row > div:nth-child(1) {
+                grid-column: 1 !important;
+                grid-row: 1 !important;
+                justify-content: flex-start !important;
+            }
+            .order-row > div:nth-child(3) {
+                grid-column: 2 !important;
+                grid-row: 1 !important;
+                font-size: 13px !important;
+            }
+            .order-row > div:nth-child(7) {
+                grid-column: 3 !important;
+                grid-row: 1 !important;
+                justify-content: flex-end !important;
+            }
+            .order-row > div:nth-child(5) {
+                grid-column: 1 / -1 !important;
+                grid-row: 2 !important;
+                padding-top: 2px !important;
+            }
+            .order-row > div:nth-child(5) span {
+                font-size: 14px !important;
+                font-weight: 600 !important;
+                color: #14381F !important;
+                white-space: normal !important;
+                display: -webkit-box !important;
+                -webkit-line-clamp: 2 !important;
+                -webkit-box-orient: vertical !important;
+            }
+            .order-row > div:nth-child(4) {
+                grid-column: 1 / 3 !important;
+                grid-row: 3 !important;
+            }
+            .order-row > div:nth-child(4) span {
+                font-size: 12px !important;
+                color: rgba(28, 28, 28, 0.75) !important;
+            }
+            .order-row > div:nth-child(2) {
+                grid-column: 3 !important;
+                grid-row: 3 !important;
+                text-align: right !important;
+                font-size: 11px !important;
+            }
+            .order-row > div:nth-child(6) {
+                grid-column: 1 / 3 !important;
+                grid-row: 4 !important;
+                text-align: left !important;
+                font-size: 15px !important;
+                padding-top: 6px !important;
+                border-top: 1px dashed rgba(20, 56, 31, 0.12) !important;
+            }
+            .order-row > div:nth-child(8) {
+                grid-column: 3 !important;
+                grid-row: 4 !important;
+                justify-content: flex-end !important;
+                padding-top: 6px !important;
+                border-top: 1px dashed rgba(20, 56, 31, 0.12) !important;
+            }
+        }
     </style>
 <body class="bg-[#FFF8E7] text-on-surface font-body-md min-h-screen overflow-x-hidden" id="body-content">
 
@@ -67,9 +141,9 @@
                 <p class="text-on-surface-variant opacity-70 font-body-md mt-1" id="orders-count-label">Loading orders...</p>
             </div>
             <div class="flex gap-4 items-center flex-wrap">
-                <div class="relative group">
+                <div class="relative group w-full sm:w-auto">
                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">search</span>
-                    <input id="search-input" class="pl-10 pr-4 py-2 bg-surface-bright border border-sage rounded-lg font-data-price focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all w-64" placeholder="Search orders..." type="text"/>
+                    <input id="search-input" class="pl-10 pr-4 py-2 bg-surface-bright border border-sage rounded-lg font-data-price focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all w-full sm:w-64" placeholder="Search orders..." type="text"/>
                 </div>
                 <select id="period-select" class="bg-surface-bright border border-sage rounded-lg px-4 py-2 font-data-price focus:ring-1 focus:ring-primary focus:border-primary outline-none text-sm cursor-pointer transition-all">
                     <option value="7d">Last 7 Days</option>
@@ -147,9 +221,9 @@
 
     <!-- Orders Table/Grid Wrap -->
     <section id="orders-table-wrap" class="w-full overflow-x-auto hidden">
-        <div class="min-w-[900px] flex flex-col gap-4">
+        <div class="w-full lg:min-w-[900px] flex flex-col gap-4">
             <!-- Table Header -->
-            <div class="grid grid-cols-12 gap-x-4 px-6 py-2 font-label-caps text-on-surface-variant opacity-60 text-xs tracking-wider">
+            <div class="hidden lg:grid grid-cols-12 gap-x-4 px-6 py-2 font-label-caps text-on-surface-variant opacity-60 text-xs tracking-wider">
                 <div class="col-span-1 flex justify-center"><input type="checkbox" id="select-all-checkbox" class="rounded border-sage text-primary focus:ring-primary"/></div>
                 <div class="col-span-1">Order Date</div>
                 <div class="col-span-2">Order ID</div>
@@ -168,7 +242,7 @@
 <!-- Order Detail Slide-over -->
 <div class="fixed inset-0 z-[60] pointer-events-none" id="slideOver">
     <div class="absolute inset-0 bg-black/20 opacity-0 transition-opacity duration-300 pointer-events-none" id="slideOverOverlay"></div>
-    <aside class="absolute right-0 top-0 h-screen w-[450px] bg-[#FFF8E7] shadow-2xl border-l border-sage-soft translate-x-full transition-transform duration-500 ease-in-out pointer-events-auto p-10 flex flex-col gap-8 overflow-y-auto" id="slideOverContent">
+    <aside class="absolute right-0 top-0 h-screen w-full sm:w-[450px] max-w-full bg-[#FFF8E7] shadow-2xl border-l border-sage-soft translate-x-full transition-transform duration-500 ease-in-out pointer-events-auto p-6 sm:p-10 flex flex-col gap-6 sm:gap-8 overflow-y-auto" id="slideOverContent">
         <div class="flex justify-between items-start">
             <div>
                 <span class="font-label-caps text-gold text-xs">Detail View</span>
