@@ -314,7 +314,7 @@ async function signupSeller(data) {
     const sellerUserName = name || data.full_name || '';
     const userRes = await client.query(
       `INSERT INTO users (full_name, name, display_name, email, phone, password_hash, role, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, 'seller', 1)
+       VALUES ($1, $2, $3, $4, $5, $6, 'seller', TRUE)
        RETURNING id, full_name, name, email, role, phone, created_at`,
       [sellerUserName, sellerUserName, sellerUserName, email, phone, passwordHash]
     );
@@ -323,7 +323,7 @@ async function signupSeller(data) {
     // 2. Initialize Master sellers row
     const sellerRes = await client.query(
       `INSERT INTO sellers (user_id, store_name, slug, bio, verification_status, is_active, is_approved, pickup_address, bank_details, onboarding_completed)
-       VALUES ($1, $2, $3, $4, 'pending_verification', 1, 0, $5, '{}', FALSE)
+       VALUES ($1, $2, $3, $4, 'pending_verification', TRUE, FALSE, $5::jsonb, '{}'::jsonb, FALSE)
        ON CONFLICT (user_id) DO UPDATE SET
          store_name = EXCLUDED.store_name,
          slug = EXCLUDED.slug,
@@ -363,7 +363,7 @@ async function signupSeller(data) {
     try {
       await client.query(
         `INSERT INTO seller_profiles (user_id, store_name, slug, bio, seller_type, verification_status, is_approved, is_active, pickup_address, bank_details, pan_number, gst_number, portfolio_images, applied_at, onboarding_completed)
-         VALUES ($1, $2, $3, $4, 'regular', 'pending_verification', 0, 1, $5, '{}', $6, $7, $8::text[], NOW(), FALSE)
+         VALUES ($1, $2, $3, $4, 'regular', 'pending_verification', FALSE, TRUE, $5::jsonb, '{}'::jsonb, $6, $7, $8::text[], NOW(), FALSE)
          ON CONFLICT (user_id) DO UPDATE SET
            store_name = EXCLUDED.store_name,
            slug = EXCLUDED.slug,
@@ -380,7 +380,7 @@ async function signupSeller(data) {
         console.error('[signupSeller] seller_profiles missing expected columns — falling back to minimal insert. Run db:migrate against production.', insertErr.message);
         await client.query(
           `INSERT INTO seller_profiles (user_id, store_name, slug, bio, seller_type, verification_status, is_approved, is_active, pickup_address, bank_details)
-           VALUES ($1, $2, $3, $4, 'regular', 'pending_verification', 0, 1, $5, '{}')
+           VALUES ($1, $2, $3, $4, 'regular', 'pending_verification', FALSE, TRUE, $5::jsonb, '{}'::jsonb)
            ON CONFLICT (user_id) DO UPDATE SET
              store_name = EXCLUDED.store_name,
              slug = EXCLUDED.slug,

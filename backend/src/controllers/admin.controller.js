@@ -241,10 +241,11 @@ async function verifySellerKyc(req, res, next) {
     }
 
     // Update seller KYC and approval status atomically in sellers table
-    const approvedInt = isApproved ? 1 : 0;
+    const approvedBool = Boolean(isApproved);
     const { rows: updatedSellers } = await query(
       `UPDATE sellers
-       SET is_approved = $1::int,
+       SET is_approved = $1::boolean,
+           is_active = CASE WHEN $1::boolean = TRUE THEN TRUE ELSE is_active END,
            verification_status = CASE WHEN $2::text = 'VERIFIED' THEN 'verified' ELSE 'rejected' END,
            rejection_reason = CASE WHEN $2::text = 'REJECTED' THEN COALESCE($3::text, rejection_reason) ELSE NULL END,
            commission_rate = COALESCE($4::numeric, commission_rate),
@@ -252,7 +253,7 @@ async function verifySellerKyc(req, res, next) {
            updated_at = NOW()
        WHERE id::text = $5::text OR user_id::text = $5::text
        RETURNING *;`,
-      [approvedInt, normStatus, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, String(id)]
+      [approvedBool, normStatus, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, String(id)]
     );
 
     let sellerRecord = updatedSellers[0];
@@ -261,15 +262,15 @@ async function verifySellerKyc(req, res, next) {
       // Fallback: check seller_profiles or users table
       const { rows: profiles } = await query(
         `UPDATE seller_profiles
-         SET is_approved = $1::int,
-             verification_status = CASE WHEN $1::int = 1 THEN 'verified' ELSE 'rejected' END,
-             rejection_reason = CASE WHEN $1::int = 0 THEN $2 ELSE NULL END,
+         SET is_approved = $1::boolean,
+             verification_status = CASE WHEN $1::boolean = TRUE THEN 'verified' ELSE 'rejected' END,
+             rejection_reason = CASE WHEN $1::boolean = FALSE THEN $2 ELSE NULL END,
              commission_rate = COALESCE($3, commission_rate),
-             approved_at = CASE WHEN $1::int = 1 THEN NOW() ELSE approved_at END,
+             approved_at = CASE WHEN $1::boolean = TRUE THEN NOW() ELSE approved_at END,
              updated_at = NOW()
          WHERE id::text = $4::text OR user_id::text = $4::text
          RETURNING *;`,
-        [approvedInt, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, String(id)]
+        [approvedBool, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, String(id)]
       );
 
       if (profiles.length === 0) {
@@ -280,14 +281,15 @@ async function verifySellerKyc(req, res, next) {
       // Sync seller_profiles table in parallel
       await query(
         `UPDATE seller_profiles
-         SET is_approved = $1::int,
-             verification_status = CASE WHEN $1::int = 1 THEN 'verified' ELSE 'rejected' END,
-             rejection_reason = CASE WHEN $1::int = 0 THEN $2 ELSE NULL END,
+         SET is_approved = $1::boolean,
+             is_active = CASE WHEN $1::boolean = TRUE THEN TRUE ELSE is_active END,
+             verification_status = CASE WHEN $1::boolean = TRUE THEN 'verified' ELSE 'rejected' END,
+             rejection_reason = CASE WHEN $1::boolean = FALSE THEN $2 ELSE NULL END,
              commission_rate = COALESCE($3, commission_rate),
-             approved_at = CASE WHEN $1::int = 1 THEN NOW() ELSE approved_at END,
+             approved_at = CASE WHEN $1::boolean = TRUE THEN NOW() ELSE approved_at END,
              updated_at = NOW()
          WHERE id::text = $4::text OR user_id::text = $4::text;`,
-        [approvedInt, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, String(id)]
+        [approvedBool, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, String(id)]
       ).catch(() => {});
     }
 
@@ -374,36 +376,36 @@ async function suspendSeller(req, res, next) {
     const sellerId = req.params.sellerId || req.params.id;
     const reason = req.body.reason || req.body.ban_reason || 'Administrative suspension';
 
-    // Resolve target user_id with priority given to direct user ID matches
-    const userRes = await query(
-      `SELECT u.id
-       FROM users u
-       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
-       LEFT JOIN sellers s ON s.user_id = u.id
-       WHERE u.id::text = $1::text OR sp.id::text = $1::text OR s.id::text = $1::text
-       ORDER BY CASE 
-         WHEN u.id::text = $1::text AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 1
-         WHEN u.id::text = $1::text THEN 2
-         WHEN sp.id::text = $1::text THEN 3
-         WHEN s.id::text = $1::text THEN 4
-         ELSE 5 
-       END ASC
+    // Resolve target user_id and seller_id accurately
+    const sellerMatch = await query(
+      `SELECT s.id AS seller_id, s.user_id 
+       FROM sellers s 
+       WHERE s.id::text = $1::text OR s.user_id::text = $1::text 
        LIMIT 1`,
       [String(sellerId)]
     );
+    let targetUserId = sellerMatch.rows[0]?.user_id;
+    let targetSellerId = sellerMatch.rows[0]?.seller_id || sellerId;
 
-    const targetUserId = userRes.rows[0]?.id || sellerId;
+    if (!targetUserId) {
+      const spMatch = await query(
+        `SELECT id, user_id FROM seller_profiles WHERE id::text = $1::text OR user_id::text = $1::text LIMIT 1`,
+        [String(sellerId)]
+      );
+      targetUserId = spMatch.rows[0]?.user_id || sellerId;
+      targetSellerId = spMatch.rows[0]?.id || targetSellerId;
+    }
 
-    await query('UPDATE users SET is_active = 0 WHERE id::text = $1', [String(targetUserId)])
+    await query('UPDATE users SET is_active = FALSE WHERE id::text = $1', [String(targetUserId)])
       .catch(() => {});
 
-    await query("UPDATE seller_profiles SET verification_status = 'suspended', is_approved = 0, updated_at = NOW() WHERE user_id::text = $1", [String(targetUserId)])
+    await query("UPDATE seller_profiles SET verification_status = 'suspended', is_active = FALSE, is_approved = FALSE, updated_at = NOW() WHERE user_id::text = $1 OR id::text = $2", [String(targetUserId), String(targetSellerId)])
       .catch(() => {});
 
-    await query("UPDATE sellers SET verification_status = 'suspended', is_approved = 0 WHERE user_id::text = $1", [String(targetUserId)])
+    await query("UPDATE sellers SET verification_status = 'suspended', is_active = FALSE, is_approved = FALSE WHERE user_id::text = $1 OR id::text = $2", [String(targetUserId), String(targetSellerId)])
       .catch(() => {});
 
-    await query("UPDATE products SET status = 'paused' WHERE seller_id::text = $1", [String(targetUserId)])
+    await query("UPDATE products SET status = 'paused', is_active = FALSE WHERE seller_id::text = $1 OR seller_id::text = $2", [String(targetUserId), String(targetSellerId)])
       .catch(() => {});
 
     await logAdminAction({
@@ -910,12 +912,11 @@ async function toggleUserStatus(req, res, next) {
   try {
     const userId = req.params.userId || req.params.id;
     const { isActive, is_active, banReason, reason } = req.body;
-    // users.is_active, products.is_active, seller_profiles.is_active are integer on the live DB
-    const activeVal = isActive !== undefined ? (isActive ? 1 : 0) : (is_active !== undefined ? (is_active ? 1 : 0) : 0);
+    const activeVal = isActive !== undefined ? Boolean(isActive) : (is_active !== undefined ? Boolean(is_active) : false);
     const why = banReason || reason || '';
 
     const result = await query(`
-      UPDATE users SET is_active = $1, updated_at = NOW() WHERE id = $2 RETURNING id, name, email, role, is_active
+      UPDATE users SET is_active = $1::boolean, updated_at = NOW() WHERE id = $2 RETURNING id, name, email, role, is_active
     `, [activeVal, userId]);
 
     if (result.rows.length === 0) {
@@ -923,8 +924,8 @@ async function toggleUserStatus(req, res, next) {
     }
 
     if (!activeVal) {
-      await query("UPDATE products SET status = 'paused', is_active = 0 WHERE seller_id = $1", [userId]).catch(() => {});
-      await query("UPDATE seller_profiles SET is_active = 0 WHERE user_id = $1", [userId]).catch(() => {});
+      await query("UPDATE products SET status = 'paused', is_active = FALSE WHERE seller_id = $1", [userId]).catch(() => {});
+      await query("UPDATE seller_profiles SET is_active = FALSE WHERE user_id = $1", [userId]).catch(() => {});
     }
 
     await logAdminAction({
@@ -1418,10 +1419,10 @@ async function deleteProduct(req, res, next) {
     const { id } = req.params;
     let rows;
     try {
-      const resQuery = await query("UPDATE products SET status = 'deleted', is_active = 0, updated_at = NOW() WHERE id::text = $1 RETURNING seller_id", [String(id)]);
+      const resQuery = await query("UPDATE products SET status = 'deleted', is_active = FALSE, updated_at = NOW() WHERE id::text = $1 RETURNING seller_id", [String(id)]);
       rows = resQuery.rows;
     } catch (e) {
-      const resQuery = await query("UPDATE products SET status = 'deleted', is_active = FALSE, updated_at = NOW() WHERE id::text = $1 RETURNING seller_id", [String(id)]);
+      const resQuery = await query("UPDATE products SET status = 'deleted', updated_at = NOW() WHERE id::text = $1 RETURNING seller_id", [String(id)]);
       rows = resQuery.rows;
     }
     if (rows[0]?.seller_id) {
@@ -2034,11 +2035,11 @@ async function createSpecialShop(req, res, next) {
 
     if (existingUser.length > 0) {
       userId = existingUser[0].id;
-      await client.query('UPDATE users SET role = $1, is_active = 1, name = $2 WHERE id = $3', ['seller', store_name, userId]);
+      await client.query('UPDATE users SET role = $1, is_active = TRUE, name = $2 WHERE id = $3', ['seller', store_name, userId]);
     } else {
       const { rows: newUser } = await client.query(
         `INSERT INTO users (name, full_name, display_name, email, phone, password_hash, role, is_active)
-         VALUES ($1, $2, $3, $4, $5, $6, 'seller', 1)
+         VALUES ($1, $2, $3, $4, $5, $6, 'seller', TRUE)
          RETURNING id`,
         [store_name, store_name, store_name, cleanEmail, cleanPhone, dummyHash]
       );
@@ -2051,31 +2052,31 @@ async function createSpecialShop(req, res, next) {
 
     await client.query(
       `INSERT INTO sellers (user_id, store_name, slug, bio, pickup_address, is_admin_managed, is_approved, verification_status, is_active)
-       VALUES ($1, $2, $3, $4, $5, 1, 1, 'verified', 1)
+       VALUES ($1, $2, $3, $4, $5::jsonb, TRUE, TRUE, 'verified', TRUE)
        ON CONFLICT (user_id) DO UPDATE SET
          store_name = EXCLUDED.store_name,
          slug = EXCLUDED.slug,
          bio = EXCLUDED.bio,
          pickup_address = EXCLUDED.pickup_address,
-         is_admin_managed = 1,
-         is_approved = 1,
+         is_admin_managed = TRUE,
+         is_approved = TRUE,
          verification_status = 'verified',
-         is_active = 1`,
+         is_active = TRUE`,
       [userId, store_name, cleanSlug, bio || '', pickupAddressJson]
     );
 
     const { rows: spRows } = await client.query(
       `INSERT INTO seller_profiles (user_id, store_name, slug, bio, pickup_address, is_admin_managed, is_approved, verification_status, is_active, seller_type)
-       VALUES ($1, $2, $3, $4, $5, 1, 1, 'verified', 1, 'special')
+       VALUES ($1, $2, $3, $4, $5::jsonb, TRUE, TRUE, 'verified', TRUE, 'special')
        ON CONFLICT (user_id) DO UPDATE SET
          store_name = EXCLUDED.store_name,
          slug = EXCLUDED.slug,
          bio = EXCLUDED.bio,
          pickup_address = EXCLUDED.pickup_address,
-         is_admin_managed = 1,
-         is_approved = 1,
+         is_admin_managed = TRUE,
+         is_approved = TRUE,
          verification_status = 'verified',
-         is_active = 1,
+         is_active = TRUE,
          seller_type = 'special',
          updated_at = NOW()
        RETURNING *`,
@@ -2269,14 +2270,14 @@ async function createRegularSeller(req, res, next) {
       userId = user.id;
       await client.query(
         `UPDATE users
-         SET role = 'seller', is_active = 1, name = $1, full_name = $2, display_name = $3, password_hash = $4, phone = COALESCE(phone, $5), updated_at = NOW()
+         SET role = 'seller', is_active = TRUE, name = $1, full_name = $2, display_name = $3, password_hash = $4, phone = COALESCE(phone, $5), updated_at = NOW()
          WHERE id = $6`,
         [artisanName, artisanName, artisanName, passwordHash, cleanPhone, userId]
       );
     } else {
       const { rows: newUser } = await client.query(
         `INSERT INTO users (name, full_name, display_name, email, phone, password_hash, role, is_active)
-         VALUES ($1, $2, $3, $4, $5, $6, 'seller', 1)
+         VALUES ($1, $2, $3, $4, $5, $6, 'seller', TRUE)
          RETURNING id`,
         [artisanName, artisanName, artisanName, cleanEmail, cleanPhone, passwordHash]
       );
@@ -2293,9 +2294,9 @@ async function createRegularSeller(req, res, next) {
          subscription_renews_at, onboarding_completed, created_at, updated_at
        ) VALUES (
          $1, $2, $3, $4,
-         $5, $6, $7,
-         'verified', 1, 1,
-         0, $8, 'active',
+         $5::jsonb, $6::jsonb, $7,
+         'verified', TRUE, TRUE,
+         FALSE, $8, 'active',
          $9, $10, NOW(), NOW()
        )
        ON CONFLICT (user_id) DO UPDATE SET
@@ -2306,9 +2307,9 @@ async function createRegularSeller(req, res, next) {
          bank_details = CASE WHEN EXCLUDED.bank_details::text != '{}' THEN EXCLUDED.bank_details ELSE sellers.bank_details END,
          commission_rate = EXCLUDED.commission_rate,
          verification_status = 'verified',
-         is_active = 1,
-         is_approved = 1,
-         is_admin_managed = 0,
+         is_active = TRUE,
+         is_approved = TRUE,
+         is_admin_managed = FALSE,
          subscription_plan = EXCLUDED.subscription_plan,
          subscription_status = 'active',
          subscription_renews_at = EXCLUDED.subscription_renews_at,
@@ -2333,8 +2334,8 @@ async function createRegularSeller(req, res, next) {
          created_at, updated_at
        ) VALUES (
          $1, $2, $3, $4, 'regular',
-         'verified', 1, 1, 0,
-         $5, $6, $7,
+         'verified', TRUE, TRUE, FALSE,
+         $5, $6::jsonb, $7::jsonb,
          $8, $9, NOW(), NOW(),
          NOW(), NOW()
        )
@@ -2344,9 +2345,9 @@ async function createRegularSeller(req, res, next) {
          bio = EXCLUDED.bio,
          seller_type = 'regular',
          verification_status = 'verified',
-         is_approved = 1,
-         is_active = 1,
-         is_admin_managed = 0,
+         is_approved = TRUE,
+         is_active = TRUE,
+         is_admin_managed = FALSE,
          commission_rate = EXCLUDED.commission_rate,
          pickup_address = CASE WHEN EXCLUDED.pickup_address::text != '{}' THEN EXCLUDED.pickup_address ELSE seller_profiles.pickup_address END,
          bank_details = CASE WHEN EXCLUDED.bank_details::text != '{}' THEN EXCLUDED.bank_details ELSE seller_profiles.bank_details END,
@@ -2508,7 +2509,7 @@ async function updateSpecialShop(req, res, next) {
       `UPDATE seller_profiles
        SET store_name = COALESCE($1, store_name),
            bio = COALESCE($2, bio),
-           pickup_address = COALESCE($3, pickup_address),
+           pickup_address = COALESCE($3::jsonb, pickup_address),
            is_active = COALESCE($4, is_active),
            commission_rate = COALESCE($5, commission_rate),
            updated_at = NOW()
@@ -2518,7 +2519,7 @@ async function updateSpecialShop(req, res, next) {
         store_name || null,
         bio || null,
         formattedAddress,
-        is_active !== undefined ? (is_active ? 1 : 0) : null,
+        is_active !== undefined ? Boolean(is_active) : null,
         parsedCommRate,
         user_id
       ]
@@ -2529,7 +2530,7 @@ async function updateSpecialShop(req, res, next) {
       `UPDATE sellers
        SET store_name = COALESCE($1, store_name),
            bio = COALESCE($2, bio),
-           pickup_address = COALESCE($3, pickup_address),
+           pickup_address = COALESCE($3::jsonb, pickup_address),
            is_active = COALESCE($4, is_active),
            commission_rate = COALESCE($5, commission_rate)
        WHERE user_id = $6
@@ -2538,7 +2539,7 @@ async function updateSpecialShop(req, res, next) {
         store_name || null,
         bio || null,
         formattedAddress,
-        is_active !== undefined ? (is_active ? 1 : 0) : null,
+        is_active !== undefined ? Boolean(is_active) : null,
         parsedCommRate,
         user_id
       ]

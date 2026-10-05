@@ -128,7 +128,8 @@ async function runTests() {
   console.log('\n🎉 ALL SELLER EMAIL NOTIFICATION TESTS PASSED!\n');
 }
 
-runTests().catch((err) => {
-  console.error('❌ Test failed:', err);
-  process.exit(1);
+describe('Seller Account Creation Email Notifications (Regular & Special)', () => {
+  it('should send appropriate emails for both regular and special sellers', async () => {
+    await runTests();
+  });
 });

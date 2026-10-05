@@ -489,7 +489,7 @@ async function updateStoreConfig(req, res, next) {
            pickup_address       = COALESCE($5::jsonb, pickup_address),
            weekly_production_capacity = COALESCE($6, weekly_production_capacity),
            daily_order_limit    = COALESCE($7, daily_order_limit),
-           is_active            = CASE WHEN $1 = 1 THEN 0 WHEN $1 = 0 THEN 1 ELSE is_active END,
+           is_active            = CASE WHEN $1 = 1 THEN FALSE WHEN $1 = 0 THEN TRUE ELSE is_active END,
            updated_at           = NOW()
        WHERE user_id = $8
        RETURNING id, user_id, vacation_mode_active, vacation_mode_active AS vacation_mode,
@@ -511,9 +511,9 @@ async function updateStoreConfig(req, res, next) {
     if (finalVacationMode !== null) {
       await query(
         `UPDATE sellers
-         SET is_active = $1, updated_at = NOW()
+         SET is_active = $1::boolean, updated_at = NOW()
          WHERE user_id = $2 OR id = $2`,
-        [finalVacationMode === 1 ? 0 : 1, userId]
+        [finalVacationMode === 1 ? false : true, userId]
       ).catch(() => {});
     }
 
@@ -565,19 +565,19 @@ async function toggleVacationMode(req, res, next) {
     const { rows } = await query(
       `UPDATE seller_profiles
        SET vacation_mode_active = $1,
-           is_active = $2,
+           is_active = $2::boolean,
            vacation_message = COALESCE($3, vacation_message),
            updated_at = NOW()
        WHERE user_id = $4
        RETURNING id, vacation_mode_active, is_active, vacation_message`,
-      [newVacationMode ? 1 : 0, newVacationMode ? 0 : 1, vacation_message || null, userId]
+      [newVacationMode ? 1 : 0, newVacationMode ? false : true, vacation_message || null, userId]
     );
 
     await query(
       `UPDATE sellers
-       SET is_active = $1, updated_at = NOW()
+       SET is_active = $1::boolean, updated_at = NOW()
        WHERE user_id = $2 OR id = $2`,
-      [newVacationMode ? 0 : 1, userId]
+      [newVacationMode ? false : true, userId]
     ).catch(() => {});
 
     return res.json({
