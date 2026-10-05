@@ -32,7 +32,7 @@ function initOccasionChips() {
   const container = document.getElementById('occasions-chips-container');
   if (!container) return;
   container.innerHTML = STANDARD_OCCASIONS.map(occ => `
-    <button type="button" data-occasion="${occ.slug}" class="occasion-chip px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer ${selectedOccasions.has(occ.slug) ? 'bg-[#14381F] text-[#FFF8E7] border-[#14381F]' : 'bg-[#FFF8E7] text-[#14381F] border-[#285C3A]/20 hover:border-[#14381F]'}">
+    <button type="button" data-occasion="${occ.slug}" class="occasion-chip min-h-[44px] px-3.5 py-2 rounded-full text-xs font-medium border transition-all cursor-pointer ${selectedOccasions.has(occ.slug) ? 'bg-[#14381F] text-[#FFF8E7] border-[#14381F]' : 'bg-[#FFF8E7] text-[#14381F] border-[#285C3A]/20 hover:border-[#14381F]'}">
       ${occ.label}
     </button>
   `).join('');
@@ -42,10 +42,10 @@ function initOccasionChips() {
       const occSlug = btn.getAttribute('data-occasion');
       if (selectedOccasions.has(occSlug)) {
         selectedOccasions.delete(occSlug);
-        btn.className = 'occasion-chip px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer bg-[#FFF8E7] text-[#14381F] border-[#285C3A]/20 hover:border-[#14381F]';
+        btn.className = 'occasion-chip min-h-[44px] px-3.5 py-2 rounded-full text-xs font-medium border transition-all cursor-pointer bg-[#FFF8E7] text-[#14381F] border-[#285C3A]/20 hover:border-[#14381F]';
       } else {
         selectedOccasions.add(occSlug);
-        btn.className = 'occasion-chip px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer bg-[#14381F] text-[#FFF8E7] border-[#14381F]';
+        btn.className = 'occasion-chip min-h-[44px] px-3.5 py-2 rounded-full text-xs font-medium border transition-all cursor-pointer bg-[#14381F] text-[#FFF8E7] border-[#14381F]';
       }
       triggerAutoSave();
     });
@@ -169,7 +169,6 @@ function setupUIInteractions() {
   // Variants toggle & builder
   const variantsToggle = document.getElementById('toggle-has-variants');
   const variantsPanel = document.getElementById('variants-builder-panel');
-  const addVariantBtn = document.getElementById('add-variant-row-btn');
   const variantsContainer = document.getElementById('variants-list-container');
 
   variantsToggle?.addEventListener('change', (e) => {
@@ -180,40 +179,77 @@ function setupUIInteractions() {
     triggerAutoSave();
   });
 
-  addVariantBtn?.addEventListener('click', () => {
-    addVariantRow();
-    triggerAutoSave();
+  ['add-variant-row-btn', 'add-variant-row-btn-bottom'].forEach(btnId => {
+    document.getElementById(btnId)?.addEventListener('click', () => {
+      addVariantRow();
+      triggerAutoSave();
+    });
   });
 
-  // Save draft button
-  document.getElementById('save-draft-btn')?.addEventListener('click', () => {
-    saveDraft();
-    alert('Listing draft saved to your browser.');
+  // Save draft buttons (bottom and top)
+  ['save-draft-btn', 'save-draft-btn-top'].forEach(btnId => {
+    document.getElementById(btnId)?.addEventListener('click', () => {
+      saveDraft();
+      alert('Listing draft saved to your browser.');
+    });
   });
 
-  // Preview Modal
+  // Preview Modal buttons (bottom and top)
   const previewModal = document.getElementById('preview-modal');
-  document.getElementById('open-preview-btn')?.addEventListener('click', () => {
-    renderPreviewModal();
-    previewModal?.classList.remove('hidden');
+  ['open-preview-btn', 'open-preview-btn-top'].forEach(btnId => {
+    document.getElementById(btnId)?.addEventListener('click', () => {
+      renderPreviewModal();
+      previewModal?.classList.remove('hidden');
+    });
   });
+
   document.getElementById('close-preview-modal-btn')?.addEventListener('click', () => {
     previewModal?.classList.add('hidden');
   });
 
-  // Publish Submit
-  document.getElementById('publish-listing-btn')?.addEventListener('click', handleSubmit);
+  // Publish Submit buttons (bottom and top)
+  ['publish-listing-btn', 'publish-listing-btn-top'].forEach(btnId => {
+    document.getElementById(btnId)?.addEventListener('click', handleSubmit);
+  });
 }
 
 function handlePhotoFiles(files) {
-  Array.from(files).forEach(file => {
-    if (!file.type.startsWith('image/')) return;
+  const fileList = Array.from(files).filter(file => file.type.startsWith('image/'));
+  if (fileList.length === 0) return;
+
+  const progressContainer = document.getElementById('photos-upload-progress');
+  const progressBar = document.getElementById('upload-progress-bar');
+  const progressPercent = document.getElementById('upload-progress-percent');
+  const progressText = document.getElementById('upload-progress-text');
+
+  if (progressContainer) {
+    progressContainer.classList.remove('hidden');
+    if (progressBar) progressBar.style.width = '10%';
+    if (progressPercent) progressPercent.textContent = '10%';
+  }
+
+  let processed = 0;
+  fileList.forEach(file => {
     const reader = new FileReader();
     reader.onload = (e) => {
       uploadedPhotos.push({
         file,
         dataUrl: e.target.result
       });
+      processed++;
+      const pct = Math.round((processed / fileList.length) * 100);
+      if (progressBar) progressBar.style.width = `${pct}%`;
+      if (progressPercent) progressPercent.textContent = `${pct}%`;
+      if (progressText) {
+        progressText.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span><span>Loaded ${processed} of ${fileList.length} photos</span>`;
+      }
+
+      if (processed === fileList.length) {
+        setTimeout(() => {
+          if (progressContainer) progressContainer.classList.add('hidden');
+          if (progressBar) progressBar.style.width = '0%';
+        }, 600);
+      }
       renderPhotoThumbnails();
       triggerAutoSave();
     };
@@ -226,16 +262,37 @@ function renderPhotoThumbnails() {
   if (!container) return;
 
   container.innerHTML = uploadedPhotos.map((p, idx) => `
-    <div class="relative group rounded-xl overflow-hidden aspect-square border border-[#285C3A]/20 bg-[#FFF8E7] shadow-xs">
+    <div class="relative group rounded-2xl overflow-hidden aspect-square border border-[#285C3A]/25 bg-[#FFF8E7] shadow-sm">
       <img src="${p.dataUrl}" alt="Photo ${idx + 1}" class="w-full h-full object-cover"/>
+      
+      <!-- Primary Badge / Set Primary Button -->
       ${idx === 0 ? `
-        <span class="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-[#14381F] text-[#FFF8E7] text-[9px] font-bold uppercase font-mono">
+        <span class="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-[#14381F] text-[#FFF8E7] text-[10px] font-bold uppercase font-mono shadow-xs">
           Primary
         </span>
-      ` : ''}
-      <button type="button" onclick="removePhoto(${idx})" class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-        <span class="material-symbols-outlined text-xs">close</span>
+      ` : `
+        <button type="button" onclick="setPrimaryPhoto(${idx})" class="absolute top-1.5 left-1.5 min-w-[36px] min-h-[36px] w-9 h-9 rounded-full bg-black/60 hover:bg-[#14381F] text-white flex items-center justify-center transition-all shadow-md cursor-pointer active:scale-95" title="Set as Primary Thumbnail" aria-label="Set as Primary">
+          <span class="material-symbols-outlined text-sm">star</span>
+        </button>
+      `}
+
+      <!-- Delete Button: Minimum 36px, always visible and directly tappable on mobile touch screens -->
+      <button type="button" onclick="removePhoto(${idx})" class="absolute top-1.5 right-1.5 min-w-[36px] min-h-[36px] w-9 h-9 rounded-full bg-red-600/90 hover:bg-red-700 text-white flex items-center justify-center shadow-md transition-all active:scale-95 cursor-pointer z-10" title="Delete Photo" aria-label="Delete Photo">
+        <span class="material-symbols-outlined text-base">close</span>
       </button>
+
+      <!-- Reorder Bar (Move Left / Right) -->
+      ${uploadedPhotos.length > 1 ? `
+        <div class="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between px-1.5 py-1 rounded-xl bg-black/60 backdrop-blur-xs text-white">
+          <button type="button" onclick="movePhoto(${idx}, -1)" ${idx === 0 ? 'disabled class="min-w-[36px] min-h-[36px] flex items-center justify-center opacity-30 text-white cursor-default"' : 'class="min-w-[36px] min-h-[36px] flex items-center justify-center text-white hover:text-amber-300 transition-colors active:scale-90 cursor-pointer"'} title="Move Left" aria-label="Move Left">
+            <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+          </button>
+          <span class="text-[10px] font-mono font-bold">${idx + 1}/${uploadedPhotos.length}</span>
+          <button type="button" onclick="movePhoto(${idx}, 1)" ${idx === uploadedPhotos.length - 1 ? 'disabled class="min-w-[36px] min-h-[36px] flex items-center justify-center opacity-30 text-white cursor-default"' : 'class="min-w-[36px] min-h-[36px] flex items-center justify-center text-white hover:text-amber-300 transition-colors active:scale-90 cursor-pointer"'} title="Move Right" aria-label="Move Right">
+            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+          </button>
+        </div>
+      ` : ''}
     </div>
   `).join('');
 }
@@ -246,13 +303,33 @@ window.removePhoto = function(index) {
   triggerAutoSave();
 };
 
+window.setPrimaryPhoto = function(index) {
+  if (index <= 0 || index >= uploadedPhotos.length) return;
+  const item = uploadedPhotos.splice(index, 1)[0];
+  uploadedPhotos.unshift(item);
+  renderPhotoThumbnails();
+  triggerAutoSave();
+};
+
+window.movePhoto = function(index, dir) {
+  const target = index + dir;
+  if (target < 0 || target >= uploadedPhotos.length) return;
+  const temp = uploadedPhotos[index];
+  uploadedPhotos[index] = uploadedPhotos[target];
+  uploadedPhotos[target] = temp;
+  renderPhotoThumbnails();
+  triggerAutoSave();
+};
+
 function triggerAutoSave() {
   saveDraft();
-  const indicator = document.getElementById('draft-status-indicator');
-  if (indicator) {
-    indicator.classList.remove('hidden');
-    indicator.textContent = 'Draft Saved ✓';
-  }
+  ['draft-status-indicator', 'draft-status-indicator-top'].forEach(id => {
+    const indicator = document.getElementById(id);
+    if (indicator) {
+      indicator.classList.remove('hidden');
+      indicator.textContent = 'Draft Saved ✓';
+    }
+  });
 }
 
 function saveDraft() {
@@ -496,35 +573,40 @@ function addVariantRow(data = {}) {
   const rowId = 'variant-row-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
   const row = document.createElement('div');
   row.id = rowId;
-  row.className = 'p-3 bg-white rounded-xl border border-[#285C3A]/20 space-y-2 relative';
+  row.className = 'variant-card-row p-3.5 sm:p-4 bg-white rounded-2xl border border-[#285C3A]/20 shadow-xs space-y-3 relative transition-all';
 
   const defaultImgs = Array.isArray(data.images) ? data.images.join(', ') : (data.image_url || '');
 
   row.innerHTML = `
-    <div class="flex items-center justify-between">
-      <span class="text-xs font-bold text-[#14381F] uppercase font-mono">Variant Option</span>
-      <button type="button" class="text-red-500 hover:text-red-700 text-xs font-bold remove-variant-btn cursor-pointer">
-        <span class="material-symbols-outlined text-[16px]">delete</span>
+    <div class="flex items-center justify-between pb-2 border-b border-[#285C3A]/10">
+      <div class="flex items-center gap-2">
+        <span class="w-6 h-6 rounded-full bg-[#14381F]/10 text-[#14381F] text-[11px] font-bold font-mono flex items-center justify-center">#</span>
+        <span class="text-xs font-bold text-[#14381F] uppercase font-mono">Variant Option</span>
+      </div>
+      <button type="button" class="min-w-[44px] min-h-[44px] p-2 rounded-full text-red-500 hover:text-red-700 hover:bg-red-50 flex items-center justify-center remove-variant-btn cursor-pointer transition-colors active:scale-95" title="Remove Variant" aria-label="Remove Variant">
+        <span class="material-symbols-outlined text-[20px]">delete</span>
       </button>
     </div>
-    <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
-      <div class="sm:col-span-2">
-        <label class="block text-[10px] font-bold text-[#14381F] uppercase font-mono mb-0.5">Variant *</label>
-        <input type="text" class="field-input text-xs variant-name-input" placeholder="e.g. Size: Large / Color: Twilight Lavender / Material: Oak" value="${data.variant_name || data.name || data.color_name || ''}" required />
+    
+    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+      <div class="sm:col-span-6">
+        <label class="block text-[11px] font-bold text-[#14381F] uppercase font-mono mb-1">Variant Name / Attribute *</label>
+        <input type="text" class="field-input min-h-[44px] text-base sm:text-xs variant-name-input" placeholder="e.g. Size: Large / Color: Indigo / Material: Oak" value="${data.variant_name || data.name || data.color_name || ''}" required />
       </div>
-      <div>
-        <label class="block text-[10px] font-bold text-[#14381F] uppercase font-mono mb-0.5">Price Adjustment (+₹)</label>
-        <input type="number" class="field-input text-xs font-mono variant-price-input" placeholder="0" value="${data.additional_price ?? 0}" />
+      <div class="sm:col-span-3">
+        <label class="block text-[11px] font-bold text-[#14381F] uppercase font-mono mb-1">Price Adjustment (+₹)</label>
+        <input type="number" class="field-input min-h-[44px] text-base sm:text-xs font-mono variant-price-input" placeholder="0" value="${data.additional_price ?? 0}" />
       </div>
-      <div>
-        <label class="block text-[10px] font-bold text-[#14381F] uppercase font-mono mb-0.5">Stock Qty</label>
-        <input type="number" class="field-input text-xs font-mono variant-stock-input" placeholder="50" value="${data.stock_qty ?? 50}" />
+      <div class="sm:col-span-3">
+        <label class="block text-[11px] font-bold text-[#14381F] uppercase font-mono mb-1">Stock Qty</label>
+        <input type="number" class="field-input min-h-[44px] text-base sm:text-xs font-mono variant-stock-input" placeholder="50" value="${data.stock_qty ?? 50}" />
       </div>
     </div>
+    
     <div>
-      <label class="block text-[10px] font-bold text-[#14381F] uppercase font-mono mb-0.5">Variant Photos (Comma-separated Image URLs)</label>
-      <input type="text" class="field-input text-xs font-mono variant-images-input" placeholder="/img/products/.../1.jpeg, /img/products/.../2.jpeg" value="${defaultImgs}" />
-      <span class="text-[10px] text-[#587A5B] block mt-0.5">Enter 1 or more image URLs for this variant option.</span>
+      <label class="block text-[11px] font-bold text-[#14381F] uppercase font-mono mb-1">Variant Photos (Comma-separated Image URLs)</label>
+      <input type="text" class="field-input min-h-[44px] text-base sm:text-xs font-mono variant-images-input" placeholder="/img/products/variant1.jpg, /img/products/variant2.jpg" value="${defaultImgs}" />
+      <span class="text-[11px] text-[#587A5B] block mt-1">Enter 1 or more image URLs for this variant option.</span>
     </div>
   `;
 
@@ -576,7 +658,10 @@ function getVariantsData() {
 async function handleSubmit(e) {
   e.preventDefault();
   const token = sessionStorage.getItem('tohfa_access_token');
-  const publishBtn = document.getElementById('publish-listing-btn');
+  const publishBtns = [
+    document.getElementById('publish-listing-btn'),
+    document.getElementById('publish-listing-btn-top')
+  ].filter(Boolean);
 
   const title = document.getElementById('prod-title')?.value.trim();
   const price = parseFloat(document.getElementById('prod-price')?.value || '0');
@@ -587,7 +672,7 @@ async function handleSubmit(e) {
     return;
   }
 
-  // U-12 fix: Require at least one product image before listing
+  // Require at least one product image before listing
   if (uploadedPhotos.length === 0) {
     alert('Please add at least one product photo before publishing. Listings without images are not allowed.');
     return;
@@ -620,8 +705,15 @@ async function handleSubmit(e) {
     variants: variantsList
   };
 
-  publishBtn.disabled = true;
-  publishBtn.innerHTML = `<span>Publishing...</span>`;
+  publishBtns.forEach(btn => {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="material-symbols-outlined text-base animate-spin">progress_activity</span><span>Publishing...</span>`;
+  });
+
+  const progressContainer = document.getElementById('photos-upload-progress');
+  const progressBar = document.getElementById('upload-progress-bar');
+  const progressPercent = document.getElementById('upload-progress-percent');
+  const progressText = document.getElementById('upload-progress-text');
 
   try {
     const res = await fetch('/api/products', {
@@ -643,11 +735,18 @@ async function handleSubmit(e) {
 
       // Upload photos if any selected (with client-side lossless compression)
       if (uploadedPhotos.length > 0) {
+        if (progressContainer) {
+          progressContainer.classList.remove('hidden');
+          if (progressText) {
+            progressText.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span><span>Uploading photos to cloud...</span>`;
+          }
+          if (progressBar) progressBar.style.width = '30%';
+          if (progressPercent) progressPercent.textContent = '30%';
+        }
+
         const formData = new FormData();
         let fileCount = 0;
         for (const p of uploadedPhotos) {
-          // H1 FIX: Draft-restored photos have file=null because only dataUrls are persisted
-          // to localStorage. Reconstruct the File from the dataUrl so they are not silently skipped.
           let file = p.file;
           if (!file && p.dataUrl && p.dataUrl.startsWith('data:')) {
             try {
@@ -664,14 +763,20 @@ async function handleSubmit(e) {
         }
         if (fileCount > 0) {
           try {
+            if (progressBar) progressBar.style.width = '60%';
+            if (progressPercent) progressPercent.textContent = '60%';
+
             const imgRes = await fetch(`/api/products/${productId}/images`, {
               method: 'POST',
               headers: {
                 ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                // Do NOT set Content-Type header manually so browser sets multipart boundary
               },
               body: formData
             });
+
+            if (progressBar) progressBar.style.width = '100%';
+            if (progressPercent) progressPercent.textContent = '100%';
+
             if (!imgRes.ok) {
               photoUploadFailed = true;
             } else {
@@ -690,8 +795,6 @@ async function handleSubmit(e) {
       // Clear draft
       localStorage.removeItem(DRAFT_STORAGE_KEY);
 
-      // H2 FIX: If photos could not be uploaded the product must NOT go live with no images.
-      // Immediately pause it so buyers cannot see it, then instruct the seller.
       if (photoUploadFailed) {
         try {
           await fetch(`/api/products/${productId}/status`, {
@@ -708,8 +811,10 @@ async function handleSubmit(e) {
           'It has been set to Paused so buyers cannot see it yet.\n\n' +
           'Please open this listing from your catalog, add the photos, then set it back to Active.'
         );
-        publishBtn.disabled = false;
-        publishBtn.innerHTML = `<span class="material-symbols-outlined text-base">publish</span><span>Publish Listing</span>`;
+        publishBtns.forEach(btn => {
+          btn.disabled = false;
+          btn.innerHTML = `<span class="material-symbols-outlined text-base">publish</span><span>Publish Listing</span>`;
+        });
         window.location.href = '/seller/catalog.html';
         return;
       }
@@ -717,15 +822,27 @@ async function handleSubmit(e) {
       alert('Congratulations! Your handcrafted listing has been published to Tohfa.');
       window.location.href = '/seller/catalog.html';
     } else {
+      if (res.status === 403 && (json.errorCode === 'ONBOARDING_INCOMPLETE' || json.message?.includes('Banking and billing'))) {
+        sessionStorage.setItem(
+          'tohfa_flash_alert',
+          json.message || 'Payout banking and billing information must be completed before listing new products.'
+        );
+        window.location.href = '/seller/settings/billing?redirect=/seller/listings/new';
+        return;
+      }
       alert(json.message || 'Failed to publish listing.');
-      publishBtn.disabled = false;
-      publishBtn.innerHTML = `<span class="material-symbols-outlined text-base">publish</span><span>Publish Listing</span>`;
+      publishBtns.forEach(btn => {
+        btn.disabled = false;
+        btn.innerHTML = `<span class="material-symbols-outlined text-base">publish</span><span>Publish Listing</span>`;
+      });
     }
   } catch (err) {
     console.error('Publish error:', err);
-    alert('Product created successfully.');
-    localStorage.removeItem(DRAFT_STORAGE_KEY);
-    window.location.href = '/seller/catalog.html';
+    alert('An error occurred while publishing listing: ' + (err.message || 'Please try again.'));
+    publishBtns.forEach(btn => {
+      btn.disabled = false;
+      btn.innerHTML = `<span class="material-symbols-outlined text-base">publish</span><span>Publish Listing</span>`;
+    });
   }
 }
 
@@ -740,7 +857,6 @@ export async function uploadMedia(file, folder = 'tohfa_products') {
     method: 'POST',
     headers: {
       ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-      // Do NOT set Content-Type header manually
     },
     body: formData
   });

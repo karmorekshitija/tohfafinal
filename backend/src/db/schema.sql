@@ -112,12 +112,14 @@ CREATE TABLE IF NOT EXISTS sellers (
   logo_url            TEXT,
   banner_url          TEXT,
   pickup_address      JSONB NOT NULL DEFAULT '{}',
+  billing_address     JSONB DEFAULT '{}',
   bank_details        JSONB DEFAULT '{}',
   commission_rate     NUMERIC(5,2) DEFAULT 10.00,
   verification_status VARCHAR(50) DEFAULT 'pending_verification' CHECK (verification_status IN ('pending_verification', 'verified', 'rejected', 'suspended')),
   is_active           BOOLEAN DEFAULT TRUE,
   is_approved         BOOLEAN DEFAULT FALSE,
   is_admin_managed    BOOLEAN DEFAULT FALSE,
+  onboarding_tour_dismissed BOOLEAN NOT NULL DEFAULT FALSE,
   created_at          TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -141,6 +143,7 @@ CREATE TABLE IF NOT EXISTS seller_profiles (
   vacation_mode       BOOLEAN NOT NULL DEFAULT FALSE,
   shipping_presets    JSONB DEFAULT '[]',
   pickup_address      JSONB DEFAULT '{}',
+  billing_address     JSONB DEFAULT '{}',
   bank_details        JSONB DEFAULT '{}',
   store_visibility    BOOLEAN NOT NULL DEFAULT TRUE,
   is_approved         BOOLEAN NOT NULL DEFAULT FALSE,
@@ -154,6 +157,7 @@ CREATE TABLE IF NOT EXISTS seller_profiles (
   gst_number          TEXT,
   portfolio_images    TEXT[] DEFAULT '{}',
   onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
+  onboarding_tour_dismissed BOOLEAN NOT NULL DEFAULT FALSE,
   daily_capacity_min  INT DEFAULT NULL,
   daily_capacity_max  INT DEFAULT NULL,
   instagram_handle    TEXT DEFAULT NULL,

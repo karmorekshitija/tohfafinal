@@ -14,6 +14,7 @@ const reviewController = require('../controllers/review.controller');
 const buyerController = require('../controllers/buyer.controller');
 const { authMiddleware } = require('../middleware/auth');
 const { sellerOnly } = require('../middleware/sellerOnly');
+const { enforceSellerOnboarding } = require('../middleware/sellerOnboarding');
 const { uploadProductImages, uploadProfilePhoto, uploadCoverPhoto, uploadSingleMedia } = require('../middleware/upload');
 const { validate, schemas } = require('../middleware/validate');
 const { verifySellerOwnership } = require('../middleware/ownership');
@@ -21,6 +22,10 @@ const { verifySellerOwnership } = require('../middleware/ownership');
 // Onboarding & application
 router.post('/apply', authMiddleware, sellerController.applyAsSeller);
 router.get('/application-status', authMiddleware, sellerController.getApplicationStatus);
+router.get('/onboarding/status', authMiddleware, sellerOnly, sellerController.getOnboardingStatus);
+router.post('/onboarding/dismiss-tour', authMiddleware, sellerOnly, sellerController.dismissTour);
+router.put('/settings/billing', authMiddleware, sellerOnly, sellerController.saveBillingAndBanking);
+router.post('/settings/billing', authMiddleware, sellerOnly, sellerController.saveBillingAndBanking);
 router.post('/complete-onboarding', authMiddleware, sellerOnly, sellerController.completeOnboarding);
 router.post('/onboarding', authMiddleware, sellerOnly, sellerController.completeOnboarding);
 router.put('/onboarding-details', authMiddleware, sellerOnly, sellerController.completeOnboarding);
@@ -72,9 +77,89 @@ router.get('/products', authMiddleware, sellerOnly, (req, res, next) => {
   }
   return productController.getSellerProducts(req, res, next);
 });
+
+// Customized listings endpoints
+router.get('/customisations', authMiddleware, sellerOnly, (req, res, next) => {
+  req.query.custom = 'true';
+  const headerSellerId = req.headers['x-seller-id'] || req.headers['x-impersonate-seller-id'] || req.query.seller_id || req.query.sellerId;
+  const userRole = String(req.user?.role || '').toUpperCase();
+  const isAdmin = userRole === 'ADMIN' || userRole === 'MASTER_ADMIN';
+  if (isAdmin && headerSellerId) {
+    req.params.sellerId = headerSellerId;
+  } else {
+    req.params.sellerId = req.user.id;
+  }
+  return productController.getSellerProducts(req, res, next);
+});
+router.get('/customizations', authMiddleware, sellerOnly, (req, res, next) => {
+  req.query.custom = 'true';
+  const headerSellerId = req.headers['x-seller-id'] || req.headers['x-impersonate-seller-id'] || req.query.seller_id || req.query.sellerId;
+  const userRole = String(req.user?.role || '').toUpperCase();
+  const isAdmin = userRole === 'ADMIN' || userRole === 'MASTER_ADMIN';
+  if (isAdmin && headerSellerId) {
+    req.params.sellerId = headerSellerId;
+  } else {
+    req.params.sellerId = req.user.id;
+  }
+  return productController.getSellerProducts(req, res, next);
+});
+router.get('/customised', authMiddleware, sellerOnly, (req, res, next) => {
+  req.query.custom = 'true';
+  const headerSellerId = req.headers['x-seller-id'] || req.headers['x-impersonate-seller-id'] || req.query.seller_id || req.query.sellerId;
+  const userRole = String(req.user?.role || '').toUpperCase();
+  const isAdmin = userRole === 'ADMIN' || userRole === 'MASTER_ADMIN';
+  if (isAdmin && headerSellerId) {
+    req.params.sellerId = headerSellerId;
+  } else {
+    req.params.sellerId = req.user.id;
+  }
+  return productController.getSellerProducts(req, res, next);
+});
+router.get('/customized', authMiddleware, sellerOnly, (req, res, next) => {
+  req.query.custom = 'true';
+  const headerSellerId = req.headers['x-seller-id'] || req.headers['x-impersonate-seller-id'] || req.query.seller_id || req.query.sellerId;
+  const userRole = String(req.user?.role || '').toUpperCase();
+  const isAdmin = userRole === 'ADMIN' || userRole === 'MASTER_ADMIN';
+  if (isAdmin && headerSellerId) {
+    req.params.sellerId = headerSellerId;
+  } else {
+    req.params.sellerId = req.user.id;
+  }
+  return productController.getSellerProducts(req, res, next);
+});
+
 router.get('/listings/:id', authMiddleware, sellerOnly, productController.getProduct);
-router.post('/listings', authMiddleware, sellerOnly, uploadProductImages, validate(schemas.createProduct), productController.createProduct);
-router.post('/products', authMiddleware, sellerOnly, uploadProductImages, validate(schemas.createProduct), productController.createProduct);
+
+// Fixed customization options endpoints
+router.get('/listings/:id/fixed-options', authMiddleware, sellerOnly, productController.getFixedOptions);
+router.post('/listings/:id/fixed-options', authMiddleware, sellerOnly, productController.saveFixedOptions);
+router.put('/listings/:id/fixed-options', authMiddleware, sellerOnly, productController.saveFixedOptions);
+router.delete('/listings/:id/fixed-options', authMiddleware, sellerOnly, productController.deleteFixedOptions);
+router.delete('/listings/:id/fixed-options/:optionId', authMiddleware, sellerOnly, productController.deleteFixedOptionItem);
+
+router.get('/products/:id/fixed-options', authMiddleware, sellerOnly, productController.getFixedOptions);
+router.post('/products/:id/fixed-options', authMiddleware, sellerOnly, productController.saveFixedOptions);
+router.put('/products/:id/fixed-options', authMiddleware, sellerOnly, productController.saveFixedOptions);
+router.delete('/products/:id/fixed-options', authMiddleware, sellerOnly, productController.deleteFixedOptions);
+router.delete('/products/:id/fixed-options/:optionId', authMiddleware, sellerOnly, productController.deleteFixedOptionItem);
+router.post('/listings/draft', authMiddleware, sellerOnly, enforceSellerOnboarding, uploadProductImages, (req, res, next) => {
+  req.body.status = 'draft';
+  return productController.createProduct(req, res, next);
+});
+router.post('/listings', authMiddleware, sellerOnly, enforceSellerOnboarding, uploadProductImages, validate(schemas.createProduct), productController.createProduct);
+router.post('/products', authMiddleware, sellerOnly, enforceSellerOnboarding, uploadProductImages, validate(schemas.createProduct), productController.createProduct);
+router.put('/listings/:id/publish', authMiddleware, sellerOnly, enforceSellerOnboarding, (req, res, next) => {
+  req.body.status = 'active';
+  return productController.updateProductStatus(req, res, next);
+});
+router.patch('/listings/:id/publish', authMiddleware, sellerOnly, enforceSellerOnboarding, (req, res, next) => {
+  req.body.status = 'active';
+  return productController.updateProductStatus(req, res, next);
+});
+router.post('/listings/:id/publish', authMiddleware, sellerOnly, enforceSellerOnboarding, (req, res, next) => {
+  req.body.status = 'active';
+  return productController.updateProductStatus(req, res, next);
+});
 router.put('/listings/:id', authMiddleware, sellerOnly, verifySellerOwnership('product'), productController.updateProduct);
 router.patch('/listings/:id', authMiddleware, sellerOnly, verifySellerOwnership('product'), productController.updateProduct);
 router.delete('/listings/:id', authMiddleware, sellerOnly, verifySellerOwnership('product'), productController.deleteProduct);

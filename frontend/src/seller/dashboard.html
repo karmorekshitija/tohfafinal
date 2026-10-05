@@ -20,6 +20,9 @@
   <link rel="stylesheet" href="/src/tailwind.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script type="module" src="/src/components/seller-components.js"></script>
+<script type="module" src="/src/components/SellerOnboardingWarningCard.js"></script>
+<script type="module" src="/src/components/SellerListingGateModal.js"></script>
+<script type="module" src="/src/components/SellerIntroTour.js"></script>
 
 <style>
         .material-symbols-outlined {
@@ -95,6 +98,9 @@
 <body class="bg-[#FFF8E7] text-on-background font-body-md overflow-x-hidden">
 
 <seller-layout active-tab="home">
+  <!-- Seller Onboarding Prerequisite Warning Card Container -->
+  <div id="onboarding-card-container"></div>
+
   <!-- Verification Warning Banner -->
   <div id="verification-warning-banner" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-xl p-lg flex items-start gap-4 mb-xl">
     <span class="material-symbols-outlined text-amber-600 text-3xl shrink-0">warning</span>
@@ -1028,12 +1034,6 @@
                     if (!isApproved) {
                         const banner = document.getElementById('verification-warning-banner');
                         if (banner) banner.classList.remove('hidden');
-                    } else if (!isAdminManaged && !onboardingDone) {
-                        // Check if deferred in current session
-                        const isDeferred = sessionStorage.getItem('tohfa_onboarding_deferred');
-                        if (!isDeferred) {
-                            openWelcomeOnboardingModal();
-                        }
                     }
                 }
             }

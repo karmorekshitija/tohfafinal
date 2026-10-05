@@ -41,4 +41,6 @@ Thumbs.db
 *.local
 .neon
 *.zip
+temp-edge-profile/
+*temp-edge-profile*
 

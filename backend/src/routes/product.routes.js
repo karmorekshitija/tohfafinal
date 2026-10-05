@@ -10,6 +10,7 @@ const router = express.Router();
 const productController = require('../controllers/product.controller');
 const { authMiddleware } = require('../middleware/auth');
 const { sellerOnly } = require('../middleware/sellerOnly');
+const { enforceSellerOnboarding } = require('../middleware/sellerOnboarding');
 const { uploadProductImages } = require('../middleware/upload');
 const { validate, schemas } = require('../middleware/validate');
 const { verifySellerOwnership } = require('../middleware/ownership');
@@ -63,13 +64,33 @@ router.post('/:id/view', (req, res, next) => {
 
 // Seller Product Management
 router.get('/seller-alerts/low-stock', authMiddleware, sellerOnly, productController.getLowStockProducts);
-router.post('/', authMiddleware, sellerOnly, uploadProductImages, validate(schemas.createProduct), productController.createProduct);
+router.post('/draft', authMiddleware, sellerOnly, enforceSellerOnboarding, uploadProductImages, (req, res, next) => {
+  req.body.status = 'draft';
+  return productController.createProduct(req, res, next);
+});
+router.post('/', authMiddleware, sellerOnly, enforceSellerOnboarding, uploadProductImages, validate(schemas.createProduct), productController.createProduct);
+router.put('/:id/publish', authMiddleware, sellerOnly, enforceSellerOnboarding, (req, res, next) => {
+  req.body.status = 'active';
+  return productController.updateProductStatus(req, res, next);
+});
+router.patch('/:id/publish', authMiddleware, sellerOnly, enforceSellerOnboarding, (req, res, next) => {
+  req.body.status = 'active';
+  return productController.updateProductStatus(req, res, next);
+});
+router.post('/:id/publish', authMiddleware, sellerOnly, enforceSellerOnboarding, (req, res, next) => {
+  req.body.status = 'active';
+  return productController.updateProductStatus(req, res, next);
+});
 router.put('/:id', authMiddleware, sellerOnly, productController.updateProduct);
 router.patch('/:id', authMiddleware, sellerOnly, productController.updateProduct);
 router.patch('/:id/status', authMiddleware, sellerOnly, productController.updateProductStatus);
 router.post('/:id/images', authMiddleware, sellerOnly, uploadProductImages, productController.uploadImages);
 router.post('/:id/variants', authMiddleware, sellerOnly, productController.upsertVariants);
+router.get('/:id/fixed-options', productController.getFixedOptions);
 router.post('/:id/fixed-options', authMiddleware, sellerOnly, productController.saveFixedOptions);
+router.put('/:id/fixed-options', authMiddleware, sellerOnly, productController.saveFixedOptions);
+router.delete('/:id/fixed-options', authMiddleware, sellerOnly, productController.deleteFixedOptions);
+router.delete('/:id/fixed-options/:optionId', authMiddleware, sellerOnly, productController.deleteFixedOptionItem);
 router.delete('/:id', authMiddleware, sellerOnly, verifySellerOwnership('product'), productController.deleteProduct);
 
 module.exports = router;

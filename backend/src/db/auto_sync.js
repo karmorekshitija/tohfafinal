@@ -136,6 +136,16 @@ async function autoSyncDatabase() {
       console.warn('⚠️ [Auto-Sync Step 3c - Seller Type Heal Notice]:', err.message);
     }
 
+    // 3c-2. Seller onboarding tour and billing address columns
+    try {
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS onboarding_tour_dismissed BOOLEAN NOT NULL DEFAULT FALSE;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS onboarding_tour_dismissed BOOLEAN NOT NULL DEFAULT FALSE;`);
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS billing_address JSONB DEFAULT '{}';`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS billing_address JSONB DEFAULT '{}';`);
+    } catch (err) {
+      console.warn('⚠️ [Auto-Sync Step 3c-2 - Seller Onboarding Columns Notice]:', err.message);
+    }
+
     // 3d. Refresh Tokens Table (auth — created here because schema.sql is never run on Render;
     //     every login/register calls issueTokenPair() which INSERTs into this table.
     //     Without it, auth crashes with "relation refresh_tokens does not exist".)
@@ -363,15 +373,26 @@ async function autoSyncDatabase() {
     try {
       await query(`
         CREATE TABLE IF NOT EXISTS fixed_customization_options (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          product_id UUID REFERENCES products(id) ON DELETE CASCADE,
-          option_type TEXT,
-          title TEXT,
-          choices JSONB DEFAULT '[]',
-          is_required BOOLEAN DEFAULT FALSE,
-          price_delta NUMERIC(10,2) DEFAULT 0,
-          created_at TIMESTAMPTZ DEFAULT NOW()
+          id SERIAL PRIMARY KEY,
+          product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
+          option_type TEXT NOT NULL DEFAULT 'text',
+          label VARCHAR(255) NOT NULL DEFAULT '',
+          choices JSONB DEFAULT '[]'::jsonb,
+          is_required BOOLEAN NOT NULL DEFAULT FALSE,
+          max_length INTEGER DEFAULT NULL,
+          price_modifier NUMERIC(10,2) DEFAULT 0,
+          sort_order INTEGER NOT NULL DEFAULT 0,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
+        ALTER TABLE fixed_customization_options ADD COLUMN IF NOT EXISTS option_type TEXT NOT NULL DEFAULT 'text';
+        ALTER TABLE fixed_customization_options ADD COLUMN IF NOT EXISTS label VARCHAR(255) NOT NULL DEFAULT '';
+        ALTER TABLE fixed_customization_options ADD COLUMN IF NOT EXISTS choices JSONB DEFAULT '[]'::jsonb;
+        ALTER TABLE fixed_customization_options ADD COLUMN IF NOT EXISTS is_required BOOLEAN NOT NULL DEFAULT FALSE;
+        ALTER TABLE fixed_customization_options ADD COLUMN IF NOT EXISTS max_length INTEGER DEFAULT NULL;
+        ALTER TABLE fixed_customization_options ADD COLUMN IF NOT EXISTS price_modifier NUMERIC(10,2) DEFAULT 0;
+        ALTER TABLE fixed_customization_options ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE fixed_customization_options ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+        CREATE INDEX IF NOT EXISTS idx_fixed_customization_product_id ON fixed_customization_options(product_id);
       `);
     } catch (err) {
       console.warn('⚠️ [Auto-Sync Step 4 - Fixed Customization Options Notice]:', err.message);

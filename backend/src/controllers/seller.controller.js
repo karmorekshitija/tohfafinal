@@ -16,6 +16,7 @@ const logisticsService = require('../services/logistics.service');
 const paymentService = require('../services/payment.service');
 const ownerNotifyService = require('../services/ownerNotify.service');
 const { PLANS, getPlan, calculateEffectivePrice } = require('../config/plans');
+const { evaluateSellerOnboarding, getSellerOnboardingStatus } = require('../utils/sellerOnboarding');
 
 // Strip internal fields (never exposed in public or seller responses)
 function sanitizeSellerProfile(sp) {
@@ -110,10 +111,16 @@ async function getOwnSellerProfile(req, res, next) {
               COALESCE(sp.vacation_mode_active, 0) AS vacation_mode,
               COALESCE(sp.vacation_mode_active, 0) AS vacation_mode_active,
               sp.vacation_message,
-              COALESCE(sp.is_accepting_orders, 1) AS is_accepting_orders,
+              COALESCE(sp.is_accepting_orders, TRUE) AS is_accepting_orders,
               COALESCE(sp.zai_mode_enabled, 0) AS zai_mode_enabled,
-              sp.pickup_address, sp.bank_details,
+              sp.pickup_address, sp.billing_address, sp.bank_details, sp.tax_details,
+              sp.pan_number, sp.gst_number,
               COALESCE(sp.onboarding_completed, FALSE) AS onboarding_completed,
+              COALESCE(sp.onboarding_tour_dismissed, FALSE) AS onboarding_tour_dismissed,
+              s.pickup_address AS s_pickup_address,
+              s.billing_address AS s_billing_address,
+              s.bank_details AS s_bank_details,
+              s.onboarding_tour_dismissed AS s_onboarding_tour_dismissed,
               (COALESCE(sp.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
               COALESCE(sp.subscription_plan, s.subscription_plan, 'basic') AS subscription_plan,
               COALESCE(sp.subscription_status, s.subscription_status, 'active') AS subscription_status,
@@ -134,7 +141,8 @@ async function getOwnSellerProfile(req, res, next) {
       return res.status(404).json({ success: false, message: 'Seller profile not found.' });
     }
 
-    const profile = sanitizeSellerProfile(rows[0]);
+    const rawRow = rows[0];
+    const profile = sanitizeSellerProfile(rawRow);
     const photo = profile.profile_photo || '/img/default-avatar.png';
     const banner = profile.banner_url || '/img/default-seller-banner.png';
     profile.profile_photo = photo;
@@ -142,6 +150,25 @@ async function getOwnSellerProfile(req, res, next) {
     profile.logo_url = profile.logo_url || photo;
     profile.banner_url = banner;
     profile.cover_photo = banner;
+
+    // Compute onboarding flags
+    const onboardingStatus = evaluateSellerOnboarding({
+      ...profile,
+      billing_address: profile.billing_address || rawRow.s_billing_address,
+      pickup_address: profile.pickup_address || rawRow.s_pickup_address,
+      bank_details: profile.bank_details || rawRow.s_bank_details,
+      onboarding_tour_dismissed: profile.onboarding_tour_dismissed || rawRow.s_onboarding_tour_dismissed,
+      gst_number: profile.gst_number,
+      pan_number: profile.pan_number,
+    });
+
+    profile.hasBillingAddress = onboardingStatus.hasBillingAddress;
+    profile.hasBankingDetails = onboardingStatus.hasBankingDetails;
+    profile.onboardingTourDismissed = onboardingStatus.onboardingTourDismissed;
+    profile.has_billing_address = onboardingStatus.hasBillingAddress;
+    profile.has_banking_details = onboardingStatus.hasBankingDetails;
+    profile.onboarding_tour_dismissed = onboardingStatus.onboardingTourDismissed;
+    profile.onboardingStatus = onboardingStatus;
 
     // Auto-expire subscription if renewal date has passed
     if (profile.subscription_renews_at && new Date(profile.subscription_renews_at) < new Date() && profile.subscription_plan !== 'basic') {
@@ -170,6 +197,9 @@ async function getOwnSellerProfile(req, res, next) {
       success: true,
       data: {
         ...profile,
+        hasBillingAddress: onboardingStatus.hasBillingAddress,
+        hasBankingDetails: onboardingStatus.hasBankingDetails,
+        onboardingTourDismissed: onboardingStatus.onboardingTourDismissed,
         profile,
       },
     });
@@ -3294,6 +3324,7 @@ async function completeOnboarding(req, res, next) {
     const { rows: updatedProfiles } = await query(
       `UPDATE seller_profiles
        SET pickup_address = $1,
+           billing_address = $1,
            bank_details = $2,
            onboarding_completed = TRUE,
            updated_at = NOW()
@@ -3306,6 +3337,7 @@ async function completeOnboarding(req, res, next) {
     await query(
       `UPDATE sellers
        SET pickup_address = $1,
+           billing_address = $1,
            bank_details = $2,
            onboarding_completed = TRUE
        WHERE user_id = $3`,
@@ -3341,14 +3373,217 @@ async function completeOnboarding(req, res, next) {
       console.warn('Address sync notice in completeOnboarding:', addrErr.message);
     }
 
+    const onboardingStatus = await getSellerOnboardingStatus(userId);
+
     return res.status(200).json({
       success: true,
       message: 'Studio setup completed successfully! Welcome to Tohfa Seller Studio.',
       data: {
         pickup_address: pickupAddress,
+        billing_address: pickupAddress,
         bank_details: bankDetails,
         onboarding_completed: true,
+        hasBillingAddress: onboardingStatus.hasBillingAddress,
+        hasBankingDetails: onboardingStatus.hasBankingDetails,
+        onboardingStatus,
         profile: updatedProfiles[0] || {}
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/seller/onboarding/status
+// ---------------------------------------------------------------------------
+async function getOnboardingStatus(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const status = await getSellerOnboardingStatus(userId);
+    return res.json({
+      success: true,
+      data: status
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/seller/onboarding/dismiss-tour
+// ---------------------------------------------------------------------------
+async function dismissTour(req, res, next) {
+  try {
+    const userId = req.user.id;
+    await query(
+      `UPDATE seller_profiles SET onboarding_tour_dismissed = TRUE, updated_at = NOW() WHERE user_id = $1`,
+      [userId]
+    ).catch(() => {});
+    await query(
+      `UPDATE sellers SET onboarding_tour_dismissed = TRUE, updated_at = NOW() WHERE user_id = $1`,
+      [userId]
+    ).catch(() => {});
+
+    return res.json({
+      success: true,
+      onboardingTourDismissed: true,
+      message: 'Onboarding walkthrough tour dismissed.'
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// POST & PUT /api/seller/settings/billing — Billing Address & Banking Details Form
+// ---------------------------------------------------------------------------
+async function saveBillingAndBanking(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const {
+      // Address fields
+      address_line1, addressLine1, address_line2, addressLine2,
+      street, city, state, pincode, postal_code, postalCode, country = 'India',
+      gst_number, gst, gstin, pan_number, pan,
+      // Bank fields
+      account_holder_name, accountHolderName, account_holder,
+      bank_name, bankName, account_number, accountNumber,
+      ifsc_code, ifscCode, ifsc, upi_id, upiId
+    } = req.body;
+
+    const finalAddr1 = (address_line1 || addressLine1 || street || '').trim();
+    const finalAddr2 = (address_line2 || addressLine2 || '').trim();
+    const finalCity = (city || '').trim();
+    const finalState = (state || '').trim();
+    const finalPincode = (pincode || postal_code || postalCode || '').trim();
+    const finalPan = (pan_number || pan || '').toUpperCase().trim();
+    const finalGst = (gst_number || gst || gstin || '').toUpperCase().trim();
+
+    if (!finalAddr1 || !finalCity || !finalState || !finalPincode) {
+      return res.status(400).json({
+        success: false,
+        message: 'All billing address fields (Address, City, State, 6-digit Pincode) are required.'
+      });
+    }
+
+    if (!/^\d{6}$/.test(finalPincode)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter a valid 6-digit Indian postal pincode.'
+      });
+    }
+
+    const finalHolder = (account_holder_name || accountHolderName || account_holder || '').trim();
+    const finalBank = (bank_name || bankName || '').trim();
+    const finalAccount = (account_number || accountNumber || '').trim();
+    const finalIfsc = (ifsc_code || ifscCode || ifsc || '').toUpperCase().trim();
+    const finalUpi = (upi_id || upiId || '').trim();
+
+    if (!finalHolder || !finalBank || !finalAccount || !finalIfsc) {
+      return res.status(400).json({
+        success: false,
+        message: 'All bank account fields (Holder Name, Bank Name, Account Number, IFSC) are required.'
+      });
+    }
+
+    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(finalIfsc)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter a valid 11-character Indian IFSC code (e.g. SBIN0001234, HDFC0000456).'
+      });
+    }
+
+    const addressPayload = {
+      address_line1: finalAddr1,
+      address_line2: finalAddr2,
+      city: finalCity,
+      state: finalState,
+      pincode: finalPincode,
+      country: country || 'India',
+      gstin: finalGst || null,
+      pan: finalPan || null
+    };
+
+    const bankPayload = {
+      account_holder: finalHolder,
+      account_holder_name: finalHolder,
+      bank_name: finalBank,
+      account_number: finalAccount,
+      ifsc_code: finalIfsc,
+      upi_id: finalUpi || null
+    };
+
+    const taxPayload = {
+      is_gst_registered: Boolean(finalGst),
+      gstin: finalGst,
+      pan_number: finalPan,
+      updated_at: new Date().toISOString()
+    };
+
+    // Update seller_profiles
+    await query(
+      `UPDATE seller_profiles
+       SET billing_address = $1,
+           pickup_address = CASE WHEN pickup_address IS NULL OR pickup_address = '{}'::jsonb THEN $1 ELSE pickup_address END,
+           bank_details = $2,
+           tax_details = $3,
+           pan_number = COALESCE(NULLIF($4, ''), pan_number),
+           gst_number = COALESCE(NULLIF($5, ''), gst_number),
+           onboarding_completed = TRUE,
+           updated_at = NOW()
+       WHERE user_id = $6`,
+      [
+        JSON.stringify(addressPayload),
+        JSON.stringify(bankPayload),
+        JSON.stringify(taxPayload),
+        finalPan || null,
+        finalGst || null,
+        userId
+      ]
+    );
+
+    // Update master sellers table
+    await query(
+      `UPDATE sellers
+       SET billing_address = $1,
+           pickup_address = CASE WHEN pickup_address IS NULL OR pickup_address = '{}'::jsonb THEN $1 ELSE pickup_address END,
+           bank_details = $2,
+           onboarding_completed = TRUE,
+           updated_at = NOW()
+       WHERE user_id = $3`,
+      [
+        JSON.stringify(addressPayload),
+        JSON.stringify(bankPayload),
+        userId
+      ]
+    ).catch(() => {});
+
+    // Sync to user_addresses as default business/office address
+    try {
+      const { rows: addrRows } = await query('SELECT id FROM user_addresses WHERE user_id = $1 LIMIT 1', [userId]);
+      if (!addrRows.length) {
+        const { rows: uRows } = await query('SELECT name, phone FROM users WHERE id = $1', [userId]);
+        await query(
+          `INSERT INTO user_addresses (user_id, name, phone, address_line1, address_line2, city, state, pincode, address_type, is_default)
+           VALUES ($1, $2, COALESCE($3, '9999999999'), $4, $5, $6, $7, $8, 'office', TRUE)`,
+          [userId, uRows[0]?.name || finalHolder || 'Artisan Workshop', uRows[0]?.phone, finalAddr1, finalAddr2, finalCity, finalState, finalPincode]
+        );
+      }
+    } catch (_) {}
+
+    const status = await getSellerOnboardingStatus(userId);
+
+    return res.json({
+      success: true,
+      message: 'Billing address and banking payout details saved successfully.',
+      data: {
+        billing_address: addressPayload,
+        bank_details: bankPayload,
+        tax_details: taxPayload,
+        onboardingStatus: status,
+        hasBillingAddress: status.hasBillingAddress,
+        hasBankingDetails: status.hasBankingDetails
       }
     });
   } catch (err) {
@@ -3870,7 +4105,22 @@ async function toggleProductSponsor(req, res, next) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// GET /api/seller/customisations or /api/seller/customised (seller only)
+// ---------------------------------------------------------------------------
+async function getCustomisedListings(req, res, next) {
+  try {
+    req.query.custom = 'true';
+    const productController = require('./product.controller');
+    return productController.getSellerProducts(req, res, next);
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
+  getCustomisedListings,
+  getCustomizedListings: getCustomisedListings,
   getOwnSellerProfile,
   updateSellerProfile,
   getPublicSellerProfile,
@@ -3922,5 +4172,8 @@ module.exports = {
   getReviewSettings,
   saveReviewSettings,
   changeSellerPassword,
+  getOnboardingStatus,
+  dismissTour,
+  saveBillingAndBanking,
 };
 
