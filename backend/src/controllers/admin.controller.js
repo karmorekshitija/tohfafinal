@@ -1748,9 +1748,9 @@ async function createSubcategory(req, res, next) {
 
     const { rows } = await query(
       `INSERT INTO categories (name, display_name, slug, parent_id, sort_order, is_active)
-       VALUES ($1, $1, $2, $3, $4, TRUE)
+       VALUES ($1, $2, $3, $4, $5, TRUE)
        RETURNING *`,
-      [trimmedName, candidateSlug, category_id, finalSortOrder]
+      [trimmedName, trimmedName, candidateSlug, category_id, finalSortOrder]
     );
 
     return res.status(201).json({ success: true, data: { ...rows[0], display_name: rows[0].name } });
@@ -2034,13 +2034,13 @@ async function createSpecialShop(req, res, next) {
 
     if (existingUser.length > 0) {
       userId = existingUser[0].id;
-      await client.query('UPDATE users SET role = $1, is_active = TRUE, name = $2 WHERE id = $3', ['seller', store_name, userId]);
+      await client.query('UPDATE users SET role = $1, is_active = 1, name = $2 WHERE id = $3', ['seller', store_name, userId]);
     } else {
       const { rows: newUser } = await client.query(
         `INSERT INTO users (name, full_name, display_name, email, phone, password_hash, role, is_active)
-         VALUES ($1, $1, $1, $2, $3, $4, 'seller', 1)
+         VALUES ($1, $2, $3, $4, $5, $6, 'seller', 1)
          RETURNING id`,
-        [store_name, cleanEmail, cleanPhone, dummyHash]
+        [store_name, store_name, store_name, cleanEmail, cleanPhone, dummyHash]
       );
       userId = newUser[0].id;
     }
@@ -2057,10 +2057,10 @@ async function createSpecialShop(req, res, next) {
          slug = EXCLUDED.slug,
          bio = EXCLUDED.bio,
          pickup_address = EXCLUDED.pickup_address,
-         is_admin_managed = TRUE,
-         is_approved = TRUE,
+         is_admin_managed = 1,
+         is_approved = 1,
          verification_status = 'verified',
-         is_active = TRUE`,
+         is_active = 1`,
       [userId, store_name, cleanSlug, bio || '', pickupAddressJson]
     );
 
@@ -2072,10 +2072,10 @@ async function createSpecialShop(req, res, next) {
          slug = EXCLUDED.slug,
          bio = EXCLUDED.bio,
          pickup_address = EXCLUDED.pickup_address,
-         is_admin_managed = TRUE,
-         is_approved = TRUE,
+         is_admin_managed = 1,
+         is_approved = 1,
          verification_status = 'verified',
-         is_active = TRUE,
+         is_active = 1,
          seller_type = 'special',
          updated_at = NOW()
        RETURNING *`,
@@ -2269,16 +2269,16 @@ async function createRegularSeller(req, res, next) {
       userId = user.id;
       await client.query(
         `UPDATE users
-         SET role = 'seller', is_active = 1, name = $1, full_name = $1, display_name = $1, password_hash = $2, phone = COALESCE(phone, $3), updated_at = NOW()
-         WHERE id = $4`,
-        [artisanName, passwordHash, cleanPhone, userId]
+         SET role = 'seller', is_active = 1, name = $1, full_name = $2, display_name = $3, password_hash = $4, phone = COALESCE(phone, $5), updated_at = NOW()
+         WHERE id = $6`,
+        [artisanName, artisanName, artisanName, passwordHash, cleanPhone, userId]
       );
     } else {
       const { rows: newUser } = await client.query(
         `INSERT INTO users (name, full_name, display_name, email, phone, password_hash, role, is_active)
-         VALUES ($1, $1, $1, $2, $3, $4, 'seller', 1)
+         VALUES ($1, $2, $3, $4, $5, $6, 'seller', 1)
          RETURNING id`,
-        [artisanName, cleanEmail, cleanPhone, passwordHash]
+        [artisanName, artisanName, artisanName, cleanEmail, cleanPhone, passwordHash]
       );
       userId = newUser[0].id;
     }
@@ -2483,14 +2483,14 @@ async function updateSpecialShop(req, res, next) {
        FROM users u
        LEFT JOIN seller_profiles sp ON sp.user_id = u.id
        LEFT JOIN sellers s ON s.user_id = u.id
-       WHERE (u.id::text = $1 OR sp.id::text = $1 OR s.id::text = $1 OR sp.slug = $1 OR s.slug = $1)
+       WHERE (u.id::text = $1::text OR sp.id::text = $1::text OR s.id::text = $1::text OR sp.slug::text = $1::text OR s.slug::text = $1::text)
          AND (sp.is_admin_managed::text IN ('true', 't', '1') OR s.is_admin_managed::text IN ('true', 't', '1'))
        ORDER BY CASE 
-         WHEN sp.slug = $1 OR s.slug = $1 THEN 1
-         WHEN u.id::text = $1 AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 2
-         WHEN u.id::text = $1 THEN 3
-         WHEN sp.id::text = $1 THEN 4
-         WHEN s.id::text = $1 THEN 5
+         WHEN sp.slug::text = $1::text OR s.slug::text = $1::text THEN 1
+         WHEN u.id::text = $1::text AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 2
+         WHEN u.id::text = $1::text THEN 3
+         WHEN sp.id::text = $1::text THEN 4
+         WHEN s.id::text = $1::text THEN 5
          ELSE 6 
        END ASC
        LIMIT 1`,
@@ -2584,14 +2584,14 @@ async function switchSessionToSpecialShop(req, res, next) {
        FROM users u
        LEFT JOIN seller_profiles sp ON sp.user_id = u.id
        LEFT JOIN sellers s ON s.user_id = u.id
-       WHERE (u.id::text = $1 OR sp.id::text = $1 OR s.id::text = $1 OR sp.slug = $1 OR s.slug = $1)
+       WHERE (u.id::text = $1::text OR sp.id::text = $1::text OR s.id::text = $1::text OR sp.slug::text = $1::text OR s.slug::text = $1::text)
          AND (sp.is_admin_managed::text IN ('true', 't', '1') OR s.is_admin_managed::text IN ('true', 't', '1'))
        ORDER BY CASE 
-         WHEN sp.slug = $1 OR s.slug = $1 THEN 1
-         WHEN u.id::text = $1 AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 2
-         WHEN u.id::text = $1 THEN 3
-         WHEN sp.id::text = $1 THEN 4
-         WHEN s.id::text = $1 THEN 5
+         WHEN sp.slug::text = $1::text OR s.slug::text = $1::text THEN 1
+         WHEN u.id::text = $1::text AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 2
+         WHEN u.id::text = $1::text THEN 3
+         WHEN sp.id::text = $1::text THEN 4
+         WHEN s.id::text = $1::text THEN 5
          ELSE 6 
        END ASC
        LIMIT 1`,
