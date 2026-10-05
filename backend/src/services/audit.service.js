@@ -28,7 +28,8 @@ exports.logAdminAction = async ({
 }) => {
   try {
     const detailsJson = JSON.stringify(details || {});
-    const aid = adminId ? parseInt(adminId, 10) : null;
+    const isUuid = typeof adminId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(adminId.trim());
+    const aid = isUuid ? adminId.trim() : null;
     const act = actionType || 'UNKNOWN_ACTION';
     const tgt = targetEntity || null;
     const tid = targetId ? String(targetId) : null;
@@ -38,7 +39,7 @@ exports.logAdminAction = async ({
       INSERT INTO audit_logs (
         admin_id, actor_id, actor_name, action_type, action, event_type, target_entity, target_type, target_id, details, meta, ip_address, created_at
       ) VALUES (
-        $1::integer, $2::integer, $3::text, $4::varchar, $5::varchar, $6::text, $7::varchar, $8::text, $9::text, $10::jsonb, $11::jsonb, $12::varchar, NOW()
+        $1::uuid, $2::uuid, $3::text, $4::varchar, $5::varchar, $6::text, $7::varchar, $8::text, $9::text, $10::jsonb, $11::jsonb, $12::varchar, NOW()
       )
     `, [aid, aid, 'Admin ' + (aid || 'System'), act, act, act, tgt, tgt, tid, detailsJson, detailsJson, ip]);
   } catch (err) {

@@ -1103,7 +1103,7 @@ async function createProduct(req, res, next) {
       if (!sellerId) sellerId = req.user.id;
     }
     if (!sellerId) {
-      return res.status(400).json({ success: false, message: 'Valid seller ID required' });
+      return res.status(400).json({ success: false, message: 'Valid seller ID required. A seller/shop identifier required for product publishing.' });
     }
 
     // Resolve sellerId to valid user_id if sellers table ID was provided (for FK constraint)
@@ -1187,7 +1187,7 @@ async function createProduct(req, res, next) {
       `INSERT INTO products
          (seller_id, name, description, category_id, base_price, price_paise, stock_quantity, low_stock_threshold,
           preparation_days, weight_grams, customization_mode, is_customizable, customization_schema, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'active')
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::boolean, $13, 'active')
        RETURNING id, name, description, category_id, base_price, stock_quantity, low_stock_threshold,
                  preparation_days, weight_grams, customization_mode, is_customizable, customization_schema, status, created_at`,
       [
@@ -1202,7 +1202,7 @@ async function createProduct(req, res, next) {
         Math.max(0, parseInt(preparation_days, 10) || 2),
         Math.max(1, parseInt(weight_grams, 10) || 500),
         finalMode,
-        finalIsCustomizable ? 1 : 0,
+        finalIsCustomizable,
         schemaJson,
       ]
     );
@@ -1501,7 +1501,7 @@ async function updateProduct(req, res, next) {
            preparation_days = COALESCE($8, preparation_days),
            weight_grams = COALESCE($9, weight_grams),
            customization_mode = COALESCE($10, customization_mode),
-           is_customizable = COALESCE($11, is_customizable),
+           is_customizable = COALESCE($11::boolean, is_customizable),
            customization_schema = COALESCE($12, customization_schema),
            updated_at = NOW()
        WHERE id = $13
@@ -1519,7 +1519,7 @@ async function updateProduct(req, res, next) {
         resolvedPrepDays,
         resolvedWeight,
         finalMode || null,
-        finalIsCustomizable !== null && finalIsCustomizable !== undefined ? (finalIsCustomizable ? 1 : 0) : null,
+        finalIsCustomizable !== null && finalIsCustomizable !== undefined ? Boolean(finalIsCustomizable) : null,
         schemaJson,
         id
       ]
@@ -1663,12 +1663,12 @@ async function deleteProduct(req, res, next) {
     const targetSellerId = existing[0].seller_id;
     try {
       await query(
-        `UPDATE products SET status = 'deleted', is_active = 0, updated_at = NOW() WHERE id::text = $1`,
+        `UPDATE products SET status = 'deleted', is_active = FALSE, updated_at = NOW() WHERE id::text = $1`,
         [String(id)]
       );
     } catch (e) {
       await query(
-        `UPDATE products SET status = 'deleted', is_active = FALSE, updated_at = NOW() WHERE id::text = $1`,
+        `UPDATE products SET status = 'deleted', is_active = 0, updated_at = NOW() WHERE id::text = $1`,
         [String(id)]
       );
     }
