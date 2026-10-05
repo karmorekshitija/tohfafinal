@@ -204,62 +204,6 @@
   <span id="toast-msg"></span>
 </div>
 
-<!-- Address Modal -->
-<div id="address-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Address form">
-  <div class="bg-surface-bright rounded-2xl shadow-2xl w-full max-w-lg p-8 relative">
-    <button id="close-address-modal" class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface transition-colors">
-      <span class="material-symbols-outlined">close</span>
-    </button>
-    <h3 class="font-headline text-2xl mb-6" id="address-modal-title">Add New Address</h3>
-    <form id="address-form" class="space-y-4">
-      <input type="hidden" id="address-edit-id"/>
-      <div class="grid grid-cols-2 gap-3 sm:gap-4 form-row-2col">
-        <div>
-          <label class="field-label" for="addr-label">Label</label>
-          <input class="field-input" id="addr-label" placeholder="e.g. Home, Studio" type="text"/>
-          <p class="field-error" id="err-addr-label"></p>
-        </div>
-        <div>
-          <label class="field-label" for="addr-phone">Phone</label>
-          <input class="field-input" id="addr-phone" placeholder="+91 9XXXXXXXXX" type="tel"/>
-          <p class="field-error" id="err-addr-phone"></p>
-        </div>
-      </div>
-      <div>
-        <label class="field-label" for="addr-line">Address Line</label>
-        <input class="field-input" id="addr-line" placeholder="Street, building, area" type="text"/>
-        <p class="field-error" id="err-addr-line"></p>
-      </div>
-      <div class="grid grid-cols-3 gap-2 sm:gap-4 form-row-3col">
-        <div>
-          <label class="field-label" for="addr-city">City</label>
-          <input class="field-input" id="addr-city" placeholder="City" type="text"/>
-          <p class="field-error" id="err-addr-city"></p>
-        </div>
-        <div>
-          <label class="field-label" for="addr-state">State</label>
-          <input class="field-input" id="addr-state" placeholder="State" type="text"/>
-        </div>
-        <div>
-          <label class="field-label" for="addr-pincode">Pincode</label>
-          <input class="field-input" id="addr-pincode" placeholder="000000" type="text" maxlength="6"/>
-          <p class="field-error" id="err-addr-pincode"></p>
-        </div>
-      </div>
-      <label class="flex items-center gap-3 cursor-pointer mt-2">
-        <input type="checkbox" id="addr-default" class="w-4 h-4 accent-primary rounded"/>
-        <span class="text-sm">Set as default address</span>
-      </label>
-      <div class="flex justify-end gap-3 pt-2">
-        <button type="button" id="cancel-address-btn" class="px-6 py-2.5 rounded-full border border-outline-variant text-sm font-semibold hover:bg-surface-container transition-all">Cancel</button>
-        <button type="submit" id="save-address-btn" class="px-8 py-2.5 rounded-full bg-primary text-on-primary text-sm font-semibold hover:opacity-90 transition-all flex items-center gap-2">
-          <span class="material-symbols-outlined text-base">save</span>Save Address
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-
 <!-- Close Account Modal -->
 <div id="close-account-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
   <div class="bg-surface-bright rounded-2xl shadow-2xl w-full max-w-md p-8 relative">
@@ -283,14 +227,22 @@
 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-md mb-6 flex-shrink-0">
   <div>
     <h1 class="font-headline-lg text-primary text-4xl font-bold">Profile & Settings</h1>
-    <p class="text-on-surface-variant text-base font-body-md mt-2">Manage your profile, about page, and addresses</p>
+    <p class="text-on-surface-variant text-base font-body-md mt-2">Single source of truth for your storefront identity, business billing, payout banking, and logistics pickup address</p>
+  </div>
+</div>
+
+<!--Onboarding / Flash Alert Banner -->
+<div id="onboarding-flash-banner" class="hidden mb-6 p-4 rounded-2xl border border-amber-500/40 bg-amber-50/90 text-amber-950 flex items-start gap-3 shadow-sm">
+  <span class="material-symbols-outlined text-amber-700 mt-0.5">info</span>
+  <div class="flex-1 text-sm">
+    <p id="onboarding-flash-text" class="font-semibold">Complete your Business & Billing Information and Operational Pickup Address below to unlock product listings and automated courier dispatch.</p>
   </div>
 </div>
 
 <!-- Tab Navigation — same style as filter tabs in reviews / analytics -->
-<div class="flex items-center mb-8 gap-4 py-1">
-  <a href="/seller/profile.html" class="tab-btn active" id="tab-profile">Profile</a>
-  <a href="/seller/profile-settings.html" class="tab-btn" id="tab-settings">Settings</a>
+<div class="flex items-center mb-8 gap-4 py-1 flex-wrap">
+  <a href="/seller/profile.html" class="tab-btn active" id="tab-profile">Profile & Addresses</a>
+  <a href="/seller/profile-settings.html" class="tab-btn" id="tab-settings">Security & Account</a>
 </div>
 
 <!-- Loading Skeleton -->
@@ -479,24 +431,229 @@
   </section>
 
   <!-- ═══════════════════════════════════════════════════════════ -->
-  <!-- SECTION C: ADDRESSES                                        -->
+  <!-- SECTION C: BUSINESS & BILLING INFORMATION                   -->
   <!-- ═══════════════════════════════════════════════════════════ -->
-  <section class="card-section">
-    <div class="flex items-center justify-between mb-7">
-      <div class="flex items-center gap-2">
-        <span class="material-symbols-outlined text-primary">home_pin</span>
-        <h2 class="font-headline text-2xl">Addresses</h2>
+  <section id="billing-section" class="card-section scroll-mt-24">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-7">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">account_balance</span>
+          <h2 class="font-headline text-2xl">Business &amp; Billing Information</h2>
+        </div>
+        <p class="text-xs text-on-surface-variant mt-1">Single source of truth for GST/PAN invoicing, Razorpay subscriptions, and artisan settlements.</p>
       </div>
-      <button id="open-add-address-btn" type="button" class="flex items-center gap-2 bg-primary text-on-primary py-2.5 px-5 rounded-full font-semibold text-sm hover:opacity-90 transition-all shadow-sm">
-        <span class="material-symbols-outlined text-base">add</span>Add New Address
-      </button>
+      <span id="billing-status-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-surface-container text-on-surface-variant">
+        <span class="material-symbols-outlined text-sm">pending</span>Pending Verification
+      </span>
     </div>
 
-    <!-- Addresses List -->
-    <div id="addresses-list" class="space-y-4">
-      <div class="skeleton h-24 rounded-xl"></div>
-      <div class="skeleton h-24 rounded-xl"></div>
+    <form id="seller-billing-form" class="space-y-8" novalidate>
+      <!-- Sub-group 1: Legal & Tax Identity -->
+      <div>
+        <h3 class="text-xs font-bold uppercase tracking-widest text-primary mb-4 flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-base">verified_user</span>Legal Entity &amp; Tax Details
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div>
+            <label class="field-label" for="b-legal-name">Legal Entity / Business Name <span class="text-error">*</span></label>
+            <input class="field-input" id="b-legal-name" name="legal_business_name" placeholder="e.g. Tohfa Artisan Crafts LLP" type="text" required />
+            <p id="err-b-legal-name" class="text-xs text-error mt-1"></p>
+          </div>
+          <div>
+            <label class="field-label" for="b-gstin">GSTIN (15-character)</label>
+            <input class="field-input uppercase" id="b-gstin" name="gstin" maxlength="15" placeholder="22AAAAA0000A1Z5 (Optional)" type="text" />
+            <p id="err-b-gstin" class="text-xs text-error mt-1"></p>
+          </div>
+          <div>
+            <label class="field-label" for="b-pan">PAN / Tax ID</label>
+            <input class="field-input uppercase" id="b-pan" name="pan_number" maxlength="10" placeholder="ABCDE1234F" type="text" />
+            <p id="err-b-pan" class="text-xs text-error mt-1"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-group 2: Registered Billing Address -->
+      <div class="pt-6 border-t border-outline-variant/25">
+        <h3 class="text-xs font-bold uppercase tracking-widest text-primary mb-4 flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-base">receipt_long</span>Registered Billing Address
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="md:col-span-2">
+            <label class="field-label" for="b-line1">Address Line 1 (Building, Flat, Street) <span class="text-error">*</span></label>
+            <input class="field-input" id="b-line1" name="address_line1" placeholder="Building No., Workshop / Office Name, Street" type="text" required />
+            <p id="err-b-line1" class="text-xs text-error mt-1"></p>
+          </div>
+          <div>
+            <label class="field-label" for="b-line2">Address Line 2 (Area, Colony, Sector)</label>
+            <input class="field-input" id="b-line2" name="address_line2" placeholder="Locality / Industrial Area" type="text" />
+          </div>
+          <div>
+            <label class="field-label" for="b-landmark">Landmark</label>
+            <input class="field-input" id="b-landmark" name="landmark" placeholder="Near main post office, metro station, etc." type="text" />
+          </div>
+          <div>
+            <label class="field-label" for="b-city">City <span class="text-error">*</span></label>
+            <input class="field-input" id="b-city" name="city" placeholder="e.g. Jaipur" type="text" required />
+            <p id="err-b-city" class="text-xs text-error mt-1"></p>
+          </div>
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label class="field-label" for="b-state">State <span class="text-error">*</span></label>
+              <input class="field-input" id="b-state" name="state" placeholder="e.g. Rajasthan" type="text" required />
+              <p id="err-b-state" class="text-xs text-error mt-1"></p>
+            </div>
+            <div>
+              <label class="field-label" for="b-pincode">PIN Code (6 digits) <span class="text-error">*</span></label>
+              <input class="field-input" id="b-pincode" name="pincode" maxlength="6" inputmode="numeric" placeholder="302001" type="text" required />
+              <p id="err-b-pincode" class="text-xs text-error mt-1"></p>
+            </div>
+            <div>
+              <label class="field-label" for="b-country">Country <span class="text-error">*</span></label>
+              <input class="field-input" id="b-country" name="country" value="India" placeholder="India" type="text" required />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-group 3: Bank Account & Payout Information (For Razorpay Settlements) -->
+      <div class="pt-6 border-t border-outline-variant/25">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+          <h3 class="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-base">payments</span>Bank Account &amp; Payout Details (Razorpay Settlements)
+          </h3>
+          <span class="text-[11px] text-on-surface-variant">Provide Bank Account + IFSC (and/or UPI ID) for automated Razorpay settlements</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="field-label" for="b-holder-name">Account Holder Name <span class="text-error">*</span></label>
+            <input class="field-input" id="b-holder-name" name="account_holder_name" placeholder="Name as per bank records" type="text" />
+            <p id="err-b-holder-name" class="text-xs text-error mt-1"></p>
+          </div>
+          <div>
+            <label class="field-label" for="b-bank-name">Bank Name</label>
+            <input class="field-input" id="b-bank-name" name="bank_name" placeholder="e.g. HDFC Bank, State Bank of India" type="text" />
+          </div>
+          <div>
+            <label class="field-label" for="b-account-no">Bank Account Number <span class="text-error">*</span></label>
+            <input class="field-input" id="b-account-no" name="account_number" placeholder="Enter 9–18 digit account number" type="password" autocomplete="off" />
+            <p id="err-b-account-no" class="text-xs text-error mt-1"></p>
+          </div>
+          <div>
+            <label class="field-label" for="b-confirm-account-no">Confirm Account Number <span class="text-error">*</span></label>
+            <input class="field-input" id="b-confirm-account-no" name="confirm_account_number" placeholder="Re-enter account number" type="text" autocomplete="off" />
+            <p id="err-b-confirm-account-no" class="text-xs text-error mt-1"></p>
+          </div>
+          <div>
+            <label class="field-label" for="b-ifsc">IFSC Code (11-character) <span class="text-error">*</span></label>
+            <input class="field-input uppercase" id="b-ifsc" name="ifsc_code" maxlength="11" placeholder="e.g. HDFC0001234" type="text" />
+            <p id="err-b-ifsc" class="text-xs text-error mt-1"></p>
+          </div>
+          <div>
+            <label class="field-label" for="b-upi">Secondary / Instant UPI ID (Optional)</label>
+            <input class="field-input" id="b-upi" name="upi_id" placeholder="yourshop@okaxis" type="text" />
+            <p id="err-b-upi" class="text-xs text-error mt-1"></p>
+          </div>
+        </div>
+      </div>
+
+      <div id="billing-form-feedback" class="hidden rounded-xl px-4 py-3 text-xs font-semibold"></div>
+
+      <div class="flex justify-end pt-6 border-t border-outline-variant/30">
+        <button type="submit" id="save-billing-btn" class="bg-primary text-on-primary py-2.5 px-8 rounded-full font-semibold text-sm hover:opacity-90 transition-all shadow-sm flex items-center gap-2">
+          <span class="material-symbols-outlined text-base">save</span>Save Billing &amp; Payout Details
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- SECTION D: OPERATIONAL PICKUP ADDRESS (FOR LOGISTICS)       -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="pickup-section" class="card-section scroll-mt-24">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">local_shipping</span>
+          <h2 class="font-headline text-2xl">Operational Pickup Address (For Logistics)</h2>
+        </div>
+        <p class="text-xs text-on-surface-variant mt-1">Courier logistics partners will arrive at this address to pick up fulfilled orders. Used exclusively by iThink Logistics for courier manifest generation, AWB labels, and RTO returns.</p>
+      </div>
+      <span id="pickup-serviceability-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-surface-container text-on-surface-variant">
+        <span class="material-symbols-outlined text-sm">pin_drop</span>Enter 6-digit PIN to verify courier pickup
+      </span>
     </div>
+
+    <!-- Same as Billing Toggle -->
+    <div class="mb-6 p-4 rounded-xl bg-surface-container-low border border-outline-variant/40 flex items-center justify-between gap-4">
+      <div>
+        <p class="text-sm font-semibold text-on-surface">Pickup address is same as billing address</p>
+        <p class="text-xs text-on-surface-variant">Automatically copy street, city, state, and PIN code from your Registered Billing Address above.</p>
+      </div>
+      <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+        <input type="checkbox" id="same-as-billing-toggle" class="sr-only peer" />
+        <div class="w-11 h-6 bg-outline-variant rounded-full peer peer-checked:bg-primary transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+      </label>
+    </div>
+
+    <form id="seller-pickup-form" class="space-y-5" novalidate>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div>
+          <label class="field-label" for="p-contact-name">Contact Person Name <span class="text-error">*</span></label>
+          <input class="field-input" id="p-contact-name" name="contact_name" placeholder="Dispatch Manager / Artisan Name" type="text" required />
+          <p id="err-p-contact-name" class="text-xs text-error mt-1"></p>
+        </div>
+        <div>
+          <label class="field-label" for="p-phone">Courier Contact Phone (10-digit) <span class="text-error">*</span></label>
+          <input class="field-input" id="p-phone" name="phone" maxlength="10" inputmode="numeric" placeholder="9876543210" type="tel" required />
+          <p id="err-p-phone" class="text-xs text-error mt-1"></p>
+        </div>
+        <div>
+          <label class="field-label" for="p-facility-name">Warehouse / Studio Label</label>
+          <input class="field-input" id="p-facility-name" name="facility_name" placeholder="e.g. Jaipur Dispatch Studio" type="text" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div class="md:col-span-2">
+          <label class="field-label" for="p-line1">Flat / Building / Workshop No. (Address Line 1) <span class="text-error">*</span></label>
+          <input class="field-input" id="p-line1" name="address_line1" placeholder="Plot / Building No., Floor, Street Name" type="text" required />
+          <p id="err-p-line1" class="text-xs text-error mt-1"></p>
+        </div>
+        <div>
+          <label class="field-label" for="p-line2">Street / Area / Locality (Address Line 2)</label>
+          <input class="field-input" id="p-line2" name="address_line2" placeholder="Area, Sector, Industrial Estate" type="text" />
+        </div>
+        <div>
+          <label class="field-label" for="p-landmark">Pickup Landmark</label>
+          <input class="field-input" id="p-landmark" name="landmark" placeholder="Near landmark for courier executive" type="text" />
+        </div>
+        <div>
+          <label class="field-label" for="p-city">City <span class="text-error">*</span></label>
+          <input class="field-input" id="p-city" name="city" placeholder="e.g. Jaipur" type="text" required />
+          <p id="err-p-city" class="text-xs text-error mt-1"></p>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="field-label" for="p-state">State <span class="text-error">*</span></label>
+            <input class="field-input" id="p-state" name="state" placeholder="e.g. Rajasthan" type="text" required />
+            <p id="err-p-state" class="text-xs text-error mt-1"></p>
+          </div>
+          <div>
+            <label class="field-label" for="p-pincode">Pickup PIN Code (6 digits) <span class="text-error">*</span></label>
+            <input class="field-input" id="p-pincode" name="pincode" maxlength="6" inputmode="numeric" placeholder="302001" type="text" required />
+            <p id="err-p-pincode" class="text-xs text-error mt-1"></p>
+          </div>
+        </div>
+      </div>
+
+      <div id="pickup-form-feedback" class="hidden rounded-xl px-4 py-3 text-xs font-semibold"></div>
+
+      <div class="flex justify-end pt-6 border-t border-outline-variant/30">
+        <button type="submit" id="save-pickup-btn" class="bg-primary text-on-primary py-2.5 px-8 rounded-full font-semibold text-sm hover:opacity-90 transition-all shadow-sm flex items-center gap-2">
+          <span class="material-symbols-outlined text-base">local_shipping</span>Verify &amp; Save Pickup Address
+        </button>
+      </div>
+    </form>
   </section>
 
 </div>
@@ -530,7 +687,9 @@ function showToast(message, type = 'success') {
 }
 
 // ─── Token ────────────────────────────────────────────────────────────────────
-function getToken() { return localStorage.getItem('token') || localStorage.getItem('accessToken') || sessionStorage.getItem('tohfa_access_token'); }
+function getToken() {
+  return sessionStorage.getItem('tohfa_access_token') || localStorage.getItem('tohfa_access_token') || localStorage.getItem('token') || localStorage.getItem('accessToken');
+}
 
 // ─── Char counters ────────────────────────────────────────────────────────────
 function wireCounter(textareaId, counterId, max) {
@@ -815,190 +974,414 @@ document.getElementById('save-about-btn').addEventListener('click', async () => 
   }
 });
 
-// ─── Addresses ────────────────────────────────────────────────────────────────
-let addresses = [];
-
-async function loadAddresses() {
-  const listEl = document.getElementById('addresses-list');
-  listEl.innerHTML = '<div class="skeleton h-20 rounded-xl"></div><div class="skeleton h-20 rounded-xl mt-3"></div>';
+// ─── Session User Flag Helper ─────────────────────────────────────────────────
+function syncSessionOnboardingFlags(status) {
   try {
-    const res = await fetch(`${API}/api/seller/addresses`, {
-      headers: { 'Authorization': `Bearer ${getToken()}` }
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error();
-    addresses = Array.isArray(data.data) ? data.data : (data.data?.addresses || data.addresses || (Array.isArray(data) ? data : []));
-    renderAddresses();
-  } catch (_) {
-    listEl.innerHTML = '<p class="text-sm text-on-surface-variant text-center py-8">Could not load addresses. <button onclick="loadAddresses()" class="text-primary underline">Retry</button></p>';
+    const raw = sessionStorage.getItem('tohfa_user');
+    if (!raw) return;
+    const user = JSON.parse(raw);
+    if (typeof status.hasBillingAddress === 'boolean') user.hasBillingAddress = status.hasBillingAddress;
+    if (typeof status.hasBankingDetails === 'boolean') user.hasBankingDetails = status.hasBankingDetails;
+    if (typeof status.hasPickupAddress === 'boolean') user.hasPickupAddress = status.hasPickupAddress;
+    if (typeof status.isComplete === 'boolean') user.isOnboardingComplete = status.isComplete;
+    sessionStorage.setItem('tohfa_user', JSON.stringify(user));
+  } catch (_) {}
+}
+
+function updateBillingStatusBadge(hasBilling, hasBanking) {
+  const badge = document.getElementById('billing-status-badge');
+  if (!badge) return;
+  if (hasBilling && hasBanking) {
+    badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary-fixed text-on-primary-container';
+    badge.innerHTML = '<span class="material-symbols-outlined text-sm">verified</span>Verified &amp; Ready for Payouts';
+  } else {
+    badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-surface-container text-on-surface-variant';
+    badge.innerHTML = '<span class="material-symbols-outlined text-sm">pending</span>Action Required for Listings &amp; Payouts';
   }
 }
 
-function renderAddresses() {
-  const listEl = document.getElementById('addresses-list');
-  if (!addresses.length) {
-    listEl.innerHTML = '<div class="text-center py-10 text-on-surface-variant text-sm"><span class="material-symbols-outlined text-4xl mb-2 block opacity-40">location_off</span>No addresses saved yet. Add one to get started.</div>';
+// ─── Same as Billing Address Toggle ───────────────────────────────────────────
+const sameAsBillingToggle = document.getElementById('same-as-billing-toggle');
+
+function copyBillingToPickup() {
+  const getVal = id => (document.getElementById(id)?.value || '').trim();
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+
+  setVal('p-line1', getVal('b-line1'));
+  setVal('p-line2', getVal('b-line2'));
+  setVal('p-landmark', getVal('b-landmark'));
+  setVal('p-city', getVal('b-city'));
+  setVal('p-state', getVal('b-state'));
+  setVal('p-pincode', getVal('b-pincode'));
+
+  if (!getVal('p-contact-name')) {
+    setVal('p-contact-name', getVal('b-holder-name') || getVal('b-legal-name') || getVal('f-shop-name'));
+  }
+  if (!getVal('p-facility-name')) {
+    setVal('p-facility-name', getVal('f-shop-name') || getVal('b-legal-name'));
+  }
+
+  const pin = getVal('p-pincode');
+  if (/^\d{6}$/.test(pin)) {
+    verifyPickupPincodeServiceability(pin);
+  }
+}
+
+function togglePickupAddressLock(locked) {
+  ['p-line1', 'p-line2', 'p-landmark', 'p-city', 'p-state', 'p-pincode'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.readOnly = locked;
+    el.classList.toggle('opacity-70', locked);
+    el.classList.toggle('cursor-not-allowed', locked);
+  });
+}
+
+if (sameAsBillingToggle) {
+  sameAsBillingToggle.addEventListener('change', () => {
+    if (sameAsBillingToggle.checked) {
+      copyBillingToPickup();
+      togglePickupAddressLock(true);
+    } else {
+      togglePickupAddressLock(false);
+    }
+  });
+}
+
+['b-line1', 'b-line2', 'b-landmark', 'b-city', 'b-state', 'b-pincode'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('input', () => {
+      if (sameAsBillingToggle && sameAsBillingToggle.checked) {
+        copyBillingToPickup();
+      }
+    });
+  }
+});
+
+// ─── Live PIN Code Serviceability Check (iThink Logistics) ────────────────────
+let pincodeCheckTimer;
+const pickupPincodeInput = document.getElementById('p-pincode');
+
+async function verifyPickupPincodeServiceability(pincode) {
+  const badge = document.getElementById('pickup-serviceability-badge');
+  if (!badge) return;
+  if (!/^\d{6}$/.test(pincode)) {
+    badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-surface-container text-on-surface-variant';
+    badge.innerHTML = '<span class="material-symbols-outlined text-sm">pin_drop</span>Enter 6-digit PIN to verify courier pickup';
     return;
   }
-  listEl.innerHTML = '';
-  addresses.forEach(addr => {
-    const card = document.createElement('div');
-    card.className = 'address-card';
-    card.id = `addr-card-${addr._id || addr.id}`;
-    card.innerHTML = `
-      <div class="flex items-start justify-between gap-3">
-        <div class="flex-1">
-          <div class="flex items-center gap-2 mb-1">
-            <span class="text-xs font-bold uppercase tracking-wider text-primary bg-primary-fixed px-2.5 py-0.5 rounded-full">${escHtml(addr.label || 'Address')}</span>
-            ${addr.is_default ? '<span class="text-xs font-semibold text-on-primary bg-custom-primary px-2.5 py-0.5 rounded-full">Default</span>' : ''}
-          </div>
-          <p class="text-sm font-medium text-on-surface">${escHtml(addr.address_line || '')}</p>
-          <p class="text-xs text-on-surface-variant mt-0.5">${[addr.city, addr.state, addr.pincode].filter(Boolean).join(', ')}</p>
-          ${addr.phone ? `<p class="text-xs text-on-surface-variant mt-0.5"><span class="material-symbols-outlined text-xs align-middle">call</span> ${escHtml(addr.phone)}</p>` : ''}
-        </div>
-        <div class="flex items-center gap-1 flex-shrink-0">
-          <button onclick="openEditAddress('${addr._id || addr.id}')" title="Edit" class="p-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant hover:text-primary">
-            <span class="material-symbols-outlined text-base">edit</span>
-          </button>
-          <button onclick="initDeleteAddress('${addr._id || addr.id}')" title="Delete" class="p-2 rounded-full hover:bg-error-container/40 transition-colors text-on-surface-variant hover:text-error">
-            <span class="material-symbols-outlined text-base">delete</span>
-          </button>
-        </div>
-      </div>
-      <div class="inline-confirm" id="confirm-del-${addr._id || addr.id}">
-        <span class="material-symbols-outlined text-error text-base">warning</span>
-        <span>Remove this address?</span>
-        <button onclick="confirmDeleteAddress('${addr._id || addr.id}')" class="text-xs font-bold text-error underline hover:no-underline">Remove</button>
-        <button onclick="cancelDeleteAddress('${addr._id || addr.id}')" class="text-xs font-bold text-on-surface-variant underline hover:no-underline">Cancel</button>
-      </div>
-    `;
-    listEl.appendChild(card);
-  });
-}
 
-function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+  badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-surface-container text-on-surface-variant';
+  badge.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">refresh</span>Checking iThink Logistics serviceability…';
 
-function initDeleteAddress(id) {
-  document.querySelectorAll('.inline-confirm').forEach(el => el.classList.remove('show'));
-  const conf = document.getElementById(`confirm-del-${id}`);
-  if (conf) conf.classList.add('show');
-}
-
-function cancelDeleteAddress(id) {
-  const conf = document.getElementById(`confirm-del-${id}`);
-  if (conf) conf.classList.remove('show');
-}
-
-async function confirmDeleteAddress(id) {
   try {
-    const res = await fetch(`${API}/api/seller/addresses/${id}`, {
-      method: 'DELETE',
+    const res = await fetch(`${API}/api/logistics/serviceability?pincode=${encodeURIComponent(pincode)}&pickupPincode=${encodeURIComponent(pincode)}`, {
       headers: { 'Authorization': `Bearer ${getToken()}` }
     });
-    if (!res.ok) throw new Error();
-    addresses = addresses.filter(a => (a._id || a.id) !== id);
-    renderAddresses();
-    showToast('Address removed.', 'success');
+    const payload = await res.json();
+    const svc = payload.data || payload;
+    if (res.ok && svc.serviceable !== false) {
+      badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary-fixed text-on-primary-container';
+      badge.innerHTML = `<span class="material-symbols-outlined text-sm">check_circle</span>Courier Pickup Serviceable (PIN ${pincode})`;
+    } else {
+      badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-error-container text-on-error-container';
+      badge.innerHTML = `<span class="material-symbols-outlined text-sm">error</span>PIN ${pincode} not serviceable for courier pickup`;
+    }
   } catch (_) {
-    showToast('Failed to delete address.', 'error');
+    badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary-fixed text-on-primary-container';
+    badge.innerHTML = `<span class="material-symbols-outlined text-sm">check_circle</span>PIN ${pincode} format valid`;
   }
 }
 
-function openEditAddress(id) {
-  const addr = addresses.find(a => (a._id || a.id) === id);
-  if (!addr) return;
-  document.getElementById('address-modal-title').textContent = 'Edit Address';
-  document.getElementById('address-edit-id').value = id;
-  document.getElementById('addr-label').value   = addr.label || '';
-  document.getElementById('addr-line').value    = addr.address_line || '';
-  document.getElementById('addr-city').value    = addr.city || '';
-  document.getElementById('addr-state').value   = addr.state || '';
-  document.getElementById('addr-pincode').value = addr.pincode || '';
-  document.getElementById('addr-phone').value   = addr.phone || '';
-  document.getElementById('addr-default').checked = !!addr.is_default;
-  openAddressModal();
-}
-
-// Address modal open/close
-function openAddressModal() {
-  document.getElementById('address-modal').classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
-}
-function closeAddressModal() {
-  document.getElementById('address-modal').classList.add('hidden');
-  document.body.style.overflow = '';
-  document.getElementById('address-form').reset();
-  document.getElementById('address-edit-id').value = '';
-  document.getElementById('address-modal-title').textContent = 'Add New Address';
-  ['err-addr-label','err-addr-line','err-addr-city','err-addr-pincode','err-addr-phone'].forEach(id => {
-    document.getElementById(id).textContent = '';
+if (pickupPincodeInput) {
+  pickupPincodeInput.addEventListener('input', () => {
+    const pin = pickupPincodeInput.value.trim();
+    clearTimeout(pincodeCheckTimer);
+    if (pin.length === 6) {
+      pincodeCheckTimer = setTimeout(() => verifyPickupPincodeServiceability(pin), 350);
+    }
   });
 }
-document.getElementById('open-add-address-btn').addEventListener('click', () => {
-  document.getElementById('address-form').reset();
-  document.getElementById('address-edit-id').value = '';
-  document.getElementById('address-modal-title').textContent = 'Add New Address';
-  openAddressModal();
-});
-document.getElementById('close-address-modal').addEventListener('click', closeAddressModal);
-document.getElementById('cancel-address-btn').addEventListener('click', closeAddressModal);
-document.getElementById('address-modal').addEventListener('click', e => {
-  if (e.target === document.getElementById('address-modal')) closeAddressModal();
-});
 
-// Submit address form
-document.getElementById('address-form').addEventListener('submit', async (e) => {
+function showFormFeedback(elId, message, type = 'success') {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (!message) {
+    el.classList.add('hidden');
+    el.textContent = '';
+    return;
+  }
+  el.className = `rounded-xl px-4 py-3 text-xs font-semibold flex items-center gap-2 ${
+    type === 'success'
+      ? 'bg-primary-fixed text-on-primary-container border border-primary-fixed-dim'
+      : 'bg-error-container text-on-error-container border border-error/30'
+  }`;
+  el.innerHTML = `<span class="material-symbols-outlined text-base">${type === 'success' ? 'check_circle' : 'error'}</span><span>${message}</span>`;
+}
+
+// ─── Save Business & Billing Form (PUT /api/seller/profile/billing) ───────────
+document.getElementById('seller-billing-form').addEventListener('submit', async (e) => {
   e.preventDefault();
-  ['err-addr-label','err-addr-line','err-addr-city','err-addr-pincode','err-addr-phone'].forEach(id => {
-    document.getElementById(id).textContent = '';
-  });
-  let valid = true;
-  const label   = document.getElementById('addr-label').value.trim();
-  const line    = document.getElementById('addr-line').value.trim();
-  const city    = document.getElementById('addr-city').value.trim();
-  const pincode = document.getElementById('addr-pincode').value.trim();
-  if (!label)   { document.getElementById('err-addr-label').textContent = 'Label required.'; valid = false; }
-  if (!line)    { document.getElementById('err-addr-line').textContent = 'Address line required.'; valid = false; }
-  if (!city)    { document.getElementById('err-addr-city').textContent = 'City required.'; valid = false; }
-  if (!pincode || !/^\d{6}$/.test(pincode)) { document.getElementById('err-addr-pincode').textContent = 'Enter valid 6-digit pincode.'; valid = false; }
-  if (!valid) return;
+  showFormFeedback('billing-form-feedback', '');
+  const errIds = [
+    'err-b-legal-name', 'err-b-gstin', 'err-b-pan',
+    'err-b-line1', 'err-b-city', 'err-b-state', 'err-b-pincode',
+    'err-b-holder-name', 'err-b-account-no', 'err-b-confirm-account-no', 'err-b-ifsc', 'err-b-upi'
+  ];
+  errIds.forEach(id => { const el = document.getElementById(id); if (el) el.textContent = ''; });
 
-  const editId = document.getElementById('address-edit-id').value;
-  const payload = {
-    label,
-    name:         document.getElementById('display-name')?.textContent?.trim() || label || 'Artisan Workshop',
-    line1:        line,
-    address_line1: line,
-    address_line: line,
-    city,
-    state:        document.getElementById('addr-state').value.trim(),
-    pincode,
-    phone:        document.getElementById('addr-phone').value.trim(),
-    is_default:   document.getElementById('addr-default').checked
-  };
-  const saveBtn = document.getElementById('save-address-btn');
+  const legalName = document.getElementById('b-legal-name').value.trim();
+  const gstin = document.getElementById('b-gstin').value.trim().toUpperCase();
+  const pan = document.getElementById('b-pan').value.trim().toUpperCase();
+  const line1 = document.getElementById('b-line1').value.trim();
+  const line2 = document.getElementById('b-line2').value.trim();
+  const landmark = document.getElementById('b-landmark').value.trim();
+  const city = document.getElementById('b-city').value.trim();
+  const state = document.getElementById('b-state').value.trim();
+  const pincode = document.getElementById('b-pincode').value.trim();
+  const countryEl = document.getElementById('b-country');
+  const country = (countryEl ? countryEl.value.trim() : 'India') || 'India';
+  const holderName = document.getElementById('b-holder-name').value.trim();
+  let bankName = document.getElementById('b-bank-name').value.trim();
+  const accountNo = document.getElementById('b-account-no').value.trim();
+  const confirmAccountNo = document.getElementById('b-confirm-account-no').value.trim();
+  const ifsc = document.getElementById('b-ifsc').value.trim().toUpperCase();
+  const upi = document.getElementById('b-upi').value.trim();
+
+  let valid = true;
+  if (!legalName) { document.getElementById('err-b-legal-name').textContent = 'Legal business name is required.'; valid = false; }
+  if (gstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gstin)) {
+    document.getElementById('err-b-gstin').textContent = 'Invalid 15-character GSTIN format.'; valid = false;
+  }
+  if (pan && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan)) {
+    document.getElementById('err-b-pan').textContent = 'Invalid 10-character PAN format (e.g. ABCDE1234F).'; valid = false;
+  }
+  if (!line1) { document.getElementById('err-b-line1').textContent = 'Billing address line 1 is required.'; valid = false; }
+  if (!city) { document.getElementById('err-b-city').textContent = 'City is required.'; valid = false; }
+  if (!state) { document.getElementById('err-b-state').textContent = 'State is required.'; valid = false; }
+  if (!/^\d{6}$/.test(pincode)) { document.getElementById('err-b-pincode').textContent = 'Valid 6-digit PIN code is required.'; valid = false; }
+
+  const hasBankInput = Boolean(accountNo || ifsc || holderName || bankName);
+  if (hasBankInput) {
+    if (!holderName) { document.getElementById('err-b-holder-name').textContent = 'Account holder name is required.'; valid = false; }
+    if (!/^\d{9,18}$/.test(accountNo)) { document.getElementById('err-b-account-no').textContent = 'Account number must be 9–18 digits.'; valid = false; }
+    if (confirmAccountNo && confirmAccountNo !== accountNo) { document.getElementById('err-b-confirm-account-no').textContent = 'Account numbers do not match.'; valid = false; }
+    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)) { document.getElementById('err-b-ifsc').textContent = 'Enter a valid 11-character IFSC code.'; valid = false; }
+    if (!bankName && /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)) {
+      bankName = `${ifsc.slice(0, 4)} Bank`;
+      const bankInputEl = document.getElementById('b-bank-name');
+      if (bankInputEl) bankInputEl.value = bankName;
+    }
+  }
+  if (upi && !/^[a-zA-Z0-9._-]{2,256}@[a-zA-Z]{2,64}$/.test(upi)) {
+    document.getElementById('err-b-upi').textContent = 'Enter a valid UPI ID (e.g. name@bank).'; valid = false;
+  }
+
+  if (!valid) {
+    const errMsg = 'Please fix the highlighted fields in Business & Billing.';
+    showFormFeedback('billing-form-feedback', errMsg, 'error');
+    showToast(errMsg, 'error');
+    return;
+  }
+
+  const saveBtn = document.getElementById('save-billing-btn');
   saveBtn.disabled = true;
   saveBtn.innerHTML = '<span class="material-symbols-outlined text-base animate-spin">refresh</span>Saving…';
+
   try {
-    const url    = editId ? `${API}/api/seller/addresses/${editId}` : `${API}/api/seller/addresses`;
-    const method = editId ? 'PUT' : 'POST';
-    const res = await fetch(url, {
-      method,
+    const res = await fetch(`${API}/api/seller/profile/billing`, {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        legal_business_name: legalName,
+        gstin,
+        pan_number: pan,
+        same_as_billing: Boolean(sameAsBillingToggle && sameAsBillingToggle.checked),
+        billing_address: {
+          legal_business_name: legalName,
+          gstin,
+          pan_number: pan,
+          address_line1: line1,
+          address_line2: line2,
+          landmark,
+          city,
+          state,
+          pincode,
+          country
+        },
+        bank_details: {
+          account_holder_name: holderName,
+          bank_name: bankName,
+          account_number: accountNo,
+          confirm_account_number: confirmAccountNo || accountNo,
+          ifsc_code: ifsc,
+          upi_id: upi
+        }
+      })
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Save failed');
-    showToast(editId ? 'Address updated!' : 'Address added!', 'success');
-    closeAddressModal();
-    await loadAddresses();
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.message || 'Failed to save billing details');
+
+    const resultData = payload.data || payload;
+    syncSessionOnboardingFlags(resultData);
+    updateBillingStatusBadge(resultData.hasBillingAddress, resultData.hasBankingDetails);
+
+    // Sync saved values back into form state
+    if (resultData.billing_address) {
+      const b = resultData.billing_address;
+      const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined && val !== null) el.value = val; };
+      set('b-legal-name', b.legal_business_name || legalName);
+      set('b-gstin', b.gstin || gstin);
+      set('b-pan', b.pan_number || b.pan || pan);
+      set('b-line1', b.address_line1 || line1);
+      set('b-line2', b.address_line2 || line2);
+      set('b-landmark', b.landmark || landmark);
+      set('b-city', b.city || city);
+      set('b-state', b.state || state);
+      set('b-pincode', b.pincode || pincode);
+      set('b-country', b.country || country);
+    }
+    if (resultData.bank_details) {
+      const bk = resultData.bank_details;
+      const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined && val !== null) el.value = val; };
+      set('b-holder-name', bk.account_holder_name || holderName);
+      set('b-bank-name', bk.bank_name || bankName);
+      set('b-account-no', bk.account_number || accountNo);
+      set('b-confirm-account-no', bk.account_number || accountNo);
+      set('b-ifsc', bk.ifsc_code || ifsc);
+      set('b-upi', bk.upi_id || upi);
+    }
+
+    if (sameAsBillingToggle && sameAsBillingToggle.checked) {
+      copyBillingToPickup();
+    } else if (resultData.pickup_address && resultData.pickup_address.address_line1 && !document.getElementById('p-line1').value.trim()) {
+      const p = resultData.pickup_address;
+      const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+      set('p-contact-name', p.contact_name);
+      set('p-phone', p.phone);
+      set('p-facility-name', p.facility_name);
+      set('p-line1', p.address_line1);
+      set('p-line2', p.address_line2);
+      set('p-landmark', p.landmark);
+      set('p-city', p.city);
+      set('p-state', p.state);
+      set('p-pincode', p.pincode);
+    }
+
+    const successMsg = payload.message || 'Business, billing & payout details saved!';
+    showFormFeedback('billing-form-feedback', successMsg, 'success');
+    showToast(successMsg, 'success');
+
+    // Handle redirect param if onboarding came from listing gate
+    const params = new URLSearchParams(window.location.search);
+    const redirectTarget = params.get('redirect');
+    if (redirectTarget && resultData.hasBillingAddress && resultData.hasBankingDetails) {
+      setTimeout(() => { window.location.href = redirectTarget; }, 800);
+    }
   } catch (err) {
-    showToast(err.message || 'Failed to save address.', 'error');
+    const errMsg = err.message || 'Failed to save billing details.';
+    showFormFeedback('billing-form-feedback', errMsg, 'error');
+    showToast(errMsg, 'error');
   } finally {
     saveBtn.disabled = false;
-    saveBtn.innerHTML = '<span class="material-symbols-outlined text-base">save</span>Save Address';
+    saveBtn.innerHTML = '<span class="material-symbols-outlined text-base">save</span>Save Billing &amp; Payout Details';
+  }
+});
+
+// ─── Save Operational Pickup Address (PUT /api/seller/profile/pickup-address) ─
+document.getElementById('seller-pickup-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  showFormFeedback('pickup-form-feedback', '');
+  ['err-p-contact-name', 'err-p-phone', 'err-p-line1', 'err-p-city', 'err-p-state', 'err-p-pincode'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.textContent = '';
+  });
+
+  if (sameAsBillingToggle && sameAsBillingToggle.checked) {
+    copyBillingToPickup();
+  }
+
+  const contactName = document.getElementById('p-contact-name').value.trim();
+  const phone = document.getElementById('p-phone').value.trim().replace(/\D/g, '').slice(-10);
+  const facilityName = document.getElementById('p-facility-name').value.trim();
+  const line1 = document.getElementById('p-line1').value.trim();
+  const line2 = document.getElementById('p-line2').value.trim();
+  const landmark = document.getElementById('p-landmark').value.trim();
+  const city = document.getElementById('p-city').value.trim();
+  const state = document.getElementById('p-state').value.trim();
+  const pincode = document.getElementById('p-pincode').value.trim();
+
+  let valid = true;
+  if (!contactName) { document.getElementById('err-p-contact-name').textContent = 'Contact person name is required.'; valid = false; }
+  if (!/^[6-9]\d{9}$/.test(phone)) { document.getElementById('err-p-phone').textContent = 'Valid 10-digit Indian mobile number is required.'; valid = false; }
+  if (!line1) { document.getElementById('err-p-line1').textContent = 'Flat / Building / Street is required for courier pickup.'; valid = false; }
+  if (!city) { document.getElementById('err-p-city').textContent = 'City is required.'; valid = false; }
+  if (!state) { document.getElementById('err-p-state').textContent = 'State is required.'; valid = false; }
+  if (!/^\d{6}$/.test(pincode)) { document.getElementById('err-p-pincode').textContent = 'Valid 6-digit PIN code is required.'; valid = false; }
+
+  if (!valid) {
+    const errMsg = 'Please complete all required pickup address fields.';
+    showFormFeedback('pickup-form-feedback', errMsg, 'error');
+    showToast(errMsg, 'error');
+    return;
+  }
+
+  const saveBtn = document.getElementById('save-pickup-btn');
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<span class="material-symbols-outlined text-base animate-spin">refresh</span>Verifying &amp; Saving…';
+
+  try {
+    const res = await fetch(`${API}/api/seller/profile/pickup-address`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+      body: JSON.stringify({
+        same_as_billing: Boolean(sameAsBillingToggle && sameAsBillingToggle.checked),
+        pickup_address: {
+          contact_name: contactName,
+          phone,
+          facility_name: facilityName || document.getElementById('f-shop-name').value.trim() || 'Artisan Studio',
+          address_line1: line1,
+          address_line2: line2,
+          landmark,
+          city,
+          state,
+          pincode,
+          country: 'India',
+          same_as_billing: Boolean(sameAsBillingToggle && sameAsBillingToggle.checked)
+        }
+      })
+    });
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.message || 'Failed to save pickup address');
+
+    const resultData = payload.data || payload;
+    syncSessionOnboardingFlags(resultData);
+    await verifyPickupPincodeServiceability(pincode);
+
+    if (resultData.pickup_address) {
+      const p = resultData.pickup_address;
+      const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined && val !== null) el.value = val; };
+      set('p-contact-name', p.contact_name || contactName);
+      set('p-phone', p.phone || phone);
+      set('p-facility-name', p.facility_name || facilityName);
+      set('p-line1', p.address_line1 || line1);
+      set('p-line2', p.address_line2 || line2);
+      set('p-landmark', p.landmark || landmark);
+      set('p-city', p.city || city);
+      set('p-state', p.state || state);
+      set('p-pincode', p.pincode || pincode);
+    }
+
+    const successMsg = payload.message || 'Operational pickup address verified & synced with logistics!';
+    showFormFeedback('pickup-form-feedback', successMsg, 'success');
+    showToast(successMsg, 'success');
+  } catch (err) {
+    const errMsg = err.message || 'Failed to save pickup address.';
+    showFormFeedback('pickup-form-feedback', errMsg, 'error');
+    showToast(errMsg, 'error');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<span class="material-symbols-outlined text-base">local_shipping</span>Verify &amp; Save Pickup Address';
   }
 });
 
@@ -1040,7 +1423,6 @@ async function loadProfile() {
     populateProfile(data);
     if (loadingEl) loadingEl.classList.add('hidden');
     if (contentEl) contentEl.classList.remove('hidden');
-    if (token) await loadAddresses();
   } catch (err) {
     console.warn('Load profile fallback:', err);
     if (loadingEl) loadingEl.classList.add('hidden');
@@ -1078,6 +1460,52 @@ function populateProfile(data) {
     const el = document.getElementById(id);
     if (el) el.dispatchEvent(new Event('input'));
   });
+
+  // Populate Section C: Business & Billing Information
+  const billing = data.billing_address || {};
+  const tax = data.tax_details || {};
+  const bank = data.bank_details || data.payout_details || {};
+
+  set('b-legal-name', data.legal_business_name || billing.legal_business_name || tax.legal_name || data.shop_name);
+  set('b-gstin', data.gst_number || billing.gstin || tax.gst_number);
+  set('b-pan', data.pan_number || billing.pan_number || billing.pan || tax.pan_number);
+  set('b-line1', billing.address_line1 || billing.line1 || billing.street);
+  set('b-line2', billing.address_line2 || billing.line2);
+  set('b-landmark', billing.landmark);
+  set('b-city', billing.city);
+  set('b-state', billing.state);
+  set('b-pincode', billing.pincode);
+  set('b-country', billing.country || 'India');
+
+  set('b-holder-name', bank.account_holder_name || bank.beneficiary_name);
+  set('b-bank-name', bank.bank_name);
+  set('b-account-no', bank.account_number);
+  set('b-confirm-account-no', bank.account_number);
+  set('b-ifsc', bank.ifsc_code || bank.ifsc);
+  set('b-upi', bank.upi_id);
+
+  updateBillingStatusBadge(Boolean(data.hasBillingAddress), Boolean(data.hasBankingDetails));
+  syncSessionOnboardingFlags(data);
+
+  // Populate Section D: Operational Pickup Address
+  const pickup = data.pickup_address || {};
+  set('p-contact-name', pickup.contact_name || bank.account_holder_name || data.shop_name);
+  set('p-phone', pickup.phone || pickup.contact_phone || billing.phone);
+  set('p-facility-name', pickup.facility_name || pickup.warehouse_name || data.shop_name);
+  set('p-line1', pickup.address_line1 || pickup.line1 || pickup.street);
+  set('p-line2', pickup.address_line2 || pickup.line2);
+  set('p-landmark', pickup.landmark);
+  set('p-city', pickup.city);
+  set('p-state', pickup.state);
+  set('p-pincode', pickup.pincode);
+
+  if (sameAsBillingToggle && pickup.same_as_billing) {
+    sameAsBillingToggle.checked = true;
+    togglePickupAddressLock(true);
+  }
+  if (pickup.pincode && /^\d{6}$/.test(String(pickup.pincode))) {
+    verifyPickupPincodeServiceability(String(pickup.pincode));
+  }
 }
 
 // ─── DOMContentLoaded ─────────────────────────────────────────────────────────
@@ -1098,7 +1526,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   wireCounter('f-bio', 'bio-counter', 300);
   wireCounter('f-story-desc', 'story-counter', 1000);
+
+  // Show flash banner if redirected from listing gate or protected route
+  const params = new URLSearchParams(window.location.search);
+  const flashMsg = sessionStorage.getItem('tohfa_flash_message') || sessionStorage.getItem('tohfa_flash_alert');
+  if (flashMsg || params.get('redirect')) {
+    const banner = document.getElementById('onboarding-flash-banner');
+    const textEl = document.getElementById('onboarding-flash-text');
+    if (banner && textEl) {
+      textEl.textContent = flashMsg || 'Complete your Business & Billing Information and Operational Pickup Address below to unlock product publishing and automated courier pickups.';
+      banner.classList.remove('hidden');
+    }
+    sessionStorage.removeItem('tohfa_flash_message');
+    sessionStorage.removeItem('tohfa_flash_alert');
+  }
+
   await loadProfile();
+
+  if (window.location.hash === '#billing-section' || params.get('redirect')) {
+    document.getElementById('billing-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else if (window.location.hash === '#pickup-section') {
+    document.getElementById('pickup-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 });
 
 document.getElementById('retry-btn').addEventListener('click', loadProfile);

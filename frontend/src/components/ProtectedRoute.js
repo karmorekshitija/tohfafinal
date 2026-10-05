@@ -163,7 +163,7 @@
               'tohfa_flash_alert',
               'Action Required: Payout banking and billing information must be completed before listing new products.'
             );
-            window.location.replace('/seller/settings/billing?redirect=/seller/listings/new');
+            window.location.replace('/seller/profile.html?redirect=/seller/listings/new#billing-section');
             return;
           }
         }

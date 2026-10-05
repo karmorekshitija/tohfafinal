@@ -188,6 +188,50 @@ async function handleRazorpayWebhook(req, res) {
       }
     }
 
+    // Handle Razorpay Linked Account / Fund Account verification events asynchronously
+    // CRITICAL: Strictly isolated — NEVER overwrites or clears billing_address or pickup_address.
+    if (typeof event.event === 'string' && (event.event.startsWith('account.') || event.event.startsWith('fund_account.'))) {
+      const accountEntity = event.payload?.account?.entity || event.payload?.fund_account?.entity || {};
+      const refSellerId = accountEntity.reference_id || accountEntity.notes?.seller_id;
+      const razorpayAccountId = accountEntity.id || null;
+      const verificationStatus = accountEntity.status || event.event;
+
+      if (refSellerId) {
+        query(
+          `UPDATE seller_profiles
+           SET bank_details = COALESCE(bank_details, '{}'::jsonb) || jsonb_build_object(
+                 'razorpay_account_id', COALESCE($1::text, bank_details->>'razorpay_account_id'),
+                 'razorpay_verification_status', $2::text,
+                 'razorpay_verified_at', NOW()::text
+               ),
+               updated_at = NOW()
+           WHERE user_id::text = $3::text`,
+          [razorpayAccountId, verificationStatus, String(refSellerId)]
+        ).catch(e => console.warn('[Webhook Account Sync Notice]:', e.message));
+      }
+    }
+
+    // Handle Razorpay Payout settlement events asynchronously
+    if (typeof event.event === 'string' && event.event.startsWith('payout.')) {
+      const payoutEntity = event.payload?.payout?.entity || {};
+      const payoutRef = payoutEntity.reference_id || payoutEntity.id;
+      const utr = payoutEntity.utr || null;
+      const mappedStatus = event.event === 'payout.processed'
+        ? 'settled'
+        : (event.event === 'payout.failed' || event.event === 'payout.reversed' ? 'failed' : 'processing');
+
+      if (payoutRef) {
+        query(
+          `UPDATE seller_payouts
+           SET status = $1,
+               utr_number = COALESCE($2, utr_number),
+               disbursed_at = CASE WHEN $1 = 'settled' THEN COALESCE(disbursed_at, NOW()) ELSE disbursed_at END,
+               updated_at = NOW()
+           WHERE reference = $3 OR id::text = $3::text`,
+          [mappedStatus, utr, String(payoutRef)]
+        ).catch(e => console.warn('[Webhook Payout Sync Notice]:', e.message));
+      }
+    }
 
     return res.status(200).json({ status: 'ok' });
   } catch (err) {

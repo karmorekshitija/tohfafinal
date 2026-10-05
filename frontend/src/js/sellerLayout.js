@@ -36,7 +36,7 @@ export function renderSellerSidebar(activeTab = 'dashboard') {
       <a href="./analytics.html" class="seller-nav-link ${activeTab === 'analytics' ? 'active' : ''}">📈 Analytics</a>
       <a href="./reviews.html" class="seller-nav-link ${activeTab === 'reviews' ? 'active' : ''}">★ Reviews</a>
       <a href="./payouts.html" class="seller-nav-link ${activeTab === 'payouts' ? 'active' : ''}">💳 Payouts</a>
-      <a href="./store-config.html" class="seller-nav-link ${activeTab === 'store-config' ? 'active' : ''}">⚙️ Store Settings</a>
+      <a href="./profile-settings.html" class="seller-nav-link ${activeTab === 'store-config' ? 'active' : ''}">⚙️ Store Settings</a>
       <a href="./profile.html" class="seller-nav-link ${activeTab === 'profile' ? 'active' : ''}">🏪 Storefront Profile</a>
     </nav>
 
@@ -92,7 +92,7 @@ export function renderMobileSellerBar(activeTab = 'dashboard') {
           <a href="./analytics.html" class="seller-nav-link ${activeTab === 'analytics' ? 'active' : ''}">📈 Analytics</a>
           <a href="./reviews.html" class="seller-nav-link ${activeTab === 'reviews' ? 'active' : ''}">★ Reviews</a>
           <a href="./payouts.html" class="seller-nav-link ${activeTab === 'payouts' ? 'active' : ''}">💳 Payouts</a>
-          <a href="./store-config.html" class="seller-nav-link ${activeTab === 'store-config' ? 'active' : ''}">⚙️ Store Settings</a>
+          <a href="./profile-settings.html" class="seller-nav-link ${activeTab === 'store-config' ? 'active' : ''}">⚙️ Store Settings</a>
           <a href="./profile.html" class="seller-nav-link ${activeTab === 'profile' ? 'active' : ''}">🏪 Store Profile</a>
           <a href="/auth/logout.html" class="seller-nav-link" style="color:var(--color-error); margin-top:var(--space-4);">Sign Out</a>
         </nav>
