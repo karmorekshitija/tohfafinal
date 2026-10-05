@@ -40,6 +40,12 @@ const routeRewritePlugin = () => ({
       if (pathname === '/buyer/zipgift.html' || pathname === '/src/buyer/zipgift.html') {
         pathname = '/buyer/zip-gift.html';
       }
+      if (pathname === '/seller/settings/billing' || pathname === '/seller/settings/billing/' || pathname === '/src/seller/settings/billing') {
+        pathname = '/seller/settings/billing.html';
+      }
+      if (pathname === '/seller/listings/new' || pathname === '/seller/listings/new/' || pathname === '/src/seller/listings/new') {
+        pathname = '/seller/add-product.html';
+      }
       if (
         pathname.startsWith('/buyer/') ||
         pathname.startsWith('/seller/') ||

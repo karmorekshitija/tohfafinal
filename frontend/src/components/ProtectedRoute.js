@@ -148,6 +148,25 @@
             return;
           }
         }
+
+        // Listing creation route prerequisite guard
+        const isListingCreationRoute =
+          path.includes('/seller/listings/new') ||
+          path.endsWith('/seller/add-product.html') ||
+          path.endsWith('/seller/add-product');
+
+        if (isListingCreationRoute && user.role === 'seller') {
+          const hasBilling = user.hasBillingAddress ?? user.has_billing_address;
+          const hasBank = user.hasBankingDetails ?? user.has_banking_details;
+          if (hasBilling === false || hasBank === false) {
+            sessionStorage.setItem(
+              'tohfa_flash_alert',
+              'Action Required: Payout banking and billing information must be completed before listing new products.'
+            );
+            window.location.replace('/seller/settings/billing?redirect=/seller/listings/new');
+            return;
+          }
+        }
       } catch (e) {
         window.location.replace('/');
       }

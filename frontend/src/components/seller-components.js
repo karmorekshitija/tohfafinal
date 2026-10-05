@@ -199,7 +199,7 @@ class SellerSidebar extends HTMLElement {
           </a>
           ` : ''}
           <!-- Customized Products -->
-          <a class="sidebar-link ${activeTab === 'customized' ? 'sidebar-link-active' : ''} relative" href="/seller/customized-products.html" title="Customized Products">
+          <a class="sidebar-link ${activeTab === 'customized' || activeTab === 'customised' ? 'sidebar-link-active' : ''} relative" href="/seller/customized-products.html" title="Customized Products">
             <span class="material-symbols-outlined mb-1 text-2xl">auto_fix_high</span>
             <span class="text-[9px] uppercase tracking-widest text-center">Customized</span>
             <span id="sidebar-customized-badge" class="hidden absolute top-1 right-3 bg-[#14381F] text-white font-bold text-[8px] w-4 h-4 rounded-full flex items-center justify-center">0</span>

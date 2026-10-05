@@ -10,6 +10,7 @@
 
 const { query, getClient } = require('../config/db');
 const bestsellerService = require('../services/bestseller.service');
+const { getSellerOnboardingStatus } = require('../utils/sellerOnboarding');
 
 function uniqueImageUrls(values) {
   const seen = new Set();
@@ -106,8 +107,11 @@ function sanitizeProduct(p) {
       slug: p.category_slug || '',
       parent_id: p.parent_category_id || null
     } : (p.category || null),
-    listing_type: (p.customization_mode === 'fixed' || p.customization_mode === 'open') ? 'custom' : 'standard',
-    is_customized: p.customization_mode === 'fixed' || p.customization_mode === 'open' || Boolean(p.is_customizable),
+    listing_type: (p.customization_mode === 'fixed' || p.customization_mode === 'open' || Boolean(p.is_customizable) || (p.customization_schema && (typeof p.customization_schema === 'object' ? (p.customization_schema.is_enabled || (Array.isArray(p.customization_schema.fields) && p.customization_schema.fields.length > 0)) : (typeof p.customization_schema === 'string' && p.customization_schema.trim() !== '' && p.customization_schema !== '{}'))) || (Array.isArray(p.fixed_customization_options) && p.fixed_customization_options.length > 0)) ? 'custom' : 'standard',
+    is_customized: (p.customization_mode === 'fixed' || p.customization_mode === 'open' || Boolean(p.is_customizable) || (p.customization_schema && (typeof p.customization_schema === 'object' ? (p.customization_schema.is_enabled || (Array.isArray(p.customization_schema.fields) && p.customization_schema.fields.length > 0)) : (typeof p.customization_schema === 'string' && p.customization_schema.trim() !== '' && p.customization_schema !== '{}'))) || (Array.isArray(p.fixed_customization_options) && p.fixed_customization_options.length > 0)),
+    is_customizable: (p.customization_mode === 'fixed' || p.customization_mode === 'open' || Boolean(p.is_customizable) || (p.customization_schema && (typeof p.customization_schema === 'object' ? (p.customization_schema.is_enabled || (Array.isArray(p.customization_schema.fields) && p.customization_schema.fields.length > 0)) : (typeof p.customization_schema === 'string' && p.customization_schema.trim() !== '' && p.customization_schema !== '{}'))) || (Array.isArray(p.fixed_customization_options) && p.fixed_customization_options.length > 0)),
+    fixed_customization_options: Array.isArray(p.fixed_customization_options) ? p.fixed_customization_options : [],
+    customization_schema: p.customization_schema || {},
     avg_rating: (p.avg_rating !== undefined && p.avg_rating !== null && !isNaN(parseFloat(p.avg_rating)) && parseInt(p.review_count || 0, 10) > 0)
       ? parseFloat(p.avg_rating)
       : null, // null means no reviews yet — display as "No ratings" not "5 stars"
@@ -1036,6 +1040,11 @@ async function getSellerProducts(req, res, next) {
       conditions.push(`LOWER(p.name) LIKE $${params.length}`);
     }
 
+    const isCustomFilter = req.query.custom === 'true' || req.query.customised === 'true' || req.query.customized === 'true';
+    if (isCustomFilter) {
+      conditions.push("(p.is_customizable = TRUE OR p.customization_mode IN ('fixed', 'open') OR (p.customization_schema IS NOT NULL AND p.customization_schema::text NOT IN ('', '{}', 'null')) OR EXISTS (SELECT 1 FROM fixed_customization_options fo WHERE fo.product_id = p.id))");
+    }
+
     const where = conditions.join(' AND ');
     params.push(limitNum);
     const limitIdx = params.length;
@@ -1051,7 +1060,11 @@ async function getSellerProducts(req, res, next) {
               COALESCE(
                 json_agg(pi ORDER BY pi.sort_order) FILTER (WHERE pi.id IS NOT NULL),
                 '[]'
-              ) AS images
+              ) AS images,
+              COALESCE(
+                (SELECT json_agg(fo ORDER BY fo.sort_order, fo.id) FROM fixed_customization_options fo WHERE fo.product_id = p.id),
+                '[]'
+              ) AS fixed_customization_options
        FROM products p
        LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
        WHERE ${where}
@@ -1101,6 +1114,16 @@ async function createProduct(req, res, next) {
       const { rows } = await query('SELECT id FROM sellers WHERE user_id = $1 LIMIT 1', [req.user.id]);
       if (rows.length > 0) sellerId = rows[0].id;
       if (!sellerId) sellerId = req.user.id;
+
+      // Defensive zero-bypass gating: check banking & billing
+      const onboardingStatus = await getSellerOnboardingStatus(req.user.id);
+      if (!onboardingStatus.hasBillingAddress || !onboardingStatus.hasBankingDetails) {
+        return res.status(403).json({
+          success: false,
+          errorCode: 'ONBOARDING_INCOMPLETE',
+          message: 'Banking and billing information must be completed before listing new products.'
+        });
+      }
     }
     if (!sellerId) {
       return res.status(400).json({ success: false, message: 'Valid seller ID required. A seller/shop identifier required for product publishing.' });
@@ -1141,19 +1164,31 @@ async function createProduct(req, res, next) {
       is_customizable === true || is_customizable === 'true' || is_customizable === 1 || (finalMode && finalMode !== 'none')
     );
 
-    let schemaJson = '{}';
-    if (customization_schema) {
-      if (typeof customization_schema === 'object') {
-        schemaJson = JSON.stringify(customization_schema);
-      } else if (typeof customization_schema === 'string') {
-        try {
-          JSON.parse(customization_schema);
-          schemaJson = customization_schema;
-        } catch {
-          schemaJson = JSON.stringify({ custom_field: customization_schema });
-        }
+    let parsedCustomSchema = customization_schema;
+    if (typeof parsedCustomSchema === 'string') {
+      try {
+        parsedCustomSchema = JSON.parse(parsedCustomSchema);
+      } catch {
+        parsedCustomSchema = { custom_field: customization_schema };
       }
     }
+    let rawOptions = req.body.options !== undefined ? req.body.options : (req.body.customOptions !== undefined ? req.body.customOptions : req.body.fixed_options);
+    if (typeof rawOptions === 'string') {
+      try { rawOptions = JSON.parse(rawOptions); } catch { rawOptions = []; }
+    }
+    if (Array.isArray(rawOptions) && rawOptions.length > 0 && (!parsedCustomSchema || !parsedCustomSchema.fields || !parsedCustomSchema.fields.length)) {
+      parsedCustomSchema = parsedCustomSchema || {};
+      parsedCustomSchema.is_enabled = true;
+      parsedCustomSchema.fields = rawOptions.map(opt => ({
+        id: opt.id || `field_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        type: opt.type || opt.option_type || 'text',
+        label: opt.label || opt.name || 'Custom Option',
+        choices: opt.choices || [],
+        max_length: opt.max_length || 25,
+        is_required: Boolean(opt.is_required)
+      }));
+    }
+    const schemaJson = parsedCustomSchema ? JSON.stringify(parsedCustomSchema) : '{}';
 
     const priceVal = Number(base_price);
     const pricePaise = Math.round(priceVal * 100);
@@ -1187,7 +1222,7 @@ async function createProduct(req, res, next) {
       `INSERT INTO products
          (seller_id, name, description, category_id, base_price, price_paise, stock_quantity, low_stock_threshold,
           preparation_days, weight_grams, customization_mode, is_customizable, customization_schema, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::boolean, $13, 'active')
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::boolean, $13::jsonb, 'active')
        RETURNING id, name, description, category_id, base_price, stock_quantity, low_stock_threshold,
                  preparation_days, weight_grams, customization_mode, is_customizable, customization_schema, status, created_at`,
       [
@@ -1208,6 +1243,33 @@ async function createProduct(req, res, next) {
     );
 
     const product = rows[0];
+
+    // Sync options to fixed_customization_options table
+    const optionsToInsert = (parsedCustomSchema && Array.isArray(parsedCustomSchema.fields) && parsedCustomSchema.fields.length > 0)
+      ? parsedCustomSchema.fields
+      : (Array.isArray(rawOptions) ? rawOptions : []);
+
+    if (finalIsCustomizable && optionsToInsert.length > 0) {
+      let sortIdx = 0;
+      for (const opt of optionsToInsert) {
+        if (!opt || typeof opt !== 'object') continue;
+        let choices = opt.choices;
+        if (typeof choices === 'string') {
+          try { choices = JSON.parse(choices); } catch { choices = choices.split(',').map(s => s.trim()).filter(Boolean); }
+        }
+        if (!Array.isArray(choices)) choices = [];
+        const optType = opt.type || opt.option_type || 'text';
+        const label = opt.label || opt.name || 'Custom Option';
+        const isRequired = Boolean(opt.is_required);
+        const maxLen = opt.max_length ? parseInt(opt.max_length, 10) : null;
+        const priceMod = parseFloat(opt.price_modifier || opt.price_delta || 0) || 0;
+        await query(
+          `INSERT INTO fixed_customization_options (product_id, option_type, label, choices, is_required, max_length, price_modifier, sort_order)
+           VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8)`,
+          [product.id, optType, label, JSON.stringify(choices), isRequired, maxLen, priceMod, sortIdx++]
+        );
+      }
+    }
 
     // Handle occasions if provided in body
     const { occasions, occasion_tags } = req.body;
@@ -1374,7 +1436,7 @@ async function updateProduct(req, res, next) {
     ].filter(v => v != null && String(v).trim() !== '')));
 
     const { rows: existing } = await query(
-      'SELECT id FROM products WHERE id::text = $1 AND (seller_id = ANY($2::uuid[]) OR $3 = TRUE)',
+      'SELECT id, customization_schema FROM products WHERE (id::text = $1 OR slug = $1) AND (seller_id::text = ANY($2::text[]) OR $3 = TRUE)',
       [String(id), validSellerIds, isAdmin]
     );
     if (!existing.length) {
@@ -1395,6 +1457,8 @@ async function updateProduct(req, res, next) {
       is_customizable,
       customization_mode,
       customization_schema,
+      options,
+      customOptions,
       images,
       variants,
       occasions,
@@ -1411,17 +1475,39 @@ async function updateProduct(req, res, next) {
       ? Boolean(is_customizable === true || is_customizable === 'true' || is_customizable === 1 || (finalMode && finalMode !== 'none'))
       : (finalMode ? finalMode !== 'none' : null);
 
+    let parsedCustomSchema = customization_schema;
+    if (typeof parsedCustomSchema === 'string') {
+      try {
+        parsedCustomSchema = JSON.parse(parsedCustomSchema);
+      } catch {
+        parsedCustomSchema = { custom_field: customization_schema };
+      }
+    }
+    let rawOptions = req.body.options !== undefined ? req.body.options : (req.body.customOptions !== undefined ? req.body.customOptions : req.body.fixed_options);
+    if (typeof rawOptions === 'string') {
+      try { rawOptions = JSON.parse(rawOptions); } catch { rawOptions = []; }
+    }
+    if (Array.isArray(rawOptions) && (!parsedCustomSchema || !parsedCustomSchema.fields || !parsedCustomSchema.fields.length)) {
+      if (rawOptions.length > 0) {
+        parsedCustomSchema = parsedCustomSchema || {};
+        parsedCustomSchema.is_enabled = true;
+        parsedCustomSchema.fields = rawOptions.map(opt => ({
+          id: opt.id || `field_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          type: opt.type || opt.option_type || 'text',
+          label: opt.label || opt.name || 'Custom Option',
+          choices: opt.choices || [],
+          max_length: opt.max_length || 25,
+          is_required: Boolean(opt.is_required)
+        }));
+      } else if (customization_schema === undefined && is_customizable === false) {
+        parsedCustomSchema = { is_enabled: false, fields: [] };
+      }
+    }
+
     let schemaJson = null;
-    if (customization_schema !== undefined) {
-      if (typeof customization_schema === 'object' && customization_schema !== null) {
-        schemaJson = JSON.stringify(customization_schema);
-      } else if (typeof customization_schema === 'string') {
-        try {
-          JSON.parse(customization_schema);
-          schemaJson = customization_schema;
-        } catch {
-          schemaJson = JSON.stringify({ custom_field: customization_schema });
-        }
+    if (parsedCustomSchema !== undefined) {
+      if (parsedCustomSchema && typeof parsedCustomSchema === 'object') {
+        schemaJson = JSON.stringify(parsedCustomSchema);
       } else {
         schemaJson = '{}';
       }
@@ -1453,7 +1539,7 @@ async function updateProduct(req, res, next) {
     if (rawSubcategory !== undefined && rawSubcategory !== null && String(rawSubcategory).trim() !== '') {
       resolvedSubId = await resolveCategoryId(rawSubcategory);
       if (!resolvedSubId) {
-        return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'Selected category does not exist or is inactive.' });
+        return res.status(400).json({ success: false, code: 'INVALID_CATEGORY', message: 'Selected subcategory does not exist or is inactive.' });
       }
     }
 
@@ -1502,7 +1588,7 @@ async function updateProduct(req, res, next) {
            weight_grams = COALESCE($9, weight_grams),
            customization_mode = COALESCE($10, customization_mode),
            is_customizable = COALESCE($11::boolean, is_customizable),
-           customization_schema = COALESCE($12, customization_schema),
+           customization_schema = CASE WHEN $12::text IS NOT NULL THEN $12::jsonb ELSE customization_schema END,
            updated_at = NOW()
        WHERE id = $13
        RETURNING id, name, description, category_id, base_price, sale_price, discount_active, discount_percentage,
@@ -1521,15 +1607,47 @@ async function updateProduct(req, res, next) {
         finalMode || null,
         finalIsCustomizable !== null && finalIsCustomizable !== undefined ? Boolean(finalIsCustomizable) : null,
         schemaJson,
-        id
+        existing[0].id
       ]
     );
+
+    // Sync fixed_customization_options table to avoid orphaned records
+    if (customization_schema !== undefined || rawOptions !== undefined || is_customizable !== undefined || customization_mode !== undefined) {
+      await query('DELETE FROM fixed_customization_options WHERE product_id = $1', [existing[0].id]);
+      
+      const shouldSyncOptions = finalIsCustomizable !== false && finalMode !== 'none';
+      const optionsToInsert = (parsedCustomSchema && Array.isArray(parsedCustomSchema.fields) && parsedCustomSchema.fields.length > 0)
+        ? parsedCustomSchema.fields
+        : (Array.isArray(rawOptions) ? rawOptions : []);
+
+      if (shouldSyncOptions && optionsToInsert.length > 0) {
+        let sortIdx = 0;
+        for (const opt of optionsToInsert) {
+          if (!opt || typeof opt !== 'object') continue;
+          let choices = opt.choices;
+          if (typeof choices === 'string') {
+            try { choices = JSON.parse(choices); } catch { choices = choices.split(',').map(s => s.trim()).filter(Boolean); }
+          }
+          if (!Array.isArray(choices)) choices = [];
+          const optType = opt.type || opt.option_type || 'text';
+          const label = opt.label || opt.name || 'Custom Option';
+          const isRequired = Boolean(opt.is_required);
+          const maxLen = opt.max_length ? parseInt(opt.max_length, 10) : null;
+          const priceMod = parseFloat(opt.price_modifier || opt.price_delta || 0) || 0;
+          await query(
+            `INSERT INTO fixed_customization_options (product_id, option_type, label, choices, is_required, max_length, price_modifier, sort_order)
+             VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8)`,
+            [existing[0].id, optType, label, JSON.stringify(choices), isRequired, maxLen, priceMod, sortIdx++]
+          );
+        }
+      }
+    }
 
 
     // Sync occasion tags if provided
     if (Array.isArray(occasions) || Array.isArray(occasion_tags)) {
       const occList = Array.isArray(occasions) ? occasions : (Array.isArray(occasion_tags) ? occasion_tags : []);
-      await query('DELETE FROM product_occasion_tags WHERE product_id = $1', [id]);
+      await query('DELETE FROM product_occasion_tags WHERE product_id = $1', [existing[0].id]);
       for (const occ of occList) {
         const occSlug = String(occ).trim().toLowerCase().replace(/\s+/g, '-');
         if (occSlug) {
@@ -1537,7 +1655,7 @@ async function updateProduct(req, res, next) {
             `INSERT INTO product_occasion_tags (product_id, occasion_slug)
              VALUES ($1, $2)
              ON CONFLICT (product_id, occasion_slug) DO NOTHING`,
-            [id, occSlug]
+            [existing[0].id, occSlug]
           );
         }
       }
@@ -1697,6 +1815,17 @@ async function updateProductStatus(req, res, next) {
       return res.status(400).json({ success: false, message: `Status must be one of: ${allowed.join(', ')}.` });
     }
 
+    if (status === 'active' && String(req.user?.role || '').toLowerCase() === 'seller') {
+      const onboardingStatus = await getSellerOnboardingStatus(sellerId);
+      if (!onboardingStatus.hasBillingAddress || !onboardingStatus.hasBankingDetails) {
+        return res.status(403).json({
+          success: false,
+          errorCode: 'ONBOARDING_INCOMPLETE',
+          message: 'Banking and billing information must be completed before listing new products.'
+        });
+      }
+    }
+
     const { rows } = await query(
       `UPDATE products SET status = $1, updated_at = NOW()
        WHERE id = $2 AND (seller_id = $3 OR $4 = TRUE)
@@ -1849,46 +1978,263 @@ async function upsertVariants(req, res, next) {
 // ---------------------------------------------------------------------------
 // POST /api/products/:id/fixed-options  (seller only)
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// GET /api/products/:id/fixed-options & /api/seller/listings/:id/fixed-options
+// ---------------------------------------------------------------------------
+async function getFixedOptions(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { rows: existing } = await query(
+      'SELECT id, customization_schema FROM products WHERE (id::text = $1 OR slug = $1) AND status != \'deleted\'',
+      [String(id)]
+    );
+    if (!existing.length) {
+      return res.status(404).json({ success: false, message: 'Product listing not found.' });
+    }
+    const productId = existing[0].id;
+    const { rows: options } = await query(
+      'SELECT id, product_id, option_type, label, choices, is_required, max_length, price_modifier, sort_order, created_at FROM fixed_customization_options WHERE product_id = $1 ORDER BY sort_order ASC, id ASC',
+      [productId]
+    );
+    return res.json({
+      success: true,
+      data: {
+        product_id: productId,
+        fixed_customization_options: options || [],
+        options: options || [],
+        customization_schema: existing[0].customization_schema || {}
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// POST & PUT /api/products/:id/fixed-options & /api/seller/listings/:id/fixed-options
+// ---------------------------------------------------------------------------
 async function saveFixedOptions(req, res, next) {
   try {
     const { id } = req.params;
-    const sellerId = req.user.id;
-    const { options } = req.body; // array of { label, choices: string[] }
+    const { rows: sRows } = await query(
+      'SELECT id, user_id FROM sellers WHERE user_id = $1 UNION SELECT id, user_id FROM seller_profiles WHERE user_id = $1',
+      [req.user.id]
+    );
+    const validSellerIds = Array.from(new Set([
+      String(req.user.id),
+      req.seller?.id && String(req.seller.id),
+      req.seller?.user_id && String(req.seller.user_id),
+      ...sRows.flatMap(s => [String(s.id), String(s.user_id)])
+    ].filter(Boolean)));
+    const isAdmin = req.user?.role === 'admin' || req.user?.role === 'master_admin';
 
     const { rows: existing } = await query(
-      'SELECT id FROM products WHERE id = $1 AND seller_id = $2',
-      [id, sellerId]
+      'SELECT id, seller_id, customization_schema FROM products WHERE (id::text = $1 OR slug = $1) AND (seller_id::text = ANY($2::text[]) OR $3 = TRUE)',
+      [String(id), validSellerIds, isAdmin]
     );
     if (!existing.length) {
-      return res.status(404).json({ success: false, message: 'Product not found.' });
+      return res.status(404).json({ success: false, message: 'Product listing not found or unauthorized.' });
     }
+    const productId = existing[0].id;
 
-    if (!Array.isArray(options) || !options.length) {
-      return res.status(400).json({ success: false, message: 'options must be a non-empty array.' });
+    // Safely parse options whether passed as native array, object, or stringified JSON
+    let rawOptions = req.body.options !== undefined ? req.body.options : (req.body.customOptions !== undefined ? req.body.customOptions : req.body.custom_options);
+    if (typeof rawOptions === 'string') {
+      try {
+        rawOptions = JSON.parse(rawOptions);
+      } catch (e) {
+        return res.status(400).json({ success: false, message: 'Invalid JSON format in options payload.' });
+      }
     }
+    const options = Array.isArray(rawOptions) ? rawOptions : (rawOptions && typeof rawOptions === 'object' ? [rawOptions] : []);
 
     const client = await getClient();
     try {
       await client.query('BEGIN');
-      await client.query('DELETE FROM fixed_customization_options WHERE product_id = $1', [id]);
+      await client.query('DELETE FROM fixed_customization_options WHERE product_id = $1', [productId]);
       const inserted = [];
+      let sortOrder = 0;
       for (const opt of options) {
+        if (!opt || typeof opt !== 'object') continue;
+        let choices = opt.choices;
+        if (typeof choices === 'string') {
+          try { choices = JSON.parse(choices); } catch { choices = choices.split(',').map(s => s.trim()).filter(Boolean); }
+        }
+        if (!Array.isArray(choices)) choices = [];
+        const optType = opt.option_type || opt.type || 'text';
+        const label = opt.label || opt.name || 'Custom Option';
+        const isRequired = Boolean(opt.is_required);
+        const maxLen = opt.max_length ? parseInt(opt.max_length, 10) : null;
+        const priceMod = parseFloat(opt.price_modifier || opt.price_delta || 0) || 0;
+        const sOrder = opt.sort_order !== undefined ? parseInt(opt.sort_order, 10) : sortOrder++;
+
         const { rows } = await client.query(
-          `INSERT INTO fixed_customization_options (product_id, option_type, label, choices, is_required, max_length, sort_order)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)
-           RETURNING id, option_type, label, choices, is_required, max_length`,
-          [id, opt.option_type || 'text', opt.label, JSON.stringify(opt.choices || []), opt.is_required ?? false, opt.max_length || null, opt.sort_order || 0]
+          `INSERT INTO fixed_customization_options (product_id, option_type, label, choices, is_required, max_length, price_modifier, sort_order)
+           VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8)
+           RETURNING id, product_id, option_type, label, choices, is_required, max_length, price_modifier, sort_order, created_at`,
+          [productId, optType, label, JSON.stringify(choices), isRequired, maxLen, priceMod, sOrder]
         );
         inserted.push(rows[0]);
       }
+
+      // Sync customization_schema on product
+      let curSchema = existing[0].customization_schema || {};
+      if (typeof curSchema === 'string') {
+        try { curSchema = JSON.parse(curSchema); } catch { curSchema = {}; }
+      }
+      curSchema.is_enabled = inserted.length > 0;
+      curSchema.fields = inserted.map(fo => ({
+        id: `field_${fo.id}`,
+        type: fo.option_type || 'text',
+        label: fo.label,
+        choices: fo.choices || [],
+        max_length: fo.max_length || 25,
+        is_required: Boolean(fo.is_required)
+      }));
+
+      await client.query(
+        `UPDATE products 
+         SET is_customizable = $1, 
+             customization_mode = $2, 
+             customization_schema = $3::jsonb,
+             updated_at = NOW() 
+         WHERE id = $4`,
+        [inserted.length > 0, inserted.length > 0 ? 'fixed' : 'none', JSON.stringify(curSchema), productId]
+      );
+
       await client.query('COMMIT');
-      return res.status(201).json({ success: true, data: { fixed_customization_options: inserted } });
+      return res.status(200).json({
+        success: true,
+        message: 'Customization options saved successfully.',
+        data: {
+          product_id: productId,
+          fixed_customization_options: inserted,
+          options: inserted
+        }
+      });
     } catch (err) {
       await client.query('ROLLBACK');
       throw err;
     } finally {
       client.release();
     }
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// DELETE /api/products/:id/fixed-options & /api/seller/listings/:id/fixed-options
+// ---------------------------------------------------------------------------
+async function deleteFixedOptions(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { rows: sRows } = await query(
+      'SELECT id, user_id FROM sellers WHERE user_id = $1 UNION SELECT id, user_id FROM seller_profiles WHERE user_id = $1',
+      [req.user.id]
+    );
+    const validSellerIds = Array.from(new Set([
+      String(req.user.id),
+      req.seller?.id && String(req.seller.id),
+      req.seller?.user_id && String(req.seller.user_id),
+      ...sRows.flatMap(s => [String(s.id), String(s.user_id)])
+    ].filter(Boolean)));
+    const isAdmin = req.user?.role === 'admin' || req.user?.role === 'master_admin';
+
+    const { rows: existing } = await query(
+      'SELECT id FROM products WHERE (id::text = $1 OR slug = $1) AND (seller_id::text = ANY($2::text[]) OR $3 = TRUE)',
+      [String(id), validSellerIds, isAdmin]
+    );
+    if (!existing.length) {
+      return res.status(404).json({ success: false, message: 'Product listing not found or unauthorized.' });
+    }
+    const productId = existing[0].id;
+
+    await query('DELETE FROM fixed_customization_options WHERE product_id = $1', [productId]);
+    await query(
+      `UPDATE products 
+       SET is_customizable = FALSE, 
+           customization_mode = 'none', 
+           customization_schema = '{"is_enabled": false, "fields": []}'::jsonb,
+           updated_at = NOW() 
+       WHERE id = $1`,
+      [productId]
+    );
+
+    return res.json({
+      success: true,
+      message: 'All customization options removed successfully.',
+      data: { product_id: productId, fixed_customization_options: [] }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// DELETE /api/products/:id/fixed-options/:optionId
+// ---------------------------------------------------------------------------
+async function deleteFixedOptionItem(req, res, next) {
+  try {
+    const { id, optionId } = req.params;
+    const { rows: sRows } = await query(
+      'SELECT id, user_id FROM sellers WHERE user_id = $1 UNION SELECT id, user_id FROM seller_profiles WHERE user_id = $1',
+      [req.user.id]
+    );
+    const validSellerIds = Array.from(new Set([
+      String(req.user.id),
+      req.seller?.id && String(req.seller.id),
+      req.seller?.user_id && String(req.seller.user_id),
+      ...sRows.flatMap(s => [String(s.id), String(s.user_id)])
+    ].filter(Boolean)));
+    const isAdmin = req.user?.role === 'admin' || req.user?.role === 'master_admin';
+
+    const { rows: existing } = await query(
+      'SELECT id, customization_schema FROM products WHERE (id::text = $1 OR slug = $1) AND (seller_id::text = ANY($2::text[]) OR $3 = TRUE)',
+      [String(id), validSellerIds, isAdmin]
+    );
+    if (!existing.length) {
+      return res.status(404).json({ success: false, message: 'Product listing not found or unauthorized.' });
+    }
+    const productId = existing[0].id;
+
+    await query('DELETE FROM fixed_customization_options WHERE product_id = $1 AND id::text = $2::text', [productId, String(optionId)]);
+
+    const { rows: remaining } = await query(
+      'SELECT id, option_type, label, choices, is_required, max_length, sort_order FROM fixed_customization_options WHERE product_id = $1 ORDER BY sort_order ASC, id ASC',
+      [productId]
+    );
+
+    let updatedSchema = existing[0].customization_schema || {};
+    if (typeof updatedSchema === 'string') {
+      try { updatedSchema = JSON.parse(updatedSchema); } catch { updatedSchema = {}; }
+    }
+    const updatedFields = remaining.map(fo => ({
+      id: `field_${fo.id}`,
+      type: fo.option_type || 'text',
+      label: fo.label,
+      choices: fo.choices || [],
+      max_length: fo.max_length || 25,
+      is_required: Boolean(fo.is_required)
+    }));
+    updatedSchema.fields = updatedFields;
+    updatedSchema.is_enabled = remaining.length > 0;
+
+    await query(
+      `UPDATE products 
+       SET is_customizable = $1, 
+           customization_mode = $2, 
+           customization_schema = $3::jsonb,
+           updated_at = NOW() 
+       WHERE id = $4`,
+      [remaining.length > 0, remaining.length > 0 ? 'fixed' : 'none', JSON.stringify(updatedSchema), productId]
+    );
+
+    return res.json({
+      success: true,
+      message: 'Customization option deleted successfully.',
+      data: { product_id: productId, fixed_customization_options: remaining }
+    });
   } catch (err) {
     next(err);
   }
@@ -2047,7 +2393,10 @@ module.exports = {
   resolveCategoryId,
   uploadImages,
   upsertVariants,
+  getFixedOptions,
   saveFixedOptions,
+  deleteFixedOptions,
+  deleteFixedOptionItem,
   recordView,
   getRecommendations,
   getMoreLikeThis: getRecommendations,
