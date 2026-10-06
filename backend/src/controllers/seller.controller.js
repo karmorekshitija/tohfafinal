@@ -1627,8 +1627,8 @@ async function getSellerOrders(req, res, next) {
     const offset   = (pageNum - 1) * limitNum;
 
     const { rows: sRows } = await query(
-      'SELECT id, user_id FROM sellers WHERE user_id = $1 UNION SELECT id, user_id FROM seller_profiles WHERE user_id = $1',
-      [effectiveSellerId]
+      'SELECT id, user_id FROM sellers WHERE user_id::text = $1 OR id::text = $1 UNION SELECT id, user_id FROM seller_profiles WHERE user_id::text = $1 OR id::text = $1',
+      [String(effectiveSellerId)]
     ).catch(() => ({ rows: [] }));
 
     const validIds = Array.from(new Set([
@@ -1835,7 +1835,8 @@ async function getSellerOrderDetail(req, res, next) {
     await ensureOrderItemColumns();
     const { id } = req.params;
     const headerSellerId = req.headers['x-seller-id'] || req.headers['x-impersonate-seller-id'] || req.query.seller_id || req.query.sellerId;
-    const isAdmin = req.user.role === 'admin' || req.user.role === 'master_admin';
+    const userRole = String(req.user?.role || '').toUpperCase();
+    const isAdmin = userRole === 'ADMIN' || userRole === 'MASTER_ADMIN';
     const effectiveSellerId = (isAdmin && headerSellerId) ? headerSellerId : req.user.id;
 
     // IDOR Check: Ensure order exists and belongs to this seller
@@ -1847,8 +1848,8 @@ async function getSellerOrderDetail(req, res, next) {
       return res.status(404).json({ success: false, message: 'Order not found.' });
     }
     if (!isAdmin) {
-      const { rows: sRows } = await query('SELECT id FROM sellers WHERE user_id = $1 UNION SELECT id FROM seller_profiles WHERE user_id = $1', [effectiveSellerId]);
-      const validIds = [Number(effectiveSellerId), String(effectiveSellerId), ...sRows.map(s => s.id), ...sRows.map(s => String(s.id))];
+      const { rows: sRows } = await query('SELECT id, user_id FROM sellers WHERE user_id::text = $1 OR id::text = $1 UNION SELECT id, user_id FROM seller_profiles WHERE user_id::text = $1 OR id::text = $1', [String(effectiveSellerId)]);
+      const validIds = [Number(effectiveSellerId), String(effectiveSellerId), ...sRows.flatMap(s => [s.id, s.user_id, Number(s.id), String(s.id), Number(s.user_id), String(s.user_id)])];
       if (!validIds.includes(orderCheck[0].seller_id) && !validIds.includes(Number(orderCheck[0].seller_id)) && !validIds.includes(String(orderCheck[0].seller_id))) {
         return res.status(403).json({ success: false, message: 'Forbidden: You do not have ownership of this order.' });
       }

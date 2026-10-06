@@ -46,7 +46,9 @@ function verifySellerOwnership(resourceType = 'order') {
 
       if (resourceType === 'order') {
         const { rows } = await query(
-          'SELECT id, seller_id FROM orders WHERE id::text = $1 OR order_ref = $1',
+          `SELECT id, seller_id FROM orders WHERE id::text = $1 OR order_ref = $1
+           UNION
+           SELECT order_id AS id, seller_id FROM seller_orders WHERE id::text = $1`,
           [String(resourceId)]
         );
 
@@ -54,10 +56,11 @@ function verifySellerOwnership(resourceType = 'order') {
           return res.status(404).json({ success: false, message: 'Order not found.' });
         }
 
-        const order = rows[0];
-        const hasAccess = validSellerIds.has(order.seller_id) ||
-                          validSellerIds.has(Number(order.seller_id)) ||
-                          validSellerIds.has(String(order.seller_id));
+        const hasAccess = rows.some(order => 
+          validSellerIds.has(order.seller_id) ||
+          validSellerIds.has(Number(order.seller_id)) ||
+          validSellerIds.has(String(order.seller_id))
+        );
 
         if (!hasAccess) {
           return res.status(403).json({

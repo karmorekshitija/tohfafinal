@@ -43,7 +43,8 @@ export function filterOrders(orders, status, search) {
       const idStr = String(o.order_id || o.order_ref || o.id || o.internal_id || '').toLowerCase();
       const buyerStr = String(o.buyer_name || '').toLowerCase();
       const itemStr = String(o.item_title || o.product_name || '').toLowerCase();
-      return idStr.includes(q) || buyerStr.includes(q) || itemStr.includes(q);
+      const notesStr = String(o.buyer_notes || o.special_instructions || o.notes || '').toLowerCase();
+      return idStr.includes(q) || buyerStr.includes(q) || itemStr.includes(q) || notesStr.includes(q);
     });
   }
 

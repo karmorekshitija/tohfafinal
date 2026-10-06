@@ -753,7 +753,7 @@
         try {
           const r = await fetch(`${API_BASE_URL}/api/seller/orders/${orderId}/status`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { ...getActiveSellerHeaders(token), 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: newStatus })
           });
           const d = await r.json();
@@ -783,7 +783,7 @@
         try {
           const r = await fetch(`${API_BASE_URL}/api/seller/orders/${orderId}/tracking`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { ...getActiveSellerHeaders(token), 'Content-Type': 'application/json' },
             body: JSON.stringify({ tracking_number: tn })
           });
           const d = await r.json();
@@ -813,7 +813,7 @@
         try {
           const r = await fetch(`${API_BASE_URL}/api/seller/orders/${orderId}/status`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { ...getActiveSellerHeaders(token), 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: currentOrder?.fulfillment_status || currentOrder?.status, studio_note: note })
           });
           const d = await r.json();
@@ -864,9 +864,7 @@
             formData.append('folder', 'custom_proofs');
             const upRes = await fetch('/api/upload', {
               method: 'POST',
-              headers: {
-                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-              },
+              headers: getActiveSellerHeaders(token),
               body: formData
             });
             if (upRes.ok) {
@@ -880,8 +878,8 @@
           const r = await fetch(`${API_BASE_URL}/api/seller/orders/custom-proof`, {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
+              ...getActiveSellerHeaders(token),
+              'Content-Type': 'application/json'
             },
             body: JSON.stringify({
               orderId: orderId,
