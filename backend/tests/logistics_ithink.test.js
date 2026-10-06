@@ -508,7 +508,6 @@ describe('iThink Logistics Integration Service', () => {
         status: 'packed',
       };
 
-      query.mockResolvedValueOnce({ rows: [{ is_admin_managed: false }] });
       query.mockResolvedValueOnce({
         rows: [{ id: 'addr-buyer-9', name: 'Meera Nair', phone: '9876501234', line1: '12 MG Road', city: 'Bengaluru', state: 'Karnataka', pincode: '560001' }],
       });

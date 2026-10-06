@@ -128,6 +128,15 @@
           <div id="customization-content" class="text-xs text-[#14381F] space-y-2"></div>
         </div>
 
+        <!-- Patron Instructions & Notes Card (if present) -->
+        <div id="buyer-notes-card" class="hidden bg-amber-500/10 border border-amber-500/25 rounded-2xl p-6 shadow-sm space-y-3">
+          <div class="flex items-center gap-2 border-b border-amber-500/20 pb-2.5">
+            <span class="material-symbols-outlined text-amber-800 text-lg">mark_chat_unread</span>
+            <h3 class="font-headline-md text-sm text-amber-950 font-bold uppercase tracking-wider">Patron Instructions & Notes</h3>
+          </div>
+          <p id="buyer-notes-content" class="text-xs text-stone-800 leading-relaxed font-medium whitespace-pre-line bg-white/80 p-3.5 rounded-xl border border-amber-200/60"></p>
+        </div>
+
         <!-- Custom Proof-of-Work Section -->
         <div id="proof-section" class="bg-[#FFF8E7] border border-outline-variant/30 rounded-2xl p-6 shadow-sm space-y-4">
           <div class="flex items-center justify-between">
@@ -189,6 +198,17 @@
 
       <!-- Right Column: Status & Notes (5 cols) -->
       <div class="lg:col-span-5 space-y-6">
+        <!-- Tohfa Special Shop Notice (if admin managed) -->
+        <div id="special-shop-banner" class="hidden bg-amber-500/15 border border-amber-500/35 rounded-2xl p-5 shadow-sm space-y-2 text-amber-950">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-amber-800 text-xl">verified_user</span>
+            <h4 class="font-headline-md text-sm font-bold text-amber-950">Tohfa Special Shop (Admin-Managed)</h4>
+          </div>
+          <p class="text-xs text-amber-900 leading-relaxed">
+            Fulfillment, courier dispatch, and customer shipping labels for this store are coordinated directly by the Tohfa Admin logistics desk. Manual courier generation is bypassed for this shop.
+          </p>
+        </div>
+
         <!-- Status & Tracking Controls -->
         <div class="bg-[#FFF8E7] border border-outline-variant/30 rounded-2xl p-6 shadow-sm space-y-5">
           <h3 class="font-headline-md text-lg text-primary font-bold">Manage Fulfillment</h3>
@@ -307,6 +327,34 @@
     return `<span class="text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${m[key] || 'bg-surface-variant text-on-surface-variant'}">${labels[key] || s || 'Unknown'}</span>`;
   }
 
+  const escapeHtml = window.escapeHtml || function(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  };
+
+  function getActiveSellerHeaders(token) {
+    const headers = { 'Authorization': `Bearer ${token}` };
+    try {
+      const switchedRaw = sessionStorage.getItem('tohfa_admin_switch_context');
+      if (switchedRaw) {
+        const parsed = JSON.parse(switchedRaw);
+        if (parsed && (parsed.sellerId || parsed.id)) {
+          headers['x-seller-id'] = String(parsed.sellerId || parsed.id);
+        }
+      }
+    } catch (_) {}
+    const specialSid = sessionStorage.getItem('tohfa_special_seller_id') || localStorage.getItem('tohfa_special_seller_id');
+    if (specialSid && !headers['x-seller-id']) {
+      headers['x-seller-id'] = String(specialSid);
+    }
+    return headers;
+  }
+
   function renderOrderDetails(o) {
     const titleEl = document.getElementById('order-title');
     if (titleEl) titleEl.textContent = `Order #${escapeHtml(o.order_id || o.order_ref || (orderId ? 'TOHFA-' + String(orderId).slice(0, 8).toUpperCase() : '—'))}`;
@@ -326,6 +374,7 @@
       const itemsToRender = (Array.isArray(o.items) && o.items.length > 0) ? o.items : [{
         product_name: o.item_title || o.item_preview || 'Handcrafted Creation',
         name: o.item_title || o.item_preview || 'Handcrafted Creation',
+        description: o.description || o.item_description,
         image_url: o.item_photo_url || o.item_image,
         product_id: o.product_id_display,
         variant_name: o.variant_name,
@@ -335,17 +384,25 @@
       }];
 
       prodContainer.innerHTML = itemsToRender.map(item => `
-        <div class="flex gap-4 items-start pb-4 border-b border-outline-variant/20 last:border-b-0 last:pb-0">
-          <img src="${item.image_url || item.photo_url || item.proof_image_url || 'https://ui-avatars.com/api/?name=Product&background=f9ecdc&color=3D6B4F&size=64'}" class="w-16 h-16 rounded-xl object-cover border border-sage-soft flex-shrink-0" alt="${escapeHtml(item.product_name || item.name || 'Product')}" loading="lazy" />
-          <div class="flex-1 min-w-0">
-            <h4 class="font-bold text-primary text-base truncate">${escapeHtml(item.product_name || item.name || 'Handcrafted Creation')}</h4>
-            <p class="text-xs font-mono text-gold mt-0.5">#${escapeHtml(item.product_id ? String(item.product_id).substring(0, 8).toUpperCase() : (o.product_id_display || '—'))}</p>
-            ${item.variant_name ? `<p class="text-xs text-on-surface-variant mt-1">Variant: <span class="font-semibold">${escapeHtml(item.variant_name)}</span></p>` : ''}
-            <div class="flex justify-between items-center mt-2">
-              <span class="text-xs text-on-surface-variant">Quantity: <span class="font-bold">${item.quantity || 1}</span></span>
-              <span class="font-bold text-primary font-mono text-base">${formatPaise(item.unit_price ? Math.round(parseFloat(item.unit_price) * 100 * (item.quantity || 1)) : (o.total_paise || (o.total_amount ? o.total_amount * 100 : 0)))}</span>
+        <div class="flex flex-col gap-3 pb-4 border-b border-outline-variant/20 last:border-b-0 last:pb-0">
+          <div class="flex gap-4 items-start">
+            <img src="${item.image_url || item.photo_url || item.proof_image_url || 'https://ui-avatars.com/api/?name=Product&background=f9ecdc&color=3D6B4F&size=64'}" class="w-16 h-16 rounded-xl object-cover border border-sage-soft flex-shrink-0" alt="${escapeHtml(item.product_name || item.name || 'Product')}" loading="lazy" />
+            <div class="flex-1 min-w-0">
+              <h4 class="font-bold text-primary text-base truncate">${escapeHtml(item.product_name || item.name || 'Handcrafted Creation')}</h4>
+              <p class="text-xs font-mono text-gold mt-0.5">#${escapeHtml(item.product_id ? String(item.product_id).substring(0, 8).toUpperCase() : (o.product_id_display || '—'))}</p>
+              ${item.variant_name ? `<p class="text-xs text-on-surface-variant mt-1">Variant: <span class="font-semibold text-primary">${escapeHtml(item.variant_name)}</span></p>` : ''}
+              <div class="flex justify-between items-center mt-2">
+                <span class="text-xs text-on-surface-variant">Quantity: <span class="font-bold text-on-surface">${item.quantity || 1}</span></span>
+                <span class="font-bold text-primary font-mono text-base">${formatPaise(item.unit_price ? Math.round(parseFloat(item.unit_price) * 100 * (item.quantity || 1)) : (o.total_paise || (o.total_amount ? o.total_amount * 100 : 0)))}</span>
+              </div>
             </div>
           </div>
+          ${(item.description || o.description) ? `
+            <div class="bg-surface-bright/70 border border-sage/25 rounded-xl p-3 text-xs text-on-surface leading-relaxed">
+              <span class="font-bold text-primary block text-[11px] uppercase tracking-wider mb-1">Product Description</span>
+              <p class="whitespace-pre-line text-on-surface/90 text-xs">${escapeHtml(item.description || o.description)}</p>
+            </div>
+          ` : ''}
         </div>
       `).join('');
     }
@@ -354,38 +411,96 @@
     const custCard = document.getElementById('customization-card');
     const custContent = document.getElementById('customization-content');
     if (custCard && custContent) {
-      let rawCustom = o.customization_details || (o.items && o.items[0]?.customization_data);
-      if (typeof rawCustom === 'string') {
-        try { rawCustom = JSON.parse(rawCustom); } catch { }
-      }
-      if (rawCustom) {
-        if (typeof rawCustom === 'object') {
-          const rows = [];
-          if (rawCustom.selected_options) {
-            Object.entries(rawCustom.selected_options).forEach(([k, v]) => {
-              rows.push(`
-                <div class="flex justify-between items-start py-1 border-b border-sage/10 text-xs">
-                  <span class="font-bold text-sage">${escapeHtml(k)}:</span>
-                  <span class="text-forest font-semibold text-right">${escapeHtml(String(v))}</span>
-                </div>
-              `);
-            });
-          }
-          if (rawCustom.fee_applied) {
-            rows.push(`
-              <div class="flex justify-between items-center py-1 font-mono text-[11px] text-forest font-bold">
-                <span>Customisation Surcharge:</span>
-                <span>+₹${rawCustom.fee_applied}</span>
-              </div>
-            `);
-          }
-          custContent.innerHTML = rows.length > 0 ? rows.join('') : `<p class="italic text-sage">${escapeHtml(rawCustom.summary_text || JSON.stringify(rawCustom))}</p>`;
-        } else {
-          custContent.innerHTML = `<p class="italic text-sage">"${escapeHtml(String(rawCustom))}"</p>`;
+      const items = Array.isArray(o.items) && o.items.length > 0 ? o.items : [o];
+      const customItems = [];
+
+      items.forEach((it, idx) => {
+        let raw = it.customization_details || it.customization_data || it.customization;
+        if (!raw && idx === 0) raw = o.customization_details || o.customization_data;
+        if (!raw) return;
+
+        let parsed = raw;
+        if (typeof raw === 'string') {
+          try { parsed = JSON.parse(raw); } catch (_) { parsed = raw; }
         }
+        customItems.push({
+          title: it.product_name || it.name || it.item_title || (items.length > 1 ? `Item #${idx + 1}` : 'Order Customization'),
+          data: parsed,
+          proof: it.proof_image_url || o.proof_image_url
+        });
+      });
+
+      if (customItems.length > 0) {
         custCard.classList.remove('hidden');
+        custContent.innerHTML = customItems.map(ci => {
+          let rowsHtml = '';
+          const d = ci.data;
+          if (typeof d === 'object' && d !== null) {
+            let entries = [];
+            if (d.selected_options && typeof d.selected_options === 'object') {
+              entries = Object.entries(d.selected_options);
+            } else {
+              entries = Object.entries(d).filter(([k]) => k !== 'fee_applied' && k !== 'summary_text');
+            }
+
+            rowsHtml = entries.map(([k, v]) => `
+              <div class="flex items-start justify-between py-1.5 border-b border-sage/15 last:border-b-0 text-xs gap-3">
+                <span class="font-bold text-primary/80">${escapeHtml(k.replace(/_/g, ' '))}:</span>
+                <span class="font-medium text-right text-forest max-w-[65%] break-words">${escapeHtml(typeof v === 'object' ? JSON.stringify(v) : String(v))}</span>
+              </div>
+            `).join('');
+
+            if (d.fee_applied) {
+              rowsHtml += `
+                <div class="flex items-center justify-between py-1.5 text-xs font-mono font-bold text-primary border-t border-sage/20 mt-1">
+                  <span>Customisation Fee:</span>
+                  <span>+₹${d.fee_applied}</span>
+                </div>
+              `;
+            }
+          } else {
+            rowsHtml = `<p class="italic text-forest whitespace-pre-line">"${escapeHtml(String(d))}"</p>`;
+          }
+
+          return `
+            <div class="bg-[#FAF6EE] border border-sage/25 rounded-xl p-3.5 space-y-2">
+              ${customItems.length > 1 ? `<div class="font-bold text-xs text-primary pb-1 border-b border-sage/15">${escapeHtml(ci.title)}</div>` : ''}
+              <div class="space-y-1">${rowsHtml}</div>
+              ${ci.proof ? `
+                <div class="pt-2 border-t border-sage/15 flex items-center gap-2">
+                  <span class="text-[11px] font-bold text-primary">Attached Reference:</span>
+                  <a href="${escapeHtml(ci.proof)}" target="_blank" rel="noopener" class="text-[11px] text-forest underline hover:opacity-80">View Attached Asset</a>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
       } else {
         custCard.classList.add('hidden');
+      }
+    }
+
+    // Patron Instructions & Notes
+    const buyerNotesCard = document.getElementById('buyer-notes-card');
+    const buyerNotesContent = document.getElementById('buyer-notes-content');
+    const buyerNotesText = o.buyer_notes || o.special_instructions || o.notes;
+    if (buyerNotesCard && buyerNotesContent) {
+      if (buyerNotesText && String(buyerNotesText).trim() && String(buyerNotesText).trim() !== '{}') {
+        buyerNotesCard.classList.remove('hidden');
+        buyerNotesContent.textContent = String(buyerNotesText).trim();
+      } else {
+        buyerNotesCard.classList.add('hidden');
+      }
+    }
+
+    // Special Shop Banner
+    const isSpecialShop = Boolean(o.is_admin_managed || o.seller_type === 'special' || o.is_special || sessionStorage.getItem('tohfa_admin_switch_context'));
+    const specialShopBanner = document.getElementById('special-shop-banner');
+    if (specialShopBanner) {
+      if (isSpecialShop) {
+        specialShopBanner.classList.remove('hidden');
+      } else {
+        specialShopBanner.classList.add('hidden');
       }
     }
 
@@ -503,12 +618,21 @@
     // Shipping Label
     const labelContainer = document.getElementById('label-container');
     if (labelContainer) {
-      labelContainer.innerHTML = `
-        <a href="/api/seller/orders/${o.internal_id || orderId}/label" download class="w-full flex items-center justify-center gap-2 bg-primary text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider hover:opacity-90 transition-all">
-          <span class="material-symbols-outlined text-sm">download</span>
-          Download Shipping Label
-        </a>
-      `;
+      if (isSpecialShop) {
+        labelContainer.innerHTML = `
+          <div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-900 flex items-center gap-2">
+            <span class="material-symbols-outlined text-amber-700 text-sm">local_shipping</span>
+            <span>Courier dispatch coordinated via Tohfa Admin Logistics</span>
+          </div>
+        `;
+      } else {
+        labelContainer.innerHTML = `
+          <a href="/api/seller/orders/${o.internal_id || orderId}/label" download class="w-full flex items-center justify-center gap-2 bg-primary text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider hover:opacity-90 transition-all">
+            <span class="material-symbols-outlined text-sm">download</span>
+            Download Shipping Label
+          </a>
+        `;
+      }
     }
 
     // Studio notes list
@@ -558,8 +682,9 @@
                   localStorage.getItem('token');
 
     try {
+      const headers = getActiveSellerHeaders(token);
       const res = await fetch(`${API_BASE_URL}/api/seller/orders/${orderId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers
       });
       if (res.status === 401 || res.status === 403) {
         if (loadingState) loadingState.classList.add('hidden');
@@ -594,14 +719,15 @@
     const params = new URLSearchParams(window.location.search);
     orderId = params.get('id');
 
-    // Role check
+    // Role check - allow sellers as well as admins in switched context
     if (token) {
       try {
         const pr = await fetch(`${API_BASE_URL}/api/profile/me`, { headers: { 'Authorization': `Bearer ${token}` } });
         if (pr.ok) {
           const pd = await pr.json();
           const u = pd.data || pd;
-          if (u.role !== 'seller') {
+          const isSwitchedAdmin = Boolean(sessionStorage.getItem('tohfa_admin_switch_context'));
+          if (u.role !== 'seller' && u.role !== 'admin' && u.role !== 'superadmin' && !isSwitchedAdmin) {
             window.location.href = '/buyer/profile.html';
             return;
           }

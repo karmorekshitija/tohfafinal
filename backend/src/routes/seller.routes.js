@@ -191,7 +191,15 @@ router.patch('/listings/:id/resume', authMiddleware, sellerOnly, (req, res, next
 router.post('/listings/:id/photos', authMiddleware, sellerOnly, uploadProductImages, productController.uploadImages);
 
 // Orders & Fulfillment
-router.get('/orders', authMiddleware, sellerOnly, sellerController.getSellerOrders);
+router.get('/orders', authMiddleware, sellerOnly, (req, res, next) => {
+  const headerSellerId = req.headers['x-seller-id'] || req.headers['x-impersonate-seller-id'] || req.query.seller_id || req.query.sellerId;
+  const userRole = String(req.user?.role || '').toUpperCase();
+  const isAdmin = userRole === 'ADMIN' || userRole === 'MASTER_ADMIN';
+  if (isAdmin && headerSellerId) {
+    req.params.sellerId = headerSellerId;
+  }
+  return sellerController.getSellerOrders(req, res, next);
+});
 router.get('/orders/:id', authMiddleware, sellerOnly, verifySellerOwnership('order'), sellerController.getSellerOrderDetail);
 router.patch('/orders/:id/status', authMiddleware, sellerOnly, verifySellerOwnership('order'), sellerController.updateSellerOrderStatus);
 router.post('/orders/:id/status', authMiddleware, sellerOnly, verifySellerOwnership('order'), sellerController.updateSellerOrderStatus);

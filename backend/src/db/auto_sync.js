@@ -110,9 +110,11 @@ async function autoSyncDatabase() {
       await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo_url TEXT;`);
       await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;`);
       await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS photo_url TEXT;`);
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS logo_url TEXT;`);
       await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS whatsapp_number TEXT;`);
       await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();`);
       await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS photo_url TEXT;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS logo_url TEXT;`);
       await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS whatsapp_number TEXT;`);
     } catch (err) {
       console.warn('⚠️ [Auto-Sync Step 3 - Profiles Notice]:', err.message);

@@ -120,10 +120,10 @@ async function getOwnSellerProfile(req, res, next) {
                 sp.badges,
                 sp.story_headline, sp.story_description, sp.working_on, sp.video_url, sp.about_image_url,
                 COALESCE(sp.whatsapp_number, s.whatsapp_number, u.phone) AS whatsapp_number,
-                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.logo_url, u.profile_photo_url) AS profile_photo,
+                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.photo_url, u.profile_photo_url) AS profile_photo,
                 COALESCE(sp.banner_url, s.banner_url, u.cover_photo_url) AS cover_photo,
-                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.logo_url, u.profile_photo_url) AS avatar_url,
-                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.logo_url, u.profile_photo_url) AS logo_url,
+                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.photo_url, u.profile_photo_url) AS avatar_url,
+                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.photo_url, u.profile_photo_url) AS logo_url,
                 COALESCE(sp.banner_url, s.banner_url, u.cover_photo_url) AS banner_url,
                 COALESCE(sp.seller_type, 'regular') AS seller_type,
                 COALESCE(sp.is_approved, s.is_approved, FALSE) AS is_approved,
@@ -171,10 +171,10 @@ async function getOwnSellerProfile(req, res, next) {
                 COALESCE(sp.slug, s.slug) AS handle,
                 COALESCE(sp.bio, s.bio) AS bio,
                 COALESCE(sp.whatsapp_number, u.phone) AS whatsapp_number,
-                COALESCE(sp.logo_url, s.logo_url, u.profile_photo_url) AS profile_photo,
+                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.photo_url, u.profile_photo_url) AS profile_photo,
                 COALESCE(sp.banner_url, s.banner_url, u.cover_photo_url) AS cover_photo,
-                COALESCE(sp.logo_url, s.logo_url, u.profile_photo_url) AS avatar_url,
-                COALESCE(sp.logo_url, s.logo_url, u.profile_photo_url) AS logo_url,
+                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.photo_url, u.profile_photo_url) AS avatar_url,
+                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.photo_url, u.profile_photo_url) AS logo_url,
                 COALESCE(sp.banner_url, s.banner_url, u.cover_photo_url) AS banner_url,
                 COALESCE(sp.seller_type, 'regular') AS seller_type,
                 COALESCE(sp.is_approved, s.is_approved, FALSE) AS is_approved,
@@ -1616,14 +1616,40 @@ async function getSellerAnalytics(req, res, next) {
 async function getSellerOrders(req, res, next) {
   try {
     await ensureOrderItemColumns();
-    const sellerId = req.user.id;
-    const { page = '1', limit = '20', status, search } = req.query;
+    const headerSellerId = req.headers['x-seller-id'] || req.headers['x-impersonate-seller-id'] || req.query.seller_id || req.query.sellerId || req.params?.sellerId;
+    const userRole = String(req.user?.role || '').toUpperCase();
+    const isAdmin = userRole === 'ADMIN' || userRole === 'MASTER_ADMIN';
+    const effectiveSellerId = (isAdmin && headerSellerId) ? headerSellerId : req.user.id;
+
+    const { page = '1', limit = '20', status, search, period } = req.query;
     const pageNum  = Math.max(1, parseInt(page, 10));
     const limitNum = Math.min(50, parseInt(limit, 10));
     const offset   = (pageNum - 1) * limitNum;
 
-    const conditions = ['so.seller_id = $1'];
-    const params = [sellerId];
+    const { rows: sRows } = await query(
+      'SELECT id, user_id FROM sellers WHERE user_id = $1 UNION SELECT id, user_id FROM seller_profiles WHERE user_id = $1',
+      [effectiveSellerId]
+    ).catch(() => ({ rows: [] }));
+
+    const validIds = Array.from(new Set([
+      Number(effectiveSellerId),
+      String(effectiveSellerId),
+      ...sRows.flatMap(s => [Number(s.id), String(s.id), Number(s.user_id), String(s.user_id)])
+    ])).filter(Boolean);
+
+    const conditions = ['(so.seller_id::text = ANY($1::text[]) OR o.seller_id::text = ANY($1::text[]))'];
+    const params = [validIds.map(String)];
+
+    if (period && period !== 'all') {
+      const p = String(period).toLowerCase().trim();
+      if (p === '7d') {
+        conditions.push("so.created_at >= NOW() - INTERVAL '7 days'");
+      } else if (p === '30d') {
+        conditions.push("so.created_at >= NOW() - INTERVAL '30 days'");
+      } else if (p === '90d') {
+        conditions.push("so.created_at >= NOW() - INTERVAL '90 days'");
+      }
+    }
 
     if (status && status !== 'all') {
       const st = String(status).toLowerCase().trim();
@@ -1631,6 +1657,8 @@ async function getSellerOrders(req, res, next) {
         conditions.push(`LOWER(so.status) IN ('in_production', 'crafting', 'processing')`);
       } else if (st === 'pending' || st === 'unfulfilled') {
         conditions.push(`LOWER(so.status) IN ('pending', 'unfulfilled', 'confirmed', 'order_placed')`);
+      } else if (st === 'shipped' || st === 'dispatched') {
+        conditions.push(`LOWER(so.status) IN ('shipped', 'dispatched')`);
       } else {
         params.push(st);
         conditions.push(`LOWER(so.status) = $${params.length}`);
@@ -1660,7 +1688,13 @@ async function getSellerOrders(req, res, next) {
               so.subtotal AS total_amount, (so.subtotal * 100) AS total_paise,
               so.id AS id, o.order_ref, NULL AS order_type, NULL AS customization, o.customization_details AS customization_summary,
               so.status, o.payment_status, so.payout_status,
-              COALESCE(so.awb_number, o.tracking_id) AS tracking_id, COALESCE(so.tracking_url, o.tracking_url) AS tracking_url, o.notes, o.studio_notes, so.delivered_at, so.created_at, o.updated_at,
+              COALESCE(so.awb_number, o.tracking_id) AS tracking_id, COALESCE(so.tracking_url, o.tracking_url) AS tracking_url,
+              o.notes AS buyer_notes, o.notes, o.studio_notes,
+              COALESCE(o.special_instructions, '') AS special_instructions,
+              COALESCE(sp.is_admin_managed, sel.is_admin_managed, FALSE) AS is_admin_managed,
+              COALESCE(sp.seller_type, sel.seller_type, 'normal') AS seller_type,
+              o.is_special,
+              so.delivered_at, so.created_at, o.updated_at,
               u.name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone,
               COALESCE(NULLIF(TRIM(o.shipping_address->>'line1'), ''), NULLIF(TRIM(a.line1), '')) AS delivery_line1,
               COALESCE(NULLIF(TRIM(o.shipping_address->>'line2'), ''), NULLIF(TRIM(a.line2), '')) AS delivery_line2,
@@ -1673,22 +1707,27 @@ async function getSellerOrders(req, res, next) {
                   'product_id', oi.product_id,
                   'product_name', p.name,
                   'name', p.name,
+                  'description', COALESCE(p.description, ''),
                   'quantity', oi.quantity,
                   'unit_price', COALESCE(oi.unit_price, (oi.unit_price_paise::numeric / 100.0), 0),
                   'customization_data', oi.customization_data,
+                  'customization_details', oi.customization_details,
+                  'variant_name', (SELECT pv.title FROM product_variants pv WHERE pv.id = oi.variant_id LIMIT 1),
                   'proof_image_url', oi.proof_image_url,
                   'customization_status', oi.customization_status,
                   'image_url', (SELECT url FROM product_images pi WHERE pi.product_id = oi.product_id ORDER BY sort_order ASC LIMIT 1)
                 ))
                 FROM order_items oi
                 LEFT JOIN products p ON p.id = oi.product_id
-                WHERE oi.seller_order_id = so.id),
+                WHERE oi.seller_order_id = so.id OR (oi.order_id = o.id AND (oi.seller_order_id IS NULL OR oi.seller_order_id = so.id))),
                 '[]'
               ) AS items
        FROM seller_orders so
        JOIN orders o ON o.id = so.order_id
        LEFT JOIN users u ON u.id = o.buyer_id
        LEFT JOIN addresses a ON a.id = o.address_id
+       LEFT JOIN seller_profiles sp ON sp.user_id = so.seller_id
+       LEFT JOIN sellers sel ON sel.id = so.seller_id OR sel.user_id = so.seller_id
        WHERE ${where}
        ORDER BY so.created_at DESC
        LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
@@ -1700,6 +1739,8 @@ async function getSellerOrders(req, res, next) {
        FROM seller_orders so
        JOIN orders o ON o.id = so.order_id
        LEFT JOIN users u ON u.id = o.buyer_id
+       LEFT JOIN seller_profiles sp ON sp.user_id = so.seller_id
+       LEFT JOIN sellers sel ON sel.id = so.seller_id OR sel.user_id = so.seller_id
        WHERE ${where}`,
       params.slice(0, params.length - 2)
     );
@@ -1718,6 +1759,7 @@ async function getSellerOrders(req, res, next) {
           product_id: o.listing_id,
           product_name: o.product_name || 'Handcrafted Creation',
           name: o.product_name || 'Handcrafted Creation',
+          description: '',
           quantity: 1,
           unit_price: o.total_amount ? (o.total_amount >= 10000 ? o.total_amount / 100.0 : parseFloat(o.total_amount)) : (o.total_paise ? o.total_paise / 100.0 : 0),
           customization_data: parsedCustom,
@@ -1755,6 +1797,10 @@ async function getSellerOrders(req, res, next) {
         item_preview: itemPreview,
         items,
         studio_notes,
+        buyer_notes: o.buyer_notes || o.notes || '',
+        special_instructions: o.special_instructions || '',
+        is_admin_managed: Boolean(o.is_admin_managed),
+        seller_type: o.seller_type || 'normal'
       };
     });
 
@@ -1788,20 +1834,21 @@ async function getSellerOrderDetail(req, res, next) {
   try {
     await ensureOrderItemColumns();
     const { id } = req.params;
-    const sellerId = req.user.id;
+    const headerSellerId = req.headers['x-seller-id'] || req.headers['x-impersonate-seller-id'] || req.query.seller_id || req.query.sellerId;
     const isAdmin = req.user.role === 'admin' || req.user.role === 'master_admin';
+    const effectiveSellerId = (isAdmin && headerSellerId) ? headerSellerId : req.user.id;
 
     // IDOR Check: Ensure order exists and belongs to this seller
     const { rows: orderCheck } = await query(
       `SELECT so.id, so.seller_id FROM seller_orders so JOIN orders o ON o.id = so.order_id WHERE so.id::text = $1 OR (o.id::text = $1 AND (so.seller_id = $2 OR so.seller_id::text = $2::text)) OR o.order_ref = $1`,
-      [String(id), String(sellerId)]
+      [String(id), String(effectiveSellerId)]
     );
-    if (!orderCheck.length) {
+    if (!orderCheck.length && !isAdmin) {
       return res.status(404).json({ success: false, message: 'Order not found.' });
     }
     if (!isAdmin) {
-      const { rows: sRows } = await query('SELECT id FROM sellers WHERE user_id = $1', [sellerId]);
-      const validIds = [Number(sellerId), String(sellerId), ...sRows.map(s => s.id), ...sRows.map(s => String(s.id))];
+      const { rows: sRows } = await query('SELECT id FROM sellers WHERE user_id = $1 UNION SELECT id FROM seller_profiles WHERE user_id = $1', [effectiveSellerId]);
+      const validIds = [Number(effectiveSellerId), String(effectiveSellerId), ...sRows.map(s => s.id), ...sRows.map(s => String(s.id))];
       if (!validIds.includes(orderCheck[0].seller_id) && !validIds.includes(Number(orderCheck[0].seller_id)) && !validIds.includes(String(orderCheck[0].seller_id))) {
         return res.status(403).json({ success: false, message: 'Forbidden: You do not have ownership of this order.' });
       }
@@ -1809,7 +1856,13 @@ async function getSellerOrderDetail(req, res, next) {
 
     const { rows } = await query(
       `SELECT o.id AS parent_order_id, so.id AS id, o.buyer_id, so.seller_id, o.address_id, so.subtotal AS total_amount, so.status, o.payment_status,
-              so.payout_status, COALESCE(so.awb_number, o.tracking_id) AS tracking_id, COALESCE(so.tracking_url, o.tracking_url) AS tracking_url, o.notes, o.studio_notes, so.delivered_at, so.created_at, o.updated_at,
+              so.payout_status, COALESCE(so.awb_number, o.tracking_id) AS tracking_id, COALESCE(so.tracking_url, o.tracking_url) AS tracking_url,
+              o.notes AS buyer_notes, o.notes, o.studio_notes,
+              COALESCE(o.special_instructions, '') AS special_instructions,
+              COALESCE(sp.is_admin_managed, sel.is_admin_managed, FALSE) AS is_admin_managed,
+              COALESCE(sp.seller_type, sel.seller_type, 'normal') AS seller_type,
+              o.is_special,
+              so.delivered_at, so.created_at, o.updated_at,
               u.name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone,
               sp.store_name, sp.whatsapp_number AS seller_whatsapp, sp.pickup_address,
               a.name AS recipient_name, a.phone AS recipient_phone,
@@ -1821,25 +1874,29 @@ async function getSellerOrderDetail(req, res, next) {
                   'product_id', oi.product_id,
                   'product_name', p.name,
                   'name', p.name,
+                  'description', COALESCE(p.description, ''),
                   'quantity', oi.quantity,
                   'unit_price', COALESCE(oi.unit_price, (oi.unit_price_paise::numeric / 100.0), 0),
                   'customization_data', oi.customization_data,
+                  'customization_details', oi.customization_details,
+                  'variant_name', (SELECT pv.title FROM product_variants pv WHERE pv.id = oi.variant_id LIMIT 1),
                   'proof_image_url', oi.proof_image_url,
                   'customization_status', oi.customization_status,
                   'image_url', (SELECT url FROM product_images pi WHERE pi.product_id = oi.product_id ORDER BY sort_order ASC LIMIT 1)
                 ))
                 FROM order_items oi
                 LEFT JOIN products p ON p.id = oi.product_id
-                WHERE oi.seller_order_id = so.id),
+                WHERE oi.seller_order_id = so.id OR (oi.order_id = o.id AND (oi.seller_order_id IS NULL OR oi.seller_order_id = so.id))),
                 '[]'
               ) AS items
        FROM seller_orders so
        JOIN orders o ON o.id = so.order_id
        LEFT JOIN users u ON u.id = o.buyer_id
        LEFT JOIN seller_profiles sp ON sp.user_id = so.seller_id
+       LEFT JOIN sellers sel ON sel.id = so.seller_id OR sel.user_id = so.seller_id
        LEFT JOIN addresses a ON a.id = o.address_id
        WHERE so.id::text = $1 OR (o.id::text = $1 AND (so.seller_id = $2 OR so.seller_id::text = $2::text)) OR o.order_ref = $1`,
-      [String(id), String(sellerId)]
+      [String(id), String(effectiveSellerId)]
     );
 
     if (!rows.length) {
@@ -1860,6 +1917,7 @@ async function getSellerOrderDetail(req, res, next) {
         product_id: order.listing_id,
         product_name: order.product_name || 'Handcrafted Creation',
         name: order.product_name || 'Handcrafted Creation',
+        description: '',
         quantity: 1,
         unit_price: order.total_amount ? (order.total_amount >= 10000 ? order.total_amount / 100.0 : parseFloat(order.total_amount)) : (order.total_paise ? order.total_paise / 100.0 : 0),
         customization_data: parsedCustom,
@@ -1910,7 +1968,7 @@ async function getSellerOrderDetail(req, res, next) {
       } else if (typeof cd === 'object') {
         customizationDetails = Object.entries(cd)
           .filter(([_, v]) => v != null && v !== '')
-          .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v}`)
+          .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
           .join(', ');
       }
     } else if (order.notes) {
@@ -1963,6 +2021,10 @@ async function getSellerOrderDetail(req, res, next) {
       customization_details: customizationDetails,
       proof_image_url: firstItem ? firstItem.proof_image_url : null,
       customization_status: firstItem ? firstItem.customization_status : null,
+      buyer_notes: order.buyer_notes || order.notes || '',
+      special_instructions: order.special_instructions || '',
+      is_admin_managed: Boolean(order.is_admin_managed),
+      seller_type: order.seller_type || 'normal',
       shipping_address: {
         recipient_name: order.recipient_name || order.buyer_name,
         phone: order.recipient_phone || order.buyer_phone,
