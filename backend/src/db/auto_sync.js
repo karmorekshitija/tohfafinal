@@ -110,9 +110,11 @@ async function autoSyncDatabase() {
       await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo_url TEXT;`);
       await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;`);
       await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS photo_url TEXT;`);
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS logo_url TEXT;`);
       await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS whatsapp_number TEXT;`);
       await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();`);
       await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS photo_url TEXT;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS logo_url TEXT;`);
       await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS whatsapp_number TEXT;`);
     } catch (err) {
       console.warn('⚠️ [Auto-Sync Step 3 - Profiles Notice]:', err.message);
@@ -997,6 +999,20 @@ async function autoSyncDatabase() {
       console.log('✅ [Auto-Sync Step 15] Logistics fulfillment columns ensured');
     } catch (logisticsErr) {
       console.warn('⚠️ [Auto-Sync Step 15 - Logistics Notice]:', logisticsErr.message);
+    }
+
+    // 16. Dashboard & Analytics Performance Indexes (Migration 043)
+    try {
+      await query(`CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_orders_seller_created_at ON orders(seller_id, created_at DESC);`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_seller_orders_status ON seller_orders(status);`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_seller_orders_created_at ON seller_orders(created_at DESC);`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_seller_orders_seller_created_at ON seller_orders(seller_id, created_at DESC);`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_products_seller_id ON products(seller_id);`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);`);
+      console.log('✅ [Auto-Sync Step 16] Dashboard & Analytics performance indexes ensured');
+    } catch (perfErr) {
+      console.warn('⚠️ [Auto-Sync Step 16 - Performance Indexes Notice]:', perfErr.message);
     }
 
     console.log('✅ Database schema and catalog auto-sync complete!');

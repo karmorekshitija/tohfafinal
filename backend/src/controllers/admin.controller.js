@@ -1843,6 +1843,7 @@ async function deleteCoupon(req, res, next) {
 
 async function listBanners(req, res, next) {
   try {
+    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
     const { rows } = await query('SELECT * FROM banners ORDER BY sort_order ASC');
     return res.json({ success: true, data: rows });
   } catch (err) {
@@ -2114,34 +2115,44 @@ async function createSpecialShop(req, res, next) {
 
     // 1. Welcome Email to the Special Seller / Shop Manager
     const loginUrl = `${process.env.FRONTEND_URL || 'https://thetohfa.in'}/auth/login.html`;
+    const parsedPickup = typeof pickup_address === 'object' && pickup_address !== null ? pickup_address : {};
+    const emailPromises = [];
+
     if (emailService && typeof emailService.sendSellerAccountCreatedEmail === 'function') {
-      emailService.sendSellerAccountCreatedEmail(cleanEmail, {
-        sellerName: store_name,
-        storeName: store_name,
-        identifier: cleanEmail,
-        password: initialPassword,
-        plan: 'Special Studio',
-        sellerType: 'special',
-        slug: cleanSlug,
-        loginUrl
-      }).catch((err) => console.error('[Email] Failed to send special seller welcome email:', err.message));
+      emailPromises.push(
+        emailService.sendSellerAccountCreatedEmail(cleanEmail, {
+          sellerName: store_name,
+          storeName: store_name,
+          identifier: cleanEmail,
+          password: initialPassword,
+          plan: 'Special Studio',
+          sellerType: 'special',
+          slug: cleanSlug,
+          loginUrl
+        }).catch((err) => console.error('[Email] Failed to send special seller welcome email:', err.message))
+      );
     }
 
     // 2. Alert Email to Platform Owner / Admin
-    const parsedPickup = typeof pickup_address === 'object' && pickup_address !== null ? pickup_address : {};
     if (ownerNotifyService && typeof ownerNotifyService.sendAdminAlertEmail === 'function') {
-      ownerNotifyService.sendAdminAlertEmail('seller_created', {
-        id: store_name,
-        storeName: store_name,
-        artisanName: store_name,
-        email: cleanEmail,
-        phone: cleanPhone,
-        plan: 'Special Studio',
-        sellerType: 'special',
-        city: parsedPickup.city || '',
-        state: parsedPickup.state || '',
-        link: `${process.env.FRONTEND_URL || 'https://thetohfa.in'}/admin/sellers.html?tab=special`
-      }).catch(() => {});
+      emailPromises.push(
+        ownerNotifyService.sendAdminAlertEmail('seller_created', {
+          id: store_name,
+          storeName: store_name,
+          artisanName: store_name,
+          email: cleanEmail,
+          phone: cleanPhone,
+          plan: 'Special Studio',
+          sellerType: 'special',
+          city: parsedPickup.city || '',
+          state: parsedPickup.state || '',
+          link: `${process.env.FRONTEND_URL || 'https://thetohfa.in'}/admin/sellers.html?tab=special`
+        }).catch((err) => console.error('[Owner Notify] Failed to send special shop admin alert email:', err.message))
+      );
+    }
+
+    if (emailPromises.length > 0) {
+      await Promise.allSettled(emailPromises);
     }
 
     return res.status(201).json({
@@ -2401,35 +2412,47 @@ async function createRegularSeller(req, res, next) {
     ).catch(() => {});
 
     const loginUrl = `${process.env.FRONTEND_URL || 'https://thetohfa.in'}/auth/login.html`;
+    const parsedPickup = typeof pickup_address === 'object' && pickup_address !== null ? pickup_address : {};
+    const emailPromises = [];
+
     if (emailService && typeof emailService.sendSellerAccountCreatedEmail === 'function') {
-      emailService.sendSellerAccountCreatedEmail(cleanEmail, {
-        sellerName: artisanName,
-        storeName: finalStoreName,
-        identifier: rawIdentifier.includes('@') ? cleanEmail : rawIdentifier,
-        password: String(password).trim(),
-        plan: selectedPlan,
-        sellerType: 'regular',
-        loginUrl
-      }).catch((e) => console.error('[Email] Error sending regular seller created email:', e.message));
+      emailPromises.push(
+        emailService.sendSellerAccountCreatedEmail(cleanEmail, {
+          sellerName: artisanName,
+          storeName: finalStoreName,
+          identifier: rawIdentifier.includes('@') ? cleanEmail : rawIdentifier,
+          password: String(password).trim(),
+          plan: selectedPlan,
+          sellerType: 'regular',
+          loginUrl
+        }).catch((e) => console.error('[Email] Error sending regular seller created email:', e.message))
+      );
     } else if (emailService && typeof emailService.sendSellerApprovalEmail === 'function') {
-      emailService.sendSellerApprovalEmail(cleanEmail, { sellerName: artisanName, storeName: finalStoreName }).catch(() => {});
+      emailPromises.push(
+        emailService.sendSellerApprovalEmail(cleanEmail, { sellerName: artisanName, storeName: finalStoreName }).catch(() => {})
+      );
     }
 
     // 7. Alert Email to Platform Owner / Admin
-    const parsedPickup = typeof pickup_address === 'object' && pickup_address !== null ? pickup_address : {};
     if (ownerNotifyService && typeof ownerNotifyService.sendAdminAlertEmail === 'function') {
-      ownerNotifyService.sendAdminAlertEmail('seller_created', {
-        id: finalStoreName,
-        storeName: finalStoreName,
-        artisanName: artisanName,
-        email: cleanEmail,
-        phone: cleanPhone,
-        plan: selectedPlan,
-        sellerType: 'regular',
-        city: parsedPickup.city || '',
-        state: parsedPickup.state || '',
-        link: `${process.env.FRONTEND_URL || 'https://thetohfa.in'}/admin/sellers.html`
-      }).catch(() => {});
+      emailPromises.push(
+        ownerNotifyService.sendAdminAlertEmail('seller_created', {
+          id: finalStoreName,
+          storeName: finalStoreName,
+          artisanName: artisanName,
+          email: cleanEmail,
+          phone: cleanPhone,
+          plan: selectedPlan,
+          sellerType: 'regular',
+          city: parsedPickup.city || '',
+          state: parsedPickup.state || '',
+          link: `${process.env.FRONTEND_URL || 'https://thetohfa.in'}/admin/sellers.html`
+        }).catch((e) => console.error('[Owner Notify] Error sending admin alert email:', e.message))
+      );
+    }
+
+    if (emailPromises.length > 0) {
+      await Promise.allSettled(emailPromises);
     }
 
     return res.status(201).json({

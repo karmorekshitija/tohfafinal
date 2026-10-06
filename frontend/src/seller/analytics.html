@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="/src/tailwind.css">
     <script type="module" src="/src/components/seller-components.js"></script>
     <script src="/seller/js/seller-utils.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" defer></script>
     
     <style>
         .material-symbols-outlined {
@@ -67,6 +67,28 @@
             <button id="apply-custom-dates" class="bg-primary text-white text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg hover:opacity-90 transition-all shadow-sm">Apply</button>
         </div>
     </section>
+
+    <!-- Status Banner for Error / Empty State -->
+    <div id="analytics-error-state" class="hidden mb-xl p-md bg-error-container border border-error/20 rounded-xl flex items-center justify-between gap-md">
+        <div class="flex items-center gap-sm">
+            <span class="material-symbols-outlined text-error text-2xl">error</span>
+            <div>
+                <p class="font-bold text-on-error-container text-sm">Couldn't load analytics</p>
+                <p class="text-xs text-on-error-container opacity-80">Unable to reach the server. Please check your connection and try again.</p>
+            </div>
+        </div>
+        <button id="analytics-retry-btn" class="bg-primary text-white text-xs font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition-all flex items-center gap-1 shrink-0">
+            <span class="material-symbols-outlined text-sm">refresh</span> Retry
+        </button>
+    </div>
+
+    <div id="analytics-empty-state" class="hidden mb-xl p-md bg-[#FFF8E7] border border-sage-soft rounded-xl flex items-center gap-sm">
+        <span class="material-symbols-outlined text-sage text-2xl">info</span>
+        <div>
+            <p class="font-bold text-sm text-primary">No analytics yet</p>
+            <p class="text-xs text-on-surface-variant">Your studio metrics will appear here once you receive visits or orders.</p>
+        </div>
+    </div>
 
     <!-- KPI Cards -->
     <section class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2.5 sm:gap-md mb-xl">
@@ -226,43 +248,8 @@
         </div>
     </section>
 
-    <!-- Section: Insights Section -->
-    <section class="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl">
-        <div class="bg-parchment p-lg border-l-4 border-gold rounded-r-xl shadow-sm hover:translate-y-[-2px] transition-transform">
-            <div class="flex items-start gap-md">
-                <span class="material-symbols-outlined text-primary text-[24px]">timer</span>
-                <div>
-                    <p class="text-body-md text-on-surface leading-relaxed">
-                        Your avg production time is <span class="font-bold">2.3 days</span> vs stated 2 days.
-                    </p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-parchment p-lg border-l-4 border-gold rounded-r-xl shadow-sm hover:translate-y-[-2px] transition-transform">
-            <div class="flex items-start gap-md">
-                <span class="material-symbols-outlined text-gold text-[24px]">warning</span>
-                <div>
-                    <p class="text-body-md text-on-surface leading-relaxed">
-                        <span class="font-bold">Custom kits:</span> highest satisfaction rating (4.9⭐). Keep up the great work!
-                    </p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-parchment p-lg border-l-4 border-gold rounded-r-xl shadow-sm hover:translate-y-[-2px] transition-transform">
-            <div class="flex items-start gap-md">
-                <span class="material-symbols-outlined text-gold text-[24px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
-                <div>
-                    <p class="text-body-md text-on-surface leading-relaxed">
-                        This season: <span class="font-bold">2.4x revenue increase</span> in Home Decor items.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    
 <!-- Shared Footer -->
-<div id="tohfa-footer"></div>
+<div id="tohfa-footer" class="overflow-hidden"></div>
 <script type="module" src="/src/components/tohfa-include.js"></script>
 
 </seller-layout>
@@ -282,81 +269,6 @@
         t.classList.remove('hidden');
         setTimeout(() => t.classList.add('hidden'), 3500);
     }
-
-    const MOCK_DATA = {
-        '7d': {
-            kpis: {
-                revenue: '₹38,900',
-                orders: '111',
-                aov: '₹350',
-                repeat_rate: '24%'
-            },
-            revenue: {
-                labels: ['June 04', 'June 05', 'June 06', 'June 07', 'June 08', 'June 09', 'June 10'],
-                data: [4200, 3100, 5600, 7200, 4800, 6100, 7900]
-            },
-            orders: {
-                labels: ['June 04', 'June 05', 'June 06', 'June 07', 'June 08', 'June 09', 'June 10'],
-                data: [12, 9, 16, 20, 14, 18, 22]
-            },
-            topProducts: {
-                labels: ['Terracotta Vase', 'Handwoven Shawl', 'Brass Incense', 'Phulkari Dupatta', 'Clay Diya Set'],
-                data: [25, 18, 15, 12, 10]
-            },
-            conversion: {
-                labels: ['June 04', 'June 05', 'June 06', 'June 07', 'June 08', 'June 09', 'June 10'],
-                data: [2.1, 1.8, 2.5, 3.1, 2.3, 2.7, 3.2]
-            }
-        },
-        '30d': {
-            kpis: {
-                revenue: '₹1,43,000',
-                orders: '442',
-                aov: '₹323',
-                repeat_rate: '28%'
-            },
-            revenue: {
-                labels: ['May 12', 'May 17', 'May 22', 'May 27', 'May 31', 'June 05', 'June 10'],
-                data: [15000, 18500, 14200, 22000, 19800, 24500, 29000]
-            },
-            orders: {
-                labels: ['May 12', 'May 17', 'May 22', 'May 27', 'May 31', 'June 05', 'June 10'],
-                data: [45, 52, 40, 65, 58, 70, 82]
-            },
-            topProducts: {
-                labels: ['Terracotta Vase', 'Handwoven Shawl', 'Brass Incense', 'Phulkari Dupatta', 'Clay Diya Set'],
-                data: [110, 85, 70, 60, 45]
-            },
-            conversion: {
-                labels: ['May 12', 'May 17', 'May 22', 'May 27', 'May 31', 'June 05', 'June 10'],
-                data: [2.3, 2.4, 2.1, 2.8, 2.5, 2.9, 3.0]
-            }
-        },
-        '90d': {
-            kpis: {
-                revenue: '₹4,95,000',
-                orders: '1,515',
-                aov: '₹326',
-                repeat_rate: '31%'
-            },
-            revenue: {
-                labels: ['Mar 15', 'Mar 30', 'Apr 15', 'Apr 30', 'May 15', 'May 30', 'Jun 10'],
-                data: [55000, 62000, 68000, 75000, 71000, 80000, 84000]
-            },
-            orders: {
-                labels: ['Mar 15', 'Mar 30', 'Apr 15', 'Apr 30', 'May 15', 'May 30', 'Jun 10'],
-                data: [170, 190, 210, 230, 220, 245, 250]
-            },
-            topProducts: {
-                labels: ['Terracotta Vase', 'Handwoven Shawl', 'Brass Incense', 'Phulkari Dupatta', 'Clay Diya Set'],
-                data: [340, 280, 220, 190, 150]
-            },
-            conversion: {
-                labels: ['Mar 15', 'Mar 30', 'Apr 15', 'Apr 30', 'May 15', 'May 30', 'Jun 10'],
-                data: [2.1, 2.2, 2.4, 2.5, 2.3, 2.6, 2.8]
-            }
-        }
-    };
 
     let revenueChartInstance = null;
     let ordersChartInstance = null;
@@ -805,7 +717,7 @@
 
     function getAuthToken() {
         if (typeof window !== 'undefined' && window.authStorage) {
-            const token = window.authStorage.getItem('tohfa_access_token') || window.authStorage.getItem('tohfa_auth_token');
+            const token = window.authStorage.getToken?.();
             if (token) return token;
         }
         return sessionStorage.getItem('tohfa_access_token') ||
@@ -823,8 +735,14 @@
     }
 
     async function loadAnalytics() {
+        const errorStateEl = document.getElementById('analytics-error-state');
+        const emptyStateEl = document.getElementById('analytics-empty-state');
+        if (errorStateEl) errorStateEl.classList.add('hidden');
+        if (emptyStateEl) emptyStateEl.classList.add('hidden');
+
         const token = getAuthToken();
         let loadedRealData = false;
+        let requestFailed = false;
 
         if (token) {
             try {
@@ -852,58 +770,44 @@
                         updateUI(data);
                         loadedRealData = true;
                     }
+                } else {
+                    requestFailed = true;
                 }
             } catch (err) {
-                console.error('Error fetching live analytics:', err);
+                console.warn('Live analytics fetch failed:', err?.message || err);
+                requestFailed = true;
             }
+        } else {
+            requestFailed = true;
         }
 
         if (!loadedRealData) {
-            let periodKey = selectedPeriod;
-            if (periodKey === 'today' || periodKey === 'custom') {
-                periodKey = '7d';
-            }
-            const activeMock = MOCK_DATA[periodKey];
-            if (activeMock) {
-                const totalRevenueVal = parseInt(activeMock.kpis.revenue.replace(/[^0-9]/g, '')) || 0;
-                const convertedData = {
-                    kpis: {
-                        total_revenue: totalRevenueVal,
-                        total_orders: parseInt(activeMock.kpis.orders) || 0,
-                        avg_order_value: parseInt(activeMock.kpis.aov.replace(/[^0-9]/g, '')) || 0,
-                        store_visitors: (parseInt(activeMock.kpis.orders) || 10) * 20,
-                        conversion_rate: parseFloat(activeMock.kpis.repeat_rate) / 5,
-                        returns_cancellations: 2
-                    },
-                    customer_insights: {
-                        repeat_buyers: 5,
-                        new_buyers: 15,
-                        top_locations: [
-                            { city: 'Jaipur', order_count: 5, revenue: 2000 },
-                            { city: 'Delhi', order_count: 3, revenue: 1500 }
-                        ]
-                    },
-                    order_types: {
-                        custom: { orders_count: 3, revenue: 1200 },
-                        premade: { orders_count: 5, revenue: 800 }
-                    },
-                    product_performance: activeMock.topProducts.labels.map((lbl, idx) => ({
-                        id: idx + 1,
-                        name: lbl,
-                        units_sold: activeMock.topProducts.data[idx],
-                        revenue: activeMock.topProducts.data[idx] * 500,
-                        stock: 20,
-                        rating: 4.5
-                    })),
-                    charts: {
-                        labels: activeMock.revenue.labels,
-                        revenue: activeMock.revenue.data,
-                        orders: activeMock.orders.data,
-                        conversion: activeMock.conversion.data
-                    },
-                    zai_insight: "ZAI Insight: Custom orders are currently driving most of your sales."
-                };
-                updateUI(convertedData);
+            updateUI({
+                kpis: {
+                    total_revenue: 0,
+                    total_orders: 0,
+                    avg_order_value: 0,
+                    store_visitors: 0,
+                    conversion_rate: 0,
+                    returns_cancellations: 0
+                },
+                order_types: {
+                    custom: { orders_count: 0, revenue: 0 },
+                    premade: { orders_count: 0, revenue: 0 }
+                },
+                product_performance: [],
+                charts: {
+                    labels: [],
+                    revenue: [],
+                    orders: [],
+                    conversion: []
+                }
+            });
+
+            if (requestFailed) {
+                if (errorStateEl) errorStateEl.classList.remove('hidden');
+            } else {
+                if (emptyStateEl) emptyStateEl.classList.remove('hidden');
             }
         }
     }
@@ -952,30 +856,10 @@
             loadAnalytics();
         });
 
-        // View Store
-        const viewStoreBtn = document.getElementById('view-store-btn');
-        if (viewStoreBtn) {
-            viewStoreBtn.addEventListener('click', () => {
-                const authToken = getAuthToken() || token || '';
-                fetch(`${API_BASE_URL}/api/seller/profile`, {
-                    headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
-                })
-                .then(res => res.json())
-                .then(data => {
-                    const profile = data.data?.profile || data.profile || data.data || data;
-                    const sellerId = profile?.user_id || profile?.seller_id || profile?.id;
-                    if (sellerId) {
-                        window.location.href = `/buyer/seller-profile.html?id=${sellerId}`;
-                    } else {
-                        window.location.href = '/seller/dashboard.html';
-                    }
-                })
-                .catch(err => {
-                    console.error('Error fetching seller profile:', err);
-                    window.location.href = '/seller/dashboard.html';
-                });
-            });
-        }
+        // Retry button listener
+        document.getElementById('analytics-retry-btn')?.addEventListener('click', () => {
+            loadAnalytics();
+        });
 
         // Logout
         document.getElementById('logout-btn')?.addEventListener('click', () => {

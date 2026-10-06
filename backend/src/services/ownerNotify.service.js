@@ -110,9 +110,10 @@ let _startupWarned = false;
  * Logs one startup warning if manual mode is on but email is not configured.
  */
 function isConfigured() {
-  const hasEmail = !!process.env.OWNER_NOTIFY_EMAIL;
-  const hasSmtp = !!(process.env.EMAIL_HOST || process.env.EMAIL_USER);
-  const hasPass = !!process.env.EMAIL_PASS;
+  const ownerEmail = (process.env.OWNER_NOTIFY_EMAIL || process.env.ADMIN_EMAIL || '').trim();
+  const hasEmail = Boolean(ownerEmail);
+  const hasSmtp = Boolean((process.env.EMAIL_HOST || '').trim() || (process.env.EMAIL_USER || '').trim());
+  const hasPass = Boolean((process.env.EMAIL_PASS || '').trim());
   const configured = hasEmail && hasSmtp && hasPass;
 
   if (!configured && !_startupWarned && whatsappConfig.getMode() === 'manual') {
@@ -669,12 +670,22 @@ const DEDUP_MS = 10 * 60 * 1000; // 10 minutes
  * @param {object} data
  */
 async function sendAdminAlertEmail(type, data) {
-  if (!isConfigured()) return;
+  const ownerEmail = (process.env.OWNER_NOTIFY_EMAIL || process.env.ADMIN_EMAIL || '').trim();
+  if (!isConfigured()) {
+    console.warn(`[Owner Notify] sendAdminAlertEmail (${type}) skipped: email config incomplete (OWNER_NOTIFY_EMAIL=${ownerEmail ? 'SET' : 'MISSING'}, EMAIL_USER/HOST=${process.env.EMAIL_USER || process.env.EMAIL_HOST ? 'SET' : 'MISSING'}, EMAIL_PASS=${process.env.EMAIL_PASS ? 'SET' : 'MISSING'})`);
+    return { success: false, reason: 'unconfigured' };
+  }
 
   try {
+    // For admin-created sellers, keep dedup to 5 seconds (prevent accidental double-click),
+    // instead of locking out for 10 minutes.
+    const dedupWindow = type === 'seller_created' ? 5000 : DEDUP_MS;
     const dedupKey = `${type}:${data.id || data.orderId || data.storeName || ''}`;
     const last = _alertDedup.get(dedupKey);
-    if (last && Date.now() - last < DEDUP_MS) return;
+    if (last && Date.now() - last < dedupWindow) {
+      console.log(`[Owner Notify] sendAdminAlertEmail (${type}) suppressed by dedup window (${dedupWindow}ms)`);
+      return { success: false, reason: 'duplicate' };
+    }
     _alertDedup.set(dedupKey, Date.now());
 
     let subject, html, text;
@@ -715,12 +726,14 @@ async function sendAdminAlertEmail(type, data) {
 <p><a href="${esc(data.link || 'https://thetohfa.in/admin/sellers.html')}">View in Admin Panel</a></p>`;
       text = `New Seller Created by Admin\nStore: ${data.storeName}\nType: ${typeLabel}\nEmail: ${data.email}\nPhone: ${data.phone || 'N/A'}\nPlan: ${data.plan || 'N/A'}\nLocation: ${loc}\n${data.link || 'https://thetohfa.in/admin/sellers.html'}`;
     } else {
-      return;
+      return { success: false, reason: 'unknown_type' };
     }
 
-    await sendMail(process.env.OWNER_NOTIFY_EMAIL, subject, html, text);
+    const res = await sendMail(ownerEmail, subject, html, text);
+    return res || { success: true };
   } catch (err) {
     console.error(`[Owner Notify] sendAdminAlertEmail error (${type}):`, err.message);
+    return { success: false, error: err.message };
   }
 }
 

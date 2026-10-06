@@ -120,10 +120,10 @@ async function getOwnSellerProfile(req, res, next) {
                 sp.badges,
                 sp.story_headline, sp.story_description, sp.working_on, sp.video_url, sp.about_image_url,
                 COALESCE(sp.whatsapp_number, s.whatsapp_number, u.phone) AS whatsapp_number,
-                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.logo_url, u.profile_photo_url) AS profile_photo,
+                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.photo_url, u.profile_photo_url) AS profile_photo,
                 COALESCE(sp.banner_url, s.banner_url, u.cover_photo_url) AS cover_photo,
-                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.logo_url, u.profile_photo_url) AS avatar_url,
-                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.logo_url, u.profile_photo_url) AS logo_url,
+                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.photo_url, u.profile_photo_url) AS avatar_url,
+                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.photo_url, u.profile_photo_url) AS logo_url,
                 COALESCE(sp.banner_url, s.banner_url, u.cover_photo_url) AS banner_url,
                 COALESCE(sp.seller_type, 'regular') AS seller_type,
                 COALESCE(sp.is_approved, s.is_approved, FALSE) AS is_approved,
@@ -171,10 +171,10 @@ async function getOwnSellerProfile(req, res, next) {
                 COALESCE(sp.slug, s.slug) AS handle,
                 COALESCE(sp.bio, s.bio) AS bio,
                 COALESCE(sp.whatsapp_number, u.phone) AS whatsapp_number,
-                COALESCE(sp.logo_url, s.logo_url, u.profile_photo_url) AS profile_photo,
+                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.photo_url, u.profile_photo_url) AS profile_photo,
                 COALESCE(sp.banner_url, s.banner_url, u.cover_photo_url) AS cover_photo,
-                COALESCE(sp.logo_url, s.logo_url, u.profile_photo_url) AS avatar_url,
-                COALESCE(sp.logo_url, s.logo_url, u.profile_photo_url) AS logo_url,
+                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.photo_url, u.profile_photo_url) AS avatar_url,
+                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.photo_url, u.profile_photo_url) AS logo_url,
                 COALESCE(sp.banner_url, s.banner_url, u.cover_photo_url) AS banner_url,
                 COALESCE(sp.seller_type, 'regular') AS seller_type,
                 COALESCE(sp.is_approved, s.is_approved, FALSE) AS is_approved,
@@ -488,12 +488,14 @@ async function getPublicSellerProfile(req, res, next) {
               s.verification_status AS s_verification_status, s.is_approved AS s_is_approved,
               COALESCE(sp.subscription_plan, s.subscription_plan, 'basic') AS subscription_plan,
               COALESCE(sp.subscription_status, s.subscription_status, 'active') AS subscription_status,
-              (SELECT COUNT(*) FROM products p WHERE p.seller_id = u.id AND p.status = 'active') AS product_count,
-              (SELECT AVG(r.rating) FROM reviews r WHERE r.seller_id = u.id) AS avg_rating,
-              (SELECT COUNT(*) FROM reviews r WHERE r.seller_id = u.id) AS review_count
+              p.product_count,
+              r.avg_rating,
+              r.review_count
        FROM users u
        LEFT JOIN seller_profiles sp ON sp.user_id = u.id
        LEFT JOIN sellers s ON s.user_id = u.id
+       LEFT JOIN LATERAL (SELECT COUNT(p.id) AS product_count FROM products p WHERE p.seller_id = u.id AND p.status = 'active') p ON true
+       LEFT JOIN LATERAL (SELECT AVG(r.rating) AS avg_rating, COUNT(r.id) AS review_count FROM reviews r WHERE r.seller_id = u.id) r ON true
        WHERE u.id::text = $1::text
           OR sp.id::text = $1::text
           OR s.id::text = $1::text
@@ -1124,65 +1126,142 @@ async function getDashboardMetrics(req, res, next) {
     if (period === '30d') days = 30;
     else if (period === '90d') days = 90;
 
-    // 0. Seller profile info
-    const { rows: profileRows } = await query(
-      `SELECT sp.store_name, COALESCE(sp.store_name, u.name) AS display_name, u.name, u.email
-       FROM users u
-       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
-       WHERE u.id = $1`,
-      [sellerId]
-    );
+    // Execute independent dashboard queries in parallel
+    const [
+      profileRes,
+      allTimeStatsRes,
+      currPeriodStatsRes,
+      prevPeriodStatsRes,
+      prodRowsRes,
+      reviewRowsRes,
+      lowStockRowsRes,
+      recentOrderRowsRes,
+      dailyDataRes
+    ] = await Promise.all([
+      // 0. Seller profile info
+      query(
+        `SELECT sp.store_name, COALESCE(sp.store_name, u.name) AS display_name, u.name, u.email
+         FROM users u
+         LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+         WHERE u.id = $1`,
+        [sellerId]
+      ),
+      // 1. All-time Core KPIs
+      query(
+        `SELECT
+           COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN so.subtotal ELSE 0 END), 0) AS all_revenue,
+           COUNT(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS all_orders,
+           COUNT(CASE WHEN LOWER(COALESCE(so.status, '')) IN ('order_placed', 'pending', 'confirmed', 'crafting', 'packed', 'processing') THEN 1 END) AS pending_orders
+         FROM seller_orders so
+         JOIN orders o ON o.id = so.order_id
+         WHERE (so.seller_id = $1 OR so.seller_id::text = $1::text)`,
+        [sellerId]
+      ).catch(() => ({ rows: [{ all_revenue: 0, all_orders: 0, pending_orders: 0 }] })),
+      // Current period stats
+      query(
+        `SELECT
+           COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN so.subtotal ELSE 0 END), 0) AS curr_revenue,
+           COUNT(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS curr_orders
+         FROM seller_orders so
+         JOIN orders o ON o.id = so.order_id
+         WHERE (so.seller_id = $1 OR so.seller_id::text = $1::text)
+           AND so.created_at >= NOW() - ($2 || ' days')::INTERVAL`,
+        [sellerId, days]
+      ).catch(() => ({ rows: [{ curr_revenue: 0, curr_orders: 0 }] })),
+      // Previous period stats (for % delta comparison)
+      query(
+        `SELECT
+           COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN so.subtotal ELSE 0 END), 0) AS prev_revenue,
+           COUNT(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS prev_orders
+         FROM seller_orders so
+         JOIN orders o ON o.id = so.order_id
+         WHERE (so.seller_id = $1 OR so.seller_id::text = $1::text)
+           AND so.created_at >= NOW() - ($2 || ' days')::INTERVAL * 2
+           AND so.created_at < NOW() - ($2 || ' days')::INTERVAL`,
+        [sellerId, days]
+      ).catch(() => ({ rows: [{ prev_revenue: 0, prev_orders: 0 }] })),
+      // Products count & views
+      query(
+        `SELECT COUNT(*) AS active_products, COALESCE(SUM(view_count), 0) AS total_views
+         FROM products WHERE (seller_id = $1 OR seller_id::text = $1::text) AND status != 'deleted'`,
+        [sellerId]
+      ).catch(() => ({ rows: [{ active_products: 0, total_views: 0 }] })),
+      // Review rating & count
+      query(
+        `SELECT COALESCE(ROUND(AVG(rating)::numeric, 1), 5.0) AS average_rating, COUNT(*) AS review_count
+         FROM reviews WHERE (seller_id = $1 OR seller_id::text = $1::text)`,
+        [sellerId]
+      ).catch(() => ({ rows: [{ average_rating: 5.0, review_count: 0 }] })),
+      // 2. Low Stock Alerts
+      query(
+        `SELECT id, name, name AS title, stock_quantity, stock_quantity AS stock_count,
+                COALESCE(low_stock_threshold, 5) AS threshold
+         FROM products
+         WHERE (seller_id = $1 OR seller_id::text = $1::text) AND status != 'deleted' AND stock_quantity <= COALESCE(low_stock_threshold, 5)
+         ORDER BY stock_quantity ASC
+         LIMIT 5`,
+        [sellerId]
+      ).catch(() => ({ rows: [] })),
+      // 3. Recent orders (latest 5)
+      query(
+        `SELECT o.id AS parent_order_id, so.id AS id, so.subtotal, so.subtotal AS total_amount, so.status, so.created_at, o.payment_status, so.payout_status,
+                COALESCE(u.name, 'Valued Buyer') AS buyer_name,
+                u.email AS buyer_email,
+                COALESCE(NULLIF(TRIM(o.shipping_address->>'city'), ''), NULLIF(TRIM(a.city), ''), 'India') AS shipping_city,
+                COALESCE(
+                  (SELECT json_agg(json_build_object(
+                    'id', oi.id,
+                    'product_id', oi.product_id,
+                    'product_name', p.name,
+                    'name', p.name,
+                    'quantity', oi.quantity,
+                    'unit_price', COALESCE(oi.unit_price, (oi.unit_price_paise::numeric / 100.0), 0),
+                    'customization_data', oi.customization_data,
+                    'proof_image_url', oi.proof_image_url,
+                    'customization_status', oi.customization_status,
+                    'image_url', (SELECT url FROM product_images pi WHERE pi.product_id = oi.product_id ORDER BY sort_order ASC LIMIT 1)
+                  ))
+                  FROM order_items oi
+                  LEFT JOIN products p ON p.id = oi.product_id
+                  WHERE oi.seller_order_id = so.id OR (oi.order_id = o.id AND oi.seller_order_id IS NULL)),
+                  '[]'
+                ) AS items
+         FROM seller_orders so
+         JOIN orders o ON o.id = so.order_id
+         LEFT JOIN users u ON u.id = o.buyer_id
+         LEFT JOIN addresses a ON a.id = o.address_id
+         WHERE (so.seller_id = $1 OR so.seller_id::text = $1::text)
+         ORDER BY so.created_at DESC
+         LIMIT 5`,
+        [sellerId]
+      ).catch(() => ({ rows: [] })),
+      // 4. Sales & Visits Chart for requested period
+      query(
+        `SELECT DATE(so.created_at) AS date,
+                COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN so.subtotal ELSE 0 END), 0) AS revenue,
+                COUNT(CASE WHEN LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS orders_count
+         FROM seller_orders so
+         JOIN orders o ON o.id = so.order_id
+         WHERE (so.seller_id = $1 OR so.seller_id::text = $1::text)
+           AND so.created_at >= NOW() - ($2 || ' days')::INTERVAL
+         GROUP BY DATE(so.created_at)
+         ORDER BY date ASC`,
+        [sellerId, days]
+      ).catch(() => ({ rows: [] }))
+    ]);
+
+    const profileRows = profileRes.rows || [];
+    const allTimeStats = allTimeStatsRes.rows || [];
+    const currPeriodStats = currPeriodStatsRes.rows || [];
+    const prevPeriodStats = prevPeriodStatsRes.rows || [];
+    const prodRows = prodRowsRes.rows || [];
+    const reviewRows = reviewRowsRes.rows || [];
+    const lowStockRows = lowStockRowsRes.rows || [];
+    const recentOrderRows = recentOrderRowsRes.rows || [];
+    const dailyData = dailyDataRes.rows || [];
+
     const sellerInfo = profileRows[0] || {};
     const displayName = sellerInfo.display_name || sellerInfo.store_name || sellerInfo.name || 'Artisan Studio';
-
-    // 1. All-time Core KPIs
-    const { rows: allTimeStats } = await query(
-      `SELECT
-         COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN so.subtotal ELSE 0 END), 0) AS all_revenue,
-         COUNT(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS all_orders,
-         COUNT(CASE WHEN LOWER(COALESCE(so.status, '')) IN ('order_placed', 'pending', 'confirmed', 'crafting', 'packed', 'processing') THEN 1 END) AS pending_orders
-       FROM seller_orders so
-       JOIN orders o ON o.id = so.order_id
-       WHERE (so.seller_id = $1 OR so.seller_id::text = $1::text)`,
-      [sellerId]
-    ).catch(() => ({ rows: [{ all_revenue: 0, all_orders: 0, pending_orders: 0 }] }));
-
-    // Current period stats
-    const { rows: currPeriodStats } = await query(
-      `SELECT
-         COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN so.subtotal ELSE 0 END), 0) AS curr_revenue,
-         COUNT(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS curr_orders
-       FROM seller_orders so
-       JOIN orders o ON o.id = so.order_id
-       WHERE (so.seller_id = $1 OR so.seller_id::text = $1::text)
-         AND so.created_at >= NOW() - ($2 || ' days')::INTERVAL`,
-      [sellerId, days]
-    ).catch(() => ({ rows: [{ curr_revenue: 0, curr_orders: 0 }] }));
-
-    // Previous period stats (for % delta comparison)
-    const { rows: prevPeriodStats } = await query(
-      `SELECT
-         COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN so.subtotal ELSE 0 END), 0) AS prev_revenue,
-         COUNT(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS prev_orders
-       FROM seller_orders so
-       JOIN orders o ON o.id = so.order_id
-       WHERE (so.seller_id = $1 OR so.seller_id::text = $1::text)
-         AND so.created_at >= NOW() - ($2 || ' days')::INTERVAL * 2
-         AND so.created_at < NOW() - ($2 || ' days')::INTERVAL`,
-      [sellerId, days]
-    ).catch(() => ({ rows: [{ prev_revenue: 0, prev_orders: 0 }] }));
-
-    const { rows: prodRows } = await query(
-      `SELECT COUNT(*) AS active_products, COALESCE(SUM(view_count), 0) AS total_views
-       FROM products WHERE (seller_id = $1 OR seller_id::text = $1::text) AND status != 'deleted'`,
-      [sellerId]
-    ).catch(() => ({ rows: [{ active_products: 0, total_views: 0 }] }));
-
-    const { rows: reviewRows } = await query(
-      `SELECT COALESCE(ROUND(AVG(rating)::numeric, 1), 5.0) AS average_rating, COUNT(*) AS review_count
-       FROM reviews WHERE (seller_id = $1 OR seller_id::text = $1::text)`,
-      [sellerId]
-    ).catch(() => ({ rows: [{ average_rating: 5.0, review_count: 0 }] }));
 
     const currRevenue = parseFloat(currPeriodStats[0]?.curr_revenue || 0);
     const currOrders = parseInt(currPeriodStats[0]?.curr_orders || 0, 10);
@@ -1213,51 +1292,6 @@ async function getDashboardMetrics(req, res, next) {
       conversionRate = parseFloat(((currOrders / viewBase) * 100).toFixed(1));
     }
 
-    // 2. Low Stock Alerts
-    const { rows: lowStockRows } = await query(
-      `SELECT id, name, name AS title, stock_quantity, stock_quantity AS stock_count,
-              COALESCE(low_stock_threshold, 5) AS threshold
-       FROM products
-       WHERE (seller_id = $1 OR seller_id::text = $1::text) AND status != 'deleted' AND stock_quantity <= COALESCE(low_stock_threshold, 5)
-       ORDER BY stock_quantity ASC
-       LIMIT 5`,
-      [sellerId]
-    ).catch(() => ({ rows: [] }));
-
-    // 3. Recent orders (latest 5)
-    const { rows: recentOrderRows } = await query(
-      `SELECT o.id AS parent_order_id, so.id AS id, so.subtotal, so.subtotal AS total_amount, so.status, so.created_at, o.payment_status, so.payout_status,
-              COALESCE(u.name, 'Valued Buyer') AS buyer_name,
-              u.email AS buyer_email,
-              COALESCE(NULLIF(TRIM(o.shipping_address->>'city'), ''), NULLIF(TRIM(a.city), ''), 'India') AS shipping_city,
-              COALESCE(
-                (SELECT json_agg(json_build_object(
-                  'id', oi.id,
-                  'product_id', oi.product_id,
-                  'product_name', p.name,
-                  'name', p.name,
-                  'quantity', oi.quantity,
-                  'unit_price', COALESCE(oi.unit_price, (oi.unit_price_paise::numeric / 100.0), 0),
-                  'customization_data', oi.customization_data,
-                  'proof_image_url', oi.proof_image_url,
-                  'customization_status', oi.customization_status,
-                  'image_url', (SELECT url FROM product_images pi WHERE pi.product_id = oi.product_id ORDER BY sort_order ASC LIMIT 1)
-                ))
-                FROM order_items oi
-                LEFT JOIN products p ON p.id = oi.product_id
-                WHERE oi.seller_order_id = so.id OR (oi.order_id = o.id AND oi.seller_order_id IS NULL)),
-                '[]'
-              ) AS items
-       FROM seller_orders so
-       JOIN orders o ON o.id = so.order_id
-       LEFT JOIN users u ON u.id = o.buyer_id
-       LEFT JOIN addresses a ON a.id = o.address_id
-       WHERE (so.seller_id = $1 OR so.seller_id::text = $1::text)
-       ORDER BY so.created_at DESC
-       LIMIT 5`,
-      [sellerId]
-    ).catch(() => ({ rows: [] }));
-
     const formattedRecentOrders = recentOrderRows.map(o => {
       const items = Array.isArray(o.items) ? o.items : [];
       const firstItem = items[0] || {};
@@ -1280,20 +1314,6 @@ async function getDashboardMetrics(req, res, next) {
         items,
       };
     });
-
-    // 4. Sales & Visits Chart for requested period (joins through seller_orders)
-    const { rows: dailyData } = await query(
-      `SELECT DATE(so.created_at) AS date,
-              COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN so.subtotal ELSE 0 END), 0) AS revenue,
-              COUNT(CASE WHEN LOWER(COALESCE(so.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS orders_count
-       FROM seller_orders so
-       JOIN orders o ON o.id = so.order_id
-       WHERE (so.seller_id = $1 OR so.seller_id::text = $1::text)
-         AND so.created_at >= NOW() - ($2 || ' days')::INTERVAL
-       GROUP BY DATE(so.created_at)
-       ORDER BY date ASC`,
-      [sellerId, days]
-    ).catch(() => ({ rows: [] }));
 
     // Build complete daily date sequence
     const chartLabels = [];
@@ -1403,24 +1423,121 @@ async function getSellerAnalytics(req, res, next) {
       daysCount = Math.max(1, Math.round(diffMs / 86400000) + 1);
     }
 
-    // 1. Revenue & Order totals in this window (excluding cancelled & refunded)
-    const { rows: totalsRows } = await query(
-      `SELECT
-         COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN COALESCE(NULLIF(o.total_paise, 0) / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0) ELSE 0 END), 0) AS total_revenue,
-         COUNT(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS total_orders,
-         COUNT(CASE WHEN LOWER(COALESCE(o.status, '')) IN ('cancelled', 'refunded', 'cancel_requested') OR LOWER(COALESCE(o.payment_status, '')) = 'refunded' THEN 1 END) AS returns_cancellations
-       FROM orders o
-       WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text) AND ${dateCondition}`,
-      queryParams
-    ).catch(() => ({ rows: [{ total_revenue: 0, total_orders: 0, returns_cancellations: 0 }] }));
+    // Execute independent analytics queries in parallel with Promise.all
+    const [
+      totalsRes,
+      prodViewsRes,
+      dailyRes,
+      topProductsRes,
+      orderTypesRes,
+      buyerStatsRes,
+      locationRes
+    ] = await Promise.all([
+      // 1. Revenue & Order totals in this window (excluding cancelled & refunded)
+      query(
+        `SELECT
+           COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN COALESCE(NULLIF(o.total_paise, 0) / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0) ELSE 0 END), 0) AS total_revenue,
+           COUNT(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS total_orders,
+           COUNT(CASE WHEN LOWER(COALESCE(o.status, '')) IN ('cancelled', 'refunded', 'cancel_requested') OR LOWER(COALESCE(o.payment_status, '')) = 'refunded' THEN 1 END) AS returns_cancellations
+         FROM orders o
+         WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text) AND ${dateCondition}`,
+        queryParams
+      ).catch(() => ({ rows: [{ total_revenue: 0, total_orders: 0, returns_cancellations: 0 }] })),
 
-    // 2. Product Views for real conversion rate
-    const { rows: prodViews } = await query(
-      `SELECT COALESCE(SUM(view_count), 0) AS total_views, COUNT(*) AS active_products
-       FROM products
-       WHERE (seller_id = $1 OR seller_id::text = $1::text) AND status != 'deleted'`,
-      [sellerId]
-    ).catch(() => ({ rows: [{ total_views: 0, active_products: 0 }] }));
+      // 2. Product Views for real conversion rate
+      query(
+        `SELECT COALESCE(SUM(view_count), 0) AS total_views, COUNT(*) AS active_products
+         FROM products
+         WHERE (seller_id = $1 OR seller_id::text = $1::text) AND status != 'deleted'`,
+        [sellerId]
+      ).catch(() => ({ rows: [{ total_views: 0, active_products: 0 }] })),
+
+      // 3. Orders per day & daily revenue series
+      query(
+        `SELECT
+           TO_CHAR(o.created_at, 'YYYY-MM-DD') AS date_str,
+           COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN COALESCE(NULLIF(o.total_paise, 0) / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0) ELSE 0 END), 0) AS daily_revenue,
+           COUNT(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS daily_orders
+         FROM orders o
+         WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text) AND ${dateCondition}
+         GROUP BY TO_CHAR(o.created_at, 'YYYY-MM-DD')
+         ORDER BY date_str ASC`,
+        queryParams
+      ).catch(() => ({ rows: [] })),
+
+      // 4. Product performance & top products
+      query(
+        `SELECT 
+           p.id, p.name, p.base_price, p.view_count, p.stock_quantity,
+           COUNT(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN oi.id END) AS units_sold,
+           COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN COALESCE(oi.unit_price * oi.quantity, 0) ELSE 0 END), 0) AS total_revenue
+         FROM products p
+         LEFT JOIN order_items oi ON oi.product_id = p.id
+         LEFT JOIN orders o ON o.id = oi.order_id AND ${dateCondition}
+         WHERE (p.seller_id = $1 OR p.seller_id::text = $1::text) AND p.status != 'deleted'
+         GROUP BY p.id, p.name, p.base_price, p.view_count, p.stock_quantity
+         ORDER BY total_revenue DESC, units_sold DESC
+         LIMIT 10`,
+        queryParams
+      ).catch(() => ({ rows: [] })),
+
+      // 5. Custom vs Pre-made comparison
+      query(
+        `SELECT 
+           COUNT(CASE WHEN (LOWER(COALESCE(o.order_type, '')) IN ('custom', 'customized') OR o.customization IS NOT NULL OR EXISTS (SELECT 1 FROM order_items oi WHERE oi.order_id = o.id AND (oi.customization_data IS NOT NULL AND oi.customization_data::text NOT IN ('', 'null', '{}')))) THEN 1 END) AS custom_count,
+           COALESCE(SUM(CASE WHEN (LOWER(COALESCE(o.order_type, '')) IN ('custom', 'customized') OR o.customization IS NOT NULL OR EXISTS (SELECT 1 FROM order_items oi WHERE oi.order_id = o.id AND (oi.customization_data IS NOT NULL AND oi.customization_data::text NOT IN ('', 'null', '{}')))) THEN COALESCE(NULLIF(o.total_paise, 0) / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0) ELSE 0 END), 0) AS custom_revenue,
+           COUNT(CASE WHEN (LOWER(COALESCE(o.order_type, '')) NOT IN ('custom', 'customized') AND o.customization IS NULL AND NOT EXISTS (SELECT 1 FROM order_items oi WHERE oi.order_id = o.id AND (oi.customization_data IS NOT NULL AND oi.customization_data::text NOT IN ('', 'null', '{}')))) THEN 1 END) AS premade_count,
+           COALESCE(SUM(CASE WHEN (LOWER(COALESCE(o.order_type, '')) NOT IN ('custom', 'customized') AND o.customization IS NULL AND NOT EXISTS (SELECT 1 FROM order_items oi WHERE oi.order_id = o.id AND (oi.customization_data IS NOT NULL AND oi.customization_data::text NOT IN ('', 'null', '{}')))) THEN COALESCE(NULLIF(o.total_paise, 0) / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0) ELSE 0 END), 0) AS premade_revenue
+         FROM orders o
+         WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text)
+           AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
+           AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested')
+           AND ${dateCondition}`,
+        queryParams
+      ).catch(() => ({ rows: [{ custom_count: 0, custom_revenue: 0, premade_count: 0, premade_revenue: 0 }] })),
+
+      // 6. Customer Insights (Repeat vs New Buyers & Top Cities)
+      query(
+        `WITH seller_buyers AS (
+           SELECT o.buyer_id, COUNT(o.id) AS order_count
+           FROM orders o
+           WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text)
+             AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
+             AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested')
+           GROUP BY o.buyer_id
+         )
+         SELECT 
+           COUNT(CASE WHEN order_count > 1 THEN 1 END) AS repeat_buyers,
+           COUNT(CASE WHEN order_count = 1 THEN 1 END) AS new_buyers
+         FROM seller_buyers`,
+        [sellerId]
+      ).catch(() => ({ rows: [{ repeat_buyers: 0, new_buyers: 0 }] })),
+
+      // 7. Top cities
+      query(
+        `SELECT 
+           COALESCE(NULLIF(TRIM(o.shipping_address->>'city'), ''), NULLIF(TRIM(a.city), ''), 'Jaipur') AS city,
+           COUNT(o.id) AS order_count,
+           COALESCE(SUM(COALESCE(NULLIF(o.total_paise, 0) / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0)), 0) AS revenue
+         FROM orders o
+         LEFT JOIN addresses a ON a.id = o.address_id
+         WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text)
+           AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
+           AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested')
+         GROUP BY city
+         ORDER BY order_count DESC, revenue DESC
+         LIMIT 5`,
+        [sellerId]
+      ).catch(() => ({ rows: [] }))
+    ]);
+
+    const totalsRows = totalsRes.rows || [];
+    const prodViews = prodViewsRes.rows || [];
+    const dailyRows = dailyRes.rows || [];
+    const topProducts = topProductsRes.rows || [];
+    const orderTypesRows = orderTypesRes.rows || [];
+    const buyerStatsRows = buyerStatsRes.rows || [];
+    const locationRows = locationRes.rows || [];
 
     const totalRevenue = parseFloat(parseFloat(totalsRows[0]?.total_revenue || 0).toFixed(2));
     const totalOrders = parseInt(totalsRows[0]?.total_orders || 0, 10);
@@ -1429,132 +1546,6 @@ async function getSellerAnalytics(req, res, next) {
     const totalViews = parseInt(prodViews[0]?.total_views || 0, 10);
     const storeVisitors = Math.max(totalViews, totalOrders);
     const conversionRate = totalOrders > 0 ? parseFloat(((totalOrders / Math.max(totalViews, totalOrders, 1)) * 100).toFixed(1)) : 0.0;
-
-    // 3. Orders per day & daily revenue series
-    const { rows: dailyRows } = await query(
-      `SELECT
-         TO_CHAR(o.created_at, 'YYYY-MM-DD') AS date_str,
-         COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN COALESCE(NULLIF(o.total_paise, 0) / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0) ELSE 0 END), 0) AS daily_revenue,
-         COUNT(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN 1 END) AS daily_orders
-       FROM orders o
-       WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text) AND ${dateCondition}
-       GROUP BY TO_CHAR(o.created_at, 'YYYY-MM-DD')
-       ORDER BY date_str ASC`,
-      queryParams
-    ).catch(() => ({ rows: [] }));
-
-    const dailyMap = {};
-    (dailyRows || []).forEach(r => {
-      dailyMap[r.date_str] = {
-        revenue: parseFloat(r.daily_revenue || 0),
-        orders: parseInt(r.daily_orders || 0, 10),
-      };
-    });
-
-    const chartLabels = [];
-    const chartRevenue = [];
-    const chartOrders = [];
-    const chartConversion = [];
-    const now = new Date();
-
-    if (selectedRange === 'today') {
-      const todayStr = now.toISOString().split('T')[0];
-      chartLabels.push(todayStr);
-      const entry = dailyMap[todayStr] || { revenue: 0, orders: 0 };
-      chartRevenue.push(entry.revenue);
-      chartOrders.push(entry.orders);
-      chartConversion.push(entry.orders > 0 ? conversionRate : 0);
-    } else {
-      const numDays = Math.min(daysCount, 90);
-      for (let i = numDays - 1; i >= 0; i--) {
-        const d = new Date(now.getTime() - i * 86400000);
-        const dateStr = d.toISOString().split('T')[0];
-        chartLabels.push(dateStr);
-        const entry = dailyMap[dateStr] || { revenue: 0, orders: 0 };
-        chartRevenue.push(entry.revenue);
-        chartOrders.push(entry.orders);
-        const dailyConv = entry.orders > 0 ? parseFloat(((entry.orders / Math.max(Math.round(totalViews / numDays), entry.orders, 1)) * 100).toFixed(1)) : 0;
-        chartConversion.push(dailyConv);
-      }
-    }
-
-    // 4. Product performance & top products
-    const { rows: topProducts } = await query(
-      `SELECT 
-         p.id, p.name, p.base_price, p.view_count, p.stock_quantity,
-         COUNT(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN oi.id END) AS units_sold,
-         COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.payment_status, '')) = 'paid' AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested') THEN COALESCE(oi.unit_price * oi.quantity, 0) ELSE 0 END), 0) AS total_revenue
-       FROM products p
-       LEFT JOIN order_items oi ON oi.product_id = p.id
-       LEFT JOIN orders o ON o.id = oi.order_id AND ${dateCondition}
-       WHERE (p.seller_id = $1 OR p.seller_id::text = $1::text) AND p.status != 'deleted'
-       GROUP BY p.id, p.name, p.base_price, p.view_count, p.stock_quantity
-       ORDER BY total_revenue DESC, units_sold DESC
-       LIMIT 10`,
-      queryParams
-    ).catch(() => ({ rows: [] }));
-
-    const productPerformance = (topProducts || []).map(p => ({
-      id: p.id,
-      name: p.name,
-      base_price: parseFloat(p.base_price || 0),
-      sales_count: parseInt(p.units_sold || 0, 10),
-      units_sold: parseInt(p.units_sold || 0, 10),
-      total_revenue: parseFloat(p.total_revenue || 0),
-      revenue: parseFloat(p.total_revenue || 0),
-      view_count: parseInt(p.view_count || 0, 10),
-      stock: p.stock_quantity != null ? parseInt(p.stock_quantity, 10) : '—',
-      stock_quantity: p.stock_quantity != null ? parseInt(p.stock_quantity, 10) : '—',
-      rating: 4.8,
-    }));
-
-    // 5. Custom vs Pre-made comparison
-    const { rows: orderTypesRows } = await query(
-      `SELECT 
-         COUNT(CASE WHEN (LOWER(COALESCE(o.order_type, '')) IN ('custom', 'customized') OR o.customization IS NOT NULL OR EXISTS (SELECT 1 FROM order_items oi WHERE oi.order_id = o.id AND (oi.customization_data IS NOT NULL AND oi.customization_data::text NOT IN ('', 'null', '{}')))) THEN 1 END) AS custom_count,
-         COALESCE(SUM(CASE WHEN (LOWER(COALESCE(o.order_type, '')) IN ('custom', 'customized') OR o.customization IS NOT NULL OR EXISTS (SELECT 1 FROM order_items oi WHERE oi.order_id = o.id AND (oi.customization_data IS NOT NULL AND oi.customization_data::text NOT IN ('', 'null', '{}')))) THEN COALESCE(NULLIF(o.total_paise, 0) / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0) ELSE 0 END), 0) AS custom_revenue,
-         COUNT(CASE WHEN (LOWER(COALESCE(o.order_type, '')) NOT IN ('custom', 'customized') AND o.customization IS NULL AND NOT EXISTS (SELECT 1 FROM order_items oi WHERE oi.order_id = o.id AND (oi.customization_data IS NOT NULL AND oi.customization_data::text NOT IN ('', 'null', '{}')))) THEN 1 END) AS premade_count,
-         COALESCE(SUM(CASE WHEN (LOWER(COALESCE(o.order_type, '')) NOT IN ('custom', 'customized') AND o.customization IS NULL AND NOT EXISTS (SELECT 1 FROM order_items oi WHERE oi.order_id = o.id AND (oi.customization_data IS NOT NULL AND oi.customization_data::text NOT IN ('', 'null', '{}')))) THEN COALESCE(NULLIF(o.total_paise, 0) / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0) ELSE 0 END), 0) AS premade_revenue
-       FROM orders o
-       WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text)
-         AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
-         AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested')
-         AND ${dateCondition}`,
-      queryParams
-    ).catch(() => ({ rows: [{ custom_count: 0, custom_revenue: 0, premade_count: 0, premade_revenue: 0 }] }));
-
-    // 6. Customer Insights (Repeat vs New Buyers & Top Cities)
-    const { rows: buyerStatsRows } = await query(
-      `WITH seller_buyers AS (
-         SELECT o.buyer_id, COUNT(o.id) AS order_count
-         FROM orders o
-         WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text)
-           AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
-           AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested')
-         GROUP BY o.buyer_id
-       )
-       SELECT 
-         COUNT(CASE WHEN order_count > 1 THEN 1 END) AS repeat_buyers,
-         COUNT(CASE WHEN order_count = 1 THEN 1 END) AS new_buyers
-       FROM seller_buyers`,
-      [sellerId]
-    ).catch(() => ({ rows: [{ repeat_buyers: 0, new_buyers: 0 }] }));
-
-    const { rows: locationRows } = await query(
-      `SELECT 
-         COALESCE(NULLIF(TRIM(o.shipping_address->>'city'), ''), NULLIF(TRIM(a.city), ''), 'Jaipur') AS city,
-         COUNT(o.id) AS order_count,
-         COALESCE(SUM(COALESCE(NULLIF(o.total_paise, 0) / 100.0, CASE WHEN o.total_amount >= 10000 THEN o.total_amount / 100.0 ELSE o.total_amount END, 0)), 0) AS revenue
-       FROM orders o
-       LEFT JOIN addresses a ON a.id = o.address_id
-       WHERE (o.seller_id = $1 OR o.seller_id::text = $1::text)
-         AND LOWER(COALESCE(o.payment_status, '')) = 'paid'
-         AND LOWER(COALESCE(o.status, '')) NOT IN ('cancelled', 'refunded', 'cancel_requested')
-       GROUP BY city
-       ORDER BY order_count DESC, revenue DESC
-       LIMIT 5`,
-      [sellerId]
-    ).catch(() => ({ rows: [] }));
 
     return res.json({
       success: true,
@@ -1625,14 +1616,40 @@ async function getSellerAnalytics(req, res, next) {
 async function getSellerOrders(req, res, next) {
   try {
     await ensureOrderItemColumns();
-    const sellerId = req.user.id;
-    const { page = '1', limit = '20', status, search } = req.query;
+    const headerSellerId = req.headers['x-seller-id'] || req.headers['x-impersonate-seller-id'] || req.query.seller_id || req.query.sellerId || req.params?.sellerId;
+    const userRole = String(req.user?.role || '').toUpperCase();
+    const isAdmin = userRole === 'ADMIN' || userRole === 'MASTER_ADMIN';
+    const effectiveSellerId = (isAdmin && headerSellerId) ? headerSellerId : req.user.id;
+
+    const { page = '1', limit = '20', status, search, period } = req.query;
     const pageNum  = Math.max(1, parseInt(page, 10));
     const limitNum = Math.min(50, parseInt(limit, 10));
     const offset   = (pageNum - 1) * limitNum;
 
-    const conditions = ['so.seller_id = $1'];
-    const params = [sellerId];
+    const { rows: sRows } = await query(
+      'SELECT id, user_id FROM sellers WHERE user_id::text = $1 OR id::text = $1 UNION SELECT id, user_id FROM seller_profiles WHERE user_id::text = $1 OR id::text = $1',
+      [String(effectiveSellerId)]
+    ).catch(() => ({ rows: [] }));
+
+    const validIds = Array.from(new Set([
+      Number(effectiveSellerId),
+      String(effectiveSellerId),
+      ...sRows.flatMap(s => [Number(s.id), String(s.id), Number(s.user_id), String(s.user_id)])
+    ])).filter(Boolean);
+
+    const conditions = ['(so.seller_id::text = ANY($1::text[]) OR o.seller_id::text = ANY($1::text[]))'];
+    const params = [validIds.map(String)];
+
+    if (period && period !== 'all') {
+      const p = String(period).toLowerCase().trim();
+      if (p === '7d') {
+        conditions.push("so.created_at >= NOW() - INTERVAL '7 days'");
+      } else if (p === '30d') {
+        conditions.push("so.created_at >= NOW() - INTERVAL '30 days'");
+      } else if (p === '90d') {
+        conditions.push("so.created_at >= NOW() - INTERVAL '90 days'");
+      }
+    }
 
     if (status && status !== 'all') {
       const st = String(status).toLowerCase().trim();
@@ -1640,6 +1657,8 @@ async function getSellerOrders(req, res, next) {
         conditions.push(`LOWER(so.status) IN ('in_production', 'crafting', 'processing')`);
       } else if (st === 'pending' || st === 'unfulfilled') {
         conditions.push(`LOWER(so.status) IN ('pending', 'unfulfilled', 'confirmed', 'order_placed')`);
+      } else if (st === 'shipped' || st === 'dispatched') {
+        conditions.push(`LOWER(so.status) IN ('shipped', 'dispatched')`);
       } else {
         params.push(st);
         conditions.push(`LOWER(so.status) = $${params.length}`);
@@ -1669,7 +1688,13 @@ async function getSellerOrders(req, res, next) {
               so.subtotal AS total_amount, (so.subtotal * 100) AS total_paise,
               so.id AS id, o.order_ref, NULL AS order_type, NULL AS customization, o.customization_details AS customization_summary,
               so.status, o.payment_status, so.payout_status,
-              COALESCE(so.awb_number, o.tracking_id) AS tracking_id, COALESCE(so.tracking_url, o.tracking_url) AS tracking_url, o.notes, o.studio_notes, so.delivered_at, so.created_at, o.updated_at,
+              COALESCE(so.awb_number, o.tracking_id) AS tracking_id, COALESCE(so.tracking_url, o.tracking_url) AS tracking_url,
+              o.notes AS buyer_notes, o.notes, o.studio_notes,
+              COALESCE(o.special_instructions, '') AS special_instructions,
+              COALESCE(sp.is_admin_managed, sel.is_admin_managed, FALSE) AS is_admin_managed,
+              COALESCE(sp.seller_type, sel.seller_type, 'normal') AS seller_type,
+              o.is_special,
+              so.delivered_at, so.created_at, o.updated_at,
               u.name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone,
               COALESCE(NULLIF(TRIM(o.shipping_address->>'line1'), ''), NULLIF(TRIM(a.line1), '')) AS delivery_line1,
               COALESCE(NULLIF(TRIM(o.shipping_address->>'line2'), ''), NULLIF(TRIM(a.line2), '')) AS delivery_line2,
@@ -1682,22 +1707,27 @@ async function getSellerOrders(req, res, next) {
                   'product_id', oi.product_id,
                   'product_name', p.name,
                   'name', p.name,
+                  'description', COALESCE(p.description, ''),
                   'quantity', oi.quantity,
                   'unit_price', COALESCE(oi.unit_price, (oi.unit_price_paise::numeric / 100.0), 0),
                   'customization_data', oi.customization_data,
+                  'customization_details', oi.customization_details,
+                  'variant_name', (SELECT pv.title FROM product_variants pv WHERE pv.id = oi.variant_id LIMIT 1),
                   'proof_image_url', oi.proof_image_url,
                   'customization_status', oi.customization_status,
                   'image_url', (SELECT url FROM product_images pi WHERE pi.product_id = oi.product_id ORDER BY sort_order ASC LIMIT 1)
                 ))
                 FROM order_items oi
                 LEFT JOIN products p ON p.id = oi.product_id
-                WHERE oi.seller_order_id = so.id),
+                WHERE oi.seller_order_id = so.id OR (oi.order_id = o.id AND (oi.seller_order_id IS NULL OR oi.seller_order_id = so.id))),
                 '[]'
               ) AS items
        FROM seller_orders so
        JOIN orders o ON o.id = so.order_id
        LEFT JOIN users u ON u.id = o.buyer_id
        LEFT JOIN addresses a ON a.id = o.address_id
+       LEFT JOIN seller_profiles sp ON sp.user_id = so.seller_id
+       LEFT JOIN sellers sel ON sel.id = so.seller_id OR sel.user_id = so.seller_id
        WHERE ${where}
        ORDER BY so.created_at DESC
        LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
@@ -1709,6 +1739,8 @@ async function getSellerOrders(req, res, next) {
        FROM seller_orders so
        JOIN orders o ON o.id = so.order_id
        LEFT JOIN users u ON u.id = o.buyer_id
+       LEFT JOIN seller_profiles sp ON sp.user_id = so.seller_id
+       LEFT JOIN sellers sel ON sel.id = so.seller_id OR sel.user_id = so.seller_id
        WHERE ${where}`,
       params.slice(0, params.length - 2)
     );
@@ -1727,6 +1759,7 @@ async function getSellerOrders(req, res, next) {
           product_id: o.listing_id,
           product_name: o.product_name || 'Handcrafted Creation',
           name: o.product_name || 'Handcrafted Creation',
+          description: '',
           quantity: 1,
           unit_price: o.total_amount ? (o.total_amount >= 10000 ? o.total_amount / 100.0 : parseFloat(o.total_amount)) : (o.total_paise ? o.total_paise / 100.0 : 0),
           customization_data: parsedCustom,
@@ -1764,6 +1797,10 @@ async function getSellerOrders(req, res, next) {
         item_preview: itemPreview,
         items,
         studio_notes,
+        buyer_notes: o.buyer_notes || o.notes || '',
+        special_instructions: o.special_instructions || '',
+        is_admin_managed: Boolean(o.is_admin_managed),
+        seller_type: o.seller_type || 'normal'
       };
     });
 
@@ -1797,20 +1834,22 @@ async function getSellerOrderDetail(req, res, next) {
   try {
     await ensureOrderItemColumns();
     const { id } = req.params;
-    const sellerId = req.user.id;
-    const isAdmin = req.user.role === 'admin' || req.user.role === 'master_admin';
+    const headerSellerId = req.headers['x-seller-id'] || req.headers['x-impersonate-seller-id'] || req.query.seller_id || req.query.sellerId;
+    const userRole = String(req.user?.role || '').toUpperCase();
+    const isAdmin = userRole === 'ADMIN' || userRole === 'MASTER_ADMIN';
+    const effectiveSellerId = (isAdmin && headerSellerId) ? headerSellerId : req.user.id;
 
     // IDOR Check: Ensure order exists and belongs to this seller
     const { rows: orderCheck } = await query(
       `SELECT so.id, so.seller_id FROM seller_orders so JOIN orders o ON o.id = so.order_id WHERE so.id::text = $1 OR (o.id::text = $1 AND (so.seller_id = $2 OR so.seller_id::text = $2::text)) OR o.order_ref = $1`,
-      [String(id), String(sellerId)]
+      [String(id), String(effectiveSellerId)]
     );
-    if (!orderCheck.length) {
+    if (!orderCheck.length && !isAdmin) {
       return res.status(404).json({ success: false, message: 'Order not found.' });
     }
     if (!isAdmin) {
-      const { rows: sRows } = await query('SELECT id FROM sellers WHERE user_id = $1', [sellerId]);
-      const validIds = [Number(sellerId), String(sellerId), ...sRows.map(s => s.id), ...sRows.map(s => String(s.id))];
+      const { rows: sRows } = await query('SELECT id, user_id FROM sellers WHERE user_id::text = $1 OR id::text = $1 UNION SELECT id, user_id FROM seller_profiles WHERE user_id::text = $1 OR id::text = $1', [String(effectiveSellerId)]);
+      const validIds = [Number(effectiveSellerId), String(effectiveSellerId), ...sRows.flatMap(s => [s.id, s.user_id, Number(s.id), String(s.id), Number(s.user_id), String(s.user_id)])];
       if (!validIds.includes(orderCheck[0].seller_id) && !validIds.includes(Number(orderCheck[0].seller_id)) && !validIds.includes(String(orderCheck[0].seller_id))) {
         return res.status(403).json({ success: false, message: 'Forbidden: You do not have ownership of this order.' });
       }
@@ -1818,7 +1857,13 @@ async function getSellerOrderDetail(req, res, next) {
 
     const { rows } = await query(
       `SELECT o.id AS parent_order_id, so.id AS id, o.buyer_id, so.seller_id, o.address_id, so.subtotal AS total_amount, so.status, o.payment_status,
-              so.payout_status, COALESCE(so.awb_number, o.tracking_id) AS tracking_id, COALESCE(so.tracking_url, o.tracking_url) AS tracking_url, o.notes, o.studio_notes, so.delivered_at, so.created_at, o.updated_at,
+              so.payout_status, COALESCE(so.awb_number, o.tracking_id) AS tracking_id, COALESCE(so.tracking_url, o.tracking_url) AS tracking_url,
+              o.notes AS buyer_notes, o.notes, o.studio_notes,
+              COALESCE(o.special_instructions, '') AS special_instructions,
+              COALESCE(sp.is_admin_managed, sel.is_admin_managed, FALSE) AS is_admin_managed,
+              COALESCE(sp.seller_type, sel.seller_type, 'normal') AS seller_type,
+              o.is_special,
+              so.delivered_at, so.created_at, o.updated_at,
               u.name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone,
               sp.store_name, sp.whatsapp_number AS seller_whatsapp, sp.pickup_address,
               a.name AS recipient_name, a.phone AS recipient_phone,
@@ -1830,25 +1875,29 @@ async function getSellerOrderDetail(req, res, next) {
                   'product_id', oi.product_id,
                   'product_name', p.name,
                   'name', p.name,
+                  'description', COALESCE(p.description, ''),
                   'quantity', oi.quantity,
                   'unit_price', COALESCE(oi.unit_price, (oi.unit_price_paise::numeric / 100.0), 0),
                   'customization_data', oi.customization_data,
+                  'customization_details', oi.customization_details,
+                  'variant_name', (SELECT pv.title FROM product_variants pv WHERE pv.id = oi.variant_id LIMIT 1),
                   'proof_image_url', oi.proof_image_url,
                   'customization_status', oi.customization_status,
                   'image_url', (SELECT url FROM product_images pi WHERE pi.product_id = oi.product_id ORDER BY sort_order ASC LIMIT 1)
                 ))
                 FROM order_items oi
                 LEFT JOIN products p ON p.id = oi.product_id
-                WHERE oi.seller_order_id = so.id),
+                WHERE oi.seller_order_id = so.id OR (oi.order_id = o.id AND (oi.seller_order_id IS NULL OR oi.seller_order_id = so.id))),
                 '[]'
               ) AS items
        FROM seller_orders so
        JOIN orders o ON o.id = so.order_id
        LEFT JOIN users u ON u.id = o.buyer_id
        LEFT JOIN seller_profiles sp ON sp.user_id = so.seller_id
+       LEFT JOIN sellers sel ON sel.id = so.seller_id OR sel.user_id = so.seller_id
        LEFT JOIN addresses a ON a.id = o.address_id
        WHERE so.id::text = $1 OR (o.id::text = $1 AND (so.seller_id = $2 OR so.seller_id::text = $2::text)) OR o.order_ref = $1`,
-      [String(id), String(sellerId)]
+      [String(id), String(effectiveSellerId)]
     );
 
     if (!rows.length) {
@@ -1869,6 +1918,7 @@ async function getSellerOrderDetail(req, res, next) {
         product_id: order.listing_id,
         product_name: order.product_name || 'Handcrafted Creation',
         name: order.product_name || 'Handcrafted Creation',
+        description: '',
         quantity: 1,
         unit_price: order.total_amount ? (order.total_amount >= 10000 ? order.total_amount / 100.0 : parseFloat(order.total_amount)) : (order.total_paise ? order.total_paise / 100.0 : 0),
         customization_data: parsedCustom,
@@ -1919,7 +1969,7 @@ async function getSellerOrderDetail(req, res, next) {
       } else if (typeof cd === 'object') {
         customizationDetails = Object.entries(cd)
           .filter(([_, v]) => v != null && v !== '')
-          .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v}`)
+          .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
           .join(', ');
       }
     } else if (order.notes) {
@@ -1972,6 +2022,10 @@ async function getSellerOrderDetail(req, res, next) {
       customization_details: customizationDetails,
       proof_image_url: firstItem ? firstItem.proof_image_url : null,
       customization_status: firstItem ? firstItem.customization_status : null,
+      buyer_notes: order.buyer_notes || order.notes || '',
+      special_instructions: order.special_instructions || '',
+      is_admin_managed: Boolean(order.is_admin_managed),
+      seller_type: order.seller_type || 'normal',
       shipping_address: {
         recipient_name: order.recipient_name || order.buyer_name,
         phone: order.recipient_phone || order.buyer_phone,
@@ -2997,16 +3051,6 @@ async function generateOrderAWB(req, res, next) {
       data: result,
     });
   } catch (err) {
-    if (err.manual_fulfillment_required) {
-      return res.json({
-        success: true,
-        message: err.message,
-        data: {
-          manual_fulfillment_required: true,
-          label_url: `/api/logistics/label/${req.params.id}?format=html`,
-        }
-      });
-    }
     next(err);
   }
 }

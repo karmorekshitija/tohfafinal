@@ -9,6 +9,7 @@
   }
 
   // 1. Inject Stylesheets dynamically
+  const isSellerPath = typeof window !== 'undefined' && window.location && window.location.pathname.startsWith('/seller/');
   const style = document.createElement('style');
   style.textContent = `
     /* Floating Mascot Button — bare transparent PNG, no circle background */
@@ -466,6 +467,35 @@
         padding-bottom: 24px; /* safe area offset */
       }
     }
+    ${isSellerPath ? `
+    @media (max-width: 640px) {
+      #tohfa-chat-mascot {
+        width: 48px !important;
+        height: 48px !important;
+        bottom: 16px !important;
+        right: 12px !important;
+      }
+      body:has(.sticky-action-bar) #tohfa-chat-mascot,
+      body:has(.sticky.bottom-0) #tohfa-chat-mascot,
+      #tohfa-chat-mascot.above-sticky-bar {
+        bottom: calc(120px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+    }
+    @media (min-width: 641px) and (max-width: 768px) {
+      body:has(.sticky-action-bar) #tohfa-chat-mascot,
+      body:has(.sticky.bottom-0) #tohfa-chat-mascot,
+      #tohfa-chat-mascot.above-sticky-bar {
+        bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+    }
+    @media (min-width: 769px) {
+      body:has(.sticky-action-bar) #tohfa-chat-mascot,
+      body:has(.sticky.bottom-0) #tohfa-chat-mascot,
+      #tohfa-chat-mascot.above-sticky-bar {
+        bottom: 96px !important;
+      }
+    }
+    ` : ''}
   `;
   document.head.appendChild(style);
 
@@ -502,6 +532,15 @@
       <img class="mascot-img" src="/img/artisan-mascot.png" alt="Tanya" draggable="false" />
       <div id="tohfa-chat-badge" style="display:none;"></div>
     `;
+    if (isSellerPath) {
+      const checkSticky = () => {
+        if (document.querySelector('.sticky-action-bar, .sticky.bottom-0')) {
+          mascot.classList.add('above-sticky-bar');
+        }
+      };
+      checkSticky();
+      setTimeout(checkSticky, 300);
+    }
     document.body.appendChild(mascot);
 
     // Create Chat Panel

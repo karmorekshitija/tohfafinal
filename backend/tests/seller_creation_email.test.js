@@ -125,11 +125,38 @@ async function runTests() {
   assert.ok(ownerSpecialAlert.subject.includes('New Seller Created: Royal Candles Studio (TOHFA Special Shop)'));
   console.log('  ✅ Owner alert email verified for special seller creation.');
 
+  // 5. Test Credential Sanitation (Google App Passwords with spaces)
+  console.log('\n[Test 5] Testing Google App Password space sanitization...');
+  process.env.EMAIL_USER = ' seller@gmail.com ';
+  process.env.EMAIL_PASS = ' abcd efgh ijkl mnop ';
+  process.env.EMAIL_HOST = '';
+  const creds = emailService.sanitizeCredentials();
+  assert.strictEqual(creds.user, 'seller@gmail.com');
+  assert.strictEqual(creds.pass, 'abcdefghijklmnop');
+  console.log('  ✅ Credential sanitization correctly stripped whitespace and 4-letter app password gaps.');
+
+  // 6. Test Transporter selection with real credentials in non-production
+  console.log('\n[Test 6] Testing Transporter selection with credentials in development...');
+  emailService.resetTransporter();
+  process.env.NODE_ENV = 'development';
+  const transporter = await emailService.getTransporter();
+  // Should use Gmail with family: 4
+  assert.ok(transporter.options.service === 'gmail' || transporter.options.host.includes('gmail'));
+  assert.strictEqual(transporter.options.family, 4);
+  console.log('  ✅ Gmail transporter selected with IPv4 enabled.');
+
   console.log('\n🎉 ALL SELLER EMAIL NOTIFICATION TESTS PASSED!\n');
 }
 
-describe('Seller Account Creation Email Notifications (Regular & Special)', () => {
-  it('should send appropriate emails for both regular and special sellers', async () => {
-    await runTests();
+if (typeof describe === 'function') {
+  describe('Seller Account Creation Email Notifications (Regular & Special)', () => {
+    it('should send appropriate emails for both regular and special sellers', async () => {
+      await runTests();
+    });
   });
-});
+} else {
+  runTests().catch(err => {
+    console.error('❌ Test failed:', err);
+    process.exit(1);
+  });
+}

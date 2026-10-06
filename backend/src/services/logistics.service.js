@@ -3,8 +3,7 @@
  * File: backend/src/services/logistics.service.js
  * Role: Integrates with iThink Logistics API for automated waybill creation,
  *       multi-origin seller fulfillment, real-time pincode serviceability checks,
- *       and parcel tracking. Tohfa Special / curated shops (is_admin_managed = true)
- *       are strictly excluded and handled manually by admin.
+ *       and parcel tracking across regular and Tohfa Special / admin-managed shops.
  */
 'use strict';
 
@@ -17,36 +16,112 @@ try {
 } catch (_) {}
 
 /**
- * Check if seller is regular (eligible for iThink) or special (manual handling)
- * @param {string} sellerId - user_id of the seller
- * @returns {Promise<boolean>} true if regular, false if special/admin-managed
+ * Resolves the pickup address for a seller.
+ * Uses the seller's own pickup_address if present and complete.
+ * If the seller is admin-managed and has none, falls back to the Tohfa warehouse address from env vars.
+ * If neither exists, throws a 400 error.
+ *
+ * @param {Object} seller - Seller profile record
+ * @returns {Object} normalized pickup address
  */
-async function isEligibleForIThink(sellerId) {
-  if (!sellerId) return false;
-  try {
-    const { rows } = await query(
-      `SELECT (COALESCE(sp.is_admin_managed::text, s.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed
-       FROM users u
-       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
-       LEFT JOIN sellers s ON (s.user_id = u.id OR s.id = u.id)
-       WHERE u.id = $1`,
-      [sellerId]
-    );
-    if (!rows.length) return false;
-    // Fails closed: if is_admin_managed is true, not eligible for iThink
-    return !rows[0].is_admin_managed;
-  } catch (err) {
-    console.error('[iThink] Failed to check seller eligibility (failing closed):', err.message);
-    return false;
+function resolvePickupAddress(seller) {
+  const parseAddr = (raw) => {
+    if (!raw) return {};
+    if (typeof raw === 'string') {
+      try { return JSON.parse(raw); } catch { return {}; }
+    }
+    return typeof raw === 'object' ? raw : {};
+  };
+  const hasValidLine = (obj) => Boolean(obj && (obj.address_line1 || obj.addressLine1 || obj.line1 || obj.address || obj.street));
+
+  const candidates = [
+    parseAddr(seller?.pickup_address),
+    parseAddr(seller?.sp_pickup_address),
+    parseAddr(seller?.sel_pickup_address),
+    parseAddr(seller?.sp_billing_address),
+    parseAddr(seller?.sel_billing_address),
+  ];
+  const pickup = candidates.find(hasValidLine) || candidates[0] || {};
+
+  const pickupLine1 = pickup.address_line1 || pickup.addressLine1 || pickup.line1 || pickup.address || pickup.street;
+  const pickupLine2 = pickup.address_line2 || pickup.addressLine2 || pickup.line2 || '';
+  const pickupLandmark = pickup.landmark || '';
+  const pickupCity = pickup.city;
+  const pickupPincode = pickup.pincode || pickup.postal_code || pickup.postalCode || pickup.zip;
+
+  if (pickupLine1 && pickupCity && pickupPincode) {
+    const facilityName = pickup.facility_name || pickup.warehouse_name || seller?.store_name || seller?.name || 'Tohfa Artisan Workshop';
+    const contactName = pickup.contact_name || seller?.name || seller?.store_name || 'Tohfa Artisan';
+    const phone = pickup.phone || pickup.contact_phone || seller?.whatsapp_number || seller?.store_phone || seller?.phone || '';
+    return {
+      store_name: facilityName,
+      facility_name: facilityName,
+      warehouse_name: facilityName,
+      contact_name: contactName,
+      phone,
+      contact_phone: phone,
+      line1: pickupLine1,
+      address_line1: pickupLine1,
+      line2: pickupLine2,
+      address_line2: pickupLine2,
+      landmark: pickupLandmark,
+      city: pickupCity,
+      state: pickup.state || '',
+      pincode: String(pickupPincode).trim(),
+      postal_code: String(pickupPincode).trim(),
+    };
   }
+
+  const isAdminManaged = Boolean(
+    seller && (
+      seller.is_admin_managed === true ||
+      seller.is_admin_managed === 'true' ||
+      seller.is_admin_managed === 1 ||
+      seller.is_admin_managed === '1' ||
+      seller.is_admin_managed === 't'
+    )
+  );
+
+  if (isAdminManaged) {
+    const warehouseLine1 = process.env.TOHFA_WAREHOUSE_LINE1;
+    const warehouseCity = process.env.TOHFA_WAREHOUSE_CITY;
+    const warehousePincode = process.env.TOHFA_WAREHOUSE_PINCODE;
+
+    if (warehouseLine1 && warehouseCity && warehousePincode) {
+      const warehouseName = process.env.TOHFA_WAREHOUSE_NAME || seller?.store_name || 'Tohfa Special';
+      const warehousePhone = process.env.TOHFA_WAREHOUSE_PHONE || seller?.whatsapp_number || seller?.store_phone || seller?.phone || '';
+      return {
+        store_name: warehouseName,
+        facility_name: warehouseName,
+        warehouse_name: warehouseName,
+        contact_name: warehouseName,
+        phone: warehousePhone,
+        contact_phone: warehousePhone,
+        line1: warehouseLine1,
+        address_line1: warehouseLine1,
+        line2: process.env.TOHFA_WAREHOUSE_LINE2 || '',
+        address_line2: process.env.TOHFA_WAREHOUSE_LINE2 || '',
+        landmark: '',
+        city: warehouseCity,
+        state: process.env.TOHFA_WAREHOUSE_STATE || '',
+        pincode: String(warehousePincode).trim(),
+        postal_code: String(warehousePincode).trim(),
+      };
+    }
+  }
+
+  const err = new Error('Pickup & return address is required before generating a shipping label. Please configure your pickup address in Settings > Profile.');
+  err.status = 400;
+  throw err;
 }
 
 /**
  * Create a shipment booking via iThink Logistics (Multi-Origin Fulfillment)
- * Dynamically queries the seller's verified pickup_address from seller_profiles.
+ * Dynamically queries the seller's verified pickup_address from seller_profiles
+ * or Tohfa central warehouse for admin-managed shops.
  * 
  * Rules:
- * 1. Tohfa Special Shops (is_admin_managed = true) return manual_fulfillment_required without touching iThink.
+ * 1. Both regular and Tohfa Special shops are fulfilled automatically via iThink.
  * 2. If tracking_id already exists, returns existing tracking idempotently.
  * 3. Never produces mock tracking numbers in production.
  * 4. Errors leave order status unchanged, record shipment_error, and notify admin.
@@ -73,19 +148,7 @@ async function createShipment(orderOrId, options = {}) {
     throw err;
   }
 
-  // 1. HARD GATE: Special Shop check
-  const eligible = await isEligibleForIThink(order.seller_id);
-  if (!eligible) {
-    console.log(`[iThink] Order ${order.id} belongs to Tohfa Special Shop. Manual fulfillment required; skipping automated courier booking.`);
-    return {
-      success: true,
-      manual_fulfillment_required: true,
-      message: 'Order belongs to a Tohfa Special / Admin-managed shop. Manual courier dispatch is required.',
-      order,
-    };
-  }
-
-  // 2. IDEMPOTENCY: If order already has a tracking ID from iThink, return it immediately
+  // 1. IDEMPOTENCY: If order already has a tracking ID from iThink, return it immediately
   if (order.tracking_id) {
     console.log(`[iThink] Order ${order.id} already has tracking ID ${order.tracking_id}. Returning existing shipment.`);
     return {
@@ -99,7 +162,7 @@ async function createShipment(orderOrId, options = {}) {
     };
   }
 
-  // 3. BOOKING TIMING CHECK: If invoked from payment verification and auto-book on payment is disabled
+  // 2. BOOKING TIMING CHECK: If invoked from payment verification and auto-book on payment is disabled
   if (options.fromPayment && process.env.ITHINK_AUTO_BOOK_ON_PAYMENT !== 'true') {
     console.log(`[iThink] Order ${order.id} payment confirmed. Courier booking deferred until artisan packs the order in Seller Studio.`);
     return {
@@ -110,7 +173,7 @@ async function createShipment(orderOrId, options = {}) {
     };
   }
 
-  // 4. FEATURE FLAG CHECK
+  // 3. FEATURE FLAG CHECK
   const isEnabled = isIThinkEnabled();
   const isDevMock = (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) && process.env.MOCK_LOGISTICS === 'true';
 
@@ -138,7 +201,8 @@ async function createShipment(orderOrId, options = {}) {
             sel.pickup_address AS sel_pickup_address,
             sp.billing_address AS sp_billing_address,
             sel.billing_address AS sel_billing_address,
-            COALESCE(sp.seller_type, sel.seller_type) AS seller_type
+            COALESCE(sp.seller_type, sel.seller_type) AS seller_type,
+            (COALESCE(sp.is_admin_managed::text, sel.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed
      FROM users u 
      LEFT JOIN seller_profiles sp ON sp.user_id = u.id 
      LEFT JOIN sellers sel ON (sel.user_id = u.id OR sel.id = u.id)
@@ -153,44 +217,21 @@ async function createShipment(orderOrId, options = {}) {
   }
 
   const seller = sellerRows[0];
-  const parseAddr = (raw) => {
-    if (!raw) return {};
-    if (typeof raw === 'string') {
-      try { return JSON.parse(raw); } catch { return {}; }
-    }
-    return typeof raw === 'object' ? raw : {};
-  };
-  const hasValidLine = (obj) => Boolean(obj && (obj.address_line1 || obj.addressLine1 || obj.line1 || obj.address || obj.street));
-
-  const candidates = [
-    parseAddr(seller.pickup_address),
-    parseAddr(seller.sp_pickup_address),
-    parseAddr(seller.sel_pickup_address),
-    parseAddr(seller.sp_billing_address),
-    parseAddr(seller.sel_billing_address),
-  ];
-  const pickup = candidates.find(hasValidLine) || candidates[0] || {};
-
-  const pickupLine1 = pickup.address_line1 || pickup.addressLine1 || pickup.line1 || pickup.address || pickup.street;
-  const pickupLine2 = pickup.address_line2 || pickup.addressLine2 || pickup.line2 || '';
+  const pickup = resolvePickupAddress(seller);
+  const pickupLine1 = pickup.address_line1;
+  const pickupLine2 = pickup.address_line2 || '';
   const pickupLandmark = pickup.landmark || '';
   const pickupCity = pickup.city;
-  const pickupPincode = pickup.pincode || pickup.postal_code || pickup.postalCode || pickup.zip;
-  const pickupFacility = pickup.facility_name || pickup.warehouse_name || seller.store_name || seller.name || 'Tohfa Artisan Workshop';
-  const pickupContactName = pickup.contact_name || seller.name || seller.store_name || 'Tohfa Artisan';
-  const pickupPhone = pickup.phone || pickup.contact_phone || seller.whatsapp_number || seller.phone || '';
-
-  if (!pickupLine1 || !pickupCity || !pickupPincode) {
-    const err = new Error('Pickup & return address is required before generating a shipping label. Please configure your pickup address in Settings > Profile.');
-    err.status = 400;
-    throw err;
-  }
+  const pickupPincode = pickup.pincode;
+  const pickupFacility = pickup.facility_name;
+  const pickupContactName = pickup.contact_name;
+  const pickupPhone = pickup.phone;
 
   let trackingId = null;
   let courierName = 'iThink Logistics';
   let logisticsResponse = null;
 
-  // 5. CALL ITHINK API (Or DEV MOCK IF EXPLICITLY ENABLED IN DEV)
+  // 4. CALL ITHINK API (Or DEV MOCK IF EXPLICITLY ENABLED IN DEV)
   if (isEnabled) {
     try {
       const fullPickupAddress = [pickupLine1, pickupLine2, pickupLandmark ? `Landmark: ${pickupLandmark}` : ''].filter(Boolean).join(', ');
@@ -363,7 +404,22 @@ async function checkServiceability(pincode, options = {}) {
     };
   }
 
-  const pickupPincode = options.pickup_pincode || '302001'; // Default artisan origin
+  let pickupPincode = options.pickup_pincode;
+  if (!pickupPincode && options.seller) {
+    try {
+      const resolved = resolvePickupAddress(options.seller);
+      if (resolved && resolved.pincode) {
+        pickupPincode = resolved.pincode;
+      }
+    } catch (_) {
+      // Suppress address resolution errors and fall back to default
+    }
+  }
+
+  if (!pickupPincode) {
+    console.warn('[iThink] checkServiceability: Origin pincode not provided; defaulting to 302001.');
+    pickupPincode = '302001';
+  }
   const weight = options.weight || 500;
   const prepDays = Number(options.preparation_days !== undefined ? options.preparation_days : 2);
 
@@ -485,13 +541,6 @@ async function generateSellerAWB(orderId, sellerId) {
   }
 
   const order = rows[0];
-  const eligible = await isEligibleForIThink(order.seller_id);
-  if (!eligible) {
-    const err = new Error('Order belongs to a Tohfa Special / Admin-managed shop. Automated courier waybill generation is not eligible; manual logistics handling is required.');
-    err.status = 400;
-    err.manual_fulfillment_required = true;
-    throw err;
-  }
 
   // Book shipment (fromPayment: false allows explicit seller booking)
   const shipment = await createShipment(order, { fromPayment: false });
@@ -526,6 +575,7 @@ async function getShippingLabel(orderId, sellerId) {
             sel.pickup_address AS sel_pickup_address,
             sp.billing_address AS sp_billing_address,
             sel.billing_address AS sel_billing_address,
+            (COALESCE(sp.is_admin_managed::text, sel.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
             COALESCE(
               (SELECT json_agg(json_build_object(
                 'name', p.name,
@@ -555,24 +605,7 @@ async function getShippingLabel(orderId, sellerId) {
   }
 
   const orderData = rows[0];
-
-  const parseAddr = (raw) => {
-    if (!raw) return {};
-    if (typeof raw === 'string') {
-      try { return JSON.parse(raw); } catch { return {}; }
-    }
-    return typeof raw === 'object' ? raw : {};
-  };
-  const hasValidLine = (obj) => Boolean(obj && (obj.address_line1 || obj.addressLine1 || obj.line1 || obj.address || obj.street));
-
-  const candidates = [
-    parseAddr(orderData.pickup_address),
-    parseAddr(orderData.sp_pickup_address),
-    parseAddr(orderData.sel_pickup_address),
-    parseAddr(orderData.sp_billing_address),
-    parseAddr(orderData.sel_billing_address),
-  ];
-  const pickup = candidates.find(hasValidLine) || candidates[0] || {};
+  const pickup = resolvePickupAddress(orderData);
 
   return {
     order_id: orderData.id,
@@ -588,10 +621,10 @@ async function getShippingLabel(orderId, sellerId) {
       facility_name: pickup.facility_name || pickup.warehouse_name || orderData.store_name,
       contact_name: pickup.contact_name || orderData.store_name,
       phone: pickup.phone || pickup.contact_phone || orderData.store_phone || '',
-      line1: pickup.address_line1 || pickup.addressLine1 || pickup.line1 || pickup.address || pickup.street || '',
-      address_line1: pickup.address_line1 || pickup.addressLine1 || pickup.line1 || pickup.address || pickup.street || '',
-      line2: pickup.address_line2 || pickup.addressLine2 || pickup.line2 || '',
-      address_line2: pickup.address_line2 || pickup.addressLine2 || pickup.line2 || '',
+      line1: pickup.address_line1 || pickup.line1 || '',
+      address_line1: pickup.address_line1 || pickup.line1 || '',
+      line2: pickup.address_line2 || pickup.line2 || '',
+      address_line2: pickup.address_line2 || pickup.line2 || '',
       landmark: pickup.landmark || '',
       city: pickup.city || '',
       state: pickup.state || '',
@@ -673,8 +706,8 @@ async function syncSellerPickupWarehouse(sellerId, pickupAddress = {}) {
 }
 
 module.exports = {
-  isEligibleForIThink,
   createShipment,
+  resolvePickupAddress,
   checkServiceability,
   calculateEstimatedDelivery,
   trackShipment,

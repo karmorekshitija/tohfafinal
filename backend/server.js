@@ -12,6 +12,7 @@ require('dotenv').config({ path: require('path').resolve(__dirname, '.env') });
 const express      = require('express');
 const cors         = require('cors');
 const helmet       = require('helmet');
+const compression  = require('compression');
 const path         = require('path');
 
 // Route imports
@@ -120,6 +121,11 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
 }));
+
+// ---------------------------------------------------------------------------
+// RESPONSE COMPRESSION
+// ---------------------------------------------------------------------------
+app.use(compression());
 
 // ---------------------------------------------------------------------------
 // BODY PARSERS

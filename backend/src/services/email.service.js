@@ -18,37 +18,91 @@ const nodemailer = require('nodemailer');
 
 let _transporter = null;
 
+function sanitizeCredentials() {
+  const user = (process.env.EMAIL_USER || '').trim();
+  // Strip whitespace from passwords (such as Google App Passwords copied with 4-letter spaced blocks)
+  const pass = (process.env.EMAIL_PASS || '').replace(/\s+/g, '');
+  const host = (process.env.EMAIL_HOST || '').trim();
+  const port = parseInt(process.env.EMAIL_PORT || '587', 10);
+  const secure = process.env.EMAIL_SECURE === 'true' || port === 465;
+  return { user, pass, host, port, secure };
+}
+
+function getFromAddress() {
+  const { user } = sanitizeCredentials();
+  const configuredFrom = (process.env.EMAIL_FROM || '').trim();
+
+  if (configuredFrom) {
+    return configuredFrom;
+  }
+  if (user) {
+    return `"Tohfa Gifting" <${user}>`;
+  }
+  return '"Tohfa Gifting" <hello@thetohfa.in>';
+}
+
+function resetTransporter() {
+  _transporter = null;
+}
+
 async function getTransporter() {
   if (_transporter) return _transporter;
 
-  const isDev = process.env.NODE_ENV !== 'production';
+  const { user, pass, host, port, secure } = sanitizeCredentials();
+  const hasCredentials = Boolean(user && pass);
 
-  if (isDev && !process.env.EMAIL_HOST) {
-    // Create an Ethereal test account automatically in dev (emails are viewable at ethereal.email)
-    const testAccount = await nodemailer.createTestAccount();
-    _transporter = nodemailer.createTransport({
-      host: 'smtp.ethereal.email',
-      port: 587,
-      secure: false,
-      auth: { user: testAccount.user, pass: testAccount.pass },
-    });
-    console.log(`[Email] Dev mode: using Ethereal SMTP. Preview at https://ethereal.email`);
-  } else {
-    _transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.EMAIL_PORT || '587', 10),
-      secure: process.env.EMAIL_SECURE === 'true',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+  // 1. If real credentials exist, ALWAYS use real SMTP (production, preview, or development)
+  if (hasCredentials) {
+    const isGmail = !host || host.toLowerCase().includes('gmail') || user.toLowerCase().endsWith('@gmail.com');
+
+    if (isGmail) {
+      _transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user, pass },
+        // Force IPv4 to prevent Render container IPv6 connection hangs (ETIMEDOUT)
+        family: 4,
+      });
+      console.log(`[Email] Initialized Gmail transport for account: ${user} (IPv4 enabled)`);
+    } else {
+      _transporter = nodemailer.createTransport({
+        host,
+        port,
+        secure,
+        auth: { user, pass },
+        family: 4,
+      });
+      console.log(`[Email] Initialized custom SMTP transport for ${host}:${port} (secure=${secure})`);
+    }
+    return _transporter;
   }
 
+  // 2. If no credentials and running in non-production, fallback to Ethereal mock SMTP
+  const isDev = process.env.NODE_ENV !== 'production';
+  if (isDev) {
+    try {
+      const testAccount = await nodemailer.createTestAccount();
+      _transporter = nodemailer.createTransport({
+        host: 'smtp.ethereal.email',
+        port: 587,
+        secure: false,
+        auth: { user: testAccount.user, pass: testAccount.pass },
+      });
+      console.log(`[Email] Dev mode without credentials: using Ethereal SMTP. Preview at https://ethereal.email`);
+      return _transporter;
+    } catch (e) {
+      console.warn(`[Email] Could not create Ethereal test account: ${e.message}`);
+    }
+  }
+
+  // 3. Fallback unauthenticated transport (will log error when send is attempted)
+  _transporter = nodemailer.createTransport({
+    host: host || 'smtp.gmail.com',
+    port: port || 587,
+    secure: false,
+    family: 4,
+  });
   return _transporter;
 }
-
-const FROM_ADDRESS = process.env.EMAIL_FROM || '"Tohfa Gifting" <hello@thetohfa.in>';
 
 async function sendMail(to, subject, html, text) {
   if (module.exports.sendMail && module.exports.sendMail !== sendMail) {
@@ -56,18 +110,19 @@ async function sendMail(to, subject, html, text) {
   }
   try {
     const transporter = await getTransporter();
+    const from = getFromAddress();
     const info = await transporter.sendMail({
-      from: FROM_ADDRESS,
+      from,
       to,
       subject,
       html,
       text: text || html.replace(/<[^>]+>/g, ''), // Strip HTML for plain text fallback
     });
-    console.log(`[Email] Sent to ${to}: ${subject} (msgId: ${info.messageId})`);
-    return info;
+    console.log(`[Email] Successfully dispatched email to ${to}: "${subject}" (msgId: ${info.messageId})`);
+    return { success: true, messageId: info.messageId };
   } catch (err) {
-    console.error(`[Email] Failed to send to ${to}: ${err.message}`);
-    // Non-fatal — log and continue, don't crash the caller
+    console.error(`[Email] FAILED sending to ${to} ("${subject}"): ${err.message}${err.code ? ` [Code: ${err.code}]` : ''}`);
+    return { success: false, error: err.message, code: err.code };
   }
 }
 
@@ -304,4 +359,8 @@ module.exports = {
   sendSellerApprovalEmail,
   sendSellerAccountCreatedEmail,
   sendSellerRejectionEmail,
+  getTransporter,
+  resetTransporter,
+  sanitizeCredentials,
+  getFromAddress,
 };

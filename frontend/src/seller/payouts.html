@@ -23,7 +23,7 @@
   <link rel="stylesheet" href="/src/tailwind.css">
     <script type="module" src="/src/components/seller-components.js"></script>
     <script src="/seller/js/seller-utils.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" defer></script>
     
     <style>
         body {
@@ -127,35 +127,35 @@
         
         <!-- SECTION 1: Earnings Overview -->
         <section class="space-y-6">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                 <!-- Card 1: Total Earnings -->
-                <div class="bg-[#FFF8E7] p-6 rounded-card border border-sage/20 shadow-premium relative" style="background-color: #FDF6EC; border-left: 4px solid #B5813A;">
-                    <span class="material-symbols-outlined text-2xl absolute top-6 right-6" style="color: #B5813A;">payments</span>
-                    <p class="text-sm font-bold uppercase tracking-wider mb-2" style="color: rgba(181, 129, 58, 0.7);">Total Earnings</p>
-                    <h3 id="stat-total-earnings" class="text-3xl font-bold font-mono" style="color: #B5813A;">₹0.00</h3>
+                <div class="bg-[#FFF8E7] p-3.5 sm:p-6 rounded-card border border-sage/20 shadow-premium relative min-w-0" style="background-color: #FDF6EC; border-left: 4px solid #B5813A;">
+                    <span class="material-symbols-outlined text-xl sm:text-2xl absolute top-3 sm:top-6 right-3 sm:right-6" style="color: #B5813A;">payments</span>
+                    <p class="text-xs sm:text-sm font-bold uppercase tracking-wider mb-2 truncate" style="color: rgba(181, 129, 58, 0.7);">Total Earnings</p>
+                    <h3 id="stat-total-earnings" class="text-lg sm:text-3xl font-bold font-mono truncate" style="color: #B5813A;">₹0.00</h3>
                 </div>
                 <!-- Card 2: This Month -->
-                <div class="bg-[#FFF8E7] p-6 rounded-card border border-sage/20 shadow-premium relative" style="background-color: #EDF5F0; border-left: 4px solid #14381F;">
-                    <span class="material-symbols-outlined text-2xl absolute top-6 right-6" style="color: #14381F;">calendar_month</span>
-                    <p class="text-sm font-bold uppercase tracking-wider mb-2" style="color: rgba(61, 107, 79, 0.7);">This Month</p>
-                    <h3 id="stat-month-earnings" class="text-3xl font-bold font-mono" style="color: #14381F;">₹0.00</h3>
+                <div class="bg-[#FFF8E7] p-3.5 sm:p-6 rounded-card border border-sage/20 shadow-premium relative min-w-0" style="background-color: #EDF5F0; border-left: 4px solid #14381F;">
+                    <span class="material-symbols-outlined text-xl sm:text-2xl absolute top-3 sm:top-6 right-3 sm:right-6" style="color: #14381F;">calendar_month</span>
+                    <p class="text-xs sm:text-sm font-bold uppercase tracking-wider mb-2 truncate" style="color: rgba(61, 107, 79, 0.7);">This Month</p>
+                    <h3 id="stat-month-earnings" class="text-lg sm:text-3xl font-bold font-mono truncate" style="color: #14381F;">₹0.00</h3>
                 </div>
                 <!-- Card 3: This Week -->
-                <div class="bg-[#FFF8E7] p-6 rounded-card border border-sage/20 shadow-premium relative" style="background-color: #EDF2FA; border-left: 4px solid #4A6FA5;">
-                    <span class="material-symbols-outlined text-2xl absolute top-6 right-6" style="color: #4A6FA5;">date_range</span>
-                    <p class="text-sm font-bold uppercase tracking-wider mb-2" style="color: rgba(74, 111, 165, 0.7);">This Week</p>
-                    <h3 id="stat-week-earnings" class="text-3xl font-bold font-mono" style="color: #4A6FA5;">₹0.00</h3>
+                <div class="bg-[#FFF8E7] p-3.5 sm:p-6 rounded-card border border-sage/20 shadow-premium relative min-w-0" style="background-color: #EDF2FA; border-left: 4px solid #4A6FA5;">
+                    <span class="material-symbols-outlined text-xl sm:text-2xl absolute top-3 sm:top-6 right-3 sm:right-6" style="color: #4A6FA5;">date_range</span>
+                    <p class="text-xs sm:text-sm font-bold uppercase tracking-wider mb-2 truncate" style="color: rgba(74, 111, 165, 0.7);">This Week</p>
+                    <h3 id="stat-week-earnings" class="text-lg sm:text-3xl font-bold font-mono truncate" style="color: #4A6FA5;">₹0.00</h3>
                 </div>
                 <!-- Card 4: Available Payout Balance -->
-                <div class="bg-[#FFF8E7] p-6 rounded-card border border-sage/20 shadow-premium relative flex flex-col justify-between" style="background-color: #EDF8F7; border-left: 4px solid #3A7D77;">
+                <div class="bg-[#FFF8E7] p-3.5 sm:p-6 rounded-card border border-sage/20 shadow-premium relative flex flex-col justify-between min-w-0" style="background-color: #EDF8F7; border-left: 4px solid #3A7D77;">
                     <div>
-                        <span class="material-symbols-outlined text-2xl absolute top-6 right-6" style="color: #3A7D77;">account_balance</span>
-                        <p class="text-sm font-bold uppercase tracking-wider mb-2" style="color: rgba(58, 125, 119, 0.7);">Available Balance</p>
-                        <h3 id="stat-pending-payout" class="text-3xl font-bold font-mono" style="color: #3A7D77;">₹0.00</h3>
+                        <span class="material-symbols-outlined text-xl sm:text-2xl absolute top-3 sm:top-6 right-3 sm:right-6" style="color: #3A7D77;">account_balance</span>
+                        <p class="text-xs sm:text-sm font-bold uppercase tracking-wider mb-2 truncate" style="color: rgba(58, 125, 119, 0.7);">Available Balance</p>
+                        <h3 id="stat-pending-payout" class="text-lg sm:text-3xl font-bold font-mono truncate" style="color: #3A7D77;">₹0.00</h3>
                         <div id="hold-badge-container" class="mt-2 hidden">
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold uppercase tracking-wider">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">
                                 <span class="material-symbols-outlined text-xs">lock_clock</span>
-                                <span id="hold-badge-text">₹0.00 on hold (7-day escrow)</span>
+                                <span id="hold-badge-text" class="break-words">₹0.00 on hold</span>
                             </span>
                         </div>
                     </div>
@@ -166,13 +166,13 @@
             </div>
 
             <!-- Earnings Graph -->
-            <div class="p-6 rounded-card border shadow-premium" style="background: linear-gradient(135deg, #FDF8F2 0%, #EDF5F0 100%); border-color: rgba(20,56,31,0.2);">
-                <div class="flex items-center justify-between mb-6">
+            <div class="p-4 sm:p-6 rounded-card border shadow-premium" style="background: linear-gradient(135deg, #FDF8F2 0%, #EDF5F0 100%); border-color: rgba(20,56,31,0.2);">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
                     <h3 class="text-xl font-bold text-forest" style="border-left: 4px solid #14381F; padding-left: 10px;">Earnings Trend</h3>
-                    <div class="flex gap-2">
-                        <button onclick="changeGraphRange('7d')" id="range-btn-7d" class="px-4 py-2 rounded-btn text-sm font-bold transition-all border border-forest bg-forest text-white">7 Days</button>
-                        <button onclick="changeGraphRange('30d')" id="range-btn-30d" class="px-4 py-2 rounded-btn text-sm font-bold transition-all border border-sage/40 hover:border-forest text-forest">30 Days</button>
-                        <button onclick="changeGraphRange('3m')" id="range-btn-3m" class="px-4 py-2 rounded-btn text-sm font-bold transition-all border border-sage/40 hover:border-forest text-forest">3 Months</button>
+                    <div class="flex gap-1.5 sm:gap-2 overflow-x-auto max-w-full">
+                        <button onclick="changeGraphRange('7d')" id="range-btn-7d" class="px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-btn text-xs sm:text-sm font-bold transition-all border border-forest bg-forest text-white shrink-0">7 Days</button>
+                        <button onclick="changeGraphRange('30d')" id="range-btn-30d" class="px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-btn text-xs sm:text-sm font-bold transition-all border border-sage/40 hover:border-forest text-forest shrink-0">30 Days</button>
+                        <button onclick="changeGraphRange('3m')" id="range-btn-3m" class="px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-btn text-xs sm:text-sm font-bold transition-all border border-sage/40 hover:border-forest text-forest shrink-0">3 Months</button>
                     </div>
                 </div>
                 <div class="relative h-64 w-full">
@@ -307,7 +307,7 @@
 
     
 <!-- Shared Footer -->
-<div id="tohfa-footer"></div>
+<div id="tohfa-footer" class="overflow-hidden"></div>
 <script type="module" src="/src/components/tohfa-include.js"></script>
 
 

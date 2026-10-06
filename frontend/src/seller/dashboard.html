@@ -18,7 +18,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet">
   <link rel="stylesheet" href="/src/tailwind.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" defer></script>
 <script type="module" src="/src/components/seller-components.js"></script>
 <script type="module" src="/src/components/SellerOnboardingWarningCard.js"></script>
 <script type="module" src="/src/components/SellerListingGateModal.js"></script>
@@ -114,7 +114,7 @@
   <header class="flex justify-between items-end mb-xl">
     <div>
       <h1 class="font-headline-lg text-on-background flex items-center gap-sm">
-        Good morning, <span id="seller-display-name">—</span> <span class="text-tertiary">✦</span>
+        Hello, <span id="seller-display-name">—</span> <span class="text-tertiary">✦</span>
       </h1>
       <p class="text-on-surface-variant font-body-md opacity-80 mt-xs">Welcome back to your creative sanctuary.</p>
     </div>
@@ -140,35 +140,35 @@
 
   <div id="dashboard-content" class="hidden flex flex-col gap-xl pb-24 lg:pb-0">
     <!-- KPI Row -->
-    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-lg mb-xl">
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-lg mb-xl auto-rows-fr">
       <!-- KPI 1 -->
-      <div class="bg-surface border border-outline-variant/30 rounded-xl p-md shadow-sm relative overflow-hidden group">
-        <p class="font-label-caps text-label-caps text-on-surface-variant/70 mb-sm">Total Orders</p>
-        <div class="flex items-baseline gap-sm">
-          <span id="kpi-orders" class="font-data-price text-[32px] text-on-surface">—</span>
-          <span id="kpi-orders-change" class="text-primary font-data-price text-xs flex items-center bg-secondary-container/30 px-xs rounded"></span>
+      <div class="bg-surface border border-outline-variant/30 rounded-xl p-3 sm:p-md shadow-sm relative overflow-hidden group flex flex-col justify-between h-full min-w-0">
+        <p class="font-label-caps text-label-caps text-on-surface-variant/70 mb-sm truncate">Total Orders</p>
+        <div class="flex flex-wrap items-baseline gap-1 sm:gap-sm min-w-0">
+          <span id="kpi-orders" class="font-data-price text-2xl sm:text-[32px] text-on-surface truncate min-w-0">—</span>
+          <span id="kpi-orders-change" class="text-primary font-data-price text-[10px] sm:text-xs flex items-center bg-secondary-container/30 px-xs rounded shrink-0"></span>
         </div>
       </div>
       <!-- KPI 2 -->
-      <div class="bg-surface border border-outline-variant/30 rounded-xl p-md shadow-sm relative overflow-hidden group">
-        <p class="font-label-caps text-label-caps text-on-surface-variant/70 mb-sm">Conversion</p>
-        <div class="flex items-baseline gap-sm">
-          <span id="kpi-conversion" class="font-data-price text-[32px] text-on-surface">—</span>
+      <div class="bg-surface border border-outline-variant/30 rounded-xl p-3 sm:p-md shadow-sm relative overflow-hidden group flex flex-col justify-between h-full min-w-0">
+        <p class="font-label-caps text-label-caps text-on-surface-variant/70 mb-sm truncate">Conversion</p>
+        <div class="flex flex-wrap items-baseline gap-1 sm:gap-sm min-w-0">
+          <span id="kpi-conversion" class="font-data-price text-2xl sm:text-[32px] text-on-surface truncate min-w-0">—</span>
         </div>
       </div>
       <!-- KPI 3 -->
-      <div class="bg-surface border border-outline-variant/30 rounded-xl p-md shadow-sm relative overflow-hidden group">
-        <p class="font-label-caps text-label-caps text-on-surface-variant/70 mb-sm">Revenue</p>
-        <div class="flex items-baseline gap-sm">
-          <span id="kpi-revenue" class="font-data-price text-[32px] text-on-surface">—</span>
-          <span id="kpi-revenue-change" class="text-primary font-data-price text-xs flex items-center bg-secondary-container/30 px-xs rounded"></span>
+      <div class="bg-surface border border-outline-variant/30 rounded-xl p-3 sm:p-md shadow-sm relative overflow-hidden group flex flex-col justify-between h-full min-w-0">
+        <p class="font-label-caps text-label-caps text-on-surface-variant/70 mb-sm truncate">Revenue</p>
+        <div class="flex flex-wrap items-baseline gap-1 sm:gap-sm min-w-0">
+          <span id="kpi-revenue" class="font-data-price text-2xl sm:text-[32px] text-on-surface truncate min-w-0">—</span>
+          <span id="kpi-revenue-change" class="text-primary font-data-price text-[10px] sm:text-xs flex items-center bg-secondary-container/30 px-xs rounded shrink-0"></span>
         </div>
       </div>
       <!-- KPI 4 -->
-      <div class="bg-surface border border-outline-variant/30 rounded-xl p-md shadow-sm relative overflow-hidden group">
-        <p class="font-label-caps text-label-caps text-on-surface-variant/70 mb-sm">Pending Orders</p>
-        <div class="flex items-baseline gap-sm">
-          <span id="kpi-pending-orders" class="font-data-price text-[32px] text-on-surface">—</span>
+      <div class="bg-surface border border-outline-variant/30 rounded-xl p-3 sm:p-md shadow-sm relative overflow-hidden group flex flex-col justify-between h-full min-w-0">
+        <p class="font-label-caps text-label-caps text-on-surface-variant/70 mb-sm truncate">Pending Orders</p>
+        <div class="flex flex-wrap items-baseline gap-1 sm:gap-sm min-w-0">
+          <span id="kpi-pending-orders" class="font-data-price text-2xl sm:text-[32px] text-on-surface truncate min-w-0">—</span>
         </div>
       </div>
     </section>
@@ -186,28 +186,6 @@
         <!-- Dynamically Populated -->
       </ul>
       <p id="low-stock-empty" class="hidden text-center text-on-surface-variant py-8 text-sm italic">All products are well-stocked 🎉</p>
-    </section>
-
-    <!-- 2. Announcements -->
-    <section class="bg-surface border border-outline-variant/30 rounded-xl p-lg shadow-sm relative overflow-hidden">
-      <h3 class="font-headline-lg italic text-on-surface text-2xl mb-6">Announcements</h3>
-      <div class="space-y-6">
-        <div class="relative pl-6">
-          <span class="absolute left-0 top-1 text-primary text-lg material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">local_florist</span>
-          <h4 class="font-title-serif font-bold text-primary text-base">New Packaging Guidelines</h4>
-          <p class="text-xs text-on-surface-variant mt-1 leading-relaxed">Artisan partners must now use 100% biodegradable twine and soy-ink labels for all gift boxes starting Sept 1st.</p>
-        </div>
-        <div class="relative pl-6">
-          <span class="absolute left-0 top-1 text-primary text-lg material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">local_florist</span>
-          <h4 class="font-title-serif font-bold text-primary text-base">Monsoon Curated Collection</h4>
-          <p class="text-xs text-on-surface-variant mt-1 leading-relaxed">Submit your "Petrichor &amp; Fern" themed listings by July 30th for a chance to be featured on the homepage.</p>
-        </div>
-        <div class="relative pl-6">
-          <span class="absolute left-0 top-1 text-primary text-lg material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">local_florist</span>
-          <h4 class="font-title-serif font-bold text-primary text-base">Seller Workshop: New Resources</h4>
-          <p class="text-xs text-on-surface-variant mt-1 leading-relaxed">Join us this Friday for a live masterclass on extracting pigments from studio waste.</p>
-        </div>
-      </div>
     </section>
 
     <!-- 3. Recent Orders -->
@@ -903,12 +881,19 @@
                     return;
                 }
 
-                // Check if seller is approved & onboarding status
-                const sellerProfileRes = await fetch(`${API_BASE_URL}/api/seller/profile`, {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                });
-                if (sellerProfileRes.ok) {
-                    const sellerProfileData = await sellerProfileRes.json();
+                // Check if seller is approved & onboarding status (shared promise/cache)
+                let sellerProfileData = null;
+                if (typeof window.fetchSellerProfile === 'function') {
+                    sellerProfileData = await window.fetchSellerProfile(accessToken);
+                } else {
+                    const sellerProfileRes = await fetch(`${API_BASE_URL}/api/seller/profile`, {
+                        headers: { 'Authorization': `Bearer ${accessToken}` }
+                    });
+                    if (sellerProfileRes.ok) {
+                        sellerProfileData = await sellerProfileRes.json();
+                    }
+                }
+                if (sellerProfileData) {
                     const sellerProfile = sellerProfileData.data?.profile || sellerProfileData.data || sellerProfileData;
                     
                     const isApproved = sellerProfile.is_approved === 1 || sellerProfile.is_approved === true || sellerProfile.is_approved === 'true';
@@ -941,34 +926,15 @@
         });
 
         // View Store button
-        const handleViewStore = () => {
-            const token = (typeof window !== 'undefined' && window.authStorage?.getItem('tohfa_access_token')) ||
-                          sessionStorage.getItem('tohfa_access_token') ||
-                          sessionStorage.getItem('tohfa_auth_token') ||
-                          localStorage.getItem('tohfa_access_token') ||
-                          localStorage.getItem('tohfa_auth_token') ||
-                          accessToken || '';
-            fetch(`${API_BASE_URL}/api/seller/profile`, {
-                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-            })
-            .then(res => res.json())
-            .then(data => {
-                const profile = data.data?.profile || data.profile || data.data || data;
-                const sellerId = profile?.user_id || profile?.seller_id || profile?.id;
-                if (sellerId) {
-                    window.location.href = `/buyer/seller-profile.html?id=${sellerId}`;
-                } else {
-                    window.location.href = '/seller/dashboard.html';
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                window.location.href = '/seller/dashboard.html';
-            });
-        };
-
         const headerViewBtn = document.getElementById('header-view-store-btn');
-        if (headerViewBtn) headerViewBtn.addEventListener('click', handleViewStore);
+        if (headerViewBtn) {
+            headerViewBtn.addEventListener('click', (e) => {
+                if (e && e.preventDefault) e.preventDefault();
+                if (typeof window.tohfaOpenStore === 'function') {
+                    window.tohfaOpenStore();
+                }
+            });
+        }
 
         // ── Holiday Mode ──
         (function initHolidayMode() {

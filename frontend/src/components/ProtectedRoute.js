@@ -20,13 +20,7 @@
 
   const path = window.location.pathname;
 
-  // ── 1. Inject responsive CSS early to avoid FOUC ──────────────────────────
-  (function injectResponsiveCss() {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = '/src/responsive.css';
-    document.head.appendChild(link);
-  })();
+  // ── 1. Responsive CSS is bundled statically via tailwind.css ──────────────
 
   // ── 2. Cross-tab session sync via localStorage bridge ─────────────────────
   // When a new tab opens without a sessionStorage token, it asks other tabs.

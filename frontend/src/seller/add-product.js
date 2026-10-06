@@ -9,6 +9,7 @@ import { compressImage } from '../utils/imageCompressor.js';
 const DRAFT_STORAGE_KEY = 'tohfa_artisan_product_draft';
 let categoriesCatalog = [];
 let uploadedPhotos = []; // array of { file, dataUrl }
+let activeVariantUploadsCount = 0;
 
 const STANDARD_OCCASIONS = [
   { slug: 'birthday', label: '🎂 Birthday' },
@@ -575,7 +576,16 @@ function addVariantRow(data = {}) {
   row.id = rowId;
   row.className = 'variant-card-row p-3.5 sm:p-4 bg-white rounded-2xl border border-[#285C3A]/20 shadow-xs space-y-3 relative transition-all';
 
-  const defaultImgs = Array.isArray(data.images) ? data.images.join(', ') : (data.image_url || '');
+  let initialImages = [];
+  if (Array.isArray(data.images)) {
+    initialImages = data.images.filter(Boolean);
+  } else if (typeof data.images === 'string' && data.images.trim()) {
+    initialImages = data.images.split(',').map(s => s.trim()).filter(Boolean);
+  } else if (data.image_url) {
+    initialImages = [data.image_url];
+  }
+  row._variantImages = initialImages;
+  row._uploadingCount = 0;
 
   row.innerHTML = `
     <div class="flex items-center justify-between pb-2 border-b border-[#285C3A]/10">
@@ -591,35 +601,186 @@ function addVariantRow(data = {}) {
     <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
       <div class="sm:col-span-6">
         <label class="block text-[11px] font-bold text-[#14381F] uppercase font-mono mb-1">Variant Name / Attribute *</label>
-        <input type="text" class="field-input min-h-[44px] text-base sm:text-xs variant-name-input" placeholder="e.g. Size: Large / Color: Indigo / Material: Oak" value="${data.variant_name || data.name || data.color_name || ''}" required />
+        <input type="text" class="field-input min-h-[44px] text-base sm:text-xs variant-name-input" placeholder="e.g. Large / Indigo / Oak" value="${data.variant_name || data.name || data.color_name || ''}" required />
       </div>
-      <div class="sm:col-span-3">
-        <label class="block text-[11px] font-bold text-[#14381F] uppercase font-mono mb-1">Price Adjustment (+₹)</label>
-        <input type="number" class="field-input min-h-[44px] text-base sm:text-xs font-mono variant-price-input" placeholder="0" value="${data.additional_price ?? 0}" />
-      </div>
-      <div class="sm:col-span-3">
-        <label class="block text-[11px] font-bold text-[#14381F] uppercase font-mono mb-1">Stock Qty</label>
-        <input type="number" class="field-input min-h-[44px] text-base sm:text-xs font-mono variant-stock-input" placeholder="50" value="${data.stock_qty ?? 50}" />
+      <div class="grid grid-cols-2 sm:col-span-6 gap-2.5 sm:gap-3">
+        <div>
+          <label class="block text-[11px] font-bold text-[#14381F] uppercase font-mono mb-1">Price (+<span class="font-sans font-semibold">₹</span>)</label>
+          <input type="number" class="field-input min-h-[44px] text-base sm:text-xs font-mono variant-price-input" placeholder="0" value="${data.additional_price ?? 0}" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-[#14381F] uppercase font-mono mb-1">Stock Qty</label>
+          <input type="number" class="field-input min-h-[44px] text-base sm:text-xs font-mono variant-stock-input" placeholder="50" value="${data.stock_qty ?? 50}" />
+        </div>
       </div>
     </div>
     
-    <div>
-      <label class="block text-[11px] font-bold text-[#14381F] uppercase font-mono mb-1">Variant Photos (Comma-separated Image URLs)</label>
-      <input type="text" class="field-input min-h-[44px] text-base sm:text-xs font-mono variant-images-input" placeholder="/img/products/variant1.jpg, /img/products/variant2.jpg" value="${defaultImgs}" />
-      <span class="text-[11px] text-[#587A5B] block mt-1">Enter 1 or more image URLs for this variant option.</span>
+    <div class="variant-photos-section pt-1 border-t border-[#285C3A]/10">
+      <div class="flex items-center justify-between mb-2">
+        <label class="block text-[11px] font-bold text-[#14381F] uppercase font-mono">Variant Photos (<span class="variant-photo-count font-bold">0</span>/5)</label>
+        <span class="variant-upload-status text-[11px] text-[#285C3A] font-medium hidden"></span>
+      </div>
+
+      <input type="file" accept="image/jpeg,image/png,image/webp,image/jpg" multiple class="hidden variant-photo-file-input" />
+
+      <div class="flex flex-wrap items-center gap-2.5">
+        <button type="button" class="variant-add-photo-btn inline-flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl border border-dashed border-[#285C3A]/50 bg-[#F5EBE1]/40 hover:bg-[#F5EBE1] text-[#14381F] text-xs font-semibold cursor-pointer transition-colors active:scale-95" title="Add photos for this variant">
+          <span class="material-symbols-outlined text-[18px]">add_photo_alternate</span>
+          <span>Add Photos</span>
+        </button>
+        <div class="variant-thumbnails-list flex flex-wrap gap-2 items-center"></div>
+      </div>
+      <div class="variant-upload-error text-[11px] text-red-600 font-medium hidden mt-1.5"></div>
+      <span class="text-[11px] text-[#587A5B] block mt-1">Upload up to 5 photos for this variant (JPEG, PNG, WebP up to 10MB). First photo is primary.</span>
     </div>
   `;
 
+  const photoCountEl = row.querySelector('.variant-photo-count');
+  const thumbsContainer = row.querySelector('.variant-thumbnails-list');
+  const addBtn = row.querySelector('.variant-add-photo-btn');
+  const fileInput = row.querySelector('.variant-photo-file-input');
+  const errorEl = row.querySelector('.variant-upload-error');
+  const statusEl = row.querySelector('.variant-upload-status');
+
+  function showError(msg) {
+    if (errorEl) {
+      errorEl.textContent = msg;
+      errorEl.classList.remove('hidden');
+    } else {
+      alert(msg);
+    }
+  }
+
+  function renderThumbnails() {
+    const count = row._variantImages.length;
+    if (photoCountEl) photoCountEl.textContent = count;
+    if (addBtn) {
+      if (count >= 5) {
+        addBtn.classList.add('opacity-40', 'pointer-events-none');
+        addBtn.setAttribute('disabled', 'true');
+      } else {
+        addBtn.classList.remove('opacity-40', 'pointer-events-none');
+        addBtn.removeAttribute('disabled');
+      }
+    }
+
+    if (thumbsContainer) {
+      thumbsContainer.innerHTML = row._variantImages.map((url, idx) => `
+        <div class="relative w-14 h-14 rounded-xl overflow-hidden border border-[#285C3A]/25 bg-[#FFF8E7] shadow-2xs shrink-0">
+          <img src="${url}" alt="Variant Photo ${idx + 1}" class="w-full h-full object-cover" />
+          ${idx === 0 ? '<span class="absolute bottom-0 inset-x-0 bg-[#14381F]/80 text-[#FFF8E7] text-[9px] font-mono text-center py-0.5 leading-none">Primary</span>' : ''}
+          <button type="button" data-photo-idx="${idx}" class="remove-variant-photo-btn absolute top-1 right-1 w-5 h-5 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer" title="Remove photo" aria-label="Remove photo">
+            <span class="material-symbols-outlined text-[13px] leading-none pointer-events-none">close</span>
+          </button>
+        </div>
+      `).join('');
+
+      thumbsContainer.querySelectorAll('.remove-variant-photo-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const idx = parseInt(btn.getAttribute('data-photo-idx'), 10);
+          if (!isNaN(idx) && idx >= 0 && idx < row._variantImages.length) {
+            row._variantImages.splice(idx, 1);
+            renderThumbnails();
+            triggerAutoSave();
+          }
+        });
+      });
+    }
+  }
+
+  addBtn?.addEventListener('click', () => {
+    if (row._variantImages.length >= 5) return;
+    if (errorEl) errorEl.classList.add('hidden');
+    fileInput?.click();
+  });
+
+  fileInput?.addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files || []);
+    fileInput.value = '';
+    if (!files.length) return;
+
+    if (errorEl) {
+      errorEl.classList.add('hidden');
+      errorEl.textContent = '';
+    }
+
+    const remainingSlots = 5 - row._variantImages.length;
+    if (remainingSlots <= 0) {
+      showError('Maximum 5 photos allowed per variant.');
+      return;
+    }
+
+    if (files.length > remainingSlots) {
+      showError(`Only the first ${remainingSlots} photo${remainingSlots > 1 ? 's' : ''} were selected (max 5 per variant).`);
+    }
+
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+    const validFiles = [];
+
+    for (const f of files) {
+      if (!allowedMimes.includes(f.type)) {
+        showError(`"${f.name}" is not a supported format. Please use JPEG, PNG, or WebP.`);
+        return;
+      }
+      if (f.size > 10 * 1024 * 1024) {
+        showError(`"${f.name}" exceeds the 10MB limit.`);
+        return;
+      }
+      validFiles.push(f);
+      if (validFiles.length === remainingSlots) break;
+    }
+
+    if (!validFiles.length) return;
+
+    for (let i = 0; i < validFiles.length; i++) {
+      const file = validFiles[i];
+      row._uploadingCount = (row._uploadingCount || 0) + 1;
+      activeVariantUploadsCount++;
+
+      try {
+        if (statusEl) {
+          statusEl.classList.remove('hidden');
+          statusEl.innerHTML = `<span class="material-symbols-outlined text-[13px] animate-spin inline-block align-middle mr-1">progress_activity</span>Uploading ${i + 1}/${validFiles.length}...`;
+        }
+        const url = await uploadMedia(file, 'tohfa_products');
+        if (url) {
+          row._variantImages.push(url);
+          renderThumbnails();
+          triggerAutoSave();
+        }
+      } catch (err) {
+        console.error('Variant photo upload failed:', err);
+        showError('Upload failed: ' + (err.message || 'Please try again.'));
+      } finally {
+        row._uploadingCount = Math.max(0, (row._uploadingCount || 1) - 1);
+        activeVariantUploadsCount = Math.max(0, activeVariantUploadsCount - 1);
+      }
+    }
+
+    if (statusEl) {
+      statusEl.classList.add('hidden');
+      statusEl.textContent = '';
+    }
+  });
+
   // Remove button
   row.querySelector('.remove-variant-btn')?.addEventListener('click', () => {
+    if (row._uploadingCount > 0) {
+      activeVariantUploadsCount = Math.max(0, activeVariantUploadsCount - row._uploadingCount);
+      row._uploadingCount = 0;
+    }
     row.remove();
     triggerAutoSave();
   });
 
   row.querySelectorAll('input').forEach(inp => {
-    inp.addEventListener('input', triggerAutoSave);
+    if (inp.type !== 'file') {
+      inp.addEventListener('input', triggerAutoSave);
+    }
   });
 
+  renderThumbnails();
   container.appendChild(row);
 }
 
@@ -637,8 +798,7 @@ function getVariantsData() {
 
     const additionalPrice = parseFloat(row.querySelector('.variant-price-input')?.value || '0');
     const stockQty = parseInt(row.querySelector('.variant-stock-input')?.value || '50', 10);
-    const rawImgs = row.querySelector('.variant-images-input')?.value.trim() || '';
-    const images = rawImgs ? rawImgs.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const images = Array.isArray(row._variantImages) ? [...row._variantImages] : [];
 
     variants.push({
       variant_name: name,
@@ -657,6 +817,12 @@ function getVariantsData() {
 
 async function handleSubmit(e) {
   e.preventDefault();
+
+  if (activeVariantUploadsCount > 0) {
+    alert('Variant photos are still uploading. Please wait for uploads to finish before publishing.');
+    return;
+  }
+
   const token = sessionStorage.getItem('tohfa_access_token');
   const publishBtns = [
     document.getElementById('publish-listing-btn'),
