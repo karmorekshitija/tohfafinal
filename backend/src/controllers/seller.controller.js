@@ -16,7 +16,18 @@ const logisticsService = require('../services/logistics.service');
 const paymentService = require('../services/payment.service');
 const ownerNotifyService = require('../services/ownerNotify.service');
 const { PLANS, getPlan, calculateEffectivePrice } = require('../config/plans');
-const { evaluateSellerOnboarding, getSellerOnboardingStatus } = require('../utils/sellerOnboarding');
+const {
+  evaluateSellerOnboarding,
+  getSellerOnboardingStatus,
+  isValidIfscOrRouting,
+  isValidPincode,
+  isValidGstin,
+  isValidPan,
+  isValidIndianPhone,
+  normalizeBillingAddress,
+  normalizePickupAddress,
+  normalizeBankDetails,
+} = require('../utils/sellerOnboarding');
 
 // Strip internal fields (never exposed in public or seller responses)
 function sanitizeSellerProfile(sp) {
@@ -44,14 +55,18 @@ async function ensureOrderItemColumns() {
   }
 }
 
-// Ensure tax_details column exists on seller_profiles
+// Ensure tax_details and address/location columns exist on seller_profiles
 let taxColsChecked = false;
 async function ensureTaxColumns() {
   if (taxColsChecked) return;
   try {
     await query(`
       ALTER TABLE seller_profiles
-      ADD COLUMN IF NOT EXISTS tax_details JSONB DEFAULT '{}';
+      ADD COLUMN IF NOT EXISTS tax_details JSONB DEFAULT '{}',
+      ADD COLUMN IF NOT EXISTS billing_address JSONB DEFAULT '{}',
+      ADD COLUMN IF NOT EXISTS pickup_address JSONB DEFAULT '{}',
+      ADD COLUMN IF NOT EXISTS bank_details JSONB DEFAULT '{}',
+      ADD COLUMN IF NOT EXISTS location TEXT;
     `);
     taxColsChecked = true;
   } catch (err) {
@@ -90,52 +105,100 @@ async function getOwnSellerProfile(req, res, next) {
   try {
     const userId = req.user.id;
 
-    const { rows } = await query(
-      `SELECT sp.id, sp.user_id,
-              COALESCE(sp.store_name, sp.shop_name, u.name) AS store_name,
-              COALESCE(sp.shop_name, sp.store_name, u.name) AS shop_name,
-              u.name AS display_name,
-              sp.handle, sp.location,
-              COALESCE(sp.bio, sp.shop_bio) AS bio,
-              sp.shop_bio,
-              sp.badges,
-              sp.story_headline, sp.story_description, sp.working_on, sp.video_url, sp.about_image_url,
-              sp.whatsapp_number,
-              COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, u.profile_photo_url) AS profile_photo,
-              COALESCE(sp.banner_url, u.cover_photo_url) AS cover_photo,
-              COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, u.profile_photo_url) AS avatar_url,
-              COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, u.profile_photo_url) AS logo_url,
-              COALESCE(sp.banner_url, u.cover_photo_url) AS banner_url,
-              sp.seller_type, sp.is_approved,
-              sp.rejection_reason,
-              COALESCE(sp.vacation_mode_active, 0) AS vacation_mode,
-              COALESCE(sp.vacation_mode_active, 0) AS vacation_mode_active,
-              sp.vacation_message,
-              COALESCE(sp.is_accepting_orders, TRUE) AS is_accepting_orders,
-              COALESCE(sp.zai_mode_enabled, 0) AS zai_mode_enabled,
-              sp.pickup_address, sp.billing_address, sp.bank_details, sp.tax_details,
-              sp.pan_number, sp.gst_number,
-              COALESCE(sp.onboarding_completed, FALSE) AS onboarding_completed,
-              COALESCE(sp.onboarding_tour_dismissed, FALSE) AS onboarding_tour_dismissed,
-              s.pickup_address AS s_pickup_address,
-              s.billing_address AS s_billing_address,
-              s.bank_details AS s_bank_details,
-              s.onboarding_tour_dismissed AS s_onboarding_tour_dismissed,
-              (COALESCE(sp.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
-              COALESCE(sp.subscription_plan, s.subscription_plan, 'basic') AS subscription_plan,
-              COALESCE(sp.subscription_status, s.subscription_status, 'active') AS subscription_status,
-              COALESCE(sp.subscription_price_paid, s.subscription_price_paid, 0.00) AS subscription_price_paid,
-              COALESCE(sp.subscription_started_at, s.subscription_started_at) AS subscription_started_at,
-              COALESCE(sp.subscription_renews_at, s.subscription_renews_at) AS subscription_renews_at,
-              COALESCE(sp.subscription_discount_used, s.subscription_discount_used, FALSE) AS subscription_discount_used,
-              sp.created_at,
-              u.name, u.email, u.phone
-       FROM seller_profiles sp
-       JOIN users u ON u.id = sp.user_id
-       LEFT JOIN sellers s ON s.user_id = u.id
-       WHERE sp.user_id = $1`,
-      [userId]
-    );
+    let rows = [];
+    try {
+      const result = await query(
+        `SELECT COALESCE(sp.id, s.id, u.id) AS id,
+                u.id AS user_id,
+                COALESCE(sp.store_name, sp.shop_name, s.store_name, u.name) AS store_name,
+                COALESCE(sp.shop_name, sp.store_name, s.store_name, u.name) AS shop_name,
+                u.name AS display_name,
+                COALESCE(sp.handle, s.slug) AS handle,
+                sp.location,
+                COALESCE(sp.bio, sp.shop_bio, s.bio) AS bio,
+                sp.shop_bio,
+                sp.badges,
+                sp.story_headline, sp.story_description, sp.working_on, sp.video_url, sp.about_image_url,
+                COALESCE(sp.whatsapp_number, s.whatsapp_number, u.phone) AS whatsapp_number,
+                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.logo_url, u.profile_photo_url) AS profile_photo,
+                COALESCE(sp.banner_url, s.banner_url, u.cover_photo_url) AS cover_photo,
+                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.logo_url, u.profile_photo_url) AS avatar_url,
+                COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.logo_url, u.profile_photo_url) AS logo_url,
+                COALESCE(sp.banner_url, s.banner_url, u.cover_photo_url) AS banner_url,
+                COALESCE(sp.seller_type, 'regular') AS seller_type,
+                COALESCE(sp.is_approved, s.is_approved, FALSE) AS is_approved,
+                sp.rejection_reason,
+                COALESCE(sp.vacation_mode_active, 0) AS vacation_mode,
+                COALESCE(sp.vacation_mode_active, 0) AS vacation_mode_active,
+                sp.vacation_message,
+                COALESCE(sp.is_accepting_orders, TRUE) AS is_accepting_orders,
+                COALESCE(sp.zai_mode_enabled, 0) AS zai_mode_enabled,
+                COALESCE(sp.pickup_address, s.pickup_address) AS pickup_address,
+                COALESCE(sp.billing_address, s.billing_address) AS billing_address,
+                COALESCE(sp.bank_details, s.bank_details) AS bank_details,
+                sp.tax_details,
+                sp.pan_number, sp.gst_number,
+                COALESCE(sp.onboarding_completed, FALSE) AS onboarding_completed,
+                COALESCE(sp.onboarding_tour_dismissed, s.onboarding_tour_dismissed, FALSE) AS onboarding_tour_dismissed,
+                s.pickup_address AS s_pickup_address,
+                s.billing_address AS s_billing_address,
+                s.bank_details AS s_bank_details,
+                s.onboarding_tour_dismissed AS s_onboarding_tour_dismissed,
+                (COALESCE(sp.is_admin_managed::text, s.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
+                COALESCE(sp.subscription_plan, s.subscription_plan, 'basic') AS subscription_plan,
+                COALESCE(sp.subscription_status, s.subscription_status, 'active') AS subscription_status,
+                COALESCE(sp.subscription_price_paid, s.subscription_price_paid, 0.00) AS subscription_price_paid,
+                COALESCE(sp.subscription_started_at, s.subscription_started_at) AS subscription_started_at,
+                COALESCE(sp.subscription_renews_at, s.subscription_renews_at) AS subscription_renews_at,
+                COALESCE(sp.subscription_discount_used, s.subscription_discount_used, FALSE) AS subscription_discount_used,
+                COALESCE(sp.created_at, s.created_at, u.created_at) AS created_at,
+                u.name, u.email, u.phone
+         FROM users u
+         LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+         LEFT JOIN sellers s ON s.user_id = u.id
+         WHERE u.id = $1`,
+        [userId]
+      );
+      rows = result.rows;
+    } catch (selectErr) {
+      await ensureTaxColumns();
+      const fallbackResult = await query(
+        `SELECT COALESCE(sp.id, s.id, u.id) AS id,
+                u.id AS user_id,
+                COALESCE(sp.store_name, s.store_name, u.name) AS store_name,
+                COALESCE(sp.store_name, s.store_name, u.name) AS shop_name,
+                u.name AS display_name,
+                COALESCE(sp.slug, s.slug) AS handle,
+                COALESCE(sp.bio, s.bio) AS bio,
+                COALESCE(sp.whatsapp_number, u.phone) AS whatsapp_number,
+                COALESCE(sp.logo_url, s.logo_url, u.profile_photo_url) AS profile_photo,
+                COALESCE(sp.banner_url, s.banner_url, u.cover_photo_url) AS cover_photo,
+                COALESCE(sp.logo_url, s.logo_url, u.profile_photo_url) AS avatar_url,
+                COALESCE(sp.logo_url, s.logo_url, u.profile_photo_url) AS logo_url,
+                COALESCE(sp.banner_url, s.banner_url, u.cover_photo_url) AS banner_url,
+                COALESCE(sp.seller_type, 'regular') AS seller_type,
+                COALESCE(sp.is_approved, s.is_approved, FALSE) AS is_approved,
+                sp.rejection_reason,
+                COALESCE(sp.pickup_address, s.pickup_address) AS pickup_address,
+                COALESCE(sp.billing_address, s.billing_address) AS billing_address,
+                COALESCE(sp.bank_details, s.bank_details) AS bank_details,
+                sp.pan_number, sp.gst_number,
+                COALESCE(sp.onboarding_completed, FALSE) AS onboarding_completed,
+                COALESCE(sp.onboarding_tour_dismissed, s.onboarding_tour_dismissed, FALSE) AS onboarding_tour_dismissed,
+                s.pickup_address AS s_pickup_address,
+                s.billing_address AS s_billing_address,
+                s.bank_details AS s_bank_details,
+                s.onboarding_tour_dismissed AS s_onboarding_tour_dismissed,
+                (COALESCE(sp.is_admin_managed::text, s.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
+                u.name, u.email, u.phone
+         FROM users u
+         LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+         LEFT JOIN sellers s ON s.user_id = u.id
+         WHERE u.id = $1`,
+        [userId]
+      );
+      rows = fallbackResult.rows;
+    }
 
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'Seller profile not found.' });
@@ -151,21 +214,65 @@ async function getOwnSellerProfile(req, res, next) {
     profile.banner_url = banner;
     profile.cover_photo = banner;
 
+    const taxObj = (profile.tax_details && typeof profile.tax_details === 'object') ? profile.tax_details : {};
+    const normalizedBilling = normalizeBillingAddress(
+      profile.billing_address,
+      {
+        ...(rawRow.s_billing_address || {}),
+        ...(profile.pickup_address || {}),
+        ...(rawRow.s_pickup_address || {}),
+        store_name: profile.store_name,
+        gst_number: profile.gst_number || taxObj.gstin,
+        pan_number: profile.pan_number || taxObj.pan_number,
+        legal_business_name: taxObj.legal_business_name || profile.store_name,
+      }
+    );
+
+    const normalizedPickup = normalizePickupAddress(
+      profile.pickup_address,
+      {
+        ...(rawRow.s_pickup_address || {}),
+        ...(normalizedBilling.address_line1 ? normalizedBilling : {}),
+        contact_name: profile.display_name || profile.name || profile.store_name,
+        phone: profile.whatsapp_number || profile.phone,
+        facility_name: profile.store_name,
+      }
+    );
+
+    const normalizedBank = normalizeBankDetails(profile.bank_details, rawRow.s_bank_details || {});
+
+    profile.billing_address = normalizedBilling;
+    profile.pickup_address = normalizedPickup;
+    profile.bank_details = normalizedBank;
+    profile.payout_details = normalizedBank;
+    profile.legal_business_name = normalizedBilling.legal_business_name || taxObj.legal_business_name || profile.store_name || '';
+    profile.gst_number = profile.gst_number || normalizedBilling.gstin || taxObj.gstin || null;
+    profile.pan_number = profile.pan_number || normalizedBilling.pan || taxObj.pan_number || null;
+    profile.tax_details = {
+      ...taxObj,
+      legal_business_name: profile.legal_business_name,
+      is_gst_registered: Boolean(profile.gst_number || taxObj.is_gst_registered),
+      gstin: profile.gst_number || '',
+      pan_number: profile.pan_number || '',
+    };
+
     // Compute onboarding flags
     const onboardingStatus = evaluateSellerOnboarding({
       ...profile,
-      billing_address: profile.billing_address || rawRow.s_billing_address,
-      pickup_address: profile.pickup_address || rawRow.s_pickup_address,
-      bank_details: profile.bank_details || rawRow.s_bank_details,
+      billing_address: normalizedBilling,
+      pickup_address: normalizedPickup,
+      bank_details: normalizedBank,
       onboarding_tour_dismissed: profile.onboarding_tour_dismissed || rawRow.s_onboarding_tour_dismissed,
       gst_number: profile.gst_number,
       pan_number: profile.pan_number,
     });
 
     profile.hasBillingAddress = onboardingStatus.hasBillingAddress;
+    profile.hasPickupAddress = onboardingStatus.hasPickupAddress;
     profile.hasBankingDetails = onboardingStatus.hasBankingDetails;
     profile.onboardingTourDismissed = onboardingStatus.onboardingTourDismissed;
     profile.has_billing_address = onboardingStatus.hasBillingAddress;
+    profile.has_pickup_address = onboardingStatus.hasPickupAddress;
     profile.has_banking_details = onboardingStatus.hasBankingDetails;
     profile.onboarding_tour_dismissed = onboardingStatus.onboardingTourDismissed;
     profile.onboardingStatus = onboardingStatus;
@@ -198,6 +305,7 @@ async function getOwnSellerProfile(req, res, next) {
       data: {
         ...profile,
         hasBillingAddress: onboardingStatus.hasBillingAddress,
+        hasPickupAddress: onboardingStatus.hasPickupAddress,
         hasBankingDetails: onboardingStatus.hasBankingDetails,
         onboardingTourDismissed: onboardingStatus.onboardingTourDismissed,
         profile,
@@ -252,26 +360,35 @@ async function updateSellerProfile(req, res, next) {
     }
 
     const { rows } = await query(
-      `UPDATE seller_profiles
-       SET store_name        = COALESCE($1, store_name),
-           shop_name         = COALESCE($1, shop_name),
-           display_name      = COALESCE($2, display_name),
-           handle            = COALESCE($3, handle),
-           location          = COALESCE($4, location),
-           bio               = COALESCE($5, bio),
-           shop_bio          = COALESCE($5, shop_bio),
-           badges            = COALESCE($6, badges),
-           whatsapp_number   = COALESCE($7, whatsapp_number),
-           story_headline    = COALESCE($8, story_headline),
-           story_description = COALESCE($9, story_description),
-           working_on        = COALESCE($10, working_on),
-           video_url         = COALESCE($11, video_url),
-           profile_photo     = COALESCE($12, profile_photo),
-           avatar_url        = COALESCE($12, avatar_url),
-           banner_url        = COALESCE($13, banner_url),
-           bank_details      = COALESCE($14::jsonb, bank_details),
+      `INSERT INTO seller_profiles (
+         user_id, store_name, shop_name, display_name, handle, location,
+         bio, shop_bio, badges, whatsapp_number, story_headline, story_description,
+         working_on, video_url, profile_photo, avatar_url, banner_url, bank_details, updated_at
+       )
+       VALUES (
+         $15, COALESCE($1, 'Artisan Studio'), $1, $2, $3, $4,
+         $5, $5, $6, $7, $8, $9,
+         $10, $11, $12, $12, $13, COALESCE($14::jsonb, '{}'::jsonb), NOW()
+       )
+       ON CONFLICT (user_id) DO UPDATE
+       SET store_name        = COALESCE($1, seller_profiles.store_name),
+           shop_name         = COALESCE($1, seller_profiles.shop_name),
+           display_name      = COALESCE($2, seller_profiles.display_name),
+           handle            = COALESCE($3, seller_profiles.handle),
+           location          = COALESCE($4, seller_profiles.location),
+           bio               = COALESCE($5, seller_profiles.bio),
+           shop_bio          = COALESCE($5, seller_profiles.shop_bio),
+           badges            = COALESCE($6, seller_profiles.badges),
+           whatsapp_number   = COALESCE($7, seller_profiles.whatsapp_number),
+           story_headline    = COALESCE($8, seller_profiles.story_headline),
+           story_description = COALESCE($9, seller_profiles.story_description),
+           working_on        = COALESCE($10, seller_profiles.working_on),
+           video_url         = COALESCE($11, seller_profiles.video_url),
+           profile_photo     = COALESCE($12, seller_profiles.profile_photo),
+           avatar_url        = COALESCE($12, seller_profiles.avatar_url),
+           banner_url        = COALESCE($13, seller_profiles.banner_url),
+           bank_details      = COALESCE($14::jsonb, seller_profiles.bank_details),
            updated_at        = NOW()
-       WHERE user_id = $15
        RETURNING *`,
       [
         resolvedStoreName,
@@ -2427,23 +2544,26 @@ async function getReceivingDetails(req, res, next) {
   try {
     const sellerId = req.user.id;
     const { rows } = await query(
-      `SELECT bank_details FROM seller_profiles WHERE (user_id = $1 OR user_id::text = $1::text)`,
+      `SELECT sp.bank_details, s.bank_details AS s_bank_details
+       FROM seller_profiles sp
+       LEFT JOIN sellers s ON s.user_id = sp.user_id
+       WHERE (sp.user_id = $1 OR sp.user_id::text = $1::text)`,
       [sellerId]
     ).catch(() => ({ rows: [] }));
-    const bd = rows[0]?.bank_details || {};
+    const normalized = normalizeBankDetails(rows[0]?.bank_details, rows[0]?.s_bank_details || {});
     return res.json({
       success: true,
       data: {
-        bank: bd.bank || (bd.account_number ? {
-          account_holder_name: bd.account_holder_name || '',
-          bank_name: bd.bank_name || '',
-          account_number: bd.account_number || '',
-          ifsc_code: bd.ifsc_code || '',
-        } : null),
-        upi: bd.upi || (bd.upi_id ? {
-          account_holder_name: bd.account_holder_name || '',
-          upi_id: bd.upi_id || '',
-        } : null),
+        bank: normalized.account_number ? {
+          account_holder_name: normalized.account_holder_name || '',
+          bank_name: normalized.bank_name || '',
+          account_number: normalized.account_number || '',
+          ifsc_code: normalized.ifsc_code || '',
+        } : null,
+        upi: normalized.upi_id ? {
+          account_holder_name: normalized.account_holder_name || '',
+          upi_id: normalized.upi_id || '',
+        } : null,
       },
     });
   } catch (err) {
@@ -2460,26 +2580,34 @@ async function saveReceivingDetails(req, res, next) {
     const { type, account_holder_name, bank_name, account_number, ifsc_code, upi_id } = req.body;
 
     const { rows } = await query(
-      `SELECT bank_details FROM seller_profiles WHERE (user_id = $1 OR user_id::text = $1::text)`,
+      `SELECT sp.bank_details, s.bank_details AS s_bank_details
+       FROM seller_profiles sp
+       LEFT JOIN sellers s ON s.user_id = sp.user_id
+       WHERE (sp.user_id = $1 OR sp.user_id::text = $1::text)`,
       [sellerId]
     ).catch(() => ({ rows: [] }));
-    let currentBd = rows[0]?.bank_details || {};
-    if (typeof currentBd !== 'object' || Array.isArray(currentBd)) currentBd = {};
+    let currentBd = normalizeBankDetails(rows[0]?.bank_details, rows[0]?.s_bank_details || {});
 
     if (type === 'BANK') {
       if (!account_holder_name || !bank_name || !account_number || !ifsc_code) {
         return res.status(400).json({ success: false, message: 'All bank account fields are required.' });
       }
-      currentBd.bank = {
+      currentBd = normalizeBankDetails({
+        ...currentBd,
         account_holder_name: String(account_holder_name).trim(),
         bank_name: String(bank_name).trim(),
         account_number: String(account_number).trim(),
         ifsc_code: String(ifsc_code).toUpperCase().trim(),
-      };
+      });
     } else if (type === 'UPI') {
       if (!account_holder_name || !upi_id) {
         return res.status(400).json({ success: false, message: 'UPI holder name and UPI ID are required.' });
       }
+      currentBd = normalizeBankDetails({
+        ...currentBd,
+        account_holder_name: currentBd.account_holder_name || String(account_holder_name).trim(),
+        upi_id: String(upi_id).trim(),
+      });
       currentBd.upi = {
         account_holder_name: String(account_holder_name).trim(),
         upi_id: String(upi_id).trim(),
@@ -2491,7 +2619,7 @@ async function saveReceivingDetails(req, res, next) {
       [JSON.stringify(currentBd), sellerId]
     );
     await query(
-      `UPDATE sellers SET bank_details = $1 WHERE (user_id = $2 OR user_id::text = $2::text)`,
+      `UPDATE sellers SET bank_details = $1, updated_at = NOW() WHERE (user_id = $2 OR user_id::text = $2::text)`,
       [JSON.stringify(currentBd), sellerId]
     ).catch(() => {});
 
@@ -2564,16 +2692,23 @@ async function getTaxSettings(req, res, next) {
     const sellerId = req.user.id;
     await ensureTaxColumns();
     const { rows } = await query(
-      `SELECT tax_details FROM seller_profiles WHERE (user_id = $1 OR user_id::text = $1::text)`,
+      `SELECT tax_details, gst_number, pan_number, billing_address, store_name
+       FROM seller_profiles
+       WHERE (user_id = $1 OR user_id::text = $1::text)`,
       [sellerId]
     ).catch(() => ({ rows: [] }));
-    const tax = rows[0]?.tax_details || {};
+    const row = rows[0] || {};
+    const tax = (row.tax_details && typeof row.tax_details === 'object') ? row.tax_details : {};
+    const billing = normalizeBillingAddress(row.billing_address, row);
+    const gstin = tax.gstin || row.gst_number || billing.gstin || '';
+    const pan = tax.pan_number || row.pan_number || billing.pan || '';
     return res.json({
       success: true,
       data: {
-        is_gst_registered: !!tax.is_gst_registered,
-        gstin: tax.gstin || '',
-        pan_number: tax.pan_number || '',
+        legal_business_name: tax.legal_business_name || billing.legal_business_name || row.store_name || '',
+        is_gst_registered: Boolean(tax.is_gst_registered || gstin),
+        gstin,
+        pan_number: pan,
         tds_applicable: !!tax.tds_applicable,
       },
     });
@@ -2589,17 +2724,31 @@ async function saveTaxSettings(req, res, next) {
   try {
     const sellerId = req.user.id;
     await ensureTaxColumns();
-    const { is_gst_registered, gstin, pan_number, tds_applicable } = req.body;
+    const { is_gst_registered, gstin, pan_number, tds_applicable, legal_business_name } = req.body;
+    const cleanGst = is_gst_registered ? String(gstin || '').toUpperCase().trim() : '';
+    const cleanPan = String(pan_number || '').toUpperCase().trim();
+    if (cleanGst && !isValidGstin(cleanGst)) {
+      return res.status(400).json({ success: false, message: 'Invalid GSTIN format.' });
+    }
+    if (cleanPan && !isValidPan(cleanPan)) {
+      return res.status(400).json({ success: false, message: 'Invalid PAN format.' });
+    }
     const taxPayload = {
+      legal_business_name: String(legal_business_name || '').trim() || undefined,
       is_gst_registered: !!is_gst_registered,
-      gstin: is_gst_registered ? String(gstin || '').toUpperCase().trim() : '',
-      pan_number: String(pan_number || '').toUpperCase().trim(),
+      gstin: cleanGst,
+      pan_number: cleanPan,
       tds_applicable: !!tds_applicable,
       updated_at: new Date().toISOString(),
     };
     await query(
-      `UPDATE seller_profiles SET tax_details = $1, updated_at = NOW() WHERE (user_id = $2 OR user_id::text = $2::text)`,
-      [JSON.stringify(taxPayload), sellerId]
+      `UPDATE seller_profiles
+       SET tax_details = $1,
+           gst_number = COALESCE(NULLIF($2, ''), gst_number),
+           pan_number = COALESCE(NULLIF($3, ''), pan_number),
+           updated_at = NOW()
+       WHERE (user_id = $4 OR user_id::text = $4::text)`,
+      [JSON.stringify(taxPayload), cleanGst || null, cleanPan || null, sellerId]
     );
     return res.json({
       success: true,
@@ -2695,6 +2844,28 @@ async function requestPayout(req, res, next) {
     const sellerId = req.user.id;
     await ensurePayoutTables();
 
+    // Verify consolidated bank/payout details from Settings > Profile
+    const { rows: profRows } = await query(
+      `SELECT sp.bank_details, sp.billing_address, sp.tax_details, sp.gst_number, sp.pan_number, sp.store_name,
+              s.bank_details AS s_bank_details, s.billing_address AS s_billing_address
+       FROM seller_profiles sp
+       LEFT JOIN sellers s ON s.user_id = sp.user_id
+       WHERE (sp.user_id = $1 OR sp.user_id::text = $1::text)`,
+      [sellerId]
+    ).catch(() => ({ rows: [] }));
+
+    const prof = profRows[0] || {};
+    const bankInfo = normalizeBankDetails(prof.bank_details, prof.s_bank_details || {});
+    const billingInfo = normalizeBillingAddress(prof.billing_address, prof.s_billing_address || {});
+
+    if ((!bankInfo.account_number || !bankInfo.ifsc_code) && !bankInfo.upi_id) {
+      return res.status(400).json({
+        success: false,
+        errorCode: 'PAYOUT_DETAILS_MISSING',
+        message: 'Please configure your Bank Account & Billing details in Settings > Profile before requesting a payout.',
+      });
+    }
+
     // Verify eligible balance
     const { rows: availableRows } = await query(
       `SELECT
@@ -2739,6 +2910,16 @@ async function requestPayout(req, res, next) {
     }
 
     const reference = `PAYOUT-REQ-${Date.now().toString().slice(-6)}`;
+    const payoutDestination = {
+      legal_business_name: billingInfo.legal_business_name || prof.store_name || '',
+      account_holder_name: bankInfo.account_holder_name || '',
+      bank_name: bankInfo.bank_name || '',
+      masked_account: bankInfo.account_number ? `••••${String(bankInfo.account_number).slice(-4)}` : null,
+      ifsc_code: bankInfo.ifsc_code || null,
+      upi_id: bankInfo.upi_id || null,
+      gstin: prof.gst_number || billingInfo.gstin || null,
+      pan: prof.pan_number || billingInfo.pan || null,
+    };
 
     let payoutRow;
     try {
@@ -2765,7 +2946,7 @@ async function requestPayout(req, res, next) {
       'payout_requested',
       'Payout Request Submitted 💳',
       `Your withdrawal request for ₹${requestedAmount.toLocaleString('en-IN')} has been received and scheduled for transfer.`,
-      { payout_id: payoutRow?.id, amount: requestedAmount, reference }
+      { payout_id: payoutRow?.id, amount: requestedAmount, reference, payout_destination: payoutDestination }
     ).catch(e => console.warn('[Payout] Notification trigger failed:', e.message));
 
     return res.status(201).json({
@@ -2774,6 +2955,7 @@ async function requestPayout(req, res, next) {
       data: {
         payout: payoutRow,
         withdrawn_amount: requestedAmount,
+        payout_destination: payoutDestination,
       },
     });
   } catch (err) {
@@ -3436,34 +3618,54 @@ async function dismissTour(req, res, next) {
 }
 
 // ---------------------------------------------------------------------------
-// POST & PUT /api/seller/settings/billing — Billing Address & Banking Details Form
+// PUT /api/seller/profile/billing & POST/PUT /api/seller/settings/billing
+// Consolidated Business, Tax, Billing Address & Payout Bank Details Handler
 // ---------------------------------------------------------------------------
-async function saveBillingAndBanking(req, res, next) {
+async function updateBillingProfile(req, res, next) {
   try {
     const userId = req.user.id;
+    await ensureTaxColumns();
+
+    const billingInput = (req.body.billing_address && typeof req.body.billing_address === 'object')
+      ? { ...req.body, ...req.body.billing_address }
+      : req.body;
+
+    const bankInput = (req.body.bank_details && typeof req.body.bank_details === 'object')
+      ? { ...req.body, ...req.body.bank_details }
+      : (req.body.payout_details && typeof req.body.payout_details === 'object')
+        ? { ...req.body, ...req.body.payout_details }
+        : req.body;
+
     const {
-      // Address fields
-      address_line1, addressLine1, address_line2, addressLine2,
-      street, city, state, pincode, postal_code, postalCode, country = 'India',
-      gst_number, gst, gstin, pan_number, pan,
-      // Bank fields
+      legal_business_name, business_name, company_name,
+      address_line1, addressLine1, line1, address_line2, addressLine2, line2,
+      landmark, street, city, state, pincode, pinCode, postal_code, postalCode, country = 'India',
+      gst_number, gst, gstin, pan_number, pan, tds_applicable,
+      same_as_billing, sameAsBilling
+    } = billingInput;
+
+    const {
       account_holder_name, accountHolderName, account_holder,
       bank_name, bankName, account_number, accountNumber,
+      confirm_account_number, confirmAccountNumber,
       ifsc_code, ifscCode, ifsc, upi_id, upiId
-    } = req.body;
+    } = bankInput;
 
-    const finalAddr1 = (address_line1 || addressLine1 || street || '').trim();
-    const finalAddr2 = (address_line2 || addressLine2 || '').trim();
-    const finalCity = (city || '').trim();
-    const finalState = (state || '').trim();
-    const finalPincode = (pincode || postal_code || postalCode || '').trim();
-    const finalPan = (pan_number || pan || '').toUpperCase().trim();
-    const finalGst = (gst_number || gst || gstin || '').toUpperCase().trim();
+    const finalBusinessName = String(legal_business_name || business_name || company_name || '').trim();
+    const finalAddr1 = String(address_line1 || addressLine1 || line1 || street || '').trim();
+    const finalAddr2 = String(address_line2 || addressLine2 || line2 || '').trim();
+    const finalLandmark = String(landmark || '').trim();
+    const finalCity = String(city || '').trim();
+    const finalState = String(state || '').trim();
+    const finalPincode = String(pincode || pinCode || postal_code || postalCode || '').trim();
+    const finalCountry = String(country || 'India').trim() || 'India';
+    const finalPan = String(pan_number || pan || '').toUpperCase().trim();
+    const finalGst = String(gst_number || gst || gstin || '').toUpperCase().trim();
 
     if (!finalAddr1 || !finalCity || !finalState || !finalPincode) {
       return res.status(400).json({
         success: false,
-        message: 'All billing address fields (Address, City, State, 6-digit Pincode) are required.'
+        message: 'All billing address fields (Address Line 1, City, State, 6-digit Pincode) are required.'
       });
     }
 
@@ -3474,60 +3676,185 @@ async function saveBillingAndBanking(req, res, next) {
       });
     }
 
-    const finalHolder = (account_holder_name || accountHolderName || account_holder || '').trim();
-    const finalBank = (bank_name || bankName || '').trim();
-    const finalAccount = (account_number || accountNumber || '').trim();
-    const finalIfsc = (ifsc_code || ifscCode || ifsc || '').toUpperCase().trim();
-    const finalUpi = (upi_id || upiId || '').trim();
-
-    if (!finalHolder || !finalBank || !finalAccount || !finalIfsc) {
+    if (finalGst && !isValidGstin(finalGst)) {
       return res.status(400).json({
         success: false,
-        message: 'All bank account fields (Holder Name, Bank Name, Account Number, IFSC) are required.'
+        message: 'Please enter a valid 15-character Indian GSTIN (e.g. 27AAAAA0000A1Z5).'
       });
     }
 
-    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(finalIfsc)) {
+    if (finalPan && !isValidPan(finalPan)) {
       return res.status(400).json({
         success: false,
-        message: 'Please enter a valid 11-character Indian IFSC code (e.g. SBIN0001234, HDFC0000456).'
+        message: 'Please enter a valid 10-character Indian PAN number (e.g. ABCDE1234F).'
       });
     }
 
-    const addressPayload = {
+    const finalHolder = String(account_holder_name || accountHolderName || account_holder || '').trim();
+    const rawBankName = String(bank_name || bankName || '').trim();
+    const finalAccount = String(account_number || accountNumber || '').trim();
+    const finalConfirmAccount = String(confirm_account_number || confirmAccountNumber || '').trim();
+    const finalIfsc = String(ifsc_code || ifscCode || ifsc || '').toUpperCase().trim();
+    const finalUpi = String(upi_id || upiId || '').trim();
+
+    if (finalConfirmAccount && finalConfirmAccount !== finalAccount) {
+      return res.status(400).json({
+        success: false,
+        message: 'Bank account number and confirm account number do not match.'
+      });
+    }
+
+    const hasAnyBankInput = Boolean(finalHolder || rawBankName || finalAccount || finalIfsc);
+    if (hasAnyBankInput) {
+      if (!finalHolder || !finalAccount || !finalIfsc) {
+        return res.status(400).json({
+          success: false,
+          message: 'Bank account fields (Account Holder Name, Account Number, and IFSC Code) are required when configuring bank payouts.'
+        });
+      }
+
+      if (!isValidIfscOrRouting(finalIfsc)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please enter a valid 11-character Indian IFSC code (e.g. SBIN0001234, HDFC0000456).'
+        });
+      }
+    }
+
+    // Fetch existing seller profile to preserve pickup metadata or sync if same_as_billing
+    const existingRes = await Promise.resolve(query(
+      `SELECT sp.store_name, sp.pickup_address, sp.billing_address, sp.bank_details, sp.whatsapp_number,
+              s.pickup_address AS s_pickup_address, s.billing_address AS s_billing_address, s.bank_details AS s_bank_details,
+              u.name AS user_name, u.email AS user_email, u.phone AS user_phone
+       FROM users u
+       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+       LEFT JOIN sellers s ON s.user_id = u.id
+       WHERE u.id = $1`,
+      [userId]
+    )).catch(() => ({ rows: [] }));
+    const existingRows = existingRes?.rows || [];
+    const existing = existingRows[0] || {};
+    const existingBank = normalizeBankDetails(existing.bank_details, existing.s_bank_details || {});
+
+    const finalBank = rawBankName || existingBank.bank_name || (finalIfsc ? `${finalIfsc.slice(0, 4)} Bank` : '');
+
+    const addressPayload = normalizeBillingAddress({
+      legal_business_name: finalBusinessName || existing.store_name || '',
       address_line1: finalAddr1,
       address_line2: finalAddr2,
+      landmark: finalLandmark,
       city: finalCity,
       state: finalState,
       pincode: finalPincode,
-      country: country || 'India',
+      country: finalCountry,
       gstin: finalGst || null,
       pan: finalPan || null
-    };
+    });
 
-    const bankPayload = {
-      account_holder: finalHolder,
-      account_holder_name: finalHolder,
-      bank_name: finalBank,
-      account_number: finalAccount,
-      ifsc_code: finalIfsc,
-      upi_id: finalUpi || null
-    };
+    const bankPayload = hasAnyBankInput
+      ? normalizeBankDetails({
+          ...existingBank,
+          account_holder_name: finalHolder,
+          bank_name: finalBank,
+          account_number: finalAccount,
+          ifsc_code: finalIfsc,
+          upi_id: finalUpi || existingBank.upi_id || null
+        })
+      : normalizeBankDetails({
+          ...existingBank,
+          upi_id: finalUpi || existingBank.upi_id || null
+        });
 
     const taxPayload = {
+      legal_business_name: addressPayload.legal_business_name,
       is_gst_registered: Boolean(finalGst),
       gstin: finalGst,
       pan_number: finalPan,
+      tds_applicable: Boolean(tds_applicable),
       updated_at: new Date().toISOString()
     };
 
-    // Update seller_profiles
+    const existingPickup = normalizePickupAddress(existing.pickup_address, existing.s_pickup_address || {});
+    const shouldSyncPickup = Boolean(
+      same_as_billing === true ||
+      sameAsBilling === true ||
+      same_as_billing === 'true' ||
+      !existingPickup.address_line1
+    );
+
+    const pickupPayload = shouldSyncPickup
+      ? normalizePickupAddress({
+          ...existingPickup,
+          same_as_billing: true,
+          contact_name: existingPickup.contact_name || existing.user_name || finalHolder || existing.store_name || 'Artisan',
+          phone: existingPickup.phone || existing.whatsapp_number || existing.user_phone || '',
+          facility_name: existingPickup.facility_name || finalBusinessName || existing.store_name || 'Artisan Studio',
+          address_line1: finalAddr1,
+          address_line2: finalAddr2,
+          landmark: finalLandmark,
+          city: finalCity,
+          state: finalState,
+          pincode: finalPincode,
+          country: finalCountry
+        })
+      : existingPickup;
+
+    // Non-blocking Razorpay Linked Account / Fund Account sync
+    let razorpaySync = null;
+    try {
+      razorpaySync = await paymentService.syncSellerRazorpayAccount(userId, {
+        billingAddress: addressPayload,
+        bankDetails: bankPayload,
+        taxDetails: taxPayload,
+        email: existing.user_email,
+        phone: existing.user_phone || existing.whatsapp_number
+      });
+      if (razorpaySync?.razorpay_account_id) {
+        bankPayload.razorpay_account_id = razorpaySync.razorpay_account_id;
+      }
+      if (razorpaySync?.razorpay_fund_account_id) {
+        bankPayload.razorpay_fund_account_id = razorpaySync.razorpay_fund_account_id;
+      }
+    } catch (rzpErr) {
+      console.warn('[Seller Billing] Non-fatal Razorpay sync warning:', rzpErr.message);
+    }
+
+    const fallbackStoreName = existing.store_name || finalBusinessName || existing.user_name || 'My Artisan Shop';
+
+    // Atomic upsert into seller_profiles so missing profile rows never fail silently
     await query(
-      `UPDATE seller_profiles
+      `INSERT INTO seller_profiles (
+         user_id, store_name, billing_address, pickup_address, bank_details, tax_details,
+         pan_number, gst_number, onboarding_completed, updated_at
+       )
+       VALUES ($7, $8, $1::jsonb, $2::jsonb, $3::jsonb, $4::jsonb, $5, $6, TRUE, NOW())
+       ON CONFLICT (user_id) DO UPDATE SET
+         billing_address = EXCLUDED.billing_address,
+         pickup_address = EXCLUDED.pickup_address,
+         bank_details = EXCLUDED.bank_details,
+         tax_details = EXCLUDED.tax_details,
+         pan_number = COALESCE(NULLIF(EXCLUDED.pan_number, ''), seller_profiles.pan_number),
+         gst_number = COALESCE(NULLIF(EXCLUDED.gst_number, ''), seller_profiles.gst_number),
+         onboarding_completed = TRUE,
+         updated_at = NOW()`,
+      [
+        JSON.stringify(addressPayload),
+        JSON.stringify(pickupPayload),
+        JSON.stringify(bankPayload),
+        JSON.stringify(taxPayload),
+        finalPan || null,
+        finalGst || null,
+        userId,
+        fallbackStoreName
+      ]
+    );
+
+    // Update master sellers table
+    await Promise.resolve(query(
+      `UPDATE sellers
        SET billing_address = $1,
-           pickup_address = CASE WHEN pickup_address IS NULL OR pickup_address = '{}'::jsonb THEN $1 ELSE pickup_address END,
-           bank_details = $2,
-           tax_details = $3,
+           pickup_address = $2,
+           bank_details = $3,
            pan_number = COALESCE(NULLIF($4, ''), pan_number),
            gst_number = COALESCE(NULLIF($5, ''), gst_number),
            onboarding_completed = TRUE,
@@ -3535,54 +3862,198 @@ async function saveBillingAndBanking(req, res, next) {
        WHERE user_id = $6`,
       [
         JSON.stringify(addressPayload),
+        JSON.stringify(pickupPayload),
         JSON.stringify(bankPayload),
-        JSON.stringify(taxPayload),
         finalPan || null,
         finalGst || null,
         userId
       ]
-    );
+    )).catch(() => {});
 
-    // Update master sellers table
-    await query(
-      `UPDATE sellers
-       SET billing_address = $1,
-           pickup_address = CASE WHEN pickup_address IS NULL OR pickup_address = '{}'::jsonb THEN $1 ELSE pickup_address END,
-           bank_details = $2,
-           onboarding_completed = TRUE,
-           updated_at = NOW()
-       WHERE user_id = $3`,
-      [
-        JSON.stringify(addressPayload),
-        JSON.stringify(bankPayload),
-        userId
-      ]
-    ).catch(() => {});
-
-    // Sync to user_addresses as default business/office address
-    try {
-      const { rows: addrRows } = await query('SELECT id FROM user_addresses WHERE user_id = $1 LIMIT 1', [userId]);
-      if (!addrRows.length) {
-        const { rows: uRows } = await query('SELECT name, phone FROM users WHERE id = $1', [userId]);
-        await query(
-          `INSERT INTO user_addresses (user_id, name, phone, address_line1, address_line2, city, state, pincode, address_type, is_default)
-           VALUES ($1, $2, COALESCE($3, '9999999999'), $4, $5, $6, $7, $8, 'office', TRUE)`,
-          [userId, uRows[0]?.name || finalHolder || 'Artisan Workshop', uRows[0]?.phone, finalAddr1, finalAddr2, finalCity, finalState, finalPincode]
-        );
-      }
-    } catch (_) {}
-
-    const status = await getSellerOnboardingStatus(userId);
+    const dbStatus = await getSellerOnboardingStatus(userId);
+    const computedStatus = evaluateSellerOnboarding({
+      billing_address: addressPayload,
+      pickup_address: pickupPayload,
+      bank_details: bankPayload,
+      onboarding_tour_dismissed: dbStatus.onboardingTourDismissed
+    });
+    const status = {
+      ...dbStatus,
+      hasBillingAddress: dbStatus.hasBillingAddress || computedStatus.hasBillingAddress,
+      hasPickupAddress: dbStatus.hasPickupAddress || computedStatus.hasPickupAddress,
+      hasBankingDetails: dbStatus.hasBankingDetails || computedStatus.hasBankingDetails,
+      isComplete: (dbStatus.hasBillingAddress || computedStatus.hasBillingAddress) &&
+                  (dbStatus.hasBankingDetails || computedStatus.hasBankingDetails)
+    };
 
     return res.json({
       success: true,
       message: 'Billing address and banking payout details saved successfully.',
       data: {
         billing_address: addressPayload,
+        pickup_address: pickupPayload,
         bank_details: bankPayload,
+        payout_details: bankPayload,
         tax_details: taxPayload,
+        razorpay_sync: razorpaySync,
         onboardingStatus: status,
         hasBillingAddress: status.hasBillingAddress,
+        hasPickupAddress: status.hasPickupAddress,
+        hasBankingDetails: status.hasBankingDetails
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+const saveBillingAndBanking = updateBillingProfile;
+
+// ---------------------------------------------------------------------------
+// PUT /api/seller/profile/pickup-address
+// Consolidated Operational Pickup Address Handler (for iThink Logistics)
+// ---------------------------------------------------------------------------
+async function updatePickupAddress(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const rawInput = (req.body.pickup_address && typeof req.body.pickup_address === 'object')
+      ? { ...req.body, ...req.body.pickup_address }
+      : req.body;
+
+    // Fetch existing seller profile & billing address for fallbacks / same_as_billing
+    const existingRes = await Promise.resolve(query(
+      `SELECT sp.store_name, sp.pickup_address, sp.billing_address, sp.bank_details, sp.whatsapp_number,
+              s.pickup_address AS s_pickup_address, s.billing_address AS s_billing_address, s.bank_details AS s_bank_details,
+              u.name AS user_name, u.phone AS user_phone
+       FROM users u
+       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+       LEFT JOIN sellers s ON s.user_id = u.id
+       WHERE u.id = $1`,
+      [userId]
+    )).catch(() => ({ rows: [] }));
+    const existingRows = existingRes?.rows || [];
+    const existing = existingRows[0] || {};
+    const currentBilling = normalizeBillingAddress(existing.billing_address, existing.s_billing_address || {});
+    const currentPickup = normalizePickupAddress(existing.pickup_address, existing.s_pickup_address || {});
+
+    const sameAsBilling = Boolean(
+      rawInput.same_as_billing === true ||
+      rawInput.sameAsBilling === true ||
+      rawInput.same_as_billing === 'true'
+    );
+
+    const addressFallback = sameAsBilling ? currentBilling : {};
+
+    const normalizedPickup = normalizePickupAddress(
+      {
+        same_as_billing: sameAsBilling,
+        contact_name: rawInput.contact_name || rawInput.contactName || rawInput.name,
+        phone: rawInput.phone || rawInput.contact_phone || rawInput.contactPhone,
+        facility_name: rawInput.facility_name || rawInput.warehouse_name || rawInput.studio_name,
+        address_line1: rawInput.address_line1 || rawInput.addressLine1 || rawInput.line1 || rawInput.street || addressFallback.address_line1,
+        address_line2: rawInput.address_line2 !== undefined ? rawInput.address_line2 : (rawInput.line2 !== undefined ? rawInput.line2 : addressFallback.address_line2),
+        landmark: rawInput.landmark !== undefined ? rawInput.landmark : addressFallback.landmark,
+        city: rawInput.city || addressFallback.city,
+        state: rawInput.state || addressFallback.state,
+        pincode: rawInput.pincode || rawInput.pinCode || rawInput.postal_code || rawInput.postalCode || addressFallback.pincode,
+        country: rawInput.country || 'India',
+        warehouse_id: currentPickup.warehouse_id,
+      },
+      {
+        contact_name: currentPickup.contact_name || existing.user_name || existing.store_name || 'Artisan',
+        phone: currentPickup.phone || existing.whatsapp_number || existing.user_phone || '',
+        facility_name: currentPickup.facility_name || currentBilling.legal_business_name || existing.store_name || 'Artisan Studio',
+      }
+    );
+
+    if (!normalizedPickup.address_line1 || !normalizedPickup.city || !normalizedPickup.state || !normalizedPickup.pincode) {
+      return res.status(400).json({
+        success: false,
+        message: 'All operational pickup address fields (Address Line 1, City, State, 6-digit PIN Code) are required.'
+      });
+    }
+
+    if (!/^\d{6}$/.test(normalizedPickup.pincode)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter a valid 6-digit Indian pickup PIN code.'
+      });
+    }
+
+    if (!normalizedPickup.contact_name || normalizedPickup.contact_name.length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: 'Contact person name is required for courier pickup coordination.'
+      });
+    }
+
+    if (!normalizedPickup.phone || !isValidIndianPhone(normalizedPickup.phone)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter a valid 10-digit Indian phone number for courier pickup coordination.'
+      });
+    }
+
+    // Check PIN code serviceability via logistics service
+    const serviceability = await logisticsService.checkServiceability(normalizedPickup.pincode);
+    if (!serviceability.serviceable) {
+      return res.status(400).json({
+        success: false,
+        errorCode: 'PINCODE_UNSERVICEABLE',
+        message: serviceability.message || `PIN code ${normalizedPickup.pincode} is not currently serviceable by logistics partners.`,
+        data: { serviceability }
+      });
+    }
+
+    // Sync warehouse / pickup location with iThink Logistics
+    const warehouseSync = await logisticsService.syncSellerPickupWarehouse(userId, normalizedPickup);
+    normalizedPickup.serviceable = true;
+    normalizedPickup.warehouse_id = warehouseSync.warehouse_id || normalizedPickup.warehouse_id || null;
+
+    const fallbackStoreName = existing.store_name || currentBilling.legal_business_name || existing.user_name || 'My Artisan Shop';
+
+    // Atomic upsert into seller_profiles so missing profile rows never fail silently
+    await query(
+      `INSERT INTO seller_profiles (user_id, store_name, pickup_address, location, updated_at)
+       VALUES ($3, $4, $1::jsonb, NULLIF($2, ''), NOW())
+       ON CONFLICT (user_id) DO UPDATE SET
+         pickup_address = EXCLUDED.pickup_address,
+         location = COALESCE(NULLIF(EXCLUDED.location, ''), seller_profiles.location),
+         updated_at = NOW()`,
+      [JSON.stringify(normalizedPickup), `${normalizedPickup.city}, ${normalizedPickup.state}`, userId, fallbackStoreName]
+    );
+
+    await Promise.resolve(query(
+      `UPDATE sellers
+       SET pickup_address = $1,
+           city = COALESCE(NULLIF($2, ''), city),
+           state = COALESCE(NULLIF($3, ''), state),
+           updated_at = NOW()
+       WHERE user_id = $4`,
+      [JSON.stringify(normalizedPickup), normalizedPickup.city, normalizedPickup.state, userId]
+    )).catch(() => {});
+
+    const dbStatus = await getSellerOnboardingStatus(userId);
+    const computedStatus = evaluateSellerOnboarding({
+      billing_address: currentBilling,
+      pickup_address: normalizedPickup,
+      bank_details: existing.bank_details || existing.s_bank_details || {}
+    });
+    const status = {
+      ...dbStatus,
+      hasPickupAddress: dbStatus.hasPickupAddress || computedStatus.hasPickupAddress
+    };
+
+    return res.json({
+      success: true,
+      message: 'Operational pickup address saved and verified for logistics dispatch.',
+      data: {
+        pickup_address: normalizedPickup,
+        serviceability,
+        warehouse_sync: warehouseSync,
+        onboardingStatus: status,
+        hasBillingAddress: status.hasBillingAddress,
+        hasPickupAddress: status.hasPickupAddress,
         hasBankingDetails: status.hasBankingDetails
       }
     });
@@ -3807,7 +4278,10 @@ async function createSubscriptionOrder(req, res, next) {
 
     const { rows: profileRows } = await query(
       `SELECT COALESCE(sp.subscription_discount_used, s.subscription_discount_used, FALSE) AS subscription_discount_used,
-              COALESCE(s.id, sp.id) AS seller_id
+              COALESCE(s.id, sp.id) AS seller_id,
+              sp.store_name, sp.billing_address, sp.gst_number, sp.pan_number, sp.tax_details,
+              s.billing_address AS s_billing_address,
+              u.name AS user_name, u.email AS user_email, u.phone AS user_phone
        FROM users u
        LEFT JOIN seller_profiles sp ON sp.user_id = u.id
        LEFT JOIN sellers s ON s.user_id = u.id
@@ -3815,8 +4289,10 @@ async function createSubscriptionOrder(req, res, next) {
       [userId]
     );
 
-    const discountUsed = Boolean(profileRows[0]?.subscription_discount_used);
-    const sellerId = profileRows[0]?.seller_id || null;
+    const prof = profileRows[0] || {};
+    const discountUsed = Boolean(prof.subscription_discount_used);
+    const sellerId = prof.seller_id || null;
+    const billingInfo = normalizeBillingAddress(prof.billing_address, prof.s_billing_address || {});
 
     // Check discount slots used from subscription_payments ledger
     const { rows: discountRows } = await query(
@@ -3849,7 +4325,18 @@ async function createSubscriptionOrder(req, res, next) {
         is_discount: pricing.isDiscountApplied,
         currency: 'INR',
         razorpay_order: razorpayOrder,
-        key_id: razorpayOrder.keyId || process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_PRIMARY_KEY_ID || 'rzp_test_placeholder'
+        key_id: razorpayOrder.keyId || process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_PRIMARY_KEY_ID || 'rzp_test_placeholder',
+        billing_details: {
+          legal_business_name: billingInfo.legal_business_name || prof.store_name || prof.user_name || '',
+          gstin: prof.gst_number || billingInfo.gstin || null,
+          pan: prof.pan_number || billingInfo.pan || null,
+          billing_address: billingInfo,
+        },
+        prefill: {
+          name: billingInfo.legal_business_name || prof.user_name || prof.store_name || '',
+          email: prof.user_email || '',
+          contact: prof.user_phone || '',
+        }
       }
     });
   } catch (err) {
@@ -4175,5 +4662,7 @@ module.exports = {
   getOnboardingStatus,
   dismissTour,
   saveBillingAndBanking,
+  updateBillingProfile,
+  updatePickupAddress,
 };
 

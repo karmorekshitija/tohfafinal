@@ -222,7 +222,7 @@ class SellerSidebar extends HTMLElement {
             <span class="text-[9px] uppercase tracking-widest text-center">Reviews</span>
           </a>
           <!-- Profile & Settings -->
-          <a class="sidebar-link ${activeTab === 'profile' || activeTab === 'settings' ? 'sidebar-link-active' : ''}" href="/seller/profile-settings.html" title="Settings">
+          <a class="sidebar-link ${activeTab === 'profile' || activeTab === 'settings' ? 'sidebar-link-active' : ''}" href="/seller/profile.html" title="Profile &amp; Settings">
             <span class="material-symbols-outlined mb-1 text-2xl">settings</span>
             <span class="text-[9px] uppercase tracking-widest text-center">Settings</span>
           </a>

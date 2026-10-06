@@ -55,13 +55,325 @@ function isValidGstin(gstin) {
 }
 
 /**
- * Evaluates whether a seller has valid billing address, banking details, and tour status.
+ * Validates Indian PAN format if provided (10 characters: 5 letters, 4 digits, 1 letter)
+ */
+function isValidPan(pan) {
+  if (!pan) return true; // Optional unless explicitly required
+  const clean = String(pan).trim().toUpperCase();
+  return /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(clean);
+}
+
+/**
+ * Validates Indian phone number (10 digits, optionally prefixed with +91 or 91 or 0)
+ */
+function isValidIndianPhone(phone) {
+  if (!phone) return false;
+  const digits = String(phone).replace(/\D/g, '');
+  if (digits.length === 10) return /^[6-9]\d{9}$/.test(digits);
+  if (digits.length === 11 && digits.startsWith('0')) return /^[6-9]\d{9}$/.test(digits.slice(1));
+  if (digits.length === 12 && digits.startsWith('91')) return /^[6-9]\d{9}$/.test(digits.slice(2));
+  return digits.length >= 10 && digits.length <= 15;
+}
+
+function hasNonEmptyKeys(obj) {
+  if (!obj || typeof obj !== 'object') return false;
+  return Object.values(obj).some(v => v !== null && v !== undefined && String(v).trim() !== '');
+}
+
+/**
+ * Normalizes Billing & Business Address into a canonical JSONB structure
+ * while retaining legacy keys (`line1`, `address_line1`, `gstin`, `gst_number`, `pan`, `pan_number`)
+ * for backwards compatibility across Seller, Buyer, and Admin services.
+ */
+function normalizeBillingAddress(raw = {}, fallbacks = {}) {
+  const src = parseJson(raw);
+  const fb = parseJson(fallbacks);
+
+  const legalBusinessName = String(
+    src.legal_business_name ||
+    src.business_name ||
+    src.company_name ||
+    fb.legal_business_name ||
+    fb.business_name ||
+    fb.store_name ||
+    ''
+  ).trim();
+
+  const gstin = String(
+    src.gstin ||
+    src.gst_number ||
+    fb.gstin ||
+    fb.gst_number ||
+    ''
+  ).trim().toUpperCase();
+
+  const pan = String(
+    src.pan ||
+    src.pan_number ||
+    fb.pan ||
+    fb.pan_number ||
+    ''
+  ).trim().toUpperCase();
+
+  const line1 = String(
+    src.address_line1 ||
+    src.addressLine1 ||
+    src.line1 ||
+    src.street ||
+    src.address ||
+    fb.address_line1 ||
+    fb.line1 ||
+    ''
+  ).trim();
+
+  const line2 = String(
+    src.address_line2 ||
+    src.addressLine2 ||
+    src.line2 ||
+    fb.address_line2 ||
+    fb.line2 ||
+    ''
+  ).trim();
+
+  const landmark = String(
+    src.landmark ||
+    fb.landmark ||
+    ''
+  ).trim();
+
+  const city = String(src.city || fb.city || '').trim();
+  const state = String(src.state || fb.state || '').trim();
+  const pincode = String(
+    src.pincode ||
+    src.postal_code ||
+    src.postalCode ||
+    src.zip ||
+    fb.pincode ||
+    ''
+  ).trim();
+
+  const country = String(src.country || fb.country || 'India').trim() || 'India';
+
+  return {
+    legal_business_name: legalBusinessName,
+    business_name: legalBusinessName,
+    gstin: gstin || null,
+    gst_number: gstin || null,
+    pan: pan || null,
+    pan_number: pan || null,
+    address_line1: line1,
+    line1: line1,
+    address_line2: line2,
+    line2: line2,
+    landmark,
+    city,
+    state,
+    pincode,
+    country,
+    updated_at: src.updated_at || new Date().toISOString()
+  };
+}
+
+/**
+ * Normalizes Operational Pickup Address (for iThink Logistics) into a canonical JSONB structure.
+ * Guarantees both `line1` and `address_line1`, `phone` and `contact_phone`, `facility_name` and `warehouse_name`
+ * are populated so `logistics.service.js` and Seller Studio UI work seamlessly.
+ */
+function normalizePickupAddress(raw = {}, fallbacks = {}) {
+  const src = parseJson(raw);
+  const fb = parseJson(fallbacks);
+
+  const sameAsBilling = Boolean(
+    src.same_as_billing === true ||
+    src.sameAsBilling === true ||
+    src.same_as_billing === 'true'
+  );
+
+  const contactName = String(
+    src.contact_name ||
+    src.contactName ||
+    src.name ||
+    fb.contact_name ||
+    fb.name ||
+    fb.full_name ||
+    fb.store_name ||
+    ''
+  ).trim();
+
+  const rawPhoneInput = String(
+    src.phone ||
+    src.contact_phone ||
+    src.contactPhone ||
+    fb.phone ||
+    fb.contact_phone ||
+    fb.whatsapp_number ||
+    ''
+  ).trim();
+  const phoneDigits = rawPhoneInput.replace(/\D/g, '');
+  const rawPhone = phoneDigits.length >= 10 ? phoneDigits.slice(-10) : rawPhoneInput;
+
+  const facilityName = String(
+    src.facility_name ||
+    src.warehouse_name ||
+    src.studio_name ||
+    fb.facility_name ||
+    fb.warehouse_name ||
+    fb.store_name ||
+    ''
+  ).trim();
+
+  const line1 = String(
+    src.address_line1 ||
+    src.addressLine1 ||
+    src.line1 ||
+    src.street ||
+    src.address ||
+    fb.address_line1 ||
+    fb.line1 ||
+    ''
+  ).trim();
+
+  const line2 = String(
+    src.address_line2 ||
+    src.addressLine2 ||
+    src.line2 ||
+    fb.address_line2 ||
+    fb.line2 ||
+    ''
+  ).trim();
+
+  const landmark = String(
+    src.landmark ||
+    fb.landmark ||
+    ''
+  ).trim();
+
+  const city = String(src.city || fb.city || '').trim();
+  const state = String(src.state || fb.state || '').trim();
+  const pincode = String(
+    src.pincode ||
+    src.postal_code ||
+    src.postalCode ||
+    src.zip ||
+    fb.pincode ||
+    ''
+  ).trim();
+
+  const country = String(src.country || fb.country || 'India').trim() || 'India';
+
+  return {
+    same_as_billing: sameAsBilling,
+    contact_name: contactName,
+    phone: rawPhone,
+    contact_phone: rawPhone,
+    facility_name: facilityName,
+    warehouse_name: facilityName,
+    address_line1: line1,
+    line1: line1,
+    address_line2: line2,
+    line2: line2,
+    landmark,
+    city,
+    state,
+    pincode,
+    country,
+    serviceable: src.serviceable !== undefined ? Boolean(src.serviceable) : true,
+    warehouse_id: src.warehouse_id || fb.warehouse_id || null,
+    updated_at: src.updated_at || new Date().toISOString()
+  };
+}
+
+/**
+ * Normalizes Bank / Payout Details into a canonical JSONB structure
+ * with both top-level keys and `.bank` nested object for full compatibility.
+ */
+function normalizeBankDetails(raw = {}, fallbacks = {}) {
+  const src = parseJson(raw);
+  const srcBank = (src.bank && typeof src.bank === 'object') ? src.bank : src;
+  const fb = parseJson(fallbacks);
+  const fbBank = (fb.bank && typeof fb.bank === 'object') ? fb.bank : fb;
+
+  const accountHolderName = String(
+    srcBank.account_holder_name ||
+    srcBank.accountHolderName ||
+    srcBank.account_holder ||
+    srcBank.holder_name ||
+    src.account_holder_name ||
+    fbBank.account_holder_name ||
+    fbBank.account_holder ||
+    fb.account_holder_name ||
+    ''
+  ).trim();
+
+  const bankName = String(
+    srcBank.bank_name ||
+    srcBank.bankName ||
+    src.bank_name ||
+    fbBank.bank_name ||
+    fb.bank_name ||
+    ''
+  ).trim();
+
+  const accountNumber = String(
+    srcBank.account_number ||
+    srcBank.accountNumber ||
+    src.account_number ||
+    fbBank.account_number ||
+    fb.account_number ||
+    ''
+  ).trim();
+
+  const ifscCode = String(
+    srcBank.ifsc_code ||
+    srcBank.ifscCode ||
+    srcBank.ifsc ||
+    srcBank.routing_number ||
+    srcBank.iban ||
+    src.ifsc_code ||
+    fbBank.ifsc_code ||
+    fbBank.ifsc ||
+    fb.ifsc_code ||
+    ''
+  ).trim().toUpperCase();
+
+  const upiId = String(
+    src.upi_id ||
+    srcBank.upi_id ||
+    src.upi ||
+    fb.upi_id ||
+    fbBank.upi_id ||
+    ''
+  ).trim();
+
+  const updatedAt = src.updated_at || new Date().toISOString();
+
+  return {
+    account_holder_name: accountHolderName,
+    bank_name: bankName,
+    account_number: accountNumber,
+    ifsc_code: ifscCode,
+    upi_id: upiId || null,
+    razorpay_contact_id: src.razorpay_contact_id || fb.razorpay_contact_id || null,
+    razorpay_fund_account_id: src.razorpay_fund_account_id || fb.razorpay_fund_account_id || null,
+    updated_at: updatedAt,
+    bank: {
+      account_holder_name: accountHolderName,
+      bank_name: bankName,
+      account_number: accountNumber,
+      ifsc_code: ifscCode
+    }
+  };
+}
+
+/**
+ * Evaluates whether a seller has valid billing address, pickup address, banking details, and tour status.
  * Accepts raw seller/seller_profiles database row or merged object.
  */
 function evaluateSellerOnboarding(seller, fallbackAddresses = []) {
   if (!seller) {
     return {
       hasBillingAddress: false,
+      hasPickupAddress: false,
       hasBankingDetails: false,
       onboardingTourDismissed: false,
       isComplete: false,
@@ -76,9 +388,9 @@ function evaluateSellerOnboarding(seller, fallbackAddresses = []) {
   
   // Also inspect fallback addresses from addresses table if provided
   let addressCandidate = {};
-  if (billingAddr && (billingAddr.address_line1 || billingAddr.street || billingAddr.address)) {
+  if (billingAddr && (billingAddr.address_line1 || billingAddr.line1 || billingAddr.street || billingAddr.address)) {
     addressCandidate = billingAddr;
-  } else if (pickupAddr && (pickupAddr.address_line1 || pickupAddr.street || pickupAddr.address)) {
+  } else if (pickupAddr && (pickupAddr.address_line1 || pickupAddr.line1 || pickupAddr.street || pickupAddr.address)) {
     addressCandidate = pickupAddr;
   } else if (Array.isArray(fallbackAddresses) && fallbackAddresses.length > 0) {
     addressCandidate = fallbackAddresses[0];
@@ -87,6 +399,7 @@ function evaluateSellerOnboarding(seller, fallbackAddresses = []) {
   const addrLine = String(
     addressCandidate.address_line1 ||
     addressCandidate.addressLine1 ||
+    addressCandidate.line1 ||
     addressCandidate.street ||
     addressCandidate.address ||
     ''
@@ -112,6 +425,35 @@ function evaluateSellerOnboarding(seller, fallbackAddresses = []) {
     state.length >= 2 &&
     isValidPincode(pincode) &&
     isGstValid
+  );
+
+  // Operational Pickup Address Evaluation
+  const pickupCandidate = (pickupAddr && (pickupAddr.address_line1 || pickupAddr.line1 || pickupAddr.street || pickupAddr.address))
+    ? pickupAddr
+    : addressCandidate;
+  const pickupLine = String(
+    pickupCandidate.address_line1 ||
+    pickupCandidate.addressLine1 ||
+    pickupCandidate.line1 ||
+    pickupCandidate.street ||
+    pickupCandidate.address ||
+    ''
+  ).trim();
+  const pickupCity = String(pickupCandidate.city || '').trim();
+  const pickupState = String(pickupCandidate.state || '').trim();
+  const pickupPin = String(
+    pickupCandidate.pincode ||
+    pickupCandidate.postal_code ||
+    pickupCandidate.postalCode ||
+    pickupCandidate.zip ||
+    ''
+  ).trim();
+
+  const hasPickupAddress = Boolean(
+    pickupLine.length >= 3 &&
+    pickupCity.length >= 2 &&
+    pickupState.length >= 2 &&
+    isValidPincode(pickupPin)
   );
 
   // 2. Banking / Payout Details Validation
@@ -166,6 +508,7 @@ function evaluateSellerOnboarding(seller, fallbackAddresses = []) {
 
   return {
     hasBillingAddress,
+    hasPickupAddress,
     hasBankingDetails,
     onboardingTourDismissed,
     isComplete: hasBillingAddress && hasBankingDetails,
@@ -177,6 +520,12 @@ function evaluateSellerOnboarding(seller, fallbackAddresses = []) {
         state,
         pincode,
         gstin: rawGst || null
+      },
+      pickup: {
+        address_line1: pickupLine,
+        city: pickupCity,
+        state: pickupState,
+        pincode: pickupPin
       },
       bank: {
         account_holder: accountHolder ? `${accountHolder.slice(0, 3)}***` : '',
@@ -223,11 +572,18 @@ async function getSellerOnboardingStatus(userId) {
     }
 
     const row = rows[0];
+    const spBilling = parseJson(row.billing_address);
+    const sBilling = parseJson(row.s_billing_address);
+    const spPickup = parseJson(row.pickup_address);
+    const sPickup = parseJson(row.s_pickup_address);
+    const spBank = parseJson(row.bank_details);
+    const sBank = parseJson(row.s_bank_details);
+
     const merged = {
       ...row,
-      billing_address: row.billing_address || row.s_billing_address,
-      pickup_address: row.pickup_address || row.s_pickup_address,
-      bank_details: row.bank_details || row.s_bank_details,
+      billing_address: hasNonEmptyKeys(spBilling) ? spBilling : sBilling,
+      pickup_address: hasNonEmptyKeys(spPickup) ? spPickup : sPickup,
+      bank_details: hasNonEmptyKeys(spBank) ? spBank : sBank,
       onboarding_tour_dismissed: row.onboarding_tour_dismissed || row.s_onboarding_tour_dismissed,
       is_admin_managed: row.is_admin_managed || row.s_is_admin_managed
     };
@@ -244,5 +600,11 @@ module.exports = {
   getSellerOnboardingStatus,
   isValidIfscOrRouting,
   isValidPincode,
-  isValidGstin
+  isValidGstin,
+  isValidPan,
+  isValidIndianPhone,
+  normalizeBillingAddress,
+  normalizePickupAddress,
+  normalizeBankDetails
 };
+
