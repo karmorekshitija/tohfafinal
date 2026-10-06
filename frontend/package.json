@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "check:categories": "node scripts/check_category_links.mjs",
-    "prebuild": "npm run check:categories",
+    "check:regressions": "node scripts/guard_regressions.mjs",
+    "prebuild": "npm run check:categories && npm run check:regressions",
     "build": "vite build",
     "postbuild": "node scripts/prerender_seo.mjs",
     "seo:audit": "node ../scripts/seo_audit.mjs",

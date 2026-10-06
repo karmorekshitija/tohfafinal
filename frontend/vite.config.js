@@ -46,6 +46,9 @@ const routeRewritePlugin = () => ({
       if (pathname === '/seller/listings/new' || pathname === '/seller/listings/new/' || pathname === '/src/seller/listings/new') {
         pathname = '/seller/add-product.html';
       }
+      if (existsSync(resolve(__dirname, 'public', pathname.replace(/^\//, '')))) {
+        return next();
+      }
       if (
         pathname.startsWith('/buyer/') ||
         pathname.startsWith('/seller/') ||
@@ -78,6 +81,15 @@ const copyDistSrcPlugin = () => ({
       }
       copyFileSync(responsiveCss, resolve(distSrcDir, 'responsive.css'));
       copyFileSync(responsiveCss, resolve(dist, 'responsive.css'));
+    }
+    // Ensure static seller-utils is mirrored to dist/src/seller/js for any relative/rewritten consumers
+    const sellerUtils = resolve(__dirname, 'public', 'seller', 'js', 'seller-utils.js');
+    if (existsSync(sellerUtils)) {
+      const distSrcSellerJs = resolve(dist, 'src', 'seller', 'js');
+      if (!existsSync(distSrcSellerJs)) {
+        mkdirSync(distSrcSellerJs, { recursive: true });
+      }
+      copyFileSync(sellerUtils, resolve(distSrcSellerJs, 'seller-utils.js'));
     }
   }
 });

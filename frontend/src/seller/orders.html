@@ -157,13 +157,13 @@
         
         <!-- Custom Tabs -->
         <div class="flex items-center border-b border-outline-variant gap-8 overflow-x-auto no-scrollbar" id="status-tabs">
-            <button data-status="all" class="filter-btn pb-3 px-1 border-b-2 border-primary text-primary font-bold whitespace-nowrap">All</button>
-            <button data-status="pending" class="filter-btn pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Pending</button>
-            <button data-status="crafting" class="filter-btn pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">In Production</button>
-            <button data-status="packed" class="filter-btn pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Packed ✓</button>
-            <button data-status="shipped" class="filter-btn pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Shipped</button>
-            <button data-status="delivered" class="filter-btn pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Delivered</button>
-            <button data-status="cancelled" class="filter-btn pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Cancelled</button>
+            <button data-status="all" class="filter-btn shrink-0 pb-3 px-1 border-b-2 border-primary text-primary font-bold whitespace-nowrap">All</button>
+            <button data-status="pending" class="filter-btn shrink-0 pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Pending</button>
+            <button data-status="crafting" class="filter-btn shrink-0 pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">In Production</button>
+            <button data-status="packed" class="filter-btn shrink-0 pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Packed ✓</button>
+            <button data-status="shipped" class="filter-btn shrink-0 pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Shipped</button>
+            <button data-status="delivered" class="filter-btn shrink-0 pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Delivered</button>
+            <button data-status="cancelled" class="filter-btn shrink-0 pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Cancelled</button>
         </div>
     </header>
 
@@ -240,7 +240,7 @@
 </seller-layout>
 
 <!-- Order Detail Slide-over -->
-<div class="fixed inset-0 z-[60] pointer-events-none" id="slideOver">
+<div class="fixed inset-0 z-[60] pointer-events-none overflow-hidden" id="slideOver">
     <div class="absolute inset-0 bg-black/20 opacity-0 transition-opacity duration-300 pointer-events-none" id="slideOverOverlay"></div>
     <aside class="absolute right-0 top-0 h-screen w-full sm:w-[450px] max-w-full bg-[#FFF8E7] shadow-2xl border-l border-sage-soft translate-x-full transition-transform duration-500 ease-in-out pointer-events-auto p-6 sm:p-10 flex flex-col gap-6 sm:gap-8 overflow-y-auto" id="slideOverContent">
         <div class="flex justify-between items-start">
@@ -1085,9 +1085,9 @@
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.filter-btn').forEach(b => {
-                    b.className = 'filter-btn pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap';
+                    b.className = 'filter-btn shrink-0 pb-3 px-1 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap';
                 });
-                btn.className = 'filter-btn pb-3 px-1 border-b-2 border-primary text-primary font-bold whitespace-nowrap';
+                btn.className = 'filter-btn shrink-0 pb-3 px-1 border-b-2 border-primary text-primary font-bold whitespace-nowrap';
                 currentStatus = btn.dataset.status;
                 loadOrders();
             });
@@ -1119,36 +1119,6 @@
         // Retry reload
         const retryBtn = document.getElementById('retry-btn');
         if (retryBtn) retryBtn.addEventListener('click', loadOrders);
-
-        // View Store redirection
-        const viewStoreBtn = document.getElementById('view-store-btn');
-        if (viewStoreBtn) {
-            viewStoreBtn.addEventListener('click', () => {
-                const authToken = (typeof window !== 'undefined' && window.authStorage?.getItem('tohfa_access_token')) ||
-                                  sessionStorage.getItem('tohfa_access_token') ||
-                                  sessionStorage.getItem('tohfa_auth_token') ||
-                                  localStorage.getItem('tohfa_access_token') ||
-                                  localStorage.getItem('tohfa_auth_token') ||
-                                  token || '';
-                fetch(`${API_BASE_URL}/api/seller/profile`, {
-                    headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
-                })
-                .then(res => res.json())
-                .then(data => {
-                    const profile = data.data?.profile || data.profile || data.data || data;
-                    const sellerId = profile?.user_id || profile?.seller_id || profile?.id;
-                    if (sellerId) {
-                        window.location.href = `/buyer/seller-profile.html?id=${sellerId}`;
-                    } else {
-                        window.location.href = '/seller/dashboard.html';
-                    }
-                })
-                .catch(err => {
-                    console.error('Error fetching seller profile:', err);
-                    window.location.href = '/seller/dashboard.html';
-                });
-            });
-        }
 
         // Logout action
         const logoutBtn = document.getElementById('logout-btn');

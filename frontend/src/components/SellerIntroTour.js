@@ -242,7 +242,7 @@ class SellerIntroTour {
     this.isDismissing = true;
 
     try {
-      const token = (typeof window !== 'undefined' && window.authStorage?.getItem('tohfa_access_token')) ||
+      const token = (typeof window !== 'undefined' && window.authStorage?.getToken?.()) ||
                     sessionStorage.getItem('tohfa_access_token') ||
                     localStorage.getItem('tohfa_access_token') || '';
 

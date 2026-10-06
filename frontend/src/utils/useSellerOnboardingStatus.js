@@ -17,7 +17,7 @@ const LISTENERS = new Set();
  * Returns auth headers with token from storage
  */
 function getAuthHeaders() {
-  const token = (typeof window !== 'undefined' && window.authStorage?.getItem('tohfa_access_token')) ||
+  const token = (typeof window !== 'undefined' && window.authStorage?.getToken?.()) ||
                 sessionStorage.getItem('tohfa_access_token') ||
                 sessionStorage.getItem('tohfa_auth_token') ||
                 localStorage.getItem('tohfa_access_token') ||

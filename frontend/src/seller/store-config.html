@@ -474,39 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // 4. Handle View Store button relative link click or navigation
-  const viewStoreBtn = document.getElementById('view-store-btn');
-  if (viewStoreBtn) {
-    viewStoreBtn.addEventListener('click', () => {
-      const authToken = (typeof window !== 'undefined' && window.authStorage?.getItem('tohfa_access_token')) ||
-                        sessionStorage.getItem('tohfa_access_token') ||
-                        sessionStorage.getItem('tohfa_auth_token') ||
-                        localStorage.getItem('tohfa_access_token') ||
-                        localStorage.getItem('tohfa_auth_token') ||
-                        token || '';
-      if (authToken) {
-        fetch('/api/seller/profile', {
-          headers: { 'Authorization': `Bearer ${authToken}` }
-        })
-        .then(res => res.json())
-        .then(data => {
-          const profile = data.data?.profile || data.profile || data.data || data;
-          const sellerId = profile?.user_id || profile?.seller_id || profile?.id;
-          if (sellerId) {
-            window.location.href = `/buyer/seller-profile.html?id=${sellerId}`;
-          } else {
-            window.location.href = '/seller/dashboard.html';
-          }
-        })
-        .catch(err => {
-          console.error(err);
-          window.location.href = '/seller/dashboard.html';
-        });
-      } else {
-        window.location.href = '/seller/dashboard.html';
-      }
-    });
-  }
+  // 5. Logout Action
 
   // 5. Logout Action
   const logoutBtn = document.getElementById('logout-btn');

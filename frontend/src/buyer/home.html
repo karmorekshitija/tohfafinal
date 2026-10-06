@@ -74,7 +74,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="dns-prefetch" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="preload" href="/src/components/tohfa-footer.html" as="fetch" crossorigin>
   <link rel="stylesheet" href="/src/tailwind.css">
 
   <style>
@@ -178,7 +179,7 @@
 <!-- Top Navigation Bar -->
 <header
   class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-3 sm:px-6 md:px-8 lg:px-12 h-14 md:h-20 transition-colors"
-  style="background-color: #273328; background-image: url('/img/taskbar-texture.png'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
+  style="background-color: #273328; background-image: url('/img/taskbar-texture.webp'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
 >
   <!-- Brand Logo -->
   <div class="flex items-center flex-shrink-0">
@@ -282,13 +283,19 @@
     style="height: clamp(140px, 20vw, 300px);"
   >
     <!-- Botanical Image -->
-    <img
-      src="/img/botanical-hero.png"
-      alt="Botanical hanging greenery arrangement"
-      class="w-full h-full object-cover select-none pointer-events-none"
-      style="object-position: center top;"
-      loading="eager"
-    />
+    <picture>
+      <source srcset="/img/botanical-hero.webp" type="image/webp" />
+      <img
+        src="/img/botanical-hero.png"
+        alt="Botanical hanging greenery arrangement"
+        width="1170"
+        height="462"
+        class="w-full h-full object-cover select-none pointer-events-none"
+        style="object-position: center top;"
+        fetchpriority="high"
+        loading="eager"
+      />
+    </picture>
 
     <!-- Elegant Compact Tohfa Serif Wordmark -->
     <div class="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
@@ -1439,12 +1446,14 @@
   }
 
   // --- Initial Invocations ---
-  loadSeasonalBanner();
-  loadSponsoredProducts();
-  loadForYouProducts();
-  loadCategoryRows();
+  Promise.all([
+    loadSeasonalBanner(),
+    loadSponsoredProducts(),
+    loadForYouProducts(),
+    loadCategoryRows(),
+    checkAuthState()
+  ]).catch(err => console.error('Initial load error:', err));
   initOccasionsScroller();
-  checkAuthState();
 </script>
 
 <script>

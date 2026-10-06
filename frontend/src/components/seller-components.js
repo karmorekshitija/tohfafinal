@@ -8,6 +8,61 @@
  * ═══════════════════════════════════════════════════
  */
 
+import apiClient from '../utils/apiClient.js';
+
+// Shared in-memory and 60s sessionStorage cache for /api/seller/profile
+export function fetchSellerProfile(authToken) {
+  const token = authToken ||
+                (typeof window !== 'undefined' && window.authStorage?.getToken?.()) ||
+                sessionStorage.getItem('tohfa_access_token') ||
+                sessionStorage.getItem('tohfa_auth_token') ||
+                localStorage.getItem('tohfa_access_token') ||
+                localStorage.getItem('tohfa_auth_token') ||
+                localStorage.getItem('token') ||
+                localStorage.getItem('accessToken') || '';
+  if (!token) return Promise.resolve(null);
+
+  try {
+    const cached = sessionStorage.getItem('tohfa_seller_profile_cache');
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed.timestamp && (Date.now() - parsed.timestamp < 60000) && parsed.data) {
+        return Promise.resolve(parsed.data);
+      }
+    }
+  } catch (e) {}
+
+  if (typeof window !== 'undefined' && !window._tohfaSellerProfilePromise) {
+    window._tohfaSellerProfilePromise = fetch('/api/seller/profile', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(r => {
+        if (!r.ok) throw new Error('Seller profile request failed: ' + r.status);
+        return r.json();
+      })
+      .then(res => {
+        try {
+          sessionStorage.setItem('tohfa_seller_profile_cache', JSON.stringify({
+            timestamp: Date.now(),
+            data: res
+          }));
+        } catch (e) {}
+        return res;
+      })
+      .catch(err => {
+        window._tohfaSellerProfilePromise = null;
+        throw err;
+      });
+  }
+  return typeof window !== 'undefined' && window._tohfaSellerProfilePromise
+    ? window._tohfaSellerProfilePromise
+    : Promise.resolve(null);
+}
+
+if (typeof window !== 'undefined') {
+  window.fetchSellerProfile = fetchSellerProfile;
+}
+
 // Inject global styles and CSS overrides for Seller Studio
 (function injectGlobalStyles() {
   const style = document.createElement('style');
@@ -137,16 +192,39 @@
         left: 0 !important;
         top: 0 !important;
         height: 100vh !important;
+        height: 100dvh !important;
         transform: translateX(-100%) !important;
+        z-index: 50 !important;
       }
       
       seller-sidebar.active {
         transform: translateX(0) !important;
       }
 
+      seller-sidebar aside {
+        height: 100vh !important;
+        height: 100dvh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+      }
+
+      seller-sidebar aside nav {
+        flex: 1 1 auto !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+
+      seller-sidebar aside .sidebar-footer {
+        flex-shrink: 0 !important;
+        margin-top: auto !important;
+        padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+        background-color: #14381F !important;
+      }
+
       .seller-main-panel {
         margin-left: 0 !important;
-        padding: 68px 16px 80px 16px !important;
+        padding: 68px 16px 96px 16px !important;
         height: auto !important;
         max-height: none !important;
         overflow-y: visible !important;
@@ -158,9 +236,67 @@
         padding-right: 16px !important;
       }
     }
+
+    @media (max-width: 420px) {
+      .seller-topbar-studio-badge {
+        display: none !important;
+      }
+      #topbar-seller-name {
+        max-width: 110px !important;
+      }
+    }
   `;
   document.head.appendChild(style);
 })();
+
+/**
+ * Open the seller's public buyer-facing store
+ */
+window.tohfaOpenStore = async function() {
+  try {
+    let sellerId = null;
+
+    // Step a: Read cached user
+    try {
+      const cached = sessionStorage.getItem('tohfa_user') || localStorage.getItem('tohfa_user');
+      if (cached) {
+        const user = JSON.parse(cached);
+        if (user && user.id) {
+          sellerId = user.id;
+        }
+      }
+    } catch (e) {
+      // Fallback to fetch on parse error
+    }
+
+    // Step b: Otherwise fetch profile through existing apiClient
+    if (!sellerId) {
+      const res = await apiClient.get('/seller/profile');
+      const data = res?.data;
+      sellerId = data?.data?.user_id || data?.data?.id || data?.data?.profile?.user_id || data?.user_id || data?.id;
+    }
+
+    if (!sellerId) {
+      throw new Error('Seller ID could not be determined.');
+    }
+
+    // Step c: Navigate in the SAME tab
+    window.location.assign('/buyer/seller-profile.html?id=' + encodeURIComponent(sellerId));
+  } catch (err) {
+    // Step d: On failure, console.error and show toast, never navigate to dashboard
+    console.error("Couldn't open store:", err);
+    const msg = "Couldn't open your store. Please try again.";
+    if (typeof showToast === 'function') {
+      showToast(msg, 'error');
+    } else if (typeof window.showToast === 'function') {
+      window.showToast(msg, 'error');
+    } else if (window.Toast && typeof window.Toast.show === 'function') {
+      window.Toast.show(msg, 'error');
+    } else {
+      alert(msg);
+    }
+  }
+};
 
 class SellerSidebar extends HTMLElement {
   connectedCallback() {
@@ -168,9 +304,9 @@ class SellerSidebar extends HTMLElement {
     const isAdminSwitched = Boolean(sessionStorage.getItem('tohfa_admin_switch_context'));
     
     this.innerHTML = `
-      <aside class="w-[130px] h-screen fixed left-0 top-0 bg-[#14381F] border-r border-white/10 shadow-lg flex flex-col py-5 z-50 overflow-y-auto font-['DM_Sans'] text-[#FFF8E7]">
+      <aside class="w-[130px] h-screen h-[100dvh] fixed left-0 top-0 bg-[#14381F] border-r border-white/10 shadow-lg flex flex-col py-5 z-50 overflow-hidden font-['DM_Sans'] text-[#FFF8E7]">
         <!-- Artisan Studio Emblem -->
-        <div class="px-3 mb-5 flex flex-col items-center">
+        <div class="px-3 mb-5 flex flex-col items-center shrink-0">
           <a href="/seller/dashboard.html" class="flex flex-col items-center text-decoration-none group" title="Seller Studio">
             <div class="w-10 h-10 rounded-full bg-white/10 group-hover:bg-white/20 transition-all flex items-center justify-center text-[#FFF8E7] shadow-inner mb-1">
               <span class="material-symbols-outlined text-[20px]">storefront</span>
@@ -180,7 +316,7 @@ class SellerSidebar extends HTMLElement {
         </div>
         
         <!-- Navigation Links -->
-        <nav class="flex-1 space-y-0.5">
+        <nav class="flex-1 space-y-0.5 overflow-y-auto overscroll-contain">
           <!-- Dashboard -->
           <a class="sidebar-link ${activeTab === 'home' || activeTab === 'dashboard' ? 'sidebar-link-active' : ''}" href="/seller/dashboard.html" title="Dashboard">
             <span class="material-symbols-outlined mb-1 text-2xl">home</span>
@@ -191,13 +327,11 @@ class SellerSidebar extends HTMLElement {
             <span class="material-symbols-outlined mb-1 text-2xl">inventory_2</span>
             <span class="text-[9px] uppercase tracking-widest text-center">Catalog</span>
           </a>
-          ${!isAdminSwitched ? `
           <!-- Orders -->
           <a class="sidebar-link ${activeTab === 'orders' ? 'sidebar-link-active' : ''}" href="/seller/orders.html" title="Orders">
             <span class="material-symbols-outlined mb-1 text-2xl">shopping_bag</span>
             <span class="text-[9px] uppercase tracking-widest text-center">Orders</span>
           </a>
-          ` : ''}
           <!-- Customized Products -->
           <a class="sidebar-link ${activeTab === 'customized' || activeTab === 'customised' ? 'sidebar-link-active' : ''} relative" href="/seller/customized-products.html" title="Customized Products">
             <span class="material-symbols-outlined mb-1 text-2xl">auto_fix_high</span>
@@ -239,45 +373,35 @@ class SellerSidebar extends HTMLElement {
         </nav>
         
         <!-- Footer actions -->
-        <div class="px-3 mt-auto pt-3 space-y-2 w-full">
-          <button id="view-store-btn" class="w-full py-2 bg-[#FFF8E7] text-[#14381F] rounded-lg font-['DM_Sans'] font-semibold text-[10px] uppercase tracking-wider hover:bg-[#DCE6D8] active:scale-95 transition-all shadow-sm cursor-pointer border-none flex items-center justify-center gap-1">
+        <div class="sidebar-footer px-3 mt-auto pt-3 space-y-2 w-full shrink-0">
+          <button id="view-store-btn" class="w-full min-h-[44px] py-2 bg-[#FFF8E7] text-[#14381F] rounded-lg font-['DM_Sans'] font-semibold text-[10px] uppercase tracking-wider hover:bg-[#DCE6D8] active:scale-95 transition-all shadow-sm cursor-pointer border-none flex items-center justify-center gap-1">
             <span class="material-symbols-outlined text-[13px]">visibility</span>
             <span>View Store</span>
           </button>
-          <button id="logout-btn" class="w-full py-2 bg-white/10 text-[#FFF8E7] rounded-lg font-['DM_Sans'] font-medium text-[10px] uppercase tracking-wider hover:bg-white/20 active:scale-95 transition-all cursor-pointer border-none">
+          <button id="logout-btn" class="w-full min-h-[44px] py-2 bg-white/10 text-[#FFF8E7] rounded-lg font-['DM_Sans'] font-medium text-[10px] uppercase tracking-wider hover:bg-white/20 active:scale-95 transition-all cursor-pointer border-none flex items-center justify-center">
             Logout
           </button>
         </div>
       </aside>
     `;
 
+    // Close mobile drawer on any navigation link click
+    this.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        if (typeof window.tohfaCloseSidebar === 'function') {
+          window.tohfaCloseSidebar();
+        }
+      });
+    });
+
     const viewStoreBtn = this.querySelector('#view-store-btn');
     if (viewStoreBtn) {
-      viewStoreBtn.addEventListener('click', () => {
-        const token = (typeof window !== 'undefined' && window.authStorage?.getItem('tohfa_access_token')) ||
-                      sessionStorage.getItem('tohfa_access_token') ||
-                      sessionStorage.getItem('tohfa_auth_token') ||
-                      localStorage.getItem('tohfa_access_token') ||
-                      localStorage.getItem('tohfa_auth_token') ||
-                      localStorage.getItem('token') ||
-                      localStorage.getItem('accessToken') || '';
-        const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
-        fetch(`/api/seller/profile`, {
-          headers: authHeaders
-        })
-        .then(res => res.json())
-        .then(data => {
-          const profile = data.data?.profile || data.profile || data.data || data;
-          const sellerId = profile?.user_id || profile?.seller_id || profile?.id;
-          if (sellerId) {
-            window.location.href = `/buyer/seller-profile.html?id=${sellerId}`;
-          } else {
-            window.location.href = '/seller/dashboard.html';
-          }
-        })
-        .catch(() => {
-          window.location.href = '/seller/dashboard.html';
-        });
+      viewStoreBtn.addEventListener('click', (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        if (typeof window.tohfaCloseSidebar === 'function') {
+          window.tohfaCloseSidebar();
+        }
+        window.tohfaOpenStore();
       });
     }
 
@@ -307,19 +431,19 @@ class SellerTopBar extends HTMLElement {
         <!-- Left Side: Tohfa Studio Primary Branding & Mobile Hamburger -->
         <div class="flex items-center gap-3">
           <!-- Mobile Hamburger -->
-          <button id="seller-hamburger-btn" class="lg:hidden text-[#14381F] flex items-center justify-center p-1.5 rounded-lg hover:bg-[#14381F]/10 focus:outline-none border-none bg-transparent cursor-pointer" aria-label="Toggle menu">
+          <button id="seller-hamburger-btn" class="lg:hidden text-[#14381F] flex items-center justify-center p-2 min-w-[44px] min-h-[44px] rounded-lg hover:bg-[#14381F]/10 focus:outline-none border-none bg-transparent cursor-pointer" aria-label="Toggle menu">
             <span class="material-symbols-outlined text-[24px]">menu</span>
           </button>
           <a href="/seller/dashboard.html" class="flex items-center text-decoration-none group">
             <span class="font-['Playfair_Display'] text-[20px] font-bold italic text-[#14381F]">Tohfa</span>
-            <span class="font-['DM_Sans'] text-xs font-semibold uppercase tracking-widest text-[#14381F]/70 border-l border-[#14381F]/20 pl-2.5 py-0.5 ml-2.5">Studio</span>
+            <span class="seller-topbar-studio-badge font-['DM_Sans'] text-xs font-semibold uppercase tracking-widest text-[#14381F]/70 border-l border-[#14381F]/20 pl-2.5 py-0.5 ml-2.5">Studio</span>
           </a>
         </div>
         
         <!-- Right Side: Clean Seller Profile Pill -->
         <div class="flex items-center gap-3">
           <div class="flex items-center gap-2.5 bg-[#FFF8E7] hover:bg-[#DCE6D8]/40 transition-all border border-[#14381F]/15 rounded-full py-1 pl-3 pr-1.5 shadow-sm">
-            <span class="text-xs font-semibold text-[#1C1C1A] line-clamp-1 max-w-[160px] sm:max-w-[200px]" id="topbar-seller-name">Artisan Studio</span>
+            <span class="text-xs font-semibold text-[#1C1C1A] line-clamp-1 max-w-[120px] sm:max-w-[200px]" id="topbar-seller-name">Artisan Studio</span>
             <div class="w-7 h-7 rounded-full overflow-hidden border border-[#14381F]/15 flex-shrink-0 bg-[#14381F]/5">
               <img loading="lazy" id="sidebar-avatar" class="w-full h-full object-cover" src="/img/default-avatar.png" onerror="this.onerror=null; this.src='/img/default-avatar.png';" alt="Avatar"/>
             </div>
@@ -328,8 +452,9 @@ class SellerTopBar extends HTMLElement {
       </header>
     `;
 
+
     // Populate seller info in topbar automatically
-    const token = (typeof window !== 'undefined' && window.authStorage?.getItem('tohfa_access_token')) ||
+    const token = (typeof window !== 'undefined' && window.authStorage?.getToken?.()) ||
                   sessionStorage.getItem('tohfa_access_token') ||
                   sessionStorage.getItem('tohfa_auth_token') ||
                   localStorage.getItem('tohfa_access_token') ||
@@ -337,10 +462,9 @@ class SellerTopBar extends HTMLElement {
                   localStorage.getItem('token') ||
                   localStorage.getItem('accessToken') || '';
     if (token) {
-      fetch('/api/seller/profile', { headers: { 'Authorization': `Bearer ${token}` } })
-        .then(r => r.json())
+      fetchSellerProfile(token)
         .then(res => {
-          const p = res.data?.profile || res.data || res.profile;
+          const p = res?.data?.profile || res?.data || res?.profile;
           if (p) {
             const nameEl = this.querySelector('#topbar-seller-name');
             if (nameEl) nameEl.textContent = p.store_name || p.display_name || p.name || 'Artisan Studio';
@@ -358,20 +482,82 @@ class SellerTopBar extends HTMLElement {
         .catch(() => {});
     }
 
+    const getBackdrop = () => {
+      let bd = document.getElementById('seller-sidebar-backdrop');
+      if (!bd) {
+        bd = document.createElement('div');
+        bd.id = 'seller-sidebar-backdrop';
+        bd.className = 'fixed inset-0 bg-black/50 z-40 lg:hidden opacity-0 pointer-events-none transition-opacity duration-300';
+        document.body.appendChild(bd);
+        bd.addEventListener('click', () => {
+          if (typeof window.tohfaCloseSidebar === 'function') {
+            window.tohfaCloseSidebar();
+          }
+        });
+      }
+      return bd;
+    };
+
+    window.tohfaOpenSidebar = function() {
+      const sidebar = document.querySelector('seller-sidebar');
+      if (sidebar) {
+        sidebar.classList.add('active');
+        const nav = sidebar.querySelector('aside nav');
+        if (nav) nav.scrollTop = 0;
+        const bd = getBackdrop();
+        bd.classList.remove('opacity-0', 'pointer-events-none');
+        bd.classList.add('opacity-100', 'pointer-events-auto');
+        document.body.style.overflow = 'hidden';
+      }
+    };
+
+    window.tohfaCloseSidebar = function() {
+      const sidebar = document.querySelector('seller-sidebar');
+      if (sidebar) {
+        sidebar.classList.remove('active');
+        const bd = document.getElementById('seller-sidebar-backdrop');
+        if (bd) {
+          bd.classList.remove('opacity-100', 'pointer-events-auto');
+          bd.classList.add('opacity-0', 'pointer-events-none');
+        }
+        document.body.style.overflow = '';
+      }
+    };
+
     const hamburgerBtn = this.querySelector('#seller-hamburger-btn');
     if (hamburgerBtn) {
       hamburgerBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         const sidebar = document.querySelector('seller-sidebar');
-        if (sidebar) {
-          sidebar.classList.toggle('active');
+        if (sidebar && sidebar.classList.contains('active')) {
+          window.tohfaCloseSidebar();
+        } else {
+          window.tohfaOpenSidebar();
         }
       });
       
       document.addEventListener('click', (e) => {
         const sidebar = document.querySelector('seller-sidebar');
         if (sidebar && sidebar.classList.contains('active') && !sidebar.contains(e.target) && !hamburgerBtn.contains(e.target)) {
-          sidebar.classList.remove('active');
+          window.tohfaCloseSidebar();
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const sidebar = document.querySelector('seller-sidebar');
+          if (sidebar && sidebar.classList.contains('active')) {
+            window.tohfaCloseSidebar();
+          }
+        }
+      });
+
+      window.addEventListener('resize', () => {
+        if (window.innerWidth >= 1024) {
+          const sidebar = document.querySelector('seller-sidebar');
+          if (sidebar && sidebar.classList.contains('active')) {
+            window.tohfaCloseSidebar();
+          }
         }
       });
     }

@@ -70,6 +70,23 @@ function evaluateSellerOnboarding(seller, fallbackAddresses = []) {
     };
   }
 
+  // Tohfa Special / Admin-Managed Shops: platform manages banking and finances
+  const isAdminManaged = Boolean(seller && (seller.is_admin_managed === true ||
+      seller.is_admin_managed === 'true' ||
+      seller.is_admin_managed === 1 ||
+      seller.is_admin_managed === '1' ||
+      seller.is_admin_managed === 't' ||
+      seller.s_is_admin_managed === true ||
+      seller.s_is_admin_managed === 'true' ||
+      seller.s_is_admin_managed === 1 ||
+      seller.s_is_admin_managed === '1' ||
+      seller.s_is_admin_managed === 't' ||
+      seller.seller_type === 'special' ||
+      seller.isAdminManaged === true ||
+      seller.actingAsSpecialShop === true
+    )
+  );
+
   // 1. Billing & Dispatch Address Validation
   const billingAddr = parseJson(seller.billing_address);
   const pickupAddr = parseJson(seller.pickup_address);
@@ -106,13 +123,15 @@ function evaluateSellerOnboarding(seller, fallbackAddresses = []) {
   const rawGst = seller.gst_number || seller.gstin || taxDetails.gstin || addressCandidate.gstin || '';
   const isGstValid = !rawGst || isValidGstin(rawGst);
 
-  const hasBillingAddress = Boolean(
-    addrLine.length >= 3 &&
-    city.length >= 2 &&
-    state.length >= 2 &&
-    isValidPincode(pincode) &&
-    isGstValid
-  );
+  const hasBillingAddress = isAdminManaged
+    ? true
+    : Boolean(
+        addrLine.length >= 3 &&
+        city.length >= 2 &&
+        state.length >= 2 &&
+        isValidPincode(pincode) &&
+        isGstValid
+      );
 
   // 2. Banking / Payout Details Validation
   const bd = parseJson(seller.bank_details);
@@ -146,19 +165,23 @@ function evaluateSellerOnboarding(seller, fallbackAddresses = []) {
     ''
   ).trim().toUpperCase();
 
-  const hasBankingDetails = Boolean(
-    accountHolder.length >= 2 &&
-    accountNumber.length >= 6 &&
-    isValidIfscOrRouting(ifscCode)
-  );
+  const hasBankingDetails = isAdminManaged
+    ? true
+    : Boolean(
+        accountHolder.length >= 2 &&
+        accountNumber.length >= 6 &&
+        isValidIfscOrRouting(ifscCode)
+      );
 
   // 3. Tour Dismissed Flag
-  const onboardingTourDismissed = Boolean(
-    seller.onboarding_tour_dismissed === true ||
-    seller.onboardingTourDismissed === true ||
-    seller.onboarding_tour_dismissed === 'true' ||
-    seller.onboarding_tour_dismissed === 1
-  );
+  const onboardingTourDismissed = isAdminManaged
+    ? true
+    : Boolean(
+        seller.onboarding_tour_dismissed === true ||
+        seller.onboardingTourDismissed === true ||
+        seller.onboarding_tour_dismissed === 'true' ||
+        seller.onboarding_tour_dismissed === 1
+      );
 
   const missing = [];
   if (!hasBillingAddress) missing.push('billing_address');
@@ -170,6 +193,7 @@ function evaluateSellerOnboarding(seller, fallbackAddresses = []) {
     onboardingTourDismissed,
     isComplete: hasBillingAddress && hasBankingDetails,
     missing,
+    isAdminManaged,
     details: {
       address: {
         address_line1: addrLine,
@@ -179,9 +203,9 @@ function evaluateSellerOnboarding(seller, fallbackAddresses = []) {
         gstin: rawGst || null
       },
       bank: {
-        account_holder: accountHolder ? `${accountHolder.slice(0, 3)}***` : '',
-        account_number_masked: accountNumber ? `••••${accountNumber.slice(-4)}` : '',
-        ifsc_code: ifscCode
+        account_holder: accountHolder ? `${accountHolder.slice(0, 3)}***` : (isAdminManaged ? 'Platform Managed' : ''),
+        account_number_masked: accountNumber ? `••••${accountNumber.slice(-4)}` : (isAdminManaged ? '••••PLATFORM' : ''),
+        ifsc_code: ifscCode || (isAdminManaged ? 'PLATFORM' : '')
       }
     }
   };

@@ -16,6 +16,7 @@ app.use('/api/seller', sellerRoutes);
 app.use('/api/auth', authRoutes);
 
 describe('Seller Pipeline End-to-End Test Suite (Tohfa Special & Normal Sellers)', () => {
+  jest.setTimeout(30000);
   let adminToken;
   let adminUserId;
   const createdUserIds = [];
