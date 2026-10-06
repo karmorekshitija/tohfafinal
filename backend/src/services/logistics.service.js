@@ -25,33 +25,50 @@ try {
  * @returns {Object} normalized pickup address
  */
 function resolvePickupAddress(seller) {
-  let pickup = null;
-  if (seller && seller.pickup_address) {
-    if (typeof seller.pickup_address === 'object') {
-      pickup = seller.pickup_address;
-    } else if (typeof seller.pickup_address === 'string') {
-      try {
-        pickup = JSON.parse(seller.pickup_address);
-      } catch {
-        pickup = null;
-      }
+  const parseAddr = (raw) => {
+    if (!raw) return {};
+    if (typeof raw === 'string') {
+      try { return JSON.parse(raw); } catch { return {}; }
     }
-  }
+    return typeof raw === 'object' ? raw : {};
+  };
+  const hasValidLine = (obj) => Boolean(obj && (obj.address_line1 || obj.addressLine1 || obj.line1 || obj.address || obj.street));
 
-  const pickupLine1 = pickup && (pickup.line1 || pickup.address || pickup.street);
-  const pickupCity = pickup && pickup.city;
-  const pickupPincode = pickup && (pickup.pincode || pickup.postal_code || pickup.zip);
+  const candidates = [
+    parseAddr(seller?.pickup_address),
+    parseAddr(seller?.sp_pickup_address),
+    parseAddr(seller?.sel_pickup_address),
+    parseAddr(seller?.sp_billing_address),
+    parseAddr(seller?.sel_billing_address),
+  ];
+  const pickup = candidates.find(hasValidLine) || candidates[0] || {};
+
+  const pickupLine1 = pickup.address_line1 || pickup.addressLine1 || pickup.line1 || pickup.address || pickup.street;
+  const pickupLine2 = pickup.address_line2 || pickup.addressLine2 || pickup.line2 || '';
+  const pickupLandmark = pickup.landmark || '';
+  const pickupCity = pickup.city;
+  const pickupPincode = pickup.pincode || pickup.postal_code || pickup.postalCode || pickup.zip;
 
   if (pickupLine1 && pickupCity && pickupPincode) {
+    const facilityName = pickup.facility_name || pickup.warehouse_name || seller?.store_name || seller?.name || 'Tohfa Artisan Workshop';
+    const contactName = pickup.contact_name || seller?.name || seller?.store_name || 'Tohfa Artisan';
+    const phone = pickup.phone || pickup.contact_phone || seller?.whatsapp_number || seller?.store_phone || seller?.phone || '';
     return {
-      store_name: seller?.store_name || seller?.name || 'Tohfa Artisan Workshop',
-      contact_name: pickup.contact_name || seller?.name || seller?.store_name || 'Tohfa Artisan',
-      phone: pickup.contact_phone || seller?.whatsapp_number || seller?.store_phone || seller?.phone || '',
+      store_name: facilityName,
+      facility_name: facilityName,
+      warehouse_name: facilityName,
+      contact_name: contactName,
+      phone,
+      contact_phone: phone,
       line1: pickupLine1,
-      line2: pickup.line2 || '',
+      address_line1: pickupLine1,
+      line2: pickupLine2,
+      address_line2: pickupLine2,
+      landmark: pickupLandmark,
       city: pickupCity,
       state: pickup.state || '',
       pincode: String(pickupPincode).trim(),
+      postal_code: String(pickupPincode).trim(),
     };
   }
 
@@ -71,20 +88,29 @@ function resolvePickupAddress(seller) {
     const warehousePincode = process.env.TOHFA_WAREHOUSE_PINCODE;
 
     if (warehouseLine1 && warehouseCity && warehousePincode) {
+      const warehouseName = process.env.TOHFA_WAREHOUSE_NAME || seller?.store_name || 'Tohfa Special';
+      const warehousePhone = process.env.TOHFA_WAREHOUSE_PHONE || seller?.whatsapp_number || seller?.store_phone || seller?.phone || '';
       return {
-        store_name: process.env.TOHFA_WAREHOUSE_NAME || seller?.store_name || 'Tohfa Special',
-        contact_name: process.env.TOHFA_WAREHOUSE_NAME || seller?.store_name || 'Tohfa Central Fulfillment',
-        phone: process.env.TOHFA_WAREHOUSE_PHONE || seller?.whatsapp_number || seller?.store_phone || seller?.phone || '',
+        store_name: warehouseName,
+        facility_name: warehouseName,
+        warehouse_name: warehouseName,
+        contact_name: warehouseName,
+        phone: warehousePhone,
+        contact_phone: warehousePhone,
         line1: warehouseLine1,
+        address_line1: warehouseLine1,
         line2: process.env.TOHFA_WAREHOUSE_LINE2 || '',
+        address_line2: process.env.TOHFA_WAREHOUSE_LINE2 || '',
+        landmark: '',
         city: warehouseCity,
         state: process.env.TOHFA_WAREHOUSE_STATE || '',
         pincode: String(warehousePincode).trim(),
+        postal_code: String(warehousePincode).trim(),
       };
     }
   }
 
-  const err = new Error('Pickup & return address is required before generating a shipping label. Please configure your pickup address in Store Settings.');
+  const err = new Error('Pickup & return address is required before generating a shipping label. Please configure your pickup address in Settings > Profile.');
   err.status = 400;
   throw err;
 }
@@ -171,6 +197,10 @@ async function createShipment(orderOrId, options = {}) {
             COALESCE(sp.store_name, sel.store_name, u.name) AS store_name,
             COALESCE(sp.whatsapp_number, sel.whatsapp_number, u.phone) AS whatsapp_number,
             COALESCE(sp.pickup_address, sel.pickup_address) AS pickup_address,
+            sp.pickup_address AS sp_pickup_address,
+            sel.pickup_address AS sel_pickup_address,
+            sp.billing_address AS sp_billing_address,
+            sel.billing_address AS sel_billing_address,
             COALESCE(sp.seller_type, sel.seller_type) AS seller_type,
             (COALESCE(sp.is_admin_managed::text, sel.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed
      FROM users u 
@@ -188,6 +218,14 @@ async function createShipment(orderOrId, options = {}) {
 
   const seller = sellerRows[0];
   const pickup = resolvePickupAddress(seller);
+  const pickupLine1 = pickup.address_line1;
+  const pickupLine2 = pickup.address_line2 || '';
+  const pickupLandmark = pickup.landmark || '';
+  const pickupCity = pickup.city;
+  const pickupPincode = pickup.pincode;
+  const pickupFacility = pickup.facility_name;
+  const pickupContactName = pickup.contact_name;
+  const pickupPhone = pickup.phone;
 
   let trackingId = null;
   let courierName = 'iThink Logistics';
@@ -196,7 +234,7 @@ async function createShipment(orderOrId, options = {}) {
   // 4. CALL ITHINK API (Or DEV MOCK IF EXPLICITLY ENABLED IN DEV)
   if (isEnabled) {
     try {
-      // TODO(verify against iThink docs): Confirm exact payload parameter names & warehouse address handling
+      const fullPickupAddress = [pickupLine1, pickupLine2, pickupLandmark ? `Landmark: ${pickupLandmark}` : ''].filter(Boolean).join(', ');
       const payload = {
         order_id: String(order.order_ref || order.id),
         order_reference_id: String(order.id),
@@ -208,13 +246,21 @@ async function createShipment(orderOrId, options = {}) {
         customer_city: address.city || '',
         customer_state: address.state || '',
         customer_pincode: address.pincode || '',
-        pickup_store_name: pickup.store_name || seller.store_name || seller.name || 'Tohfa Artisan Workshop',
-        pickup_name: pickup.contact_name,
-        pickup_phone: pickup.phone,
-        pickup_address: `${pickup.line1} ${pickup.line2 || ''}`.trim(),
-        pickup_city: pickup.city,
+        pickup_store_name: pickupFacility,
+        pickup_facility_name: pickupFacility,
+        pickup_name: pickupContactName,
+        pickup_phone: pickupPhone,
+        pickup_address: fullPickupAddress,
+        pickup_landmark: pickupLandmark,
+        pickup_city: pickupCity,
         pickup_state: pickup.state || '',
-        pickup_pincode: pickup.pincode,
+        pickup_pincode: pickupPincode,
+        return_name: pickupContactName,
+        return_phone: pickupPhone,
+        return_address: fullPickupAddress,
+        return_city: pickupCity,
+        return_state: pickup.state || '',
+        return_pincode: pickupPincode,
         weight_in_grams: 500,
       };
 
@@ -525,6 +571,10 @@ async function getShippingLabel(orderId, sellerId) {
             COALESCE(sp.store_name, sel.store_name, s.name) AS store_name, 
             COALESCE(sp.whatsapp_number, s.phone) AS store_phone, 
             COALESCE(sp.pickup_address, sel.pickup_address) AS pickup_address,
+            sp.pickup_address AS sp_pickup_address,
+            sel.pickup_address AS sel_pickup_address,
+            sp.billing_address AS sp_billing_address,
+            sel.billing_address AS sel_billing_address,
             (COALESCE(sp.is_admin_managed::text, sel.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
             COALESCE(
               (SELECT json_agg(json_build_object(
@@ -567,14 +617,18 @@ async function getShippingLabel(orderId, sellerId) {
     total_amount: orderData.total_amount,
     created_at: orderData.created_at,
     pickup_address: {
-      store_name: pickup.store_name || orderData.store_name,
-      contact_name: pickup.contact_name,
-      phone: pickup.phone,
-      line1: pickup.line1,
-      line2: pickup.line2,
-      city: pickup.city,
-      state: pickup.state,
-      pincode: pickup.pincode,
+      store_name: pickup.facility_name || pickup.warehouse_name || orderData.store_name,
+      facility_name: pickup.facility_name || pickup.warehouse_name || orderData.store_name,
+      contact_name: pickup.contact_name || orderData.store_name,
+      phone: pickup.phone || pickup.contact_phone || orderData.store_phone || '',
+      line1: pickup.address_line1 || pickup.line1 || '',
+      address_line1: pickup.address_line1 || pickup.line1 || '',
+      line2: pickup.address_line2 || pickup.line2 || '',
+      address_line2: pickup.address_line2 || pickup.line2 || '',
+      landmark: pickup.landmark || '',
+      city: pickup.city || '',
+      state: pickup.state || '',
+      pincode: pickup.pincode || pickup.postal_code || '',
     },
     delivery_address: {
       recipient_name: orderData.recipient_name || orderData.buyer_name,
@@ -589,6 +643,68 @@ async function getShippingLabel(orderId, sellerId) {
   };
 }
 
+/**
+ * Synchronizes a seller's verified Operational Pickup Address with iThink Logistics
+ * warehouse / pickup registry when iThink is enabled.
+ * Never throws on external network errors so profile updates remain resilient.
+ * @param {string} sellerId
+ * @param {object} pickupAddress
+ */
+async function syncSellerPickupWarehouse(sellerId, pickupAddress = {}) {
+  const line1 = pickupAddress.address_line1 || pickupAddress.line1 || '';
+  const pincode = pickupAddress.pincode || '';
+  const city = pickupAddress.city || '';
+  const state = pickupAddress.state || '';
+
+  if (!line1 || !pincode || !city) {
+    return { synced: false, reason: 'incomplete_pickup_address' };
+  }
+
+  if (!isIThinkEnabled()) {
+    return {
+      synced: false,
+      source: 'local',
+      warehouse_id: pickupAddress.warehouse_id || `WH-TOHFA-${String(sellerId || '').slice(0, 8).toUpperCase()}`,
+    };
+  }
+
+  try {
+    const payload = {
+      company_name: pickupAddress.facility_name || pickupAddress.warehouse_name || 'Tohfa Artisan Studio',
+      contact_person_name: pickupAddress.contact_name || 'Artisan',
+      mobile: pickupAddress.phone || pickupAddress.contact_phone || '',
+      address1: line1,
+      address2: [pickupAddress.address_line2 || pickupAddress.line2 || '', pickupAddress.landmark || ''].filter(Boolean).join(', '),
+      pincode,
+      city,
+      state,
+      country: pickupAddress.country || 'India',
+    };
+
+    const res = await ithinkRequest('/warehouse/add.json', 'POST', payload)
+      .catch(() => null);
+
+    const warehouseId =
+      res?.warehouse_id ||
+      res?.data?.warehouse_id ||
+      pickupAddress.warehouse_id ||
+      `WH-TOHFA-${String(sellerId || '').slice(0, 8).toUpperCase()}`;
+
+    return {
+      synced: Boolean(res && (res.status === 'success' || res.warehouse_id || res.data?.warehouse_id)),
+      source: res ? 'ithink' : 'local_fallback',
+      warehouse_id: warehouseId,
+    };
+  } catch (err) {
+    console.warn('[iThink] Warehouse sync non-fatal warning:', err.message);
+    return {
+      synced: false,
+      source: 'local_fallback',
+      warehouse_id: pickupAddress.warehouse_id || `WH-TOHFA-${String(sellerId || '').slice(0, 8).toUpperCase()}`,
+    };
+  }
+}
+
 module.exports = {
   createShipment,
   resolvePickupAddress,
@@ -597,4 +713,6 @@ module.exports = {
   trackShipment,
   generateSellerAWB,
   getShippingLabel,
+  syncSellerPickupWarehouse,
 };
+

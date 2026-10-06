@@ -990,10 +990,10 @@ async function handleSubmit(e) {
     } else {
       if (res.status === 403 && (json.errorCode === 'ONBOARDING_INCOMPLETE' || json.message?.includes('Banking and billing'))) {
         sessionStorage.setItem(
-          'tohfa_flash_alert',
+          'tohfa_flash_message',
           json.message || 'Payout banking and billing information must be completed before listing new products.'
         );
-        window.location.href = '/seller/settings/billing?redirect=/seller/listings/new';
+        window.location.href = '/seller/profile.html?redirect=/seller/listings/new#billing-section';
         return;
       }
       alert(json.message || 'Failed to publish listing.');

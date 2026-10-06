@@ -183,61 +183,39 @@
 
         <!-- SECTION 2: Receiving Bank Details Configuration & Recent Payments -->
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Receiving Bank Details Form -->
-            <div class="bg-[#FFF8E7] p-6 rounded-card border border-sage/20 shadow-premium space-y-6">
+            <!-- Receiving Bank Details Summary (Consolidated in Settings > Profile) -->
+            <div class="bg-[#FFF8E7] p-6 rounded-card border border-sage/20 shadow-premium flex flex-col justify-between space-y-5">
                 <div>
-                    <h3 class="text-xl font-bold text-forest" style="border-left: 4px solid #14381F; padding-left: 10px;">Receiving Bank Details</h3>
-                    <p class="text-sm text-forest/80">Configure where you receive direct settlements (minus commissions/fees).</p>
-                </div>
-                
-                <div class="flex border-b border-sage/10 bg-parchment/20 rounded-t-lg overflow-hidden">
-                    <button onclick="setDetailsTab('BANK')" id="tab-BANK" class="flex-1 py-3 text-center text-sm font-bold text-forest border-b-2 border-forest">Bank Account</button>
-                    <button onclick="setDetailsTab('UPI')" id="tab-UPI" class="flex-1 py-3 text-center text-sm font-bold text-forest/60 border-b-2 border-transparent">UPI VPA</button>
-                </div>
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <h3 class="text-xl font-bold text-forest" style="border-left: 4px solid #14381F; padding-left: 10px;">Receiving Bank &amp; Payout Destination</h3>
+                        <span id="payout-dest-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-parchment/40 text-forest">Checking…</span>
+                    </div>
+                    <p class="text-sm text-forest/80">Direct Razorpay settlements (minus marketplace commission) are routed to your verified account configured in Settings &gt; Profile.</p>
 
-                <form id="receiving-details-form" onsubmit="saveReceivingDetails(event)" class="space-y-4">
-                    <input type="hidden" id="details-type" value="BANK" />
-                    
-                    <!-- Bank Fields -->
-                    <div id="bank-fields" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-bold text-forest mb-1">Account Holder Name</label>
-                            <input type="text" id="bank-holder" class="w-full px-3 py-2 bg-parchment/20 border border-sage/30 rounded-btn text-sm text-forest font-medium" placeholder="Amit Sharma" />
+                    <div class="mt-5 p-4 rounded-xl bg-parchment/20 border border-sage/20 space-y-2.5 text-sm">
+                        <div class="flex items-center justify-between">
+                            <span class="text-forest/70">Account Holder</span>
+                            <span id="summary-bank-holder" class="font-bold text-forest">—</span>
                         </div>
-                        <div>
-                            <label class="block text-sm font-bold text-forest mb-1">Bank Name</label>
-                            <input type="text" id="bank-name" class="w-full px-3 py-2 bg-parchment/20 border border-sage/30 rounded-btn text-sm text-forest font-medium" placeholder="State Bank of India" />
+                        <div class="flex items-center justify-between">
+                            <span class="text-forest/70">Bank / IFSC</span>
+                            <span id="summary-bank-ifsc" class="font-mono font-semibold text-forest">—</span>
                         </div>
-                        <div>
-                            <label class="block text-sm font-bold text-forest mb-1">Account Number</label>
-                            <input type="password" id="bank-acc" class="w-full px-3 py-2 bg-parchment/20 border border-sage/30 rounded-btn text-sm text-forest font-mono font-medium" placeholder="••••••••••••" />
+                        <div class="flex items-center justify-between">
+                            <span class="text-forest/70">Account Number</span>
+                            <span id="summary-bank-acc" class="font-mono font-semibold text-forest">—</span>
                         </div>
-                        <div>
-                            <label class="block text-sm font-bold text-forest mb-1">Confirm Account Number</label>
-                            <input type="text" id="bank-confirm-acc" class="w-full px-3 py-2 bg-parchment/20 border border-sage/30 rounded-btn text-sm text-forest font-mono font-medium" placeholder="Re-enter Account Number" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-forest mb-1">IFSC Code</label>
-                            <input type="text" id="bank-ifsc" class="w-full px-3 py-2 bg-parchment/20 border border-sage/30 rounded-btn text-sm text-forest uppercase font-mono font-medium" placeholder="SBIN0001234" />
+                        <div class="flex items-center justify-between">
+                            <span class="text-forest/70">UPI ID (VPA)</span>
+                            <span id="summary-upi-id" class="font-mono font-semibold text-forest">—</span>
                         </div>
                     </div>
+                </div>
 
-                    <!-- UPI Fields -->
-                    <div id="upi-fields" class="space-y-4 hidden">
-                        <div>
-                            <label class="block text-sm font-bold text-forest mb-1">UPI Account Holder Name</label>
-                            <input type="text" id="upi-holder" class="w-full px-3 py-2 bg-parchment/20 border border-sage/30 rounded-btn text-sm text-forest font-medium" placeholder="Amit Sharma" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-forest mb-1">UPI ID (VPA)</label>
-                            <input type="text" id="upi-id" class="w-full px-3 py-2 bg-parchment/20 border border-sage/30 rounded-btn text-sm text-forest font-mono font-medium" placeholder="amit@upi" />
-                        </div>
-                    </div>
-
-                    <button type="submit" class="w-full py-3 bg-forest hover:bg-forest/90 text-white font-bold text-sm rounded-btn shadow-md transition-colors">
-                        Save Settlement Details
-                    </button>
-                </form>
+                <a href="/seller/profile.html#billing-section" class="w-full py-3 bg-forest hover:bg-forest/90 text-white font-bold text-sm rounded-btn shadow-md transition-colors flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-base">settings</span>
+                    Manage Bank &amp; Payout Details in Settings &gt; Profile
+                </a>
             </div>
 
             <!-- Recent Payments -->
@@ -269,51 +247,32 @@
 
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- SECTION 5: Tax & GST -->
-            <div class="bg-[#FFF8E7] p-6 rounded-card border border-sage/20 shadow-premium space-y-6">
+            <!-- SECTION 5: Tax & GST Summary (Consolidated in Settings > Profile) -->
+            <div class="bg-[#FFF8E7] p-6 rounded-card border border-sage/20 shadow-premium flex flex-col justify-between space-y-5">
                 <div>
-                    <h3 class="text-xl font-bold text-forest" style="border-left: 4px solid #14381F; padding-left: 10px;">Tax & GST Settings</h3>
-                    <p class="text-sm text-forest/80">Configure your business taxes and download TDS sheets.</p>
+                    <h3 class="text-xl font-bold text-forest" style="border-left: 4px solid #14381F; padding-left: 10px;">Business Tax &amp; GST Identity</h3>
+                    <p class="text-sm text-forest/80 mt-1">Used for GST tax invoices, Razorpay subscription billing, and statutory TDS compliance.</p>
+
+                    <div class="mt-5 p-4 rounded-xl bg-parchment/20 border border-sage/20 space-y-2.5 text-sm">
+                        <div class="flex items-center justify-between">
+                            <span class="text-forest/70">GST Registration</span>
+                            <span id="summary-gst-status" class="font-bold text-forest">—</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-forest/70">GSTIN</span>
+                            <span id="summary-gstin" class="font-mono font-semibold text-forest">—</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-forest/70">PAN Number</span>
+                            <span id="summary-pan" class="font-mono font-semibold text-forest">—</span>
+                        </div>
+                    </div>
                 </div>
 
-                <form id="tax-form" onsubmit="saveTaxInfo(event)" class="space-y-4">
-                    <div class="flex items-center justify-between py-3 border-b border-sage/10">
-                        <div>
-                            <span class="text-base font-semibold text-forest">GST Registered?</span>
-                            <p class="text-sm text-forest/80">Toggle if you possess a valid GSTIN registration.</p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="tax-gst-registered" class="sr-only peer" onchange="toggleGstinField()" />
-                            <div class="w-11 h-6 bg-parchment peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#FFF8E7] after:border-sage/40 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-forest"></div>
-                        </label>
-                    </div>
-
-                    <div id="gstin-container" class="hidden">
-                        <label class="block text-sm font-bold text-forest mb-1">GSTIN Number</label>
-                        <input type="text" id="tax-gstin" class="w-full px-3 py-2 bg-parchment/20 border border-sage/30 rounded-btn text-sm text-forest focus:ring-1 focus:ring-forest outline-none uppercase font-mono font-medium" placeholder="22AAAAA0000A1Z5" />
-                        <span id="gstin-error" class="text-sm text-error font-medium hidden"></span>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-forest mb-1">PAN Number</label>
-                        <input type="text" id="tax-pan" required class="w-full px-3 py-2 bg-parchment/20 border border-sage/30 rounded-btn text-sm text-forest focus:ring-1 focus:ring-forest outline-none uppercase font-mono font-medium" placeholder="ABCDE1234F" />
-                    </div>
-
-                    <div class="flex items-center justify-between py-3 border-b border-sage/10">
-                        <div>
-                            <span class="text-base font-semibold text-forest">TDS Applicable</span>
-                            <p class="text-sm text-forest/80">Select if standard government TDS is deducted.</p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="tax-tds-applicable" class="sr-only peer" />
-                            <div class="w-11 h-6 bg-parchment peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#FFF8E7] after:border-sage/40 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-forest"></div>
-                        </label>
-                    </div>
-
-                    <button type="submit" class="px-6 py-3 bg-forest hover:bg-forest/90 transition-colors text-white font-bold text-sm rounded-btn shadow-md">
-                        Save Tax Settings
-                    </button>
-                </form>
+                <a href="/seller/profile.html#billing-section" class="px-6 py-3 bg-forest hover:bg-forest/90 transition-colors text-white font-bold text-sm rounded-btn shadow-md flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-base">edit_square</span>
+                    Update Tax &amp; Billing Identity in Profile
+                </a>
             </div>
 
             <!-- SECTION 6: Invoices & Documents -->
@@ -675,89 +634,33 @@
         loadGraphData(range);
     }
 
-    // Load Receiving bank/UPI details
+    // Load Receiving bank/UPI details summary
     async function loadReceivingDetails() {
         try {
             const res = await fetchAPI(`${API_BASE}/api/payments/receiving-details`, { headers: getAuthHeaders() });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const resp = await res.json();
             const data = resp.data || {};
+            const bank = data.bank || {};
+            const upi = data.upi || {};
 
-            const bankHolder = document.getElementById('bank-holder');
-            const bankName   = document.getElementById('bank-name');
-            const bankAcc    = document.getElementById('bank-acc');
-            const bankConfirmAcc = document.getElementById('bank-confirm-acc');
-            const bankIfsc   = document.getElementById('bank-ifsc');
+            const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || 'Not configured'; };
+            setTxt('summary-bank-holder', bank.account_holder_name || upi.account_holder_name);
+            setTxt('summary-bank-ifsc', [bank.bank_name, bank.ifsc_code].filter(Boolean).join(' · '));
+            const rawAcc = String(bank.account_number || '');
+            setTxt('summary-bank-acc', rawAcc.length >= 4 ? `•••• •••• ${rawAcc.slice(-4)}` : rawAcc);
+            setTxt('summary-upi-id', upi.upi_id);
 
-            if (data.bank) {
-                if (bankHolder) bankHolder.value = data.bank.account_holder_name || '';
-                if (bankName) bankName.value = data.bank.bank_name || '';
-                if (bankAcc) bankAcc.value = data.bank.account_number || '';
-                if (bankConfirmAcc) bankConfirmAcc.value = data.bank.account_number || '';
-                if (bankIfsc) bankIfsc.value = data.bank.ifsc_code || '';
-            } else {
-                if (bankHolder) bankHolder.value = '';
-                if (bankName) bankName.value = '';
-                if (bankAcc) bankAcc.value = '';
-                if (bankConfirmAcc) bankConfirmAcc.value = '';
-                if (bankIfsc) bankIfsc.value = '';
-            }
-
-            const upiHolder = document.getElementById('upi-holder');
-            const upiId     = document.getElementById('upi-id');
-
-            if (data.upi) {
-                if (upiHolder) upiHolder.value = data.upi.account_holder_name || '';
-                if (upiId) upiId.value = data.upi.upi_id || '';
-            } else {
-                if (upiHolder) upiHolder.value = '';
-                if (upiId) upiId.value = '';
+            const badge = document.getElementById('payout-dest-badge');
+            if (badge) {
+                const isReady = Boolean((rawAcc && bank.ifsc_code) || upi.upi_id);
+                badge.textContent = isReady ? 'Verified' : 'Incomplete';
+                badge.className = isReady
+                    ? 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-forest text-white'
+                    : 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800';
             }
         } catch (err) {
             console.warn('loadReceivingDetails error:', err);
-        }
-    }
-
-    // Save Receiving bank/UPI details
-    async function saveReceivingDetails(event) {
-        event.preventDefault();
-        const type = document.getElementById('details-type').value;
-
-        let payload = { type };
-        if (type === 'BANK') {
-            const acc = document.getElementById('bank-acc').value;
-            const confirmAcc = document.getElementById('bank-confirm-acc').value;
-            if (acc !== confirmAcc) {
-                showToast("Account numbers do not match!", "error");
-                return;
-            }
-            const ifsc = document.getElementById('bank-ifsc').value.toUpperCase().trim();
-            const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
-            if (!ifscRegex.test(ifsc)) {
-                showToast("Invalid IFSC code format (e.g. SBIN0001234)", "error");
-                return;
-            }
-            payload.account_holder_name = document.getElementById('bank-holder').value;
-            payload.bank_name = document.getElementById('bank-name').value;
-            payload.account_number = acc;
-            payload.ifsc_code = ifsc;
-        } else {
-            payload.account_holder_name = document.getElementById('upi-holder').value;
-            payload.upi_id = document.getElementById('upi-id').value;
-        }
-
-        const res = await fetchAPI(`${API_BASE}/api/payments/receiving-details`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(payload)
-        });
-
-        if (res.ok) {
-            showToast("Receiving details updated successfully.");
-            loadReceivingDetails();
-        } else {
-            const err = await res.json();
-            showToast(err.message || "Failed to update details.", "error");
         }
     }
 
@@ -783,70 +686,20 @@
         `).join('');
     }
 
-
-
-    // Load Tax Settings
+    // Load Tax Settings Summary
     async function loadTaxInfo() {
-        const res = await fetchAPI(`${API_BASE}/api/payments/tax`, { headers: getAuthHeaders() });
-        if (!res.ok) return;
-        const resp = await res.json();
-        const data = resp.data || {};
+        try {
+            const res = await fetchAPI(`${API_BASE}/api/payments/tax`, { headers: getAuthHeaders() });
+            if (!res.ok) return;
+            const resp = await res.json();
+            const data = resp.data || {};
 
-        const gstReg = document.getElementById('tax-gst-registered');
-        gstReg.checked = !!data.is_gst_registered;
-        document.getElementById('tax-gstin').value = data.gstin || '';
-        document.getElementById('tax-pan').value = data.pan_number || '';
-        document.getElementById('tax-tds-applicable').checked = !!data.tds_applicable;
-
-        toggleGstinField();
-    }
-
-    function toggleGstinField() {
-        const registered = document.getElementById('tax-gst-registered').checked;
-        const container = document.getElementById('gstin-container');
-        const input = document.getElementById('tax-gstin');
-        
-        if (registered) {
-            container.classList.remove('hidden');
-            input.required = true;
-        } else {
-            container.classList.add('hidden');
-            input.required = false;
-        }
-    }
-
-    async function saveTaxInfo(event) {
-        event.preventDefault();
-        const isGst = document.getElementById('tax-gst-registered').checked;
-        const gstin = document.getElementById('tax-gstin').value.toUpperCase().trim();
-        const pan = document.getElementById('tax-pan').value.toUpperCase().trim();
-        const tds = document.getElementById('tax-tds-applicable').checked;
-
-        if (isGst) {
-            const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
-            if (!gstinRegex.test(gstin)) {
-                showToast("Invalid GSTIN structure format", "error");
-                return;
-            }
-        }
-
-        const res = await fetchAPI(`${API_BASE}/api/payments/tax`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({
-                is_gst_registered: isGst,
-                gstin: isGst ? gstin : null,
-                pan_number: pan,
-                tds_applicable: tds
-            })
-        });
-
-        if (res.ok) {
-            showToast("Tax settings saved successfully.");
-            loadTaxInfo();
-        } else {
-            const err = await res.json();
-            showToast(err.message || "Failed to update tax details.", "error");
+            const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || 'Not provided'; };
+            setTxt('summary-gst-status', data.is_gst_registered || data.gstin ? 'GST Registered' : 'Composite / Unregistered');
+            setTxt('summary-gstin', data.gstin);
+            setTxt('summary-pan', data.pan_number);
+        } catch (err) {
+            console.warn('loadTaxInfo error:', err);
         }
     }
 

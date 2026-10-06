@@ -69,7 +69,7 @@ function getOrCreateModal() {
 
       <!-- Actions -->
       <div class="flex flex-col sm:flex-row items-center gap-2.5">
-        <a id="gate-modal-setup-btn" href="/seller/settings/billing?redirect=/seller/listings/new" class="w-full sm:flex-1 py-3 px-5 bg-[#14381F] text-[#FFF8E7] rounded-xl text-xs font-bold uppercase tracking-wider text-center shadow hover:bg-[#285C3A] active:scale-95 transition-all text-decoration-none flex items-center justify-center gap-1.5">
+        <a id="gate-modal-setup-btn" href="/seller/profile.html?redirect=/seller/listings/new#billing-section" class="w-full sm:flex-1 py-3 px-5 bg-[#14381F] text-[#FFF8E7] rounded-xl text-xs font-bold uppercase tracking-wider text-center shadow hover:bg-[#285C3A] active:scale-95 transition-all text-decoration-none flex items-center justify-center gap-1.5">
           <span>Setup Now</span>
           <span class="material-symbols-outlined text-sm">arrow_forward</span>
         </a>
@@ -219,7 +219,7 @@ export async function checkDirectListingRouteGuard() {
       'tohfa_flash_alert',
       'Action Required: Payout banking and billing information must be completed before listing new products.'
     );
-    window.location.replace('/seller/settings/billing?redirect=/seller/listings/new');
+    window.location.replace('/seller/profile.html?redirect=/seller/listings/new#billing-section');
   }
 }
 

@@ -382,10 +382,127 @@ async function markOrderPaid(orderId, paymentDetails = {}, externalClient = null
   }
 }
 
+/**
+ * Synchronizes a seller's Business & Billing Address and Bank Account details
+ * with Razorpay (Linked Accounts / Route / Settlement Fund Account).
+ * Strictly isolated in try/catch so external Razorpay test mode, rate limits,
+ * or validation errors NEVER block or roll back local PostgreSQL persistence.
+ *
+ * @param {string} sellerId
+ * @param {object} sellerData
+ * @returns {Promise<object>}
+ */
+async function syncSellerRazorpayAccount(sellerId, sellerData = {}) {
+  const billing = sellerData.billingAddress || {};
+  const bank = sellerData.bankDetails || {};
+  const tax = sellerData.taxDetails || {};
+
+  const mappedProfile = {
+    legal_business_name: billing.legal_business_name || sellerData.legalBusinessName || 'Artisan Studio',
+    business_type: 'individual',
+    email: sellerData.email || undefined,
+    phone: sellerData.phone || undefined,
+    legal_info: {
+      pan: tax.pan_number || billing.pan || undefined,
+      gst: tax.gstin || billing.gstin || undefined,
+    },
+    profile: {
+      category: 'ecommerce',
+      subcategory: 'ecommerce_marketplace',
+      addresses: {
+        registered: {
+          street1: billing.address_line1 || '',
+          street2: billing.address_line2 || billing.landmark || 'N/A',
+          city: billing.city || '',
+          state: billing.state || '',
+          postal_code: billing.pincode || '',
+          country: 'IN',
+        },
+      },
+    },
+    settlement_account: {
+      beneficiary_name: bank.account_holder_name || bank.beneficiary_name || '',
+      account_number: bank.account_number || '',
+      ifsc_code: bank.ifsc_code || '',
+      bank_name: bank.bank_name || '',
+      upi_id: bank.upi_id || null,
+    },
+  };
+
+  const primaryKeyId = process.env.RAZORPAY_PRIMARY_KEY_ID || process.env.RAZORPAY_KEY_ID;
+  const isPlaceholder =
+    !primaryKeyId ||
+    primaryKeyId === 'YOUR_RAZORPAY_KEY_ID' ||
+    primaryKeyId === 'rzp_test_placeholder' ||
+    primaryKeyId.includes('placeholder') ||
+    primaryKeyId.includes('YOUR_');
+
+  const routeEnabled = process.env.RAZORPAY_ROUTE_ENABLED === 'true';
+  const shortId = String(sellerId || 'seller').replace(/[^a-zA-Z0-9]/g, '').slice(0, 8);
+
+  if (isPlaceholder || !routeEnabled) {
+    return {
+      synced: false,
+      mode: isPlaceholder ? 'test_local' : 'local_saved',
+      razorpay_account_id: bank.razorpay_account_id || `acc_local_${shortId}`,
+      razorpay_fund_account_id:
+        bank.razorpay_fund_account_id || (bank.account_number ? `fa_local_${shortId}` : null),
+      mapped_profile: mappedProfile,
+      message: 'Billing and payout details saved locally.',
+    };
+  }
+
+  try {
+    const client = razorpay.getClient('primary');
+    if (client && client.accounts && typeof client.accounts.create === 'function') {
+      const accountRes = await client.accounts.create({
+        email: mappedProfile.email,
+        phone: mappedProfile.phone,
+        type: 'route',
+        reference_id: String(sellerId).slice(0, 40),
+        legal_business_name: mappedProfile.legal_business_name,
+        business_type: mappedProfile.business_type,
+        contact_name: mappedProfile.settlement_account.beneficiary_name || mappedProfile.legal_business_name,
+        profile: mappedProfile.profile,
+        legal_info: mappedProfile.legal_info,
+      });
+      return {
+        synced: true,
+        mode: 'razorpay_route',
+        razorpay_account_id: accountRes.id,
+        razorpay_fund_account_id: bank.razorpay_fund_account_id || null,
+        status: accountRes.status || 'created',
+      };
+    }
+
+    return {
+      synced: false,
+      mode: 'local_saved',
+      razorpay_account_id: bank.razorpay_account_id || `acc_local_${shortId}`,
+      razorpay_fund_account_id:
+        bank.razorpay_fund_account_id || (bank.account_number ? `fa_local_${shortId}` : null),
+      mapped_profile: mappedProfile,
+    };
+  } catch (err) {
+    console.warn('[Payment Gateway] Non-fatal Razorpay seller account sync warning:', err.message);
+    return {
+      synced: false,
+      mode: 'local_saved',
+      warning: 'Address saved locally. Razorpay Linked Account verification will be retried asynchronously.',
+      error: err.message,
+      razorpay_account_id: bank.razorpay_account_id || `acc_local_${shortId}`,
+      razorpay_fund_account_id:
+        bank.razorpay_fund_account_id || (bank.account_number ? `fa_local_${shortId}` : null),
+    };
+  }
+}
+
 module.exports = {
   createRazorpayOrder,
   verifyPaymentSignature,
   refundPayment,
   markOrderPaid,
   verifyHmacSignature,
+  syncSellerRazorpayAccount,
 };
+

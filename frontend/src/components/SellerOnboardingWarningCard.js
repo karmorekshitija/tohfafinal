@@ -69,7 +69,7 @@ export function createOnboardingWarningCard(status) {
 
       <!-- Action Button -->
       <div class="flex items-center justify-end sm:justify-start md:justify-end shrink-0 pt-2 sm:pt-0">
-        <a href="/seller/settings/billing" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#14381F] text-[#FFF8E7] text-xs font-bold uppercase tracking-wider rounded-full shadow-md hover:bg-[#285C3A] active:scale-95 transition-all text-decoration-none">
+        <a href="/seller/profile.html#billing-section" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#14381F] text-[#FFF8E7] text-xs font-bold uppercase tracking-wider rounded-full shadow-md hover:bg-[#285C3A] active:scale-95 transition-all text-decoration-none">
           <span>Complete Details</span>
           <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
         </a>

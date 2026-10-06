@@ -30,9 +30,13 @@ router.post('/complete-onboarding', authMiddleware, sellerOnly, sellerController
 router.post('/onboarding', authMiddleware, sellerOnly, sellerController.completeOnboarding);
 router.put('/onboarding-details', authMiddleware, sellerOnly, sellerController.completeOnboarding);
 
-// Studio Profile
+// Studio Profile & Consolidated Billing / Pickup Address (Single Source of Truth)
 router.get('/profile', authMiddleware, sellerOnly, sellerController.getOwnSellerProfile);
 router.put('/profile', authMiddleware, sellerOnly, sellerController.updateSellerProfile);
+router.put('/profile/billing', authMiddleware, sellerOnly, sellerController.updateBillingProfile);
+router.post('/profile/billing', authMiddleware, sellerOnly, sellerController.updateBillingProfile);
+router.put('/profile/pickup-address', authMiddleware, sellerOnly, sellerController.updatePickupAddress);
+router.post('/profile/pickup-address', authMiddleware, sellerOnly, sellerController.updatePickupAddress);
 router.post('/profile/photo', authMiddleware, sellerOnly, uploadProfilePhoto, sellerController.uploadProfilePhoto);
 router.post('/profile/banner', authMiddleware, sellerOnly, uploadCoverPhoto, sellerController.uploadBannerPhoto);
 router.post('/profile/about-image', authMiddleware, sellerOnly, uploadSingleMedia, sellerController.uploadAboutImage);

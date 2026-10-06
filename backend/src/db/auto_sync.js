@@ -136,12 +136,38 @@ async function autoSyncDatabase() {
       console.warn('⚠️ [Auto-Sync Step 3c - Seller Type Heal Notice]:', err.message);
     }
 
-    // 3c-2. Seller onboarding tour and billing address columns
+    // 3c-2. Seller onboarding tour, billing/pickup address, tax, and storefront columns
     try {
       await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS onboarding_tour_dismissed BOOLEAN NOT NULL DEFAULT FALSE;`);
       await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS onboarding_tour_dismissed BOOLEAN NOT NULL DEFAULT FALSE;`);
       await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS billing_address JSONB DEFAULT '{}';`);
       await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS billing_address JSONB DEFAULT '{}';`);
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS pickup_address JSONB DEFAULT '{}';`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS pickup_address JSONB DEFAULT '{}';`);
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS bank_details JSONB DEFAULT '{}';`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS bank_details JSONB DEFAULT '{}';`);
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS tax_details JSONB DEFAULT '{}';`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS tax_details JSONB DEFAULT '{}';`);
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS pan_number TEXT;`);
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS gst_number TEXT;`);
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT FALSE;`);
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS city TEXT;`);
+      await query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS state TEXT;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS location TEXT;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS shop_name TEXT;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS display_name TEXT;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS handle TEXT;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS shop_bio TEXT;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS badges JSONB;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS story_headline TEXT;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS story_description TEXT;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS working_on TEXT;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS video_url TEXT;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS about_image_url TEXT;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS profile_photo TEXT;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS is_accepting_orders BOOLEAN DEFAULT TRUE;`);
+      await query(`ALTER TABLE seller_profiles ADD COLUMN IF NOT EXISTS zai_mode_enabled INT DEFAULT 0;`);
     } catch (err) {
       console.warn('⚠️ [Auto-Sync Step 3c-2 - Seller Onboarding Columns Notice]:', err.message);
     }
