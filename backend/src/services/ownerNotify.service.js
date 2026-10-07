@@ -65,6 +65,11 @@ async function sendMail(to, subject, html, text) {
 // Helpers
 // ---------------------------------------------------------------------------
 
+/** Resolve recipient email address from OWNER_NOTIFY_EMAIL or ADMIN_EMAIL fallback */
+function getRecipientEmail() {
+  return (process.env.OWNER_NOTIFY_EMAIL || process.env.ADMIN_EMAIL || '').trim();
+}
+
 /** HTML-escape a string for safe insertion into HTML bodies */
 function esc(val) {
   return String(val == null ? '' : val)
@@ -109,18 +114,26 @@ function toIST(date) {
 let _startupWarned = false;
 
 /**
- * Returns true only if OWNER_NOTIFY_EMAIL and email SMTP credentials are set.
+ * Returns true only if OWNER_NOTIFY_EMAIL/ADMIN_EMAIL and valid Resend or SMTP credentials exist.
  * Logs one startup warning if manual mode is on but email is not configured.
  */
 function isConfigured() {
-  const ownerEmail = (process.env.OWNER_NOTIFY_EMAIL || process.env.ADMIN_EMAIL || '').trim();
+  const ownerEmail = getRecipientEmail();
   const hasEmail = Boolean(ownerEmail);
-  const hasSmtp = Boolean(
-    (process.env.EMAIL_HOST || process.env.SMTP_HOST || '').trim() ||
-    (process.env.EMAIL_USER || process.env.SMTP_USER || '').trim()
-  );
-  const hasPass = Boolean((process.env.EMAIL_PASS || process.env.SMTP_PASS || '').trim());
-  const configured = hasEmail && hasSmtp && hasPass;
+
+  const resendKey = (process.env.RESEND_API_KEY || '').trim();
+  const isPlaceholder = (val) => !val || val.includes('placeholder') || val.includes('YOUR_') || val.includes('example.com') || val === 're_xxxx';
+  const hasResend = Boolean(resendKey && !isPlaceholder(resendKey));
+
+  const host = (process.env.EMAIL_HOST || process.env.SMTP_HOST || '').trim();
+  const user = (process.env.EMAIL_USER || process.env.SMTP_USER || '').trim();
+  const pass = (process.env.EMAIL_PASS || process.env.SMTP_PASS || '').replace(/\s+/g, '');
+
+  const hasHostOrUser = Boolean((host && !isPlaceholder(host)) || (user && !isPlaceholder(user)));
+  const hasPass = Boolean(pass && !isPlaceholder(pass));
+  const hasSmtp = hasHostOrUser && hasPass;
+
+  const configured = hasEmail && (hasResend || hasSmtp);
 
   if (!configured && !_startupWarned && whatsappConfig.getMode() === 'manual') {
     _startupWarned = true;
@@ -423,14 +436,15 @@ async function queueTaskEmail(row) {
 
     const { html, text } = buildTaskEmailBody(row, message, recipientLabel, phone, adminLink, extra);
 
+    const recipientEmail = getRecipientEmail();
     const result = await sendMail(
-      process.env.OWNER_NOTIFY_EMAIL,
+      recipientEmail,
       subject,
       html,
       text
     );
 
-    const emailStatus = result ? 'sent' : 'failed';
+    const emailStatus = (result && result.success === true) ? 'sent' : 'failed';
     await query(
       `UPDATE whatsapp_outbox
        SET owner_email_status = $1, owner_emailed_at = NOW(), updated_at = NOW()
@@ -465,7 +479,8 @@ async function queueInvalidNumberAlert(row) {
 <p>Kind: ${esc(kind)}<br>Outbox ID: ${esc(shortId)}<br>Reason: Phone number missing or invalid.</p>
 <p>Please contact the recipient directly to fulfil this task.</p>`;
     const text = `Manual WhatsApp task — MISSING NUMBER\n\nKind: ${kind}\nOutbox ID: ${shortId}\nPhone was missing or invalid. Please contact the recipient directly.`;
-    await sendMail(process.env.OWNER_NOTIFY_EMAIL, subject, html, text);
+    const recipientEmail = getRecipientEmail();
+    await sendMail(recipientEmail, subject, html, text);
   } catch (err) {
     console.error('[Owner Notify] queueInvalidNumberAlert error:', err.message);
   }
@@ -560,8 +575,9 @@ ${waUrl ? `<p><a href="${esc(waUrl)}" style="background:#25D366;color:white;padd
 
         const text = `ESCALATION: ${kind}\nRecipient: ${name} — ${row.intended_to || ''}\n\n---\n${message}\n---\n${waUrl ? `WhatsApp: ${waUrl}` : ''}`;
 
+        const recipientEmail = getRecipientEmail();
         const result = await sendMail(
-          process.env.OWNER_NOTIFY_EMAIL,
+          recipientEmail,
           subject,
           html,
           text
@@ -573,7 +589,7 @@ ${waUrl ? `<p><a href="${esc(waUrl)}" style="background:#25D366;color:white;padd
           [row.id]
         );
 
-        if (result) escalated++;
+        if (result && result.success === true) escalated++;
       } catch (e) {
         console.error(`[Owner Notify] Escalation failed for ${row.id}:`, e.message);
       }
@@ -643,7 +659,8 @@ async function sendOccasionDigest(rowsInput) {
 ${htmlSections.join('<hr style="margin:24px 0">')}`;
     const text = `Occasion Reminder Digest (${count})\nPlease send each of the following WhatsApp messages:\n\n${'='.repeat(50)}\n${sections.join('='.repeat(50) + '\n')}`;
 
-    await sendMail(process.env.OWNER_NOTIFY_EMAIL, subject, html, text);
+    const recipientEmail = getRecipientEmail();
+    await sendMail(recipientEmail, subject, html, text);
 
     // Mark rows as emailed
     const ids = rows.map((r) => r.id).filter(Boolean);
@@ -676,9 +693,9 @@ const DEDUP_MS = 10 * 60 * 1000; // 10 minutes
  * @param {object} data
  */
 async function sendAdminAlertEmail(type, data) {
-  const ownerEmail = (process.env.OWNER_NOTIFY_EMAIL || process.env.ADMIN_EMAIL || '').trim();
+  const ownerEmail = getRecipientEmail();
   if (!isConfigured()) {
-    console.warn(`[Owner Notify] sendAdminAlertEmail (${type}) skipped: email config incomplete (OWNER_NOTIFY_EMAIL=${ownerEmail ? 'SET' : 'MISSING'}, EMAIL_USER/SMTP_USER=${process.env.EMAIL_USER || process.env.SMTP_USER || process.env.EMAIL_HOST || process.env.SMTP_HOST ? 'SET' : 'MISSING'}, EMAIL_PASS/SMTP_PASS=${process.env.EMAIL_PASS || process.env.SMTP_PASS ? 'SET' : 'MISSING'})`);
+    console.warn(`[Owner Notify] sendAdminAlertEmail (${type}) skipped: email config incomplete (recipientEmail=${ownerEmail ? 'SET' : 'MISSING'})`);
     return { success: false, reason: 'unconfigured' };
   }
 
@@ -748,6 +765,7 @@ async function sendAdminAlertEmail(type, data) {
 // ---------------------------------------------------------------------------
 
 module.exports = {
+  getRecipientEmail,
   isConfigured,
   sendMail,
   buildReadyMessage,

@@ -666,6 +666,11 @@ async function autoSyncDatabase() {
       await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_id INTEGER;`);
       await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method TEXT DEFAULT 'razorpay';`);
       await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_address JSONB DEFAULT '{}';`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS is_special BOOLEAN DEFAULT FALSE;`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS special_instructions TEXT DEFAULT '';`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS customization_details JSONB DEFAULT '{}'::jsonb;`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS studio_notes TEXT;`);
+      await query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS seller_id UUID;`);
       await query(`UPDATE orders SET user_id = buyer_id WHERE user_id IS NULL AND buyer_id IS NOT NULL;`);
       await query(`UPDATE orders SET buyer_id = user_id WHERE buyer_id IS NULL AND user_id IS NOT NULL;`);
 
@@ -689,6 +694,10 @@ async function autoSyncDatabase() {
       // Order items compatibility fields (Bug 3)
       await query(`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS seller_order_id INTEGER;`);
       await query(`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS customization_details TEXT;`);
+      await query(`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS customization_data JSONB DEFAULT '{}'::jsonb;`);
+      await query(`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS proof_image_url TEXT;`);
+      await query(`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS customization_status TEXT DEFAULT 'pending';`);
+      await query(`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS unit_price NUMERIC DEFAULT 0;`);
 
       // Create seller_orders table (Bug 3)
       await query(`

@@ -3272,15 +3272,20 @@ async function markWhatsAppOutboxDoneByToken(req, res) {
 }
 
 // ---------------------------------------------------------------------------
-// POST /api/admin/email/test  (admin-authenticated diagnostic endpoint)
-// Verifies SMTP connection and dispatches a sample test email.
+// POST / GET /api/admin/email/test  (admin-authenticated diagnostic endpoint)
+// Verifies Resend HTTPS API / SMTP connection and dispatches a sample test email.
 // ---------------------------------------------------------------------------
 async function testEmail(req, res) {
+  const resendApiKey = typeof emailService.getResendApiKey === 'function' ? emailService.getResendApiKey() : null;
   const { user, host, port } = emailService.sanitizeCredentials();
+  const activeTransport = resendApiKey ? 'resend' : (user ? 'smtp' : 'none');
+
   try {
     const targetEmail = (
       req.body?.target_email ||
       req.body?.email ||
+      req.query?.target_email ||
+      req.query?.email ||
       process.env.OWNER_NOTIFY_EMAIL ||
       process.env.ADMIN_EMAIL ||
       req.user?.email ||
@@ -3291,7 +3296,8 @@ async function testEmail(req, res) {
     if (!targetEmail) {
       return res.status(400).json({
         success: false,
-        message: 'No target email specified and OWNER_NOTIFY_EMAIL / EMAIL_USER not configured.',
+        message: 'No target email specified and OWNER_NOTIFY_EMAIL / ADMIN_EMAIL not configured.',
+        transport: activeTransport,
         host,
         port,
         user,
@@ -3302,9 +3308,13 @@ async function testEmail(req, res) {
 
     const mailRes = await emailService.sendMail(
       targetEmail,
-      'Tohfa SMTP Diagnostic Test Email',
-      `<h2>Tohfa Email Pipeline Verified</h2><p>This is a diagnostic test email dispatched from <strong>${host}:${port}</strong> (${user || 'N/A'}).</p><p>Timestamp: ${new Date().toISOString()}</p>`,
-      `Tohfa Email Pipeline Verified. Dispatched from ${host}:${port} (${user || 'N/A'}) at ${new Date().toISOString()}`
+      'Tohfa Email System Test',
+      `<h2>Tohfa Email Pipeline Verified</h2>
+       <p>This is an instant diagnostic test email dispatched from Tohfa Gifting Platform.</p>
+       <p><strong>Active Transport:</strong> ${activeTransport.toUpperCase()} ${resendApiKey ? '(HTTPS Port 443)' : `(${host}:${port})`}</p>
+       <p><strong>Recipient:</strong> ${targetEmail}</p>
+       <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>`,
+      `Tohfa Email Pipeline Verified. Dispatched via ${activeTransport.toUpperCase()} to ${targetEmail} at ${new Date().toISOString()}`
     );
 
     if (!mailRes || mailRes.success === false) {
@@ -3312,6 +3322,7 @@ async function testEmail(req, res) {
         success: false,
         message: mailRes?.error || 'Failed to dispatch diagnostic test email.',
         code: mailRes?.code,
+        transport: activeTransport,
         host,
         port,
         user,
@@ -3320,6 +3331,8 @@ async function testEmail(req, res) {
 
     return res.status(200).json({
       success: true,
+      message: 'Test email dispatched successfully.',
+      transport: activeTransport,
       messageId: mailRes.messageId,
       targetEmail,
       host,
@@ -3330,8 +3343,9 @@ async function testEmail(req, res) {
     console.error('[Admin] testEmail diagnostic error:', err.message);
     return res.status(502).json({
       success: false,
-      message: err.message || 'SMTP verification or dispatch failed.',
+      message: err.message || 'Email verification or dispatch failed.',
       code: err.code,
+      transport: activeTransport,
       host,
       port,
       user,

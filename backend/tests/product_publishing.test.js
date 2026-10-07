@@ -75,6 +75,43 @@ describe('Product Publishing — Seller Studio & Tohfa Special Studio', () => {
     );
     const sellerUser = sellerRows[0] || { id: 128, email: 'seller@test.dev' };
 
+    if (sellerUser.id) {
+      const billingJson = JSON.stringify({
+        address_line1: '123 Craft Street',
+        city: 'Jaipur',
+        state: 'Rajasthan',
+        pincode: '302001'
+      });
+      const bankJson = JSON.stringify({
+        account_holder_name: 'Test Seller',
+        account_number: '123456789012',
+        ifsc_code: 'HDFC0001234'
+      });
+      await query(
+        `UPDATE sellers SET 
+           legal_business_name = 'Test Craft LLP',
+           address_line1 = '123 Craft Street',
+           city = 'Jaipur',
+           state = 'Rajasthan',
+           pincode = '302001',
+           account_holder_name = 'Test Seller',
+           account_number = '123456789012',
+           ifsc_code = 'HDFC0001234',
+           billing_address = $2,
+           bank_details = $3
+         WHERE user_id = $1 OR id = $1`,
+        [sellerUser.id, billingJson, bankJson]
+      ).catch(() => {});
+
+      await query(
+        `UPDATE seller_profiles SET
+           billing_address = $2,
+           bank_details = $3
+         WHERE user_id = $1`,
+        [sellerUser.id, billingJson, bankJson]
+      ).catch(() => {});
+    }
+
     const { rows: buyerRows } = await query(
       "SELECT id, email FROM users WHERE role = 'buyer' LIMIT 1"
     );

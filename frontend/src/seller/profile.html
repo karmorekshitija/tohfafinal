@@ -68,19 +68,24 @@
   }
 
   /* Input style — matches other tabs */
+  /* Input style — visible white background with high contrast border */
   .field-input {
-    width: 100%;
-    background: #FFF8E7;
-    border: 1px solid #FFF8E7;
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 14px;
-    color: #211b11;
-    font-family: 'DM Sans', sans-serif;
+    width: 100% !important;
+    background: #FFFFFF !important;
+    border: 1.5px solid rgba(20, 56, 31, 0.25) !important;
+    border-radius: 10px !important;
+    padding: 10px 14px !important;
+    font-size: 14px !important;
+    color: #1C1C1C !important;
+    font-family: 'DM Sans', sans-serif !important;
     transition: border-color .15s, box-shadow .15s;
     outline: none;
+    box-sizing: border-box;
   }
-  .field-input:focus { border-color: #14381F; box-shadow: 0 0 0 3px rgba(37,83,56,.10); }
+  .field-input:focus {
+    border-color: #14381F !important;
+    box-shadow: 0 0 0 3px rgba(20, 56, 31, 0.12) !important;
+  }
   .field-label {
     font-size: 11px;
     font-weight: 700;
@@ -174,8 +179,32 @@
   .embed-preview { width: 100%; border-radius: 10px; overflow: hidden; background: #FFF8E7; aspect-ratio: 16/9; }
 
   /* Char counter */
-  .char-counter { font-size: 11px; color: #717972; text-align: right; margin-top: 3px; }
+  .char-counter {
+    font-size: 11px;
+    color: #717972;
+    text-align: right;
+    margin-top: 4px;
+    position: relative;
+    z-index: 2;
+  }
   .char-counter.warn { color: #14381F; }
+
+  /* Floating mascot widget override for form layout accessibility */
+  #tohfa-chat-mascot {
+    z-index: 40 !important;
+  }
+  @media (max-width: 768px) {
+    #tohfa-chat-mascot {
+      width: 44px !important;
+      height: 44px !important;
+      bottom: 12px !important;
+      right: 12px !important;
+    }
+    /* Completely eliminate duplicate/stacked footer on mobile screens */
+    #tohfa-footer {
+      display: none !important;
+    }
+  }
 
   /* Modal overlay */
   .modal-overlay {

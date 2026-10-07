@@ -14,9 +14,25 @@ const bestsellerService = require('../services/bestseller.service');
 const whatsappCloudService = require('../services/whatsappCloud.service');
 const whatsappConfig = require('../config/whatsapp');
 const whatsappOutboxService = require('../services/whatsappOutbox.service');
-const { maskPhone, getPhone10 } = require('../utils/phone');
-
+const emailService = require('../services/email.service');
+const ownerNotifyService = require('../services/ownerNotify.service');
 const razorpay = require('../config/razorpay');
+
+function getPhone10(phone) {
+  if (!phone) return null;
+  const digits = String(phone).replace(/\D/g, '');
+  if (digits.length >= 10) {
+    return digits.slice(-10);
+  }
+  return null;
+}
+
+function maskPhone(phone) {
+  if (!phone) return '***';
+  const str = String(phone);
+  if (str.length <= 4) return '***';
+  return '***' + str.slice(-4);
+}
 
 async function handleRazorpayWebhook(req, res) {
   try {
@@ -88,7 +104,35 @@ async function handleRazorpayWebhook(req, res) {
             logisticsService.createShipment(confirmedOrder, { fromPayment: true }).catch(e => console.error('[Webhook Logistics]:', e.message));
             bestsellerService.recomputeForOrder(confirmedOrder.id).catch(e => console.error('[Webhook Bestseller Error]:', e.message));
 
-            // Notify seller(s) via WhatsApp
+            // Send Order Confirmation Email to Buyer (awaited inside try/catch so webhook execution never crashes)
+            (async () => {
+              try {
+                const [buyerRes, itemsRes] = await Promise.all([
+                  query('SELECT email, name FROM users WHERE id = $1', [confirmedOrder.buyer_id]),
+                  query(
+                    `SELECT COALESCE(p.name, 'Handcrafted Gift') AS name, oi.quantity
+                     FROM order_items oi
+                     LEFT JOIN products p ON p.id = oi.product_id
+                     WHERE oi.order_id = $1`,
+                    [confirmedOrder.id]
+                  ),
+                ]);
+                const buyer = buyerRes.rows[0] || {};
+                const recipientEmail = buyer.email;
+                if (recipientEmail) {
+                  await emailService.sendOrderConfirmationEmail(recipientEmail, {
+                    orderId: String(confirmedOrder.id).slice(0, 8),
+                    buyerName: buyer.name || 'Customer',
+                    totalAmount: confirmedOrder.total_amount,
+                    items: itemsRes.rows || [],
+                  });
+                }
+              } catch (emailErr) {
+                console.error('[Webhook] Order confirmation email error:', emailErr.message);
+              }
+            })();
+
+            // Notify seller(s) via WhatsApp and trigger admin alert if special order
             (async () => {
               try {
                 let buyerName = 'Customer';
@@ -103,7 +147,10 @@ async function handleRazorpayWebhook(req, res) {
                   `SELECT so.id AS seller_order_id,
                           so.seller_id,
                           so.subtotal,
-                          COALESCE(sp.whatsapp_number, s.whatsapp_number, u.phone) AS whatsapp_number
+                          u.name,
+                          COALESCE(sp.whatsapp_number, s.whatsapp_number, u.phone) AS whatsapp_number,
+                          (COALESCE(sp.is_admin_managed::text, s.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
+                          COALESCE(sp.store_name, s.store_name, u.name) AS store_name
                    FROM seller_orders so
                    JOIN users u ON u.id = so.seller_id
                    LEFT JOIN seller_profiles sp ON sp.user_id = u.id
@@ -119,7 +166,10 @@ async function handleRazorpayWebhook(req, res) {
                     `SELECT NULL AS seller_order_id,
                             u.id AS seller_id,
                             $2::numeric AS subtotal,
-                            COALESCE(sp.whatsapp_number, s.whatsapp_number, u.phone) AS whatsapp_number
+                            u.name,
+                            COALESCE(sp.whatsapp_number, s.whatsapp_number, u.phone) AS whatsapp_number,
+                            (COALESCE(sp.is_admin_managed::text, s.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
+                            COALESCE(sp.store_name, s.store_name, u.name) AS store_name
                      FROM users u
                      LEFT JOIN seller_profiles sp ON sp.user_id = u.id
                      LEFT JOIN sellers s ON s.user_id = u.id
@@ -139,6 +189,17 @@ async function handleRazorpayWebhook(req, res) {
                       buyerName,
                       amount: seller.subtotal || confirmedOrder.total_amount,
                     }).catch(e => console.error('[Webhook WhatsApp]:', e.message));
+                  }
+
+                  if (seller.is_admin_managed) {
+                    await ownerNotifyService.sendAdminAlertEmail('special_order', {
+                      id: confirmedOrder.id,
+                      orderId: String(confirmedOrder.id).slice(0, 8),
+                      shopName: seller.store_name || seller.name || 'Special Shop',
+                      buyerName,
+                      amount: seller.subtotal || confirmedOrder.total_amount,
+                      link: 'https://thetohfa.in/admin/special-orders.html',
+                    }).catch(() => {});
                   }
                 }
               } catch (err) {
