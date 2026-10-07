@@ -468,31 +468,33 @@
       }
     }
     ${isSellerPath ? `
-    @media (max-width: 640px) {
+    #tohfa-chat-mascot {
+      z-index: 40 !important;
+    }
+    @media (max-width: 768px) {
       #tohfa-chat-mascot {
-        width: 48px !important;
-        height: 48px !important;
-        bottom: 16px !important;
+        width: 44px !important;
+        height: 44px !important;
+        bottom: 12px !important;
         right: 12px !important;
       }
       body:has(.sticky-action-bar) #tohfa-chat-mascot,
       body:has(.sticky.bottom-0) #tohfa-chat-mascot,
       #tohfa-chat-mascot.above-sticky-bar {
-        bottom: calc(120px + env(safe-area-inset-bottom, 0px)) !important;
-      }
-    }
-    @media (min-width: 641px) and (max-width: 768px) {
-      body:has(.sticky-action-bar) #tohfa-chat-mascot,
-      body:has(.sticky.bottom-0) #tohfa-chat-mascot,
-      #tohfa-chat-mascot.above-sticky-bar {
-        bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important;
+        bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
       }
     }
     @media (min-width: 769px) {
+      #tohfa-chat-mascot {
+        width: 56px !important;
+        height: 56px !important;
+        bottom: 20px !important;
+        right: 20px !important;
+      }
       body:has(.sticky-action-bar) #tohfa-chat-mascot,
       body:has(.sticky.bottom-0) #tohfa-chat-mascot,
       #tohfa-chat-mascot.above-sticky-bar {
-        bottom: 96px !important;
+        bottom: 80px !important;
       }
     }
     ` : ''}

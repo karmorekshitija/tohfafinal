@@ -1,44 +1,70 @@
 /**
- * Tohfa v2 — Email Service (Dev Stub)
+ * Tohfa v2 — Email Service
  * File: src/services/email.service.js
- * Role: Stub email functions that log in development.
- *       Real SMTP/SendGrid integration will be wired by the integration agent.
- *       Never log passwords, tokens, or sensitive PII beyond email address.
+ * Role: Provides dual-transport email delivery (Resend HTTPS API over Port 443 primary,
+ *       Nodemailer SMTP fallback, and dev test fallback).
+ *       Guards against placeholder credentials and guarantees email delivery on Render Free tier.
  */
 'use strict';
 
 const nodemailer = require('nodemailer');
 
 // ---------------------------------------------------------------------------
-// Transporter Configuration
-// Reads from environment variables. Falls back to Ethereal (fake SMTP) in dev.
-// Required env vars for production: EMAIL_HOST, EMAIL_PORT, EMAIL_USER,
-//   EMAIL_PASS, EMAIL_FROM
+// Credential & Placeholder Validation
 // ---------------------------------------------------------------------------
 
-let _transporter = null;
+function isPlaceholderValue(val) {
+  if (!val || typeof val !== 'string') return true;
+  const s = val.trim().toLowerCase();
+  return (
+    !s ||
+    s.includes('placeholder') ||
+    s.includes('your_') ||
+    s.includes('example.com') ||
+    s === 're_xxxx' ||
+    s === 're_your_api_key_here' ||
+    s === 'your_email@gmail.com' ||
+    s === 'your_app_password'
+  );
+}
+
+function getResendApiKey() {
+  const key = (process.env.RESEND_API_KEY || '').trim();
+  if (isPlaceholderValue(key)) return null;
+  return key;
+}
 
 function sanitizeCredentials() {
-  const user = (process.env.EMAIL_USER || process.env.SMTP_USER || '').trim();
-  const pass = (process.env.EMAIL_PASS || process.env.SMTP_PASS || '').replace(/\s+/g, '');
+  let user = (process.env.EMAIL_USER || process.env.SMTP_USER || '').trim();
+  let pass = (process.env.EMAIL_PASS || process.env.SMTP_PASS || '').replace(/\s+/g, '');
   const host = (process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com').trim();
   const port = parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '465', 10);
   const secure = process.env.EMAIL_SECURE === 'true' || process.env.SMTP_SECURE === 'true' || port === 465;
+
+  if (isPlaceholderValue(user)) user = '';
+  if (isPlaceholderValue(pass)) pass = '';
+
   return { user, pass, host, port, secure };
 }
 
 function getFromAddress() {
-  const { user } = sanitizeCredentials();
-  const configuredFrom = (process.env.EMAIL_FROM || process.env.SMTP_FROM || '').trim();
+  const resendKey = getResendApiKey();
+  const configuredFrom = (process.env.EMAIL_FROM || process.env.SMTP_FROM || process.env.RESEND_FROM || '').trim();
 
-  if (configuredFrom) {
+  if (configuredFrom && !isPlaceholderValue(configuredFrom)) {
     return configuredFrom;
   }
+  const { user } = sanitizeCredentials();
   if (user) {
     return `"Tohfa Gifting" <${user}>`;
   }
+  if (resendKey) {
+    return 'Tohfa <onboarding@resend.dev>';
+  }
   return '"Tohfa Gifting" <hello@thetohfa.in>';
 }
+
+let _transporter = null;
 
 function resetTransporter() {
   _transporter = null;
@@ -108,14 +134,71 @@ async function getTransporter() {
 }
 
 async function verifyConnection() {
+  const resendApiKey = getResendApiKey();
+  if (resendApiKey) {
+    return { success: true, transport: 'resend' };
+  }
   const transporter = await getTransporter();
   return transporter.verify();
 }
 
+/**
+ * Dispatches email using Resend HTTPS API (Primary) or Nodemailer SMTP (Fallback).
+ * @param {string} to - Recipient email address
+ * @param {string} subject - Email subject
+ * @param {string} html - HTML body content
+ * @param {string} [text] - Plain text body fallback
+ * @returns {Promise<{ success: boolean, messageId?: string, error?: string, code?: string }>}
+ */
 async function sendMail(to, subject, html, text) {
   if (module.exports.sendMail && module.exports.sendMail !== sendMail) {
     return module.exports.sendMail(to, subject, html, text);
   }
+
+  if (!to) {
+    console.error('[Email] sendMail called without recipient email');
+    return { success: false, error: 'Missing recipient email' };
+  }
+
+  const resendApiKey = getResendApiKey();
+  const plainText = text || (html ? html.replace(/<[^>]+>/g, '') : '');
+
+  // -------------------------------------------------------------------------
+  // Path A: Primary — Resend HTTPS API (Port 443)
+  // Unblocked on Render Free tier where outbound SMTP ports 25/465/587 are blocked
+  // -------------------------------------------------------------------------
+  if (resendApiKey) {
+    try {
+      const { Resend } = require('resend');
+      const resend = new Resend(resendApiKey);
+      const from = getFromAddress();
+
+      const response = await resend.emails.send({
+        from,
+        to,
+        subject,
+        html,
+        text: plainText,
+      });
+
+      if (response.error) {
+        const errMsg = response.error.message || (typeof response.error === 'string' ? response.error : JSON.stringify(response.error));
+        console.error(`[Email Resend] FAILED sending to ${to} ("${subject}"): ${errMsg}`);
+        return { success: false, error: errMsg };
+      }
+
+      const messageId = response.data?.id || response.id || 'resend_ok';
+      console.log(`[Email Resend] Successfully dispatched email via HTTPS to ${to}: "${subject}" (msgId: ${messageId})`);
+      return { success: true, messageId };
+    } catch (err) {
+      console.error(`[Email Resend] Exception sending to ${to} ("${subject}"): ${err.message}`);
+      return { success: false, error: err.message, code: err.code };
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Path B: Fallback — Nodemailer SMTP
+  // -------------------------------------------------------------------------
   try {
     const transporter = await getTransporter();
     const from = getFromAddress();
@@ -124,12 +207,12 @@ async function sendMail(to, subject, html, text) {
       to,
       subject,
       html,
-      text: text || html.replace(/<[^>]+>/g, ''), // Strip HTML for plain text fallback
+      text: plainText,
     });
-    console.log(`[Email] Successfully dispatched email to ${to}: "${subject}" (msgId: ${info.messageId})`);
+    console.log(`[Email SMTP] Successfully dispatched email to ${to}: "${subject}" (msgId: ${info.messageId})`);
     return { success: true, messageId: info.messageId };
   } catch (err) {
-    console.error(`[Email] FAILED sending to ${to} ("${subject}"): ${err.message}${err.code ? ` [Code: ${err.code}]` : ''}`);
+    console.error(`[Email SMTP] FAILED sending to ${to} ("${subject}"): ${err.message}${err.code ? ` [Code: ${err.code}]` : ''}`);
     return { success: false, error: err.message, code: err.code };
   }
 }
@@ -148,7 +231,7 @@ async function sendPasswordResetEmail(email, resetUrl) {
     <a href="${resetUrl}">Reset Password</a>
     <p>If you didn't request this, you can safely ignore this email.</p>
   `;
-  await sendMail(email, subject, html);
+  return await sendMail(email, subject, html);
 }
 
 /**
@@ -375,9 +458,11 @@ module.exports = {
   sendSellerApprovalEmail,
   sendSellerAccountCreatedEmail,
   sendSellerRejectionEmail,
+  getResendApiKey,
   getTransporter,
   resetTransporter,
   sanitizeCredentials,
   getFromAddress,
   verifyConnection,
 };
+

@@ -140,9 +140,9 @@
         </a>
       </div>
 
-      <!-- Table of Customized Products -->
-      <div id="custom-table-container" class="hidden bg-white rounded-2xl border border-sage/20 shadow-sm overflow-x-auto">
-        <table class="w-full text-left border-collapse min-w-[850px]">
+      <!-- Desktop Table View (>= 768px) -->
+      <div id="custom-table-container" class="hidden md:block bg-white rounded-2xl border border-sage/20 shadow-sm overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[750px]">
           <thead>
             <tr class="bg-primary/5 border-b border-sage/20 text-[10px] font-mono uppercase tracking-wider text-sage font-bold">
               <th class="py-4 px-4">Customized Product</th>
@@ -157,6 +157,11 @@
             <!-- Populated dynamically -->
           </tbody>
         </table>
+      </div>
+
+      <!-- Mobile Card View (< 768px) -->
+      <div id="custom-mobile-cards" class="block md:hidden space-y-3">
+        <!-- Populated dynamically -->
       </div>
     </div>
 
@@ -194,8 +199,8 @@
         </p>
       </div>
 
-      <!-- Table of Customized Orders -->
-      <div id="orders-table-container" class="hidden bg-white rounded-2xl border border-sage/20 shadow-sm overflow-x-auto">
+      <!-- Table of Customized Orders (Desktop >= 768px) -->
+      <div id="orders-table-container" class="hidden md:block bg-white rounded-2xl border border-sage/20 shadow-sm overflow-x-auto">
         <table class="w-full text-left border-collapse min-w-[900px]">
           <thead>
             <tr class="bg-primary/5 border-b border-sage/20 text-[10px] font-mono uppercase tracking-wider text-sage font-bold">
@@ -211,6 +216,11 @@
             <!-- Populated dynamically -->
           </tbody>
         </table>
+      </div>
+
+      <!-- Mobile Card View for Orders (< 768px) -->
+      <div id="orders-mobile-cards" class="block md:hidden space-y-3">
+        <!-- Populated dynamically -->
       </div>
     </div>
 
@@ -353,6 +363,7 @@
 
   function renderCustomProducts() {
     const tbody = document.getElementById('custom-table-body');
+    const mobileCards = document.getElementById('custom-mobile-cards');
     const statusVal = document.getElementById('status-filter').value;
     const sortVal = document.getElementById('sort-filter').value;
     const searchVal = document.getElementById('search-input').value.trim().toLowerCase();
@@ -376,109 +387,222 @@
     }
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="6" class="text-center py-8 text-[#587A5B]">No matching customized products found.</td>
-        </tr>
-      `;
+      if (tbody) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center py-8 text-[#587A5B]">No matching customized products found.</td>
+          </tr>
+        `;
+      }
+      if (mobileCards) {
+        mobileCards.innerHTML = `
+          <div class="bg-white rounded-2xl border border-sage/20 p-8 text-center text-xs text-[#587A5B]">
+            No matching customized products found.
+          </div>
+        `;
+      }
       return;
     }
 
-    tbody.innerHTML = filtered.map(p => {
-      const img = p.product_image || (Array.isArray(p.images) ? p.images[0]?.url || p.images[0] : null) || 'https://ui-avatars.com/api/?name=Artisan&background=f9ecdc&color=3D6B4F&size=64';
-      const basePrice = parseFloat(p.base_price || p.price || 0);
-      
-      let schema = p.customization_schema;
-      if (typeof schema === 'string') {
-        try { schema = JSON.parse(schema); } catch { schema = {}; }
-      }
-      schema = schema || {};
+    // Render Desktop Table Rows
+    if (tbody) {
+      tbody.innerHTML = filtered.map(p => {
+        const img = p.product_image || (Array.isArray(p.images) ? p.images[0]?.url || p.images[0] : null) || 'https://ui-avatars.com/api/?name=Artisan&background=f9ecdc&color=3D6B4F&size=64';
+        const basePrice = parseFloat(p.base_price || p.price || 0);
+        
+        let schema = p.customization_schema;
+        if (typeof schema === 'string') {
+          try { schema = JSON.parse(schema); } catch { schema = {}; }
+        }
+        schema = schema || {};
 
-      const fee = parseFloat(schema.customization_fee || p.customization_fee || 0);
-      let fields = Array.isArray(schema.fields) ? schema.fields : [];
-      if (fields.length === 0 && Array.isArray(p.fixed_customization_options) && p.fixed_customization_options.length > 0) {
-        fields = p.fixed_customization_options.map(fo => ({
-          type: fo.option_type || 'text',
-          label: fo.label,
-          choices: fo.choices || [],
-          max_length: fo.max_length
-        }));
-      }
+        const fee = parseFloat(schema.customization_fee || p.customization_fee || 0);
+        let fields = Array.isArray(schema.fields) ? schema.fields : [];
+        if (fields.length === 0 && Array.isArray(p.fixed_customization_options) && p.fixed_customization_options.length > 0) {
+          fields = p.fixed_customization_options.map(fo => ({
+            type: fo.option_type || 'text',
+            label: fo.label,
+            choices: fo.choices || [],
+            max_length: fo.max_length
+          }));
+        }
 
-      // Extract option chips
-      const optionBadges = [];
-      if (fields.length > 0) {
-        fields.forEach(f => {
-          if (f.type === 'text') {
-            optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-[10px]">Text (${f.max_length || 25} max)</span>`);
-          } else if (f.type === 'select') {
-            const count = Array.isArray(f.choices) ? f.choices.length : 0;
-            optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200 font-mono text-[10px]">Choices (${count} opts)</span>`);
-          } else if (f.type === 'image') {
-            optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-purple-50 text-purple-800 border border-purple-200 font-mono text-[10px]">Photo Upload</span>`);
-          } else if (f.type === 'textarea') {
-            optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 font-mono text-[10px]">Artisan Note</span>`);
-          } else {
-            optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-[10px]">${f.label || 'Option'}</span>`);
-          }
-        });
-      } else {
-        optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-stone-100 text-stone-700 font-mono text-[10px]">Direct Customizer</span>`);
-      }
+        const optionBadges = [];
+        if (fields.length > 0) {
+          fields.forEach(f => {
+            if (f.type === 'text') {
+              optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-[10px]">Text (${f.max_length || 25} max)</span>`);
+            } else if (f.type === 'select') {
+              const count = Array.isArray(f.choices) ? f.choices.length : 0;
+              optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200 font-mono text-[10px]">Choices (${count} opts)</span>`);
+            } else if (f.type === 'image') {
+              optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-purple-50 text-purple-800 border border-purple-200 font-mono text-[10px]">Photo Upload</span>`);
+            } else if (f.type === 'textarea') {
+              optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 font-mono text-[10px]">Artisan Note</span>`);
+            } else {
+              optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-[10px]">${f.label || 'Option'}</span>`);
+            }
+          });
+        } else {
+          optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-stone-100 text-stone-700 font-mono text-[10px]">Direct Customizer</span>`);
+        }
 
-      const craftingTime = schema.crafting_time || (p.preparation_days ? `${p.preparation_days} days` : '5-7 days');
-      optionBadges.push(`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200 font-mono text-[10px]"><span class="material-symbols-outlined text-[12px]">schedule</span>${craftingTime} prep</span>`);
+        const craftingTime = schema.crafting_time || (p.preparation_days ? `${p.preparation_days} days` : '5-7 days');
+        optionBadges.push(`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200 font-mono text-[10px]"><span class="material-symbols-outlined text-[12px]">schedule</span>${craftingTime} prep</span>`);
 
-      const isActive = p.status === 'active';
+        const isActive = p.status === 'active';
 
-      return `
-        <tr class="hover:bg-primary/5 transition-colors">
-          <td class="py-3 px-4">
-            <div class="flex items-center gap-3">
-              <img src="${img}" class="w-12 h-12 rounded-xl object-cover border border-sage/20 shrink-0" alt="${p.name || p.title}"/>
+        return `
+          <tr class="hover:bg-primary/5 transition-colors">
+            <td class="py-3 px-4">
+              <div class="flex items-center gap-3">
+                <img src="${img}" class="w-12 h-12 rounded-xl object-cover border border-sage/20 shrink-0" alt="${p.name || p.title}"/>
+                <div>
+                  <h4 class="font-bold text-[#14381F] text-sm">${p.name || p.title}</h4>
+                  <span class="text-[10px] text-[#587A5B] font-mono">ID: ${String(p.id).substring(0, 8)}</span>
+                </div>
+              </div>
+            </td>
+            <td class="py-3 px-3 font-bold font-mono text-primary text-sm">
+              ₹${basePrice.toLocaleString('en-IN')}
+            </td>
+            <td class="py-3 px-3 font-mono font-semibold ${fee > 0 ? 'text-forest' : 'text-[#587A5B]'}">
+              ${fee > 0 ? `+₹${fee.toLocaleString('en-IN')}` : 'Free'}
+            </td>
+            <td class="py-3 px-4">
+              <div class="flex flex-wrap gap-1.5 max-w-xs">
+                ${optionBadges.join('')}
+              </div>
+            </td>
+            <td class="py-3 px-3">
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold font-mono ${
+                isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-200 text-stone-700'
+              }">
+                ${isActive ? 'Active' : 'Paused'}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-right">
+              <div class="flex items-center justify-end gap-2">
+                <a href="/buyer/product.html?id=${p.id}" target="_blank" title="View Store Preview" class="p-1.5 text-sage hover:text-primary rounded-lg hover:bg-sage/10 transition-colors">
+                  <span class="material-symbols-outlined text-base">visibility</span>
+                </a>
+                <a href="/seller/edit-product.html?id=${p.id}" title="Edit Customizer & Pricing" class="p-1.5 text-sage hover:text-primary rounded-lg hover:bg-sage/10 transition-colors">
+                  <span class="material-symbols-outlined text-base">edit</span>
+                </a>
+                <button onclick="toggleProductStatus('${p.id}', '${p.status}')" title="${isActive ? 'Pause' : 'Activate'}" class="p-1.5 text-sage hover:text-primary rounded-lg hover:bg-sage/10 transition-colors cursor-pointer">
+                  <span class="material-symbols-outlined text-base">${isActive ? 'pause_circle' : 'play_circle'}</span>
+                </button>
+                <button onclick="deleteCustomProduct('${p.id}')" title="Delete Listing" class="p-1.5 text-sage hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors cursor-pointer">
+                  <span class="material-symbols-outlined text-base">delete</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Render Mobile Cards (< 768px)
+    if (mobileCards) {
+      mobileCards.innerHTML = filtered.map(p => {
+        const img = p.product_image || (Array.isArray(p.images) ? p.images[0]?.url || p.images[0] : null) || 'https://ui-avatars.com/api/?name=Artisan&background=f9ecdc&color=3D6B4F&size=64';
+        const basePrice = parseFloat(p.base_price || p.price || 0);
+
+        let schema = p.customization_schema;
+        if (typeof schema === 'string') {
+          try { schema = JSON.parse(schema); } catch { schema = {}; }
+        }
+        schema = schema || {};
+
+        const fee = parseFloat(schema.customization_fee || p.customization_fee || 0);
+        let fields = Array.isArray(schema.fields) ? schema.fields : [];
+        if (fields.length === 0 && Array.isArray(p.fixed_customization_options) && p.fixed_customization_options.length > 0) {
+          fields = p.fixed_customization_options.map(fo => ({
+            type: fo.option_type || 'text',
+            label: fo.label,
+            choices: fo.choices || [],
+            max_length: fo.max_length
+          }));
+        }
+
+        const optionBadges = [];
+        if (fields.length > 0) {
+          fields.forEach(f => {
+            if (f.type === 'text') {
+              optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-[10px]">Text (${f.max_length || 25} max)</span>`);
+            } else if (f.type === 'select') {
+              const count = Array.isArray(f.choices) ? f.choices.length : 0;
+              optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200 font-mono text-[10px]">Choices (${count} opts)</span>`);
+            } else if (f.type === 'image') {
+              optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-purple-50 text-purple-800 border border-purple-200 font-mono text-[10px]">Photo Upload</span>`);
+            } else if (f.type === 'textarea') {
+              optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 font-mono text-[10px]">Artisan Note</span>`);
+            } else {
+              optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-[10px]">${f.label || 'Option'}</span>`);
+            }
+          });
+        } else {
+          optionBadges.push(`<span class="px-2 py-0.5 rounded-md bg-stone-100 text-stone-700 font-mono text-[10px]">Direct Customizer</span>`);
+        }
+
+        const craftingTime = schema.crafting_time || (p.preparation_days ? `${p.preparation_days} days` : '5-7 days');
+        optionBadges.push(`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200 font-mono text-[10px]"><span class="material-symbols-outlined text-[12px]">schedule</span>${craftingTime} prep</span>`);
+
+        const isActive = p.status === 'active';
+
+        return `
+          <div class="bg-white rounded-2xl border border-sage/20 p-4 shadow-xs space-y-3">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <img src="${img}" class="w-12 h-12 rounded-xl object-cover border border-sage/20 shrink-0" alt="${p.name || p.title}"/>
+                <div>
+                  <h4 class="font-bold text-[#14381F] text-sm line-clamp-1">${p.name || p.title}</h4>
+                  <span class="text-[10px] text-[#587A5B] font-mono">ID: ${String(p.id).substring(0, 8)}</span>
+                </div>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold font-mono shrink-0 ${
+                isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-200 text-stone-700'
+              }">
+                ${isActive ? 'Active' : 'Paused'}
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between text-xs bg-[#FFF8E7]/60 p-2.5 rounded-xl border border-sage/10 font-mono">
               <div>
-                <h4 class="font-bold text-[#14381F] text-sm">${p.name || p.title}</h4>
-                <span class="text-[10px] text-[#587A5B] font-mono">ID: ${String(p.id).substring(0, 8)}</span>
+                <span class="text-[10px] text-[#587A5B] block uppercase tracking-wider">Base Price</span>
+                <span class="font-bold text-primary text-sm">₹${basePrice.toLocaleString('en-IN')}</span>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] text-[#587A5B] block uppercase tracking-wider">Custom Fee</span>
+                <span class="font-semibold ${fee > 0 ? 'text-forest' : 'text-[#587A5B]'}">${fee > 0 ? `+₹${fee.toLocaleString('en-IN')}` : 'Free'}</span>
               </div>
             </div>
-          </td>
-          <td class="py-3 px-3 font-bold font-mono text-primary text-sm">
-            ₹${basePrice.toLocaleString('en-IN')}
-          </td>
-          <td class="py-3 px-3 font-mono font-semibold ${fee > 0 ? 'text-forest' : 'text-[#587A5B]'}">
-            ${fee > 0 ? `+₹${fee.toLocaleString('en-IN')}` : 'Free'}
-          </td>
-          <td class="py-3 px-4">
-            <div class="flex flex-wrap gap-1.5 max-w-xs">
-              ${optionBadges.join('')}
+
+            <div>
+              <span class="text-[10px] font-bold font-mono uppercase tracking-wider text-sage block mb-1">Personalization Options</span>
+              <div class="flex flex-wrap gap-1.5">
+                ${optionBadges.join('')}
+              </div>
             </div>
-          </td>
-          <td class="py-3 px-3">
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold font-mono ${
-              isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-200 text-stone-700'
-            }">
-              ${isActive ? 'Active' : 'Paused'}
-            </span>
-          </td>
-          <td class="py-3 px-4 text-right">
-            <div class="flex items-center justify-end gap-2">
-              <a href="/buyer/product.html?id=${p.id}" target="_blank" title="View Store Preview" class="p-1.5 text-sage hover:text-primary rounded-lg hover:bg-sage/10 transition-colors">
-                <span class="material-symbols-outlined text-base">visibility</span>
+
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-sage/10">
+              <a href="/buyer/product.html?id=${p.id}" target="_blank" class="px-3 py-1.5 bg-stone-100 text-[#14381F] hover:bg-stone-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">visibility</span> Preview
               </a>
-              <a href="/seller/edit-product.html?id=${p.id}" title="Edit Customizer & Pricing" class="p-1.5 text-sage hover:text-primary rounded-lg hover:bg-sage/10 transition-colors">
-                <span class="material-symbols-outlined text-base">edit</span>
+              <a href="/seller/edit-product.html?id=${p.id}" class="px-3 py-1.5 bg-sage/10 text-primary hover:bg-sage/20 rounded-lg text-xs font-bold transition-all flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">edit</span> Edit
               </a>
-              <button onclick="toggleProductStatus('${p.id}', '${p.status}')" title="${isActive ? 'Pause' : 'Activate'}" class="p-1.5 text-sage hover:text-primary rounded-lg hover:bg-sage/10 transition-colors">
-                <span class="material-symbols-outlined text-base">${isActive ? 'pause_circle' : 'play_circle'}</span>
+              <button onclick="toggleProductStatus('${p.id}', '${p.status}')" class="px-3 py-1.5 bg-sage/10 text-primary hover:bg-sage/20 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer">
+                <span class="material-symbols-outlined text-sm">${isActive ? 'pause_circle' : 'play_circle'}</span> ${isActive ? 'Pause' : 'Activate'}
               </button>
-              <button onclick="deleteCustomProduct('${p.id}')" title="Delete Listing" class="p-1.5 text-sage hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors">
-                <span class="material-symbols-outlined text-base">delete</span>
+              <button onclick="deleteCustomProduct('${p.id}')" class="p-1.5 text-sage hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-sm">delete</span>
               </button>
             </div>
-          </td>
-        </tr>
-      `;
-    }).join('');
+          </div>
+        `;
+      }).join('');
+    }
   }
 
   // ── Load Customized Orders ───────────────────────────────────────────
@@ -498,6 +622,7 @@
       loadingEl.classList.remove('hidden');
       emptyEl.classList.add('hidden');
       tableContainer.classList.add('hidden');
+      document.getElementById('orders-mobile-cards')?.classList.add('hidden');
 
       const res = await fetch(`${API_BASE}/api/seller/orders?limit=100`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -508,7 +633,6 @@
       const json = await res.json();
       const orders = json.data?.orders || (Array.isArray(json.data) ? json.data : []);
 
-      // Filter only orders with customized items or customization fields
       allCustomOrders = orders.filter(o => {
         if (o.order_type === 'custom' || o.order_type === 'customized' || o.customization || o.customization_summary) return true;
         if (!o.items || !Array.isArray(o.items)) return false;
@@ -521,7 +645,6 @@
         });
       });
 
-      // Update Header & Tab Badges
       document.getElementById('stats-custom-orders').textContent = allCustomOrders.length;
       document.getElementById('tab-badge-orders').textContent = allCustomOrders.length;
 
@@ -530,9 +653,11 @@
       if (allCustomOrders.length === 0) {
         emptyEl.classList.remove('hidden');
         tableContainer.classList.add('hidden');
+        document.getElementById('orders-mobile-cards')?.classList.add('hidden');
       } else {
         emptyEl.classList.add('hidden');
         tableContainer.classList.remove('hidden');
+        document.getElementById('orders-mobile-cards')?.classList.remove('hidden');
         renderCustomOrders();
       }
 
@@ -545,6 +670,7 @@
 
   function renderCustomOrders() {
     const tbody = document.getElementById('orders-table-body');
+    const mobileOrders = document.getElementById('orders-mobile-cards');
     const statusVal = document.getElementById('order-status-filter')?.value || 'all';
     const searchVal = document.getElementById('search-input')?.value.trim().toLowerCase() || '';
 
@@ -560,97 +686,195 @@
     });
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="6" class="text-center py-8 text-[#587A5B]">No matching customized orders found.</td>
-        </tr>
-      `;
+      if (tbody) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center py-8 text-[#587A5B]">No matching customized orders found.</td>
+          </tr>
+        `;
+      }
+      if (mobileOrders) {
+        mobileOrders.innerHTML = `
+          <div class="bg-white rounded-2xl border border-sage/20 p-8 text-center text-xs text-[#587A5B]">
+            No matching customized orders found.
+          </div>
+        `;
+      }
       return;
     }
 
-    tbody.innerHTML = filtered.map(o => {
-      const customItems = (o.items || []).filter(it => {
-        let cData = it.customization_data;
+    if (tbody) {
+      tbody.innerHTML = filtered.map(o => {
+        const customItems = (o.items || []).filter(it => {
+          let cData = it.customization_data;
+          if (typeof cData === 'string') {
+            try { cData = JSON.parse(cData); } catch { cData = null; }
+          }
+          return Boolean(cData && typeof cData === 'object' && Object.keys(cData).length > 0);
+        });
+
+        const primaryItem = customItems[0] || (Array.isArray(o.items) && o.items[0]) || {};
+        let cData = primaryItem.customization_data;
         if (typeof cData === 'string') {
-          try { cData = JSON.parse(cData); } catch { cData = null; }
+          try { cData = JSON.parse(cData); } catch { cData = {}; }
         }
-        return Boolean(cData && typeof cData === 'object' && Object.keys(cData).length > 0);
-      });
+        cData = cData || {};
 
-      const primaryItem = customItems[0] || (Array.isArray(o.items) && o.items[0]) || {};
-      let cData = primaryItem.customization_data;
-      if (typeof cData === 'string') {
-        try { cData = JSON.parse(cData); } catch { cData = {}; }
-      }
-      cData = cData || {};
-
-      if ((!cData || Object.keys(cData).length === 0) && (o.customization_summary || o.customization)) {
-        if (o.customization_summary) {
-          try { cData = typeof o.customization_summary === 'string' ? JSON.parse(o.customization_summary) : o.customization_summary; } catch { cData = { summary_text: o.customization_summary }; }
-        } else if (o.customization) {
-          try { cData = typeof o.customization === 'string' ? JSON.parse(o.customization) : o.customization; } catch { cData = { summary_text: o.customization }; }
+        if ((!cData || Object.keys(cData).length === 0) && (o.customization_summary || o.customization)) {
+          if (o.customization_summary) {
+            try { cData = typeof o.customization_summary === 'string' ? JSON.parse(o.customization_summary) : o.customization_summary; } catch { cData = { summary_text: o.customization_summary }; }
+          } else if (o.customization) {
+            try { cData = typeof o.customization === 'string' ? JSON.parse(o.customization) : o.customization; } catch { cData = { summary_text: o.customization }; }
+          }
         }
-      }
-      let summaryText = cData.summary_text;
-      if (!summaryText && Array.isArray(cData.questions_and_answers)) {
-        summaryText = cData.questions_and_answers.map(qa => `${qa.question}: ${qa.answer}`).join(', ');
-      } else if (!summaryText && cData.selected_options) {
-        summaryText = Object.entries(cData.selected_options).map(([k, v]) => `${k}: ${v}`).join(', ');
-      }
-      if (!summaryText) summaryText = 'Personalized Item';
-      const craftingTime = cData.crafting_time || '5-7 days';
-      const orderTotal = parseFloat(o.total_amount || 0);
+        let summaryText = cData.summary_text;
+        if (!summaryText && Array.isArray(cData.questions_and_answers)) {
+          summaryText = cData.questions_and_answers.map(qa => `${qa.question}: ${qa.answer}`).join(', ');
+        } else if (!summaryText && cData.selected_options) {
+          summaryText = Object.entries(cData.selected_options).map(([k, v]) => `${k}: ${v}`).join(', ');
+        }
+        if (!summaryText) summaryText = 'Personalized Item';
+        const craftingTime = cData.crafting_time || '5-7 days';
+        const orderTotal = parseFloat(o.total_amount || 0);
 
-      const statusMap = {
-        'order_placed': { label: 'New Placed', cls: 'bg-amber-100 text-amber-900 border-amber-300' },
-        'confirmed': { label: 'Confirmed', cls: 'bg-blue-100 text-blue-900 border-blue-300' },
-        'in_crafting': { label: 'In Crafting', cls: 'bg-purple-100 text-purple-900 border-purple-300' },
-        'shipped': { label: 'Dispatched', cls: 'bg-indigo-100 text-indigo-900 border-indigo-300' },
-        'delivered': { label: 'Delivered', cls: 'bg-emerald-100 text-emerald-900 border-emerald-300' },
-        'cancelled': { label: 'Cancelled', cls: 'bg-red-100 text-red-900 border-red-300' }
-      };
-      const badge = statusMap[o.status] || { label: o.status, cls: 'bg-stone-100 text-stone-800 border-stone-200' };
+        const statusMap = {
+          'order_placed': { label: 'New Placed', cls: 'bg-amber-100 text-amber-900 border-amber-300' },
+          'confirmed': { label: 'Confirmed', cls: 'bg-blue-100 text-blue-900 border-blue-300' },
+          'in_crafting': { label: 'In Crafting', cls: 'bg-purple-100 text-purple-900 border-purple-300' },
+          'shipped': { label: 'Dispatched', cls: 'bg-indigo-100 text-indigo-900 border-indigo-300' },
+          'delivered': { label: 'Delivered', cls: 'bg-emerald-100 text-emerald-900 border-emerald-300' },
+          'cancelled': { label: 'Cancelled', cls: 'bg-red-100 text-red-900 border-red-300' }
+        };
+        const badge = statusMap[o.status] || { label: o.status, cls: 'bg-stone-100 text-stone-800 border-stone-200' };
 
-      return `
-        <tr class="hover:bg-primary/5 transition-colors">
-          <td class="py-3 px-4">
-            <div class="font-mono font-bold text-primary text-xs">#${String(o.id).substring(0, 8).toUpperCase()}</div>
-            <div class="text-xs font-semibold text-[#14381F] mt-0.5">${o.buyer_name || 'Buyer'}</div>
-            <div class="text-[10px] text-[#587A5B] font-mono">${new Date(o.created_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-          </td>
-          <td class="py-3 px-4">
-            <div class="font-bold text-[#14381F] text-xs">${primaryItem.product_name || primaryItem.name || 'Customized Item'}</div>
-            <div class="mt-1 p-2 rounded-xl bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-950 max-w-md">
-              <div class="font-bold flex items-center gap-1 text-[10px] uppercase font-mono text-amber-900 mb-0.5">
-                <span class="material-symbols-outlined text-[13px]">auto_fix_high</span>
-                <span>Personalisation Brief</span>
+        return `
+          <tr class="hover:bg-primary/5 transition-colors">
+            <td class="py-3 px-4">
+              <div class="font-mono font-bold text-primary text-xs">#${String(o.id).substring(0, 8).toUpperCase()}</div>
+              <div class="text-xs font-semibold text-[#14381F] mt-0.5">${o.buyer_name || 'Buyer'}</div>
+              <div class="text-[10px] text-[#587A5B] font-mono">${new Date(o.created_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+            </td>
+            <td class="py-3 px-4">
+              <div class="font-bold text-[#14381F] text-xs">${primaryItem.product_name || primaryItem.name || 'Customized Item'}</div>
+              <div class="mt-1 p-2 rounded-xl bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-950 max-w-md">
+                <div class="font-bold flex items-center gap-1 text-[10px] uppercase font-mono text-amber-900 mb-0.5">
+                  <span class="material-symbols-outlined text-[13px]">auto_fix_high</span>
+                  <span>Personalisation Brief</span>
+                </div>
+                <p class="line-clamp-2 leading-relaxed">${summaryText}</p>
               </div>
-              <p class="line-clamp-2 leading-relaxed">${summaryText}</p>
+            </td>
+            <td class="py-3 px-3 font-mono text-[11px] text-amber-900 font-bold">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200">
+                <span class="material-symbols-outlined text-[13px]">schedule</span>
+                <span>${craftingTime}</span>
+              </span>
+            </td>
+            <td class="py-3 px-3 font-mono font-bold text-primary text-sm">
+              ₹${orderTotal.toLocaleString('en-IN')}
+            </td>
+            <td class="py-3 px-3">
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold font-mono border ${badge.cls}">
+                ${badge.label}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-right">
+              <a href="/seller/order-detail.html?id=${o.id}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-[#14381F] text-white rounded-lg text-xs font-bold shadow-xs hover:bg-[#14381F]/90 transition-all active:scale-95">
+                <span>View Brief</span>
+                <span class="material-symbols-outlined text-xs">arrow_forward</span>
+              </a>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    if (mobileOrders) {
+      mobileOrders.innerHTML = filtered.map(o => {
+        const customItems = (o.items || []).filter(it => {
+          let cData = it.customization_data;
+          if (typeof cData === 'string') {
+            try { cData = JSON.parse(cData); } catch { cData = null; }
+          }
+          return Boolean(cData && typeof cData === 'object' && Object.keys(cData).length > 0);
+        });
+
+        const primaryItem = customItems[0] || (Array.isArray(o.items) && o.items[0]) || {};
+        let cData = primaryItem.customization_data;
+        if (typeof cData === 'string') {
+          try { cData = JSON.parse(cData); } catch { cData = {}; }
+        }
+        cData = cData || {};
+
+        if ((!cData || Object.keys(cData).length === 0) && (o.customization_summary || o.customization)) {
+          if (o.customization_summary) {
+            try { cData = typeof o.customization_summary === 'string' ? JSON.parse(o.customization_summary) : o.customization_summary; } catch { cData = { summary_text: o.customization_summary }; }
+          } else if (o.customization) {
+            try { cData = typeof o.customization === 'string' ? JSON.parse(o.customization) : o.customization; } catch { cData = { summary_text: o.customization }; }
+          }
+        }
+        let summaryText = cData.summary_text;
+        if (!summaryText && Array.isArray(cData.questions_and_answers)) {
+          summaryText = cData.questions_and_answers.map(qa => `${qa.question}: ${qa.answer}`).join(', ');
+        } else if (!summaryText && cData.selected_options) {
+          summaryText = Object.entries(cData.selected_options).map(([k, v]) => `${k}: ${v}`).join(', ');
+        }
+        if (!summaryText) summaryText = 'Personalized Item';
+        const craftingTime = cData.crafting_time || '5-7 days';
+        const orderTotal = parseFloat(o.total_amount || 0);
+
+        const statusMap = {
+          'order_placed': { label: 'New Placed', cls: 'bg-amber-100 text-amber-900 border-amber-300' },
+          'confirmed': { label: 'Confirmed', cls: 'bg-blue-100 text-blue-900 border-blue-300' },
+          'in_crafting': { label: 'In Crafting', cls: 'bg-purple-100 text-purple-900 border-purple-300' },
+          'shipped': { label: 'Dispatched', cls: 'bg-indigo-100 text-indigo-900 border-indigo-300' },
+          'delivered': { label: 'Delivered', cls: 'bg-emerald-100 text-emerald-900 border-emerald-300' },
+          'cancelled': { label: 'Cancelled', cls: 'bg-red-100 text-red-900 border-red-300' }
+        };
+        const badge = statusMap[o.status] || { label: o.status, cls: 'bg-stone-100 text-stone-800 border-stone-200' };
+
+        return `
+          <div class="bg-white rounded-2xl border border-sage/20 p-4 shadow-xs space-y-3">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="font-mono font-bold text-primary text-xs">#${String(o.id).substring(0, 8).toUpperCase()}</div>
+                <div class="text-xs font-semibold text-[#14381F] mt-0.5">${o.buyer_name || 'Buyer'}</div>
+                <div class="text-[10px] text-[#587A5B] font-mono">${new Date(o.created_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold font-mono border shrink-0 ${badge.cls}">
+                ${badge.label}
+              </span>
             </div>
-          </td>
-          <td class="py-3 px-3 font-mono text-[11px] text-amber-900 font-bold">
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200">
-              <span class="material-symbols-outlined text-[13px]">schedule</span>
-              <span>${craftingTime}</span>
-            </span>
-          </td>
-          <td class="py-3 px-3 font-mono font-bold text-primary text-sm">
-            ₹${orderTotal.toLocaleString('en-IN')}
-          </td>
-          <td class="py-3 px-3">
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold font-mono border ${badge.cls}">
-              ${badge.label}
-            </span>
-          </td>
-          <td class="py-3 px-4 text-right">
-            <a href="/seller/order-detail.html?id=${o.id}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-[#14381F] text-white rounded-lg text-xs font-bold shadow-xs hover:bg-[#14381F]/90 transition-all active:scale-95">
-              <span>View Brief</span>
-              <span class="material-symbols-outlined text-xs">arrow_forward</span>
-            </a>
-          </td>
-        </tr>
-      `;
-    }).join('');
+
+            <div class="space-y-1.5">
+              <div class="font-bold text-[#14381F] text-xs">${primaryItem.product_name || primaryItem.name || 'Customized Item'}</div>
+              <div class="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-950">
+                <div class="font-bold flex items-center gap-1 text-[10px] uppercase font-mono text-amber-900 mb-0.5">
+                  <span class="material-symbols-outlined text-[13px]">auto_fix_high</span>
+                  <span>Personalisation Brief</span>
+                </div>
+                <p class="line-clamp-3 leading-relaxed">${summaryText}</p>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-xs font-mono border-t border-sage/10 pt-2">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-900 font-bold text-[10px]">
+                <span class="material-symbols-outlined text-[13px]">schedule</span>
+                <span>${craftingTime}</span>
+              </span>
+              <span class="font-bold text-primary text-sm">₹${orderTotal.toLocaleString('en-IN')}</span>
+            </div>
+
+            <div class="flex items-center justify-end pt-1">
+              <a href="/seller/order-detail.html?id=${o.id}" class="w-full inline-flex items-center justify-center gap-1 px-4 py-2 bg-[#14381F] text-white rounded-xl text-xs font-bold shadow-xs hover:bg-[#14381F]/90 transition-all active:scale-95">
+                <span>View Brief & Manage Order</span>
+                <span class="material-symbols-outlined text-xs">arrow_forward</span>
+              </a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
   }
 
   async function toggleProductStatus(productId, currentStatus) {

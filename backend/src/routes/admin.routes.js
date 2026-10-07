@@ -46,6 +46,7 @@ router.get('/audit-logs/:id/diff', adminController.getAuditLogDiff);
 router.get('/whatsapp/outbox', adminController.getWhatsAppOutbox);
 router.post('/whatsapp/outbox/:id/done', adminController.markWhatsAppOutboxDone);
 router.post('/email/test', adminController.testEmail);
+router.get('/email/test', adminController.testEmail);
 
 // 2. Sellers & KYC Authority
 router.get("/plans/overview", adminController.getPlansOverview);

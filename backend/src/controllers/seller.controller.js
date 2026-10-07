@@ -1661,10 +1661,41 @@ async function getSellerOrders(req, res, next) {
         conditions.push(`LOWER(so.status) IN ('pending', 'unfulfilled', 'confirmed', 'order_placed')`);
       } else if (st === 'shipped' || st === 'dispatched') {
         conditions.push(`LOWER(so.status) IN ('shipped', 'dispatched')`);
+      } else if (st === 'custom' || st === 'customized') {
+        conditions.push(`(
+          o.is_special = TRUE OR
+          (o.customization_details IS NOT NULL AND o.customization_details::text NOT IN ('', 'null', '{}')) OR
+          EXISTS (
+            SELECT 1 FROM order_items oi
+            WHERE (oi.seller_order_id = so.id OR oi.order_id = o.id)
+              AND (
+                (oi.customization_data IS NOT NULL AND oi.customization_data::text NOT IN ('', 'null', '{}')) OR
+                (oi.customization_details IS NOT NULL AND oi.customization_details <> '') OR
+                (oi.proof_image_url IS NOT NULL AND oi.proof_image_url <> '')
+              )
+          )
+        )`);
       } else {
         params.push(st);
         conditions.push(`LOWER(so.status) = $${params.length}`);
       }
+    }
+
+    const isCustomFilter = req.query.custom === 'true' || req.query.customized === 'true' || req.query.is_custom === 'true' || req.query.type === 'custom' || req.query.type === 'customized';
+    if (isCustomFilter && !(status && (status.toLowerCase() === 'custom' || status.toLowerCase() === 'customized'))) {
+      conditions.push(`(
+        o.is_special = TRUE OR
+        (o.customization_details IS NOT NULL AND o.customization_details::text NOT IN ('', 'null', '{}')) OR
+        EXISTS (
+          SELECT 1 FROM order_items oi
+          WHERE (oi.seller_order_id = so.id OR oi.order_id = o.id)
+            AND (
+              (oi.customization_data IS NOT NULL AND oi.customization_data::text NOT IN ('', 'null', '{}')) OR
+              (oi.customization_details IS NOT NULL AND oi.customization_details <> '') OR
+              (oi.proof_image_url IS NOT NULL AND oi.proof_image_url <> '')
+            )
+        )
+      )`);
     }
 
     if (search && search.trim()) {
