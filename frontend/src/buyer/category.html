@@ -833,17 +833,22 @@
       const isCustomized = p.listing_type === 'custom' || (p.customization_mode && p.customization_mode !== 'none') || Boolean(p.is_customizable);
       const stock = p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : (p.stock !== undefined ? p.stock : null));
       const isOutOfStock = !isCustomized && (p.status === 'sold_out' || (stock !== null && stock <= 0));
+
       const actionBtnHtml = isOwner
-        ? `<button class="w-full bg-[#14381F]/15 text-[#587A5B] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold opacity-60 cursor-not-allowed text-[11px] sm:text-xs" disabled onclick="event.stopPropagation();">
+        ? `<button class="w-full bg-[#14381F]/15 text-[#587A5B] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold opacity-60 cursor-not-allowed text-[11px] sm:text-xs" disabled onclick="event.preventDefault(); event.stopPropagation();">
              Own Product
            </button>`
-        : isCustomized
-          ? `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs talk-to-seller-btn cursor-pointer" data-id="${p.id}" onclick="event.stopPropagation();">
-               Talk to Seller
+        : isOutOfStock
+          ? `<button class="w-full bg-stone-200 text-stone-500 py-1.5 px-2 rounded-md sm:rounded-lg font-semibold cursor-not-allowed text-[11px] sm:text-xs" disabled onclick="event.preventDefault(); event.stopPropagation();">
+               Out of Stock
              </button>`
-          : `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs add-to-cart-btn cursor-pointer" data-id="${p.id}" onclick="event.stopPropagation();">
-               Add to Cart
-             </button>`;
+          : isCustomized
+            ? `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs customize-btn cursor-pointer flex items-center justify-center gap-1" data-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/buyer/product.html?id=${p.id}';">
+                 <span class="material-symbols-outlined text-[14px]">auto_fix_high</span> Customize Product
+               </button>`
+            : `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs add-to-cart-btn cursor-pointer" data-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation();">
+                 Add to Cart
+               </button>`;
 
       return `
         <a href="/buyer/product.html?id=${p.id}" class="product-card group bg-[#FAF6EE] border border-[rgba(20,56,31,0.15)] rounded-xl p-2.5 sm:p-3 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer relative no-underline text-inherit ${isCarousel ? 'w-[220px] sm:w-[260px] flex-shrink-0 snap-start' : ''} ${isOutOfStock ? 'is-out-of-stock' : ''}">
@@ -1001,22 +1006,25 @@
 
           container.querySelectorAll('.add-to-cart-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
+              e.preventDefault();
               e.stopPropagation();
               const id = btn.getAttribute('data-id');
               await handleAddToCart(id, btn);
             });
           });
 
-          container.querySelectorAll('.talk-to-seller-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
+          container.querySelectorAll('.customize-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.preventDefault();
               e.stopPropagation();
               const id = btn.getAttribute('data-id');
-              await handleTalkToSeller(id, btn);
+              window.location.href = `/buyer/product.html?id=${id}`;
             });
           });
 
           container.querySelectorAll('.toggle-wishlist-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
+              e.preventDefault();
               e.stopPropagation();
               const id = btn.getAttribute('data-id');
               const wishlisted = btn.getAttribute('data-wishlisted') === 'true';
@@ -1037,39 +1045,6 @@
       }
     }
 
-    async function handleTalkToSeller(productId, btn) {
-      const token = sessionStorage.getItem('tohfa_access_token');
-      if (!token) {
-        window.location.href = '/auth/login.html';
-        return;
-      }
-
-      btn.disabled = true;
-      const originalText = btn.innerText;
-      btn.innerText = 'Starting chat...';
-
-      try {
-        const res = await apiClient.post('/customization/requests', {
-          product_id: String(productId).trim(),
-          request_type: 'customization',
-          quantity: 1
-        });
-        if (res.data && res.data.success) {
-          const convId = res.data.data?.conversation_id || res.data.conversation_id;
-          window.location.href = `/buyer/messages.html?conversation_id=${convId}`;
-        } else {
-          throw new Error("Invalid response");
-        }
-      } catch (err) {
-        console.error("Failed to start chat:", err);
-        Toast.show("Directing to inquiry...", "info");
-        window.location.href = `/buyer/product.html?id=${productId}&inquiry=true`;
-      } finally {
-        btn.disabled = false;
-        btn.innerText = originalText;
-      }
-    }
-
     async function handleAddToCart(productId, btn) {
       const token = sessionStorage.getItem('tohfa_access_token');
       if (!token) {
@@ -1077,12 +1052,36 @@
         return;
       }
 
+      let originalHtml = '';
+      if (btn) {
+        if (btn.disabled) return;
+        originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = 'Adding...';
+      }
+
       try {
         const res = await apiClient.post('/cart/items', { product_id: String(productId).trim(), quantity: 1 });
         if (res.data && res.data.success) {
-          Toast.show("Added to your basket!", "success");
-          updateNavCartBadge();
+          Toast.show("Added to cart!", "success");
+          if (btn) btn.innerHTML = 'Added! ✓';
+          await updateNavCartBadge();
+        } else {
+          if (btn) btn.innerHTML = originalHtml;
         }
+      } catch (err) {
+        console.error("Cart error:", err);
+        Toast.show(err.response?.data?.message || err.message || "Failed to add to cart", "error");
+        if (btn) btn.innerHTML = originalHtml;
+      } finally {
+        if (btn) {
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+          }, 1500);
+        }
+      }
+    }
       } catch (err) {
         console.error("Cart error:", err);
       }
@@ -1259,15 +1258,15 @@
         const res = await apiClient.get('/cart');
         if (res.data && res.data.success) {
           const count = res.data.data?.item_count || res.data.data?.items?.length || 0;
-          const navBadge = document.getElementById('nav-cart-badge');
-          if (navBadge) {
+          const badges = document.querySelectorAll('#nav-cart-badge, .cart-badge, #mobile-cart-badge');
+          badges.forEach(navBadge => {
             if (count > 0) {
               navBadge.innerText = count;
               navBadge.classList.remove('hidden');
             } else {
               navBadge.classList.add('hidden');
             }
-          }
+          });
         }
       } catch (e) {}
     }

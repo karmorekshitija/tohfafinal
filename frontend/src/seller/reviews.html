@@ -56,11 +56,11 @@
         <div class="bg-[#FFF8E7] border border-sage rounded-xl p-lg custom-shadow flex flex-col items-center justify-center text-center relative overflow-hidden">
 
             <p class="font-label-caps text-label-caps text-on-surface-variant mb-2">Overall Rating</p>
-            <h2 class="font-data-price text-[48px] text-primary mb-2" id="summary-avg">4.7</h2>
+            <h2 class="font-data-price text-[48px] text-primary mb-2" id="summary-avg">—</h2>
             <div class="flex gap-1 mb-1" id="summary-stars">
                 <!-- Stars rendered dynamically -->
             </div>
-            <p class="font-body-md text-on-surface-variant" id="summary-total-label">Based on 0 reviews</p>
+            <p class="font-body-md text-on-surface-variant" id="summary-total-label">No reviews yet</p>
         </div>
         <!-- Total Reviews & Graph -->
         <div class="bg-[#FFF8E7] border border-sage rounded-xl p-lg custom-shadow relative overflow-hidden">
@@ -80,7 +80,7 @@
             </div>
             <div class="text-xs text-on-surface-variant mt-4 flex items-center gap-1.5">
                 <span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
-                Response Rate: <span id="summary-response-rate">100%</span>
+                Response Rate: <span id="summary-response-rate">—</span>
             </div>
         </div>
     </div>
@@ -197,6 +197,11 @@
     }
 
     function renderStars(r) {
+        if (!r || isNaN(r) || Number(r) <= 0) {
+            return [1, 2, 3, 4, 5].map(() =>
+                `<span class="material-symbols-outlined text-outline-variant text-sm">star</span>`
+            ).join('');
+        }
         let stars = '';
         for (let i = 1; i <= 5; i++) {
             if (i <= Math.floor(r)) {
@@ -235,30 +240,64 @@
 
             const rawReviews = data?.reviews || [];
             const summary = data?.summary || {
-                avg_rating: rawReviews.length ? (rawReviews.reduce((acc, r) => acc + Number(r.rating || 5), 0) / rawReviews.length) : 5.0,
+                avg_rating: rawReviews.length ? (rawReviews.reduce((acc, r) => acc + Number(r.rating || 5), 0) / rawReviews.length) : 0,
                 total_reviews: rawReviews.length,
-                pending_replies: rawReviews.filter(r => !r.reply).length,
-                response_rate_pct: 100,
+                pending_replies: rawReviews.filter(r => !r.reply && !r.seller_reply).length,
+                response_rate_pct: null,
                 rating_distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
             };
 
             const totalReviews = Number(summary.total_reviews || rawReviews.length || 0);
-            const avgRating = summary.avg_rating ? Number(summary.avg_rating).toFixed(1) : '5.0';
+            const avgRatingNum = Number(summary.avg_rating || 0);
 
-            // Render stats
-            if (document.getElementById('summary-avg')) document.getElementById('summary-avg').textContent = avgRating;
-            if (document.getElementById('summary-stars')) document.getElementById('summary-stars').innerHTML = renderStars(Number(avgRating));
-            if (document.getElementById('summary-total-label')) document.getElementById('summary-total-label').textContent = `Based on ${totalReviews} review${totalReviews !== 1 ? 's' : ''}`;
-            if (document.getElementById('summary-pending')) document.getElementById('summary-pending').textContent = summary.pending_replies || 0;
-            if (document.getElementById('summary-response-rate')) document.getElementById('summary-response-rate').textContent = `${summary.response_rate_pct ?? 100}%`;
+            if (totalReviews === 0) {
+                // Legitimate Zero-State
+                if (document.getElementById('summary-avg')) {
+                    document.getElementById('summary-avg').textContent = '—';
+                }
+                if (document.getElementById('summary-stars')) {
+                    document.getElementById('summary-stars').innerHTML = [1, 2, 3, 4, 5].map(() =>
+                        `<span class="material-symbols-outlined text-outline-variant text-sm">star</span>`
+                    ).join('');
+                }
+                if (document.getElementById('summary-total-label')) {
+                    document.getElementById('summary-total-label').textContent = 'No reviews yet';
+                }
+                if (document.getElementById('summary-pending')) {
+                    document.getElementById('summary-pending').textContent = '0';
+                }
+                if (document.getElementById('summary-response-rate')) {
+                    document.getElementById('summary-response-rate').textContent = '—';
+                }
+            } else {
+                // Genuine Authenticated Data
+                const avgRatingStr = avgRatingNum.toFixed(1);
+                if (document.getElementById('summary-avg')) {
+                    document.getElementById('summary-avg').textContent = avgRatingStr;
+                }
+                if (document.getElementById('summary-stars')) {
+                    document.getElementById('summary-stars').innerHTML = renderStars(avgRatingNum);
+                }
+                if (document.getElementById('summary-total-label')) {
+                    document.getElementById('summary-total-label').textContent = `Based on ${totalReviews} review${totalReviews !== 1 ? 's' : ''}`;
+                }
+                if (document.getElementById('summary-pending')) {
+                    document.getElementById('summary-pending').textContent = summary.pending_replies || 0;
+                }
+                if (document.getElementById('summary-response-rate')) {
+                    const rate = summary.response_rate_pct !== undefined && summary.response_rate_pct !== null
+                        ? `${summary.response_rate_pct}%`
+                        : '—';
+                    document.getElementById('summary-response-rate').textContent = rate;
+                }
+            }
 
             // Rating distribution
-            const total = totalReviews > 0 ? totalReviews : 1;
             const dist = summary.rating_distribution || {};
             if (document.getElementById('distribution-wrap')) {
                 document.getElementById('distribution-wrap').innerHTML = [5, 4, 3, 2, 1].map(stars => {
                     const count = dist[String(stars)] || 0;
-                    const pct = Math.round((count / total) * 100);
+                    const pct = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0;
                     return `
                         <div class="flex items-center gap-3">
                             <span class="font-data-price text-xs w-4">${stars}★</span>

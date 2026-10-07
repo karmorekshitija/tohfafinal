@@ -248,7 +248,7 @@ async function getSellerReviews(req, res, next) {
     const total = parseInt(statsRows[0]?.total || 0, 10);
     const avgRating = parseFloat(statsRows[0]?.avg_rating) || 0;
     const pendingReplies = parseInt(statsRows[0]?.pending_replies || 0, 10);
-    const responseRate = total > 0 ? Math.round(((total - pendingReplies) / total) * 100) : 100;
+    const responseRate = total > 0 ? Math.round(((total - pendingReplies) / total) * 100) : null;
 
     const formattedReviews = rows.map(r => ({
       id: r.id,
@@ -269,10 +269,10 @@ async function getSellerReviews(req, res, next) {
     }));
 
     const summary = {
-      avg_rating: avgRating || 5.0,
+      avg_rating: total > 0 ? avgRating : 0,
       total_reviews: total,
       pending_replies: pendingReplies,
-      response_rate_pct: responseRate,
+      response_rate_pct: total > 0 ? responseRate : null,
       rating_distribution: {
         5: parseInt(statsRows[0]?.star_5 || 0, 10),
         4: parseInt(statsRows[0]?.star_4 || 0, 10),
