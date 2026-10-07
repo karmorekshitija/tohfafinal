@@ -267,7 +267,8 @@ footer {
    Global Form & Input overrides
    ========================================================================== */
 @media (max-width: 767px) {
-  input,
+  /* Apply 44px min-height only to text/number/select inputs */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
   textarea,
   select,
   .form-input {
@@ -276,13 +277,37 @@ footer {
     min-height: 44px !important;
     box-sizing: border-box !important;
   }
-  
-  label,
-  .form-label {
+
+  /* Reset and enforce strict compact sizing for checkboxes and radios */
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
+    display: inline-block !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+    accent-color: #14381F !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Prevent breaking flex-based labels, toggle switches, and check containers */
+  label:not(.flex):not(.inline-flex):not(.cursor-pointer):not(.form-check-label) {
     display: block !important;
     margin-bottom: 4px !important;
     text-align: left !important;
-    width: 100% !important;
+  }
+
+  label.flex,
+  label.inline-flex,
+  label:has(input[type="checkbox"]),
+  label:has(input[type="radio"]) {
+    display: flex !important;
+    width: auto !important;
+    align-items: center !important;
   }
 
   /* 2-column and 3-column form rows for paired compact inputs */

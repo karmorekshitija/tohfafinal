@@ -562,17 +562,18 @@ class SellerTopBar extends HTMLElement {
       });
     }
 
-    // Check if admin is currently acting as a TOFA Special shop
+    // Check if admin is currently acting as a Seller Studio or TOFA Special shop
     const switchContextRaw = sessionStorage.getItem('tohfa_admin_switch_context');
     if (switchContextRaw) {
       try {
         const ctx = JSON.parse(switchContextRaw);
         const banner = document.createElement('div');
         banner.className = 'w-full bg-[#14381F] text-[#FFF8E7] px-4 py-2 flex items-center justify-between text-xs font-medium z-50 fixed top-0 left-0 right-0 border-b border-amber-400/40 shadow-sm';
+        const studioTypeLabel = ctx.isSpecialShop ? '(TOFA Special Shop)' : '(Artisan Studio)';
         banner.innerHTML = `
           <div class="flex items-center gap-2">
             <span class="px-2 py-0.5 bg-amber-400 text-stone-950 font-bold text-[10px] uppercase rounded tracking-wider">Admin Mode</span>
-            <span>Operating Studio as <strong>${ctx.actingAs || 'Special Shop'}</strong> (TOFA Special Shop)</span>
+            <span>Operating Studio as <strong>${ctx.actingAs || 'Artisan Studio'}</strong> ${studioTypeLabel}</span>
           </div>
           <button id="return-to-admin-btn" class="px-3 py-1 bg-white/15 hover:bg-white/25 text-[#FFF8E7] rounded font-semibold text-[11px] flex items-center gap-1 transition-colors cursor-pointer border-none">
             <span>Exit to Admin Panel</span>
@@ -591,6 +592,7 @@ class SellerTopBar extends HTMLElement {
         if (returnBtn) {
           returnBtn.addEventListener('click', () => {
             sessionStorage.removeItem('tohfa_admin_switch_context');
+            sessionStorage.removeItem('tohfa_seller_profile_cache');
             window.location.href = ctx.returnUrl || '/admin/sellers.html';
           });
         }

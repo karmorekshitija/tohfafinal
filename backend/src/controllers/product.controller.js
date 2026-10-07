@@ -467,7 +467,16 @@ async function listProducts(req, res, next) {
     }
     if (seller_id) {
       params.push(seller_id);
-      conditions.push(`(p.seller_id::text = $${params.length})`);
+      const sIdx = params.length;
+      conditions.push(`(
+        p.seller_id::text = $${sIdx}
+        OR sp.slug = $${sIdx}
+        OR s.slug = $${sIdx}
+        OR sp.handle = $${sIdx}
+        OR s.handle = $${sIdx}
+        OR sp.id::text = $${sIdx}
+        OR s.id::text = $${sIdx}
+      )`);
     }
 
     const checkFeatured = featured === 'true' || is_featured === 'true';
@@ -583,7 +592,7 @@ async function forYouFeed(req, res, next) {
          LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
          LEFT JOIN sellers s ON s.user_id = p.seller_id
          LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
-         WHERE (p.status = 'active' OR p.is_active = TRUE)
+         WHERE p.status = 'active' AND (p.is_active IS NULL OR p.is_active = TRUE)
            AND (
              sp.verification_status = 'verified'
              OR s.verification_status = 'verified'
@@ -623,7 +632,7 @@ async function forYouFeed(req, res, next) {
          LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
          LEFT JOIN sellers s ON s.user_id = p.seller_id
          LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
-         WHERE (p.status = 'active' OR p.is_active = TRUE)
+         WHERE p.status = 'active' AND (p.is_active IS NULL OR p.is_active = TRUE)
            AND (
              sp.verification_status = 'verified'
              OR s.verification_status = 'verified'
@@ -670,7 +679,7 @@ async function getSponsoredProducts(req, res, next) {
        LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
        LEFT JOIN sellers s ON s.user_id = p.seller_id
        LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
-       WHERE (p.status = 'active' OR p.is_active = TRUE)
+       WHERE p.status = 'active' AND (p.is_active IS NULL OR p.is_active = TRUE)
          AND p.is_sponsored = TRUE
          AND (
            sp.verification_status = 'verified'
@@ -715,7 +724,7 @@ async function getSponsoredProducts(req, res, next) {
          LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
          LEFT JOIN sellers s ON s.user_id = p.seller_id
          LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
-         WHERE (p.status = 'active' OR p.is_active = TRUE)
+         WHERE p.status = 'active' AND (p.is_active IS NULL OR p.is_active = TRUE)
            AND NOT (p.id::text = ANY($1::text[]))
            AND (
              sp.verification_status = 'verified'
@@ -767,7 +776,7 @@ async function getTrendingProducts(req, res, next) {
        LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
        LEFT JOIN sellers s ON s.user_id = p.seller_id
        LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
-       WHERE (p.status = 'active' OR p.is_active = TRUE)
+       WHERE p.status = 'active' AND (p.is_active IS NULL OR p.is_active = TRUE)
          AND (
            sp.verification_status = 'verified'
            OR s.verification_status = 'verified'
@@ -864,7 +873,7 @@ async function searchProducts(req, res, next) {
        LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
        LEFT JOIN sellers s ON s.user_id = p.seller_id
        LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
-       WHERE (p.status = 'active' OR p.is_active = TRUE)
+       WHERE p.status = 'active' AND (p.is_active IS NULL OR p.is_active = TRUE)
          AND (
            sp.verification_status = 'verified'
            OR s.verification_status = 'verified'
@@ -1017,19 +1026,22 @@ async function getSellerProducts(req, res, next) {
     const conditions = [`p.seller_id::text = ANY($1)`];
     const params = [sellerIdArray];
 
+    const callerRole = String(req.user?.role || '').toUpperCase();
+    const isSellerOrAdmin = ['SELLER', 'ADMIN', 'MASTER_ADMIN'].includes(callerRole);
+
     // Status filtering: Exclude soft-deleted products
     if (status && status !== 'all') {
       params.push(status);
       conditions.push(`p.status = $${params.length}`);
       if (status !== 'deleted') {
-        conditions.push("p.is_active = TRUE");
+        conditions.push('(p.is_active IS NULL OR p.is_active = TRUE)');
       }
     } else {
       conditions.push("p.status != 'deleted'");
-      conditions.push("p.is_active = TRUE");
-      if (!req.seller && !isAdmin) {
-        // For unauthenticated/public seller storefront view, only show active
+      if (!isSellerOrAdmin) {
+        // Guest / public storefront view only sees active products
         conditions.push("p.status = 'active'");
+        conditions.push('(p.is_active IS NULL OR p.is_active = TRUE)');
       }
     }
 
@@ -1813,7 +1825,28 @@ async function updateProductStatus(req, res, next) {
       return res.status(400).json({ success: false, message: `Status must be one of: ${allowed.join(', ')}.` });
     }
 
-    if (status === 'active' && String(req.user?.role || '').toLowerCase() === 'seller') {
+    const { rows: matchedSellers } = await query(
+      'SELECT id, user_id FROM sellers WHERE id::text = $1 OR user_id::text = $1 UNION SELECT id, user_id FROM seller_profiles WHERE id::text = $1 OR user_id::text = $1',
+      [String(sellerId)]
+    );
+    const sellerIds = new Set([String(sellerId)]);
+    matchedSellers.forEach(s => {
+      if (s.id) sellerIds.add(String(s.id));
+      if (s.user_id) sellerIds.add(String(s.user_id));
+    });
+    const sellerIdArray = Array.from(sellerIds);
+    const callerRole = String(req.user?.role || '').toUpperCase();
+    const isAdmin = callerRole === 'ADMIN' || callerRole === 'MASTER_ADMIN';
+
+    const { rows: existingRows } = await query(
+      'SELECT id, seller_id, status FROM products WHERE id::text = $1 AND (seller_id::text = ANY($2) OR $3 = TRUE)',
+      [String(id), sellerIdArray, isAdmin]
+    );
+    if (!existingRows.length) {
+      return res.status(404).json({ success: false, message: 'Product not found.' });
+    }
+
+    if (status === 'active' && existingRows[0].status !== 'paused' && callerRole === 'SELLER') {
       const onboardingStatus = await getSellerOnboardingStatus(sellerId);
       if (!onboardingStatus.hasBillingAddress || !onboardingStatus.hasBankingDetails) {
         return res.status(403).json({
@@ -1826,9 +1859,9 @@ async function updateProductStatus(req, res, next) {
 
     const { rows } = await query(
       `UPDATE products SET status = $1, updated_at = NOW()
-       WHERE id = $2 AND (seller_id = $3 OR $4 = TRUE)
+       WHERE id::text = $2 AND (seller_id::text = ANY($3) OR $4 = TRUE)
        RETURNING id, seller_id, status, updated_at`,
-      [status, id, sellerId, req.user?.role === 'admin' || req.user?.role === 'master_admin']
+      [status, String(id), sellerIdArray, isAdmin]
     );
 
     if (!rows.length) {
@@ -2349,7 +2382,7 @@ async function getRecommendations(req, res, next) {
        LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
        LEFT JOIN sellers s ON s.user_id = p.seller_id
        WHERE (p.id::text != $1 AND p.slug != $1)
-         AND (p.status = 'active' OR p.is_active = TRUE)
+         AND p.status = 'active' AND (p.is_active IS NULL OR p.is_active = TRUE)
          AND (
            sp.verification_status = 'verified'
            OR s.verification_status = 'verified'

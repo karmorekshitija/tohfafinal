@@ -297,9 +297,9 @@
         </div>
         <div>
           <label class="field-label" for="f-handle">Username / Handle</label>
-          <div class="flex items-center">
-            <span class="bg-surface-container border border-outline-variant border-r-0 px-3 py-[10px] rounded-l-[10px] text-sm text-on-surface-variant font-medium select-none">@</span>
-            <input class="field-input rounded-l-none" id="f-handle" name="handle" placeholder="your_handle" type="text" style="border-top-left-radius:0;border-bottom-left-radius:0;"/>
+          <div class="flex items-center w-full">
+            <span class="inline-flex items-center justify-center h-11 px-3.5 bg-[#F2ECE1] border border-[#285C3A]/20 border-r-0 rounded-l-xl text-sm font-bold text-[#14381F] select-none shrink-0">@</span>
+            <input class="field-input h-11 rounded-l-none flex-1 min-w-0" id="f-handle" name="handle" placeholder="your_handle" type="text" style="border-top-left-radius:0;border-bottom-left-radius:0;"/>
           </div>
           <p class="field-error" id="err-handle"></p>
           <p id="handle-status" class="text-xs mt-1 hidden"></p>
@@ -810,6 +810,7 @@ async function uploadBanner(file) {
   reader.readAsDataURL(file);
   const fd = new FormData();
   fd.append('banner', file);
+  fd.append('cover', file);
   try {
     const res = await fetch(`${API}/api/seller/profile/banner`, {
       method: 'POST',

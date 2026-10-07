@@ -964,6 +964,12 @@ function renderSellers(sellers) {
     } else {
       actionButtons = `
         <div class="flex items-center justify-center gap-1.5">
+          <button class="enter-studio-btn px-2.5 py-1 bg-[#14381F] text-[#FFF8E7] hover:bg-[#285C3A] font-bold text-[11px] rounded transition-all flex items-center gap-1"
+                  data-id="${seller.user_id || seller.id}"
+                  data-name="${seller.store_name || seller.name}">
+            <span class="material-symbols-outlined text-[13px]">launch</span>
+            <span>Studio</span>
+          </button>
           <button class="open-kyc-approve-btn px-2.5 py-1 bg-stone-100 text-primary border border-sage-border hover:bg-stone-200 font-bold text-[11px] rounded transition-all"
                   data-id="${seller.id}" data-name="${seller.store_name || seller.name}" data-email="${seller.email || ''}">
             Override Rate
@@ -1179,6 +1185,89 @@ function attachSellerEventListeners() {
         } catch (err) {
           showToast(err.response?.data?.message || 'Failed to reactivate seller.', 'error');
         }
+      }
+    });
+  });
+
+  document.querySelectorAll('.enter-studio-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute('data-id');
+      const sellerName = btn.getAttribute('data-name') || 'Artisan Studio';
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="material-symbols-outlined animate-spin text-[13px]">progress_activity</span><span>Studio</span>`;
+
+      try {
+        // Preserve current admin token before switching session so admin can return seamlessly
+        const currentAdminToken =
+          sessionStorage.getItem('tohfa_admin_token') ||
+          localStorage.getItem('tohfa_admin_token') ||
+          sessionStorage.getItem('tohfa_access_token') ||
+          localStorage.getItem('tohfa_access_token');
+        if (currentAdminToken) {
+          sessionStorage.setItem('tohfa_admin_token', currentAdminToken);
+          localStorage.setItem('tohfa_admin_token', currentAdminToken);
+        }
+
+        const res = await adminApiClient.post(`/admin/sellers/${id}/switch-session`);
+        if (res.data?.success) {
+          const { user, accessToken, refreshToken, token } = res.data.data;
+          const jwtToken = token || accessToken;
+          const userStr = JSON.stringify(user);
+
+          // Clear stale tokens and seller profile cache
+          localStorage.removeItem('token');
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('auth_token');
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('accessToken');
+          sessionStorage.removeItem('auth_token');
+          sessionStorage.removeItem('tohfa_seller_profile_cache');
+
+          // Sync tokens across both sessionStorage & localStorage
+          sessionStorage.setItem('tohfa_access_token', jwtToken);
+          sessionStorage.setItem('tohfa_auth_token', jwtToken);
+          localStorage.setItem('tohfa_access_token', jwtToken);
+          localStorage.setItem('tohfa_auth_token', jwtToken);
+          localStorage.setItem('token', jwtToken);
+          localStorage.setItem('accessToken', jwtToken);
+
+          if (refreshToken) {
+            sessionStorage.setItem('tohfa_refresh_token', refreshToken);
+            localStorage.setItem('tohfa_refresh_token', refreshToken);
+          }
+
+          // Sync user profiles across all key variants
+          sessionStorage.setItem('tohfa_user', userStr);
+          localStorage.setItem('tohfa_user', userStr);
+          sessionStorage.setItem('tohfa_user_data', userStr);
+          localStorage.setItem('tohfa_user_data', userStr);
+          sessionStorage.setItem('tohfa_user_role', 'seller');
+          localStorage.setItem('tohfa_user_role', 'seller');
+
+          // Set switch context for Admin Mode banner and seller studio queries
+          sessionStorage.setItem('tohfa_admin_switch_context', JSON.stringify({
+            actingAs: user.store_name || user.name || sellerName,
+            sellerId: user.id || id,
+            shopId: user.id || id,
+            isSpecialShop: false,
+            returnUrl: '/admin/sellers.html'
+          }));
+
+          showToast(`Switching into "${user.store_name || sellerName}" studio...`, 'success');
+          setTimeout(() => {
+            window.location.href = '/seller/dashboard.html';
+          }, 250);
+        } else {
+          showToast(res.data?.message || 'Failed to switch into seller studio.', 'error');
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+        }
+      } catch (err) {
+        showToast(err.response?.data?.message || 'Failed to switch into seller studio.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
       }
     });
   });
@@ -2032,6 +2121,7 @@ function renderSpecialShops(shops) {
           sessionStorage.removeItem('token');
           sessionStorage.removeItem('accessToken');
           sessionStorage.removeItem('auth_token');
+          sessionStorage.removeItem('tohfa_seller_profile_cache');
 
           // Sync tokens across both sessionStorage & localStorage
           sessionStorage.setItem('tohfa_access_token', jwtToken);
@@ -2057,7 +2147,9 @@ function renderSpecialShops(shops) {
           // Set switch context for Admin Mode banner
           sessionStorage.setItem('tohfa_admin_switch_context', JSON.stringify({
             actingAs: user.store_name || user.name,
+            sellerId: user.id || shopId,
             shopId: shopId,
+            isSpecialShop: true,
             returnUrl: '/admin/sellers.html?tab=specials'
           }));
 

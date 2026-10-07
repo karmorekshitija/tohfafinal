@@ -11,6 +11,7 @@ const logisticsService = require('../services/logistics.service');
 const whatsappService = require('../services/whatsapp.service');
 const bestsellerService = require('../services/bestseller.service');
 const ownerNotifyService = require('../services/ownerNotify.service');
+const emailService = require('../services/email.service');
 const { query, getClient } = require('../config/db');
 
 /**
@@ -199,23 +200,49 @@ async function verifyPayment(req, res, next) {
     logisticsService.createShipment(confirmedOrder, { fromPayment: true }).catch(e => console.error('[Logistics Dispatch Error]:', e.message));
     bestsellerService.recomputeForOrder(confirmedOrder.id || orderId).catch(e => console.error('[Bestseller Recompute Error]:', e.message));
 
+    // Send Order Confirmation Email to Buyer (awaited inside try/catch so Render free tier does not kill the socket)
+    try {
+      const [buyerRes, itemsRes] = await Promise.all([
+        query('SELECT email, name FROM users WHERE id = $1', [confirmedOrder.buyer_id]),
+        query(
+          `SELECT COALESCE(p.name, 'Handcrafted Gift') AS name, oi.quantity
+           FROM order_items oi
+           LEFT JOIN products p ON p.id = oi.product_id
+           WHERE oi.order_id = $1`,
+          [confirmedOrder.id]
+        ),
+      ]);
+      const buyer = buyerRes.rows[0] || {};
+      const recipientEmail = buyer.email || req.user?.email;
+      if (recipientEmail) {
+        await emailService.sendOrderConfirmationEmail(recipientEmail, {
+          orderId: String(confirmedOrder.id).slice(0, 8),
+          buyerName: buyer.name || req.user?.name || 'Customer',
+          totalAmount: confirmedOrder.total_amount,
+          items: itemsRes.rows || [],
+        });
+      }
+    } catch (emailErr) {
+      console.error('[Payment] Order confirmation email error:', emailErr.message);
+    }
 
     // Notify seller(s) via WhatsApp (and admin email if special)
-    query(
-      `SELECT so.id AS seller_order_id,
-              so.seller_id,
-              so.subtotal,
-              u.name,
-              COALESCE(sp.whatsapp_number, s.whatsapp_number, u.phone) AS whatsapp_number,
-              (COALESCE(sp.is_admin_managed::text, s.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
-              COALESCE(sp.store_name, s.store_name, u.name) AS store_name
-       FROM seller_orders so
-       JOIN users u ON u.id = so.seller_id
-       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
-       LEFT JOIN sellers s ON s.user_id = u.id
-       WHERE so.order_id = $1`,
-      [confirmedOrder.id]
-    ).then(async ({ rows: sellerOrderRows }) => {
+    try {
+      const { rows: sellerOrderRows } = await query(
+        `SELECT so.id AS seller_order_id,
+                so.seller_id,
+                so.subtotal,
+                u.name,
+                COALESCE(sp.whatsapp_number, s.whatsapp_number, u.phone) AS whatsapp_number,
+                (COALESCE(sp.is_admin_managed::text, s.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed,
+                COALESCE(sp.store_name, s.store_name, u.name) AS store_name
+         FROM seller_orders so
+         JOIN users u ON u.id = so.seller_id
+         LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+         LEFT JOIN sellers s ON s.user_id = u.id
+         WHERE so.order_id = $1`,
+        [confirmedOrder.id]
+      );
       let sellersToNotify = sellerOrderRows;
 
       // Fallback to confirmedOrder.seller_id if no sub-orders exist
@@ -251,7 +278,7 @@ async function verifyPayment(req, res, next) {
 
         if (seller.is_admin_managed) {
           // Admin alert for special orders
-          ownerNotifyService.sendAdminAlertEmail('special_order', {
+          await ownerNotifyService.sendAdminAlertEmail('special_order', {
             id: confirmedOrder.id,
             orderId: String(confirmedOrder.id).slice(0, 8),
             shopName: seller.store_name || seller.name || 'Special Shop',
@@ -261,7 +288,9 @@ async function verifyPayment(req, res, next) {
           }).catch(() => {});
         }
       }
-    }).catch(e => console.error('[Seller Query Error]:', e.message));
+    } catch (e) {
+      console.error('[Seller Query Error]:', e.message);
+    }
 
     // In-app notification for buyer
     query(

@@ -45,6 +45,7 @@ router.get('/audit-logs', adminController.listAuditLogs);
 router.get('/audit-logs/:id/diff', adminController.getAuditLogDiff);
 router.get('/whatsapp/outbox', adminController.getWhatsAppOutbox);
 router.post('/whatsapp/outbox/:id/done', adminController.markWhatsAppOutboxDone);
+router.post('/email/test', adminController.testEmail);
 
 // 2. Sellers & KYC Authority
 router.get("/plans/overview", adminController.getPlansOverview);
@@ -76,6 +77,9 @@ router.post('/sellers/:id/reject', adminController.rejectSeller);
 router.patch('/sellers/:id/reject', adminController.rejectSeller);
 router.post('/sellers/:id/ban', adminController.banSeller);
 router.delete('/sellers/:id', adminController.banSeller);
+router.post('/sellers/:id/switch-session', authMiddleware, adminOnly, adminController.switchSessionToSeller);
+router.post('/sellers/:sellerId/switch-session', authMiddleware, adminOnly, adminController.switchSessionToSeller);
+router.post('/sellers/:id/impersonate', authMiddleware, adminOnly, adminController.switchSessionToSeller);
 
 router.get('/seller-applications', (req, res, next) => {
   req.query.status = req.query.status || 'pending';

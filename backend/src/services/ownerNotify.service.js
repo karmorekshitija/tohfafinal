@@ -23,14 +23,17 @@ const whatsappConfig = require('../config/whatsapp');
 let _transporter = null;
 async function getTransporter() {
   if (_transporter) return _transporter;
+  const port = parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '465', 10);
+  const secure = process.env.EMAIL_SECURE === 'true' || process.env.SMTP_SECURE === 'true' || port === 465;
   _transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.EMAIL_PORT || '587', 10),
-    secure: process.env.EMAIL_SECURE === 'true',
+    host: (process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com').trim(),
+    port,
+    secure,
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      user: (process.env.EMAIL_USER || process.env.SMTP_USER || '').trim(),
+      pass: (process.env.EMAIL_PASS || process.env.SMTP_PASS || '').replace(/\s+/g, ''),
     },
+    family: 4,
   });
   return _transporter;
 }
@@ -45,7 +48,7 @@ async function sendMail(to, subject, html, text) {
   try {
     const transporter = await getTransporter();
     const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM || '"Tohfa Gifting" <hello@thetohfa.in>',
+      from: process.env.EMAIL_FROM || process.env.SMTP_FROM || '"Tohfa Gifting" <hello@thetohfa.in>',
       to,
       subject,
       html,
@@ -112,8 +115,11 @@ let _startupWarned = false;
 function isConfigured() {
   const ownerEmail = (process.env.OWNER_NOTIFY_EMAIL || process.env.ADMIN_EMAIL || '').trim();
   const hasEmail = Boolean(ownerEmail);
-  const hasSmtp = Boolean((process.env.EMAIL_HOST || '').trim() || (process.env.EMAIL_USER || '').trim());
-  const hasPass = Boolean((process.env.EMAIL_PASS || '').trim());
+  const hasSmtp = Boolean(
+    (process.env.EMAIL_HOST || process.env.SMTP_HOST || '').trim() ||
+    (process.env.EMAIL_USER || process.env.SMTP_USER || '').trim()
+  );
+  const hasPass = Boolean((process.env.EMAIL_PASS || process.env.SMTP_PASS || '').trim());
   const configured = hasEmail && hasSmtp && hasPass;
 
   if (!configured && !_startupWarned && whatsappConfig.getMode() === 'manual') {
@@ -672,7 +678,7 @@ const DEDUP_MS = 10 * 60 * 1000; // 10 minutes
 async function sendAdminAlertEmail(type, data) {
   const ownerEmail = (process.env.OWNER_NOTIFY_EMAIL || process.env.ADMIN_EMAIL || '').trim();
   if (!isConfigured()) {
-    console.warn(`[Owner Notify] sendAdminAlertEmail (${type}) skipped: email config incomplete (OWNER_NOTIFY_EMAIL=${ownerEmail ? 'SET' : 'MISSING'}, EMAIL_USER/HOST=${process.env.EMAIL_USER || process.env.EMAIL_HOST ? 'SET' : 'MISSING'}, EMAIL_PASS=${process.env.EMAIL_PASS ? 'SET' : 'MISSING'})`);
+    console.warn(`[Owner Notify] sendAdminAlertEmail (${type}) skipped: email config incomplete (OWNER_NOTIFY_EMAIL=${ownerEmail ? 'SET' : 'MISSING'}, EMAIL_USER/SMTP_USER=${process.env.EMAIL_USER || process.env.SMTP_USER || process.env.EMAIL_HOST || process.env.SMTP_HOST ? 'SET' : 'MISSING'}, EMAIL_PASS/SMTP_PASS=${process.env.EMAIL_PASS || process.env.SMTP_PASS ? 'SET' : 'MISSING'})`);
     return { success: false, reason: 'unconfigured' };
   }
 

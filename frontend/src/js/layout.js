@@ -467,6 +467,7 @@ export function openTanya() {
  * Dark charcoal bg · Gold italic logo · Gold section headings
  */
 export function renderFooter() {
+  if (document.getElementById('tohfa-footer')) return;
   let footer = document.querySelector('footer.footer');
   if (!footer) {
     footer = document.createElement('footer');
