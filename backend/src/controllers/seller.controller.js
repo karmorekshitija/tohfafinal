@@ -126,7 +126,7 @@ async function getOwnSellerProfile(req, res, next) {
                 COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.photo_url, u.profile_photo_url) AS logo_url,
                 COALESCE(sp.banner_url, s.banner_url, u.cover_photo_url) AS banner_url,
                 COALESCE(sp.seller_type, 'regular') AS seller_type,
-                COALESCE(sp.is_approved, s.is_approved, FALSE) AS is_approved,
+                (COALESCE(sp.is_approved, FALSE) = TRUE OR COALESCE(s.is_approved, FALSE) = TRUE OR COALESCE(sp.verification_status, s.verification_status) = 'verified') AS is_approved,
                 sp.rejection_reason,
                 COALESCE(sp.vacation_mode_active, 0) AS vacation_mode,
                 COALESCE(sp.vacation_mode_active, 0) AS vacation_mode_active,
@@ -177,7 +177,7 @@ async function getOwnSellerProfile(req, res, next) {
                 COALESCE(sp.profile_photo, sp.avatar_url, sp.photo_url, s.photo_url, u.profile_photo_url) AS logo_url,
                 COALESCE(sp.banner_url, s.banner_url, u.cover_photo_url) AS banner_url,
                 COALESCE(sp.seller_type, 'regular') AS seller_type,
-                COALESCE(sp.is_approved, s.is_approved, FALSE) AS is_approved,
+                (COALESCE(sp.is_approved, FALSE) = TRUE OR COALESCE(s.is_approved, FALSE) = TRUE) AS is_approved,
                 sp.rejection_reason,
                 COALESCE(sp.pickup_address, s.pickup_address) AS pickup_address,
                 COALESCE(sp.billing_address, s.billing_address) AS billing_address,
@@ -480,7 +480,7 @@ async function getPublicSellerProfile(req, res, next) {
       `SELECT u.id AS user_id, u.name, u.profile_photo_url, u.cover_photo_url,
               sp.id AS profile_id,
               COALESCE(sp.store_name, s.store_name, u.name, 'Artisan Studio') AS store_name,
-              COALESCE(sp.slug, s.slug) AS slug,
+              COALESCE(sp.handle, sp.slug, s.handle, s.slug) AS slug,
               COALESCE(sp.bio, s.bio) AS bio,
               sp.banner_url, sp.about_image_url,
               sp.pickup_address, sp.created_at,
@@ -501,8 +501,10 @@ async function getPublicSellerProfile(req, res, next) {
           OR s.id::text = $1::text
           OR sp.slug = $1
           OR s.slug = $1
+          OR sp.handle = $1
+          OR s.handle = $1
        ORDER BY CASE 
-         WHEN sp.slug = $1 OR s.slug = $1 THEN 1
+         WHEN sp.slug = $1 OR s.slug = $1 OR sp.handle = $1 OR s.handle = $1 THEN 1
          WHEN u.id::text = $1::text AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 2
          WHEN u.id::text = $1::text THEN 3
          WHEN sp.id::text = $1::text THEN 4
@@ -1052,7 +1054,7 @@ async function applyAsSeller(req, res, next) {
     await client.query('COMMIT');
 
     // Notify admins of the new application
-    ownerNotifyService.sendAdminAlertEmail('seller_application', {
+    await ownerNotifyService.sendAdminAlertEmail('seller_application', {
       id: finalStoreName,
       storeName: finalStoreName,
       artisanName: userName,
@@ -3268,25 +3270,29 @@ async function getCatalogSummary(req, res, next) {
 
     const { rows } = await query(
       `SELECT 
-         COUNT(*) AS total_listings,
-         COUNT(*) FILTER (WHERE COALESCE(stock_quantity, stock_qty, 0) <= COALESCE(low_stock_threshold, 5)) AS low_stock,
-         COUNT(*) FILTER (WHERE discount_active::text IN ('true', '1', 't')) AS on_discount
+         COUNT(*) FILTER (WHERE status IN ('active', 'paused')) AS total_listings,
+         COUNT(*) FILTER (WHERE status = 'active') AS active_listings,
+         COUNT(*) FILTER (WHERE status = 'paused') AS paused_listings,
+         COUNT(*) FILTER (WHERE status IN ('active', 'paused') AND COALESCE(stock_quantity, 0) <= COALESCE(low_stock_threshold, 5)) AS low_stock,
+         COUNT(*) FILTER (WHERE status IN ('active', 'paused') AND discount_active::text IN ('true', '1', 't')) AS on_discount
        FROM products
        WHERE (
          seller_id::text = $1 
-         OR seller_id IN (SELECT id FROM sellers WHERE user_id = $1)
-         OR seller_id IN (SELECT id FROM seller_profiles WHERE user_id = $1)
-       ) AND status NOT IN ('deleted')`,
+         OR seller_id::text IN (SELECT id::text FROM sellers WHERE user_id::text = $1)
+         OR seller_id::text IN (SELECT id::text FROM seller_profiles WHERE user_id::text = $1)
+       ) AND status IN ('active', 'paused')`,
       [String(sellerId)]
     );
 
-    const summary = rows[0] || { total_listings: 0, low_stock: 0, on_discount: 0 };
+    const summary = rows[0] || { total_listings: 0, active_listings: 0, paused_listings: 0, low_stock: 0, on_discount: 0 };
     return res.json({
       success: true,
       data: {
-        total_listings: summary.total_listings || 0,
-        low_stock: summary.low_stock || 0,
-        on_discount: summary.on_discount || 0
+        total_listings: parseInt(summary.total_listings || 0, 10),
+        active_listings: parseInt(summary.active_listings || 0, 10),
+        paused_listings: parseInt(summary.paused_listings || 0, 10),
+        low_stock: parseInt(summary.low_stock || 0, 10),
+        on_discount: parseInt(summary.on_discount || 0, 10)
       }
     });
   } catch (err) {

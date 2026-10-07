@@ -320,6 +320,11 @@ let bulkDiscountTrigger = null; // 'checkboxes' or 'apply-to-all'
 
 // ── Discount & Selection Helpers ──────────────────────────────
 async function loadStats() {
+    const activeAndPaused = allListings.filter(l => l.status === 'active' || l.status === 'paused');
+    const localTotal = activeAndPaused.length;
+    const localLowStock = activeAndPaused.filter(l => l.stock_count <= 5).length;
+    const localOnDiscount = activeAndPaused.filter(l => l.discount_active === true || l.discount_active === 1).length;
+
     const token = sessionStorage.getItem('tohfa_access_token');
     if (token) {
         try {
@@ -329,9 +334,9 @@ async function loadStats() {
             if (res.ok) {
                 const resp = await res.json();
                 if (resp && resp.data) {
-                    document.getElementById('stats-total-listings').textContent = resp.data.total_listings;
-                    document.getElementById('stats-low-stock').textContent = resp.data.low_stock;
-                    document.getElementById('stats-on-discount').textContent = resp.data.on_discount;
+                    document.getElementById('stats-total-listings').textContent = allListings.length > 0 ? localTotal : resp.data.total_listings;
+                    document.getElementById('stats-low-stock').textContent = allListings.length > 0 ? localLowStock : resp.data.low_stock;
+                    document.getElementById('stats-on-discount').textContent = allListings.length > 0 ? localOnDiscount : resp.data.on_discount;
                     return;
                 }
             }
@@ -340,12 +345,9 @@ async function loadStats() {
         }
     }
     // Fallback:
-    const totalListings = allListings.length;
-    const lowStock = allListings.filter(l => l.stock_count <= 5).length;
-    const onDiscount = allListings.filter(l => l.discount_active === true || l.discount_active === 1).length;
-    document.getElementById('stats-total-listings').textContent = totalListings;
-    document.getElementById('stats-low-stock').textContent = lowStock;
-    document.getElementById('stats-on-discount').textContent = onDiscount;
+    document.getElementById('stats-total-listings').textContent = localTotal;
+    document.getElementById('stats-low-stock').textContent = localLowStock;
+    document.getElementById('stats-on-discount').textContent = localOnDiscount;
 }
 
 function startEditDiscount(id) {
@@ -591,7 +593,7 @@ function statusBadge(status, stock) {
     const m = {
         active: 'bg-primary-container text-on-primary-container',
         draft:  'bg-surface-container-high text-on-surface-variant',
-        paused: 'bg-secondary-container text-on-secondary-container'
+        paused: 'bg-amber-100 text-amber-800 border border-amber-300'
     };
     const l = { active:'Active', draft:'Draft', paused:'Paused' };
     return `<span class="text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter ${m[status] || 'bg-surface-container text-on-surface-variant'}">${l[status] || status}</span>`;
@@ -709,8 +711,9 @@ function rowHTML(l) {
                 <button type="button" class="add-color-btn text-forest hover:text-primary transition-colors flex items-center justify-center p-1 rounded-full hover:bg-forest/10 active:scale-95" title="Add Color Variant" onclick="event.stopPropagation(); window.location.href='/seller/edit-product.html?id=' + encodeURIComponent('${l.listing_id}');">
                     <span class="material-symbols-outlined text-lg">palette</span>
                 </button>
-                <button type="button" class="pause-btn text-[#7B5EA7] hover:text-[#7B5EA7]/85 transition-colors" title="${pauseTitle}" data-id="${l.listing_id}" data-status="${l.status}">
-                    <span class="material-symbols-outlined text-lg">${pauseIcon}</span>
+                <button type="button" class="pause-btn ${isPaused ? 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300 text-xs font-bold' : 'text-[#7B5EA7] hover:text-[#7B5EA7]/85'} transition-colors" title="${pauseTitle}" data-id="${l.listing_id}" data-status="${isPaused ? 'paused' : l.status}">
+                    <span class="material-symbols-outlined ${isPaused ? 'text-sm' : 'text-lg'}">${pauseIcon}</span>
+                    ${isPaused ? '<span>Resume</span>' : ''}
                 </button>
                 <button type="button" class="delete-btn text-rose-400 hover:text-rose-600 transition-colors" title="Delete" data-id="${l.listing_id}" data-title="${l.title}">
                     <span class="material-symbols-outlined text-lg">delete</span>
@@ -860,8 +863,7 @@ function applyFiltersAndRender() {
         const endIndex = startIndex + PAGE_LIMIT;
         const pageListings = filteredListings.slice(startIndex, endIndex);
 
-        let rowsHtml = pageListings.map(rowHTML).join('');
-        document.getElementById('listings-table-body').innerHTML = rowsHtml;
+        renderListingsTable(pageListings);
         tableContainer.classList.remove('hidden');
         attachCardListeners();
 
@@ -875,6 +877,12 @@ function applyFiltersAndRender() {
             pgn.classList.add('hidden');
         }
     }
+}
+
+function renderListingsTable(items) {
+    const tbody = document.getElementById('listings-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = (items || []).map(rowHTML).join('');
 }
 
 // ── Card action listeners ─────────────────────────────────────

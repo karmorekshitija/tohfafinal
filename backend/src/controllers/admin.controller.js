@@ -92,7 +92,7 @@ async function listSellers(req, res, next) {
     const total = parseInt(countRes.rows[0]?.total || 0, 10);
 
     const selectSql = `
-      SELECT u.id, u.name, u.email, u.phone, u.profile_photo_url, u.is_active,
+      SELECT u.id, u.id AS user_id, u.name, u.email, u.phone, u.profile_photo_url, u.is_active,
              COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
              COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS shop_name,
              COALESCE(sp.seller_type, 'Artisan') AS seller_type,
@@ -2678,6 +2678,72 @@ async function switchSessionToSpecialShop(req, res, next) {
   }
 }
 
+async function switchSessionToSeller(req, res, next) {
+  try {
+    const sellerId = req.params.id || req.params.sellerId;
+    const authService = require('../services/auth.service');
+
+    const { rows } = await query(
+      `SELECT u.id AS user_id, u.email, u.name,
+              COALESCE(sp.store_name, s.store_name, u.name) AS store_name,
+              COALESCE(sp.slug, s.slug) AS slug,
+              sp.is_approved
+       FROM users u
+       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+       LEFT JOIN sellers s ON s.user_id = u.id
+       WHERE (u.id::text = $1 OR sp.id::text = $1 OR s.id::text = $1)
+         AND u.role = 'seller'
+       LIMIT 1`,
+      [sellerId]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'Artisan seller account not found.' });
+    }
+
+    const seller = rows[0];
+    const tokenPayload = {
+      id: seller.user_id,
+      email: seller.email,
+      role: 'seller',
+      isSellerApproved: true,
+      realAdminId: req.user.id,
+      actingAsSeller: true
+    };
+
+    const tokens = await authService.issueTokenPair(tokenPayload);
+
+    await logAdminAction({
+      adminId: req.user.id,
+      actionType: 'ADMIN_SWITCHED_TO_SELLER_STUDIO',
+      targetEntity: 'sellers',
+      targetId: seller.user_id,
+      details: { store_name: seller.store_name, slug: seller.slug },
+      ipAddress: req.ip
+    });
+
+    return res.json({
+      success: true,
+      message: `Switched into studio for "${seller.store_name}".`,
+      data: {
+        user: {
+          id: seller.user_id,
+          name: seller.name || seller.store_name,
+          email: seller.email,
+          role: 'seller',
+          store_name: seller.store_name,
+          is_approved: true
+        },
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        token: tokens.accessToken
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function getRevenueBreakdown(req, res, next) {
   try {
     const { rows } = await query(`
@@ -3205,7 +3271,77 @@ async function markWhatsAppOutboxDoneByToken(req, res) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// POST /api/admin/email/test  (admin-authenticated diagnostic endpoint)
+// Verifies SMTP connection and dispatches a sample test email.
+// ---------------------------------------------------------------------------
+async function testEmail(req, res) {
+  const { user, host, port } = emailService.sanitizeCredentials();
+  try {
+    const targetEmail = (
+      req.body?.target_email ||
+      req.body?.email ||
+      process.env.OWNER_NOTIFY_EMAIL ||
+      process.env.ADMIN_EMAIL ||
+      req.user?.email ||
+      user ||
+      ''
+    ).trim();
+
+    if (!targetEmail) {
+      return res.status(400).json({
+        success: false,
+        message: 'No target email specified and OWNER_NOTIFY_EMAIL / EMAIL_USER not configured.',
+        host,
+        port,
+        user,
+      });
+    }
+
+    await emailService.verifyConnection();
+
+    const mailRes = await emailService.sendMail(
+      targetEmail,
+      'Tohfa SMTP Diagnostic Test Email',
+      `<h2>Tohfa Email Pipeline Verified</h2><p>This is a diagnostic test email dispatched from <strong>${host}:${port}</strong> (${user || 'N/A'}).</p><p>Timestamp: ${new Date().toISOString()}</p>`,
+      `Tohfa Email Pipeline Verified. Dispatched from ${host}:${port} (${user || 'N/A'}) at ${new Date().toISOString()}`
+    );
+
+    if (!mailRes || mailRes.success === false) {
+      return res.status(502).json({
+        success: false,
+        message: mailRes?.error || 'Failed to dispatch diagnostic test email.',
+        code: mailRes?.code,
+        host,
+        port,
+        user,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      messageId: mailRes.messageId,
+      targetEmail,
+      host,
+      port,
+      user,
+    });
+  } catch (err) {
+    console.error('[Admin] testEmail diagnostic error:', err.message);
+    return res.status(502).json({
+      success: false,
+      message: err.message || 'SMTP verification or dispatch failed.',
+      code: err.code,
+      host,
+      port,
+      user,
+    });
+  }
+}
+
 module.exports = {
+  testEmail,
+  sendTestEmail: testEmail,
   getWhatsAppOutbox,
   markWhatsAppOutboxDone,
   markWhatsAppOutboxDoneByToken,
@@ -3263,6 +3399,7 @@ module.exports = {
   createSeller: createRegularSeller,
   updateSpecialShop,
   switchSessionToSpecialShop,
+  switchSessionToSeller,
   getRevenueBreakdown,
   getPlansOverview,
   updateSellerPlan,

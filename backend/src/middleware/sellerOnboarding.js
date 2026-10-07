@@ -15,7 +15,7 @@ const { getSellerOnboardingStatus } = require('../utils/sellerOnboarding');
 async function enforceSellerOnboarding(req, res, next) {
   try {
     const userRole = String(req.user?.role || '').toLowerCase();
-    const isAdmin = userRole === 'admin' || userRole === 'master_admin';
+    const isAdmin = userRole === 'admin' || userRole === 'master_admin' || Boolean(req.user?.realAdminId || req.user?.actingAsSeller || req.user?.actingAsSpecialShop);
 
     // Admins managing marketplace or system shops bypass this check unless testing seller context
     if (isAdmin && !req.headers['x-enforce-seller-gating']) {

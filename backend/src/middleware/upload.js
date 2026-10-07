@@ -112,8 +112,8 @@ const uploadProfilePhoto = createResilientSingleUploader('photo', 'profiles', {
   crop: 'fill',
 });
 
-// Cover/banner photo uploader (1 file)
-const uploadCoverPhoto = createResilientSingleUploader('cover', 'covers', {
+// Cover/banner photo uploader (1 file) — accepts 'cover' or 'banner'
+const uploadCoverPhoto = createResilientSingleUploader(['cover', 'banner'], 'covers', {
   maxWidth: 1200,
   maxHeight: 400,
   crop: 'fill',
@@ -127,12 +127,16 @@ const uploadRefImages = createResilientMultiUploader('images', 'customization-re
 // to an optimized base64 Data URI if Cloudinary credentials or signatures fail.
 function createResilientSingleUploader(fieldName, defaultFolder, options = {}) {
   const allowedFieldNames = Array.isArray(fieldName) ? [...fieldName] : [fieldName];
-  // Support common category cover/image field aliases from admin forms
+  // Support common category cover/image field aliases from admin and seller forms
   if (allowedFieldNames.includes('image')) {
     if (!allowedFieldNames.includes('cover_image')) allowedFieldNames.push('cover_image');
     if (!allowedFieldNames.includes('banner')) allowedFieldNames.push('banner');
     if (!allowedFieldNames.includes('banner_url')) allowedFieldNames.push('banner_url');
     if (!allowedFieldNames.includes('file')) allowedFieldNames.push('file');
+  }
+  if (allowedFieldNames.includes('cover') || allowedFieldNames.includes('banner')) {
+    if (!allowedFieldNames.includes('cover')) allowedFieldNames.push('cover');
+    if (!allowedFieldNames.includes('banner')) allowedFieldNames.push('banner');
   }
 
   const memUpload = multer({
@@ -152,10 +156,13 @@ function createResilientSingleUploader(fieldName, defaultFolder, options = {}) {
 
       // Map matching field to req.file
       if (!req.file && req.files) {
-        for (const name of allowedFieldNames) {
-          if (req.files[name] && req.files[name][0]) {
-            req.file = req.files[name][0];
-            break;
+        req.file = req.files['banner']?.[0] || req.files['cover']?.[0];
+        if (!req.file) {
+          for (const name of allowedFieldNames) {
+            if (req.files[name] && req.files[name][0]) {
+              req.file = req.files[name][0];
+              break;
+            }
           }
         }
         if (!req.file) {

@@ -413,6 +413,12 @@
                         </div>
                     </div>
 
+                    <!-- Paused Craft Banner (hidden by default) -->
+                    <div id="paused-craft-banner" class="hidden my-3 p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 text-sm font-semibold flex items-center gap-2.5 shadow-xs">
+                        <span class="material-symbols-outlined text-amber-700 text-[20px]">pause_circle</span>
+                        <span>Artisan is currently paused on this craft</span>
+                    </div>
+
                     <!-- Primary Conversion CTA (Wingify CSF & Baymard #1181, #1182) with 24px negative space -->
                     <button id="add-to-cart-btn" class="w-full bg-[#1A3A32] text-white hover:bg-opacity-90 py-4 rounded-full font-semibold transition-all shadow-md my-6 flex items-center justify-center gap-2 font-['DM_Sans'] text-base tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3A32] focus-visible:ring-offset-2 active:scale-[0.98]">
                         <span class="material-symbols-outlined text-[20px]">shopping_bag</span>
@@ -1493,25 +1499,39 @@
                     }
                     // -- Phase 2: Paused state ----------------------------------------------
                     if (isPaused) {
-                        // Hide buy widget, show paused state
-                        document.getElementById('qty-selector-container').style.display = 'none';
-                        document.getElementById('add-to-cart-btn').style.display = 'none';
+                        const pausedBanner = document.getElementById('paused-craft-banner');
+                        if (pausedBanner) {
+                            pausedBanner.classList.remove('hidden');
+                        }
+                        if (stockBadge) {
+                            stockBadge.innerText = 'Paused';
+                            stockBadge.className = 'text-xs bg-amber-100 text-amber-800 border border-amber-300 px-sm py-[2px] rounded font-semibold';
+                        }
+                        if (addToCartBtn) {
+                            addToCartBtn.style.display = '';
+                            addToCartBtn.disabled = true;
+                            addToCartBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        }
+                        const buyNowBtn = document.getElementById('buy-now-btn');
+                        if (buyNowBtn) {
+                            buyNowBtn.disabled = true;
+                            buyNowBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        }
                         document.getElementById('overflow-container').classList.add('hidden');
                         const pausedContainer = document.getElementById('paused-state-container');
                         pausedContainer.classList.remove('hidden');
-                        // Dynamically import and render the shared unavailable-state module
                         try {
                             const { renderUnavailableState } = await import('/src/components/unavailable-state.js');
                             await renderUnavailableState(pausedContainer, {
                                 mode: 'paused',
                                 message: product.pause_reason
-                                    ? `Temporarily unavailable: ${product.pause_reason}`
-                                    : 'This product is temporarily paused by the artisan.',
+                                    ? `Artisan is currently paused on this craft (${product.pause_reason})`
+                                    : 'Artisan is currently paused on this craft',
                                 resumeEstimate: product.resume_estimate_date,
                                 productId: productId
                             });
                         } catch (importErr) {
-                            pausedContainer.innerHTML = '<p class="text-sm text-purple-700 bg-purple-50 border border-purple-200 rounded-xl p-4">?? This product is temporarily paused by the artisan. Please check back soon.</p>';
+                            pausedContainer.innerHTML = '<p class="text-sm text-amber-800 bg-amber-50 border border-amber-300 rounded-xl p-4">Artisan is currently paused on this craft</p>';
                             console.warn('Could not load unavailable-state module:', importErr);
                         }
                     }
@@ -1839,6 +1859,10 @@
                 window.Toast?.show("Sellers cannot purchase their own products", "error");
                 return;
             }
+            if (product && product.status === 'paused') {
+                window.Toast?.show("This item has been temporarily paused by the artisan and cannot be added to cart.", "error");
+                return;
+            }
             if (product && product.holiday_mode_active) return;
 
             if (isSoldOut) return;
@@ -1939,8 +1963,12 @@
                 }
             } catch (e) {
                 console.error("Error adding to cart:", e);
+                const errMsg = e?.response?.data?.message || e?.message || "Failed to add item to cart.";
+                window.Toast?.show(errMsg, "error");
             } finally {
-                btn.disabled = false;
+                if (!(product && product.status === 'paused')) {
+                    btn.disabled = false;
+                }
                 btn.querySelector('span:last-child').innerText = hasCustomOptions ? 'Add to Cart (Personalised)' : 'Add to Cart';
             }
         }

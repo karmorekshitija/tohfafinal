@@ -19,18 +19,17 @@ const nodemailer = require('nodemailer');
 let _transporter = null;
 
 function sanitizeCredentials() {
-  const user = (process.env.EMAIL_USER || '').trim();
-  // Strip whitespace from passwords (such as Google App Passwords copied with 4-letter spaced blocks)
-  const pass = (process.env.EMAIL_PASS || '').replace(/\s+/g, '');
-  const host = (process.env.EMAIL_HOST || '').trim();
-  const port = parseInt(process.env.EMAIL_PORT || '587', 10);
-  const secure = process.env.EMAIL_SECURE === 'true' || port === 465;
+  const user = (process.env.EMAIL_USER || process.env.SMTP_USER || '').trim();
+  const pass = (process.env.EMAIL_PASS || process.env.SMTP_PASS || '').replace(/\s+/g, '');
+  const host = (process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com').trim();
+  const port = parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '465', 10);
+  const secure = process.env.EMAIL_SECURE === 'true' || process.env.SMTP_SECURE === 'true' || port === 465;
   return { user, pass, host, port, secure };
 }
 
 function getFromAddress() {
   const { user } = sanitizeCredentials();
-  const configuredFrom = (process.env.EMAIL_FROM || '').trim();
+  const configuredFrom = (process.env.EMAIL_FROM || process.env.SMTP_FROM || '').trim();
 
   if (configuredFrom) {
     return configuredFrom;
@@ -58,11 +57,14 @@ async function getTransporter() {
     if (isGmail) {
       _transporter = nodemailer.createTransport({
         service: 'gmail',
+        host: host || 'smtp.gmail.com',
+        port,
+        secure,
         auth: { user, pass },
         // Force IPv4 to prevent Render container IPv6 connection hangs (ETIMEDOUT)
         family: 4,
       });
-      console.log(`[Email] Initialized Gmail transport for account: ${user} (IPv4 enabled)`);
+      console.log(`[Email] Initialized Gmail transport for account: ${user} (port=${port}, secure=${secure}, IPv4 enabled)`);
     } else {
       _transporter = nodemailer.createTransport({
         host,
@@ -71,7 +73,7 @@ async function getTransporter() {
         auth: { user, pass },
         family: 4,
       });
-      console.log(`[Email] Initialized custom SMTP transport for ${host}:${port} (secure=${secure})`);
+      console.log(`[Email] Initialized custom SMTP transport for ${host}:${port} (secure=${secure}, IPv4 enabled)`);
     }
     return _transporter;
   }
@@ -86,6 +88,7 @@ async function getTransporter() {
         port: 587,
         secure: false,
         auth: { user: testAccount.user, pass: testAccount.pass },
+        family: 4,
       });
       console.log(`[Email] Dev mode without credentials: using Ethereal SMTP. Preview at https://ethereal.email`);
       return _transporter;
@@ -97,11 +100,16 @@ async function getTransporter() {
   // 3. Fallback unauthenticated transport (will log error when send is attempted)
   _transporter = nodemailer.createTransport({
     host: host || 'smtp.gmail.com',
-    port: port || 587,
-    secure: false,
+    port: port || 465,
+    secure: Boolean(secure),
     family: 4,
   });
   return _transporter;
+}
+
+async function verifyConnection() {
+  const transporter = await getTransporter();
+  return transporter.verify();
 }
 
 async function sendMail(to, subject, html, text) {
@@ -148,20 +156,26 @@ async function sendPasswordResetEmail(email, resetUrl) {
  * @param {string} email - Buyer email address
  * @param {object} orderDetails - Order summary object
  */
-async function sendOrderConfirmationEmail(email, { orderId, buyerName, totalAmount, items }) {
-  const subject = `Order Confirmed — Tohfa #${orderId}`;
+async function sendOrderConfirmationEmail(email, { orderId, buyerName, totalAmount, items } = {}) {
+  if (!email) return { success: false, error: 'Missing recipient email' };
+  const safeOrderId = orderId || 'N/A';
+  const safeBuyerName = buyerName || 'Customer';
+  const safeTotal = totalAmount != null ? totalAmount : '0.00';
+  const safeItems = Array.isArray(items) ? items : [];
+
+  const subject = `Order Confirmed — Tohfa #${safeOrderId}`;
   const html = `
     <h1>Order Confirmed</h1>
-    <p>Hi ${buyerName || 'Customer'},</p>
-    <p>Your order <strong>#${orderId}</strong> has been confirmed.</p>
-    <p>Total amount: ₹${totalAmount}</p>
+    <p>Hi ${esc(safeBuyerName)},</p>
+    <p>Your order <strong>#${esc(safeOrderId)}</strong> has been confirmed.</p>
+    <p>Total amount: ₹${esc(safeTotal)}</p>
     <p>Order Summary:</p>
     <ul>
-      ${(items || []).map(item => `<li>${item.name || 'Item'} x ${item.quantity || 1}</li>`).join('')}
+      ${safeItems.map(item => `<li>${esc(item?.name || item?.product_name || 'Item')} x ${esc(item?.quantity || 1)}</li>`).join('')}
     </ul>
     <p>Thank you for shopping on Tohfa!</p>
   `;
-  await sendMail(email, subject, html);
+  return await sendMail(email, subject, html);
 }
 
 function esc(val) {
@@ -188,8 +202,10 @@ async function sendSellerAccountCreatedEmail(email, {
   loginUrl
 } = {}) {
   const isSpecial = sellerType === 'special';
-  const displayStore = storeName || 'Artisan Studio';
-  const displayName = sellerName || displayStore;
+  const displayStore = storeName || sellerName || 'Artisan Studio';
+  const displayName = sellerName || displayStore || 'Artisan';
+  const loginId = identifier || email || 'N/A';
+  const safePassword = password ? String(password) : null;
   const loginLink = loginUrl || `${process.env.FRONTEND_URL || 'https://thetohfa.in'}/auth/login.html`;
   const planDisplay = plan ? String(plan).toUpperCase() : (isSpecial ? 'SPECIAL STUDIO' : 'BASIC');
 
@@ -245,8 +261,8 @@ async function sendSellerAccountCreatedEmail(email, {
         <div class="creds-title">🔐 Your Studio Access Details</div>
         <div class="cred-row"><span class="cred-label">Store Name:</span> <span class="cred-value">${esc(displayStore)}</span></div>
         <div class="cred-row"><span class="cred-label">Studio Plan:</span> <span class="cred-value">${esc(planDisplay)}</span></div>
-        <div class="cred-row"><span class="cred-label">Login Identifier:</span> <span class="cred-value cred-code">${esc(identifier || email)}</span></div>
-        ${password ? `<div class="cred-row"><span class="cred-label">Temporary Password:</span> <span class="cred-value cred-code">${esc(password)}</span></div>` : ''}
+        <div class="cred-row"><span class="cred-label">Login Identifier:</span> <span class="cred-value cred-code">${esc(loginId)}</span></div>
+        ${safePassword ? `<div class="cred-row"><span class="cred-label">Temporary Password:</span> <span class="cred-value cred-code">${esc(safePassword)}</span></div>` : ''}
       </div>
 
       <div class="btn-container">
@@ -290,8 +306,8 @@ async function sendSellerAccountCreatedEmail(email, {
     '-------------------------------------------',
     `Store Name: ${displayStore}`,
     `Studio Plan: ${planDisplay}`,
-    `Login Identifier: ${identifier || email}`,
-    password ? `Password: ${password}` : '',
+    `Login Identifier: ${loginId}`,
+    safePassword ? `Password: ${safePassword}` : '',
     `Login URL: ${loginLink}`,
     '-------------------------------------------',
     '',
@@ -301,7 +317,7 @@ async function sendSellerAccountCreatedEmail(email, {
     'Artisan Support: support@thetohfa.in'
   ].filter(Boolean).join('\n');
 
-  await sendMail(email, subject, html, text);
+  return await sendMail(email, subject, html, text);
 }
 
 /**
@@ -331,7 +347,7 @@ async function sendSellerApprovalEmail(email, detailsOrStore) {
     <p>Please log in and add your first handcrafted listing:</p>
     <p><a href="${esc(loginUrl)}" style="display:inline-block;padding:10px 20px;background:#14381F;color:#FFF8E7;text-decoration:none;border-radius:6px;font-weight:bold;">Log In to Tohfa Studio</a></p>
   `;
-  await sendMail(email, subject, html);
+  return await sendMail(email, subject, html);
 }
 
 /**
@@ -339,7 +355,7 @@ async function sendSellerApprovalEmail(email, detailsOrStore) {
  * @param {string} email - Seller email address
  * @param {object} details - Rejection details
  */
-async function sendSellerRejectionEmail(email, { sellerName, rejectionReason }) {
+async function sendSellerRejectionEmail(email, { sellerName, rejectionReason } = {}) {
   const subject = 'Tohfa Seller Application Update';
   const html = `
     <h1>Application Update</h1>
@@ -349,7 +365,7 @@ async function sendSellerRejectionEmail(email, { sellerName, rejectionReason }) 
     <blockquote>${esc(rejectionReason || 'Application criteria not met')}</blockquote>
     <p>We invite you to reapply in the future once the above issues are addressed.</p>
   `;
-  await sendMail(email, subject, html);
+  return await sendMail(email, subject, html);
 }
 
 module.exports = {
@@ -363,4 +379,5 @@ module.exports = {
   resetTransporter,
   sanitizeCredentials,
   getFromAddress,
+  verifyConnection,
 };
