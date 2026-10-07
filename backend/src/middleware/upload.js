@@ -57,8 +57,7 @@ function createResilientMultiUploader(fieldName, defaultFolder, maxCount = 10, o
         cfg.api_secret && !cfg.api_secret.startsWith('YOUR_')
       );
 
-      for (let i = 0; i < req.files.length; i++) {
-        const file = req.files[i];
+      await Promise.all(req.files.map(async (file, i) => {
         if (isCloudinaryReady) {
           try {
             const uploadOptions = {
@@ -82,7 +81,7 @@ function createResilientMultiUploader(fieldName, defaultFolder, maxCount = 10, o
             file.secure_url = file.path;
             file.url = file.path;
             file.filename = uploadResult.public_id;
-            continue;
+            return;
           } catch (cErr) {
             console.warn(`[Upload] Cloudinary upload for '${folder}' failed (${cErr.message}). Using resilient fallback.`);
           }
@@ -95,7 +94,7 @@ function createResilientMultiUploader(fieldName, defaultFolder, maxCount = 10, o
         file.secure_url = file.path;
         file.url = file.path;
         file.filename = `local_${Date.now()}_${i}`;
-      }
+      }));
 
       next();
     });

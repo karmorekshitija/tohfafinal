@@ -1960,6 +1960,7 @@
                 if (response.data && response.data.success) {
                     window.Toast?.show("Added to cart successfully! 🛍️", "success");
                     logProductEvent('cart_add');
+                    await updateNavCartBadge();
                 }
             } catch (e) {
                 console.error("Error adding to cart:", e);
@@ -2235,14 +2236,18 @@
             const recStock = p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : (p.stock !== undefined ? p.stock : null));
             const isOutOfStock = !isCustom && (p.status === 'sold_out' || (recStock !== null && recStock <= 0));
             const actionBtnHtml = isOwner
-                ? `<button class="w-full bg-[#14381F]/15 text-[#605e57] py-1.5 rounded-lg font-semibold opacity-50 cursor-not-allowed text-xs" disabled onclick="event.stopPropagation();">
+                ? `<button class="w-full bg-[#14381F]/15 text-[#605e57] py-1.5 rounded-lg font-semibold opacity-50 cursor-not-allowed text-xs" disabled onclick="event.preventDefault(); event.stopPropagation();">
                        Own Product
                    </button>`
-                : isCustom
-                    ? `<button class="w-full bg-[#14381F] text-white py-1.5 rounded-lg font-semibold hover:bg-[#0D2614] active:scale-[0.98] transition-all text-xs talk-to-seller-btn shadow-sm" data-id="${p.id}" onclick="event.stopPropagation();">
-                           Talk to Seller
+                : isOutOfStock
+                    ? `<button class="w-full bg-stone-200 text-stone-500 py-1.5 rounded-lg font-semibold cursor-not-allowed text-xs" disabled onclick="event.preventDefault(); event.stopPropagation();">
+                           Out of Stock
                        </button>`
-                    : `<button class="w-full bg-[#14381F] text-white py-1.5 rounded-lg font-semibold hover:bg-[#0D2614] active:scale-[0.98] transition-all text-xs add-rec-to-cart-btn shadow-sm" data-id="${p.id}" onclick="event.stopPropagation();">
+                : isCustom
+                    ? `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-xs customize-btn cursor-pointer flex items-center justify-center gap-1 shadow-sm" data-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/buyer/product.html?id=${p.id}';">
+                           <span class="material-symbols-outlined text-[14px]">auto_fix_high</span> Customize Product
+                       </button>`
+                    : `<button class="w-full bg-[#14381F] text-white py-1.5 rounded-lg font-semibold hover:bg-[#0D2614] active:scale-[0.98] transition-all text-xs add-rec-to-cart-btn shadow-sm cursor-pointer" data-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation();">
                            Add to Cart
                        </button>`;
 
@@ -2287,45 +2292,41 @@
             `;
         }
 
-        async function handleRecommendationTalkToSeller(productId, btn) {
-            const token = sessionStorage.getItem('tohfa_access_token');
-            if (!token) {
-                // login check bypassed
-                return;
-            }
-
-            btn.disabled = true;
-            const originalText = btn.innerText;
-            btn.innerText = 'Starting chat...';
-
+        async function updateNavCartBadge() {
             try {
-                const res = await apiClient.post('/requests', {
-                    listing_id: String(productId).trim(),
-                    request_type: 'customization',
-                    quantity: 1
-                });
-                if (res.data && res.data.success) {
-                    const convId = res.data.conversation_id;
-                    window.location.href = `/buyer/chat.html?conversationId=${convId}`;
-                } else {
-                    throw new Error("Invalid response");
+                const cartRes = await apiClient.get('/cart');
+                const badges = document.querySelectorAll('#nav-cart-badge, .cart-badge, #mobile-cart-badge');
+                if (cartRes.data && cartRes.data.success) {
+                    const count = cartRes.data.data.item_count || 0;
+                    badges.forEach(badge => {
+                        if (count > 0) {
+                            badge.innerText = count;
+                            badge.classList.remove('hidden');
+                        } else {
+                            badge.classList.add('hidden');
+                        }
+                    });
                 }
-            } catch (err) {
-                console.error("Failed to start customization request:", err);
-                btn.disabled = false;
-                btn.innerText = originalText;
-            }
+            } catch(e){}
         }
 
-        async function handleRecommendationAddToCart(productId) {
-            if (!requireAuth({ type: 'add_to_cart', productId: String(productId).trim(), quantity: 1 })) {
-                return;
-            }
+        async function handleRecommendationAddToCart(productId, btn) {
+            if (btn && btn.disabled) return;
+            const originalText = btn ? btn.innerText : 'Add to Cart';
 
             try {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerText = 'Adding...';
+                }
                 const res = await apiClient.post('/cart/items', { product_id: String(productId).trim(), quantity: 1 });
                 if (res.data && res.data.success) {
-                    window.Toast?.show("Added to cart successfully!", "success");
+                    window.Toast?.show("Added to cart!", "success");
+                    if (btn) {
+                        btn.innerText = 'Added! ✓';
+                        btn.classList.add('bg-[#285C3A]');
+                    }
+                    await updateNavCartBadge();
                     try {
                         let sessionId = localStorage.getItem('tohfa_chat_session_id');
                         if (!sessionId) {
@@ -2339,9 +2340,22 @@
                     } catch (err) {
                         console.error('Failed to log recommendation cart_add:', err);
                     }
+                    setTimeout(() => {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerText = originalText;
+                            btn.classList.remove('bg-[#285C3A]');
+                        }
+                    }, 1500);
                 }
             } catch (err) {
                 console.error("Cart error:", err);
+                const errMsg = err?.response?.data?.message || err?.message || "Failed to add item to cart.";
+                window.Toast?.show(errMsg, "error");
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
             }
         }
 
@@ -2409,17 +2423,19 @@
 
                     grid.querySelectorAll('.add-rec-to-cart-btn').forEach(btn => {
                         btn.addEventListener('click', async (e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             const id = btn.getAttribute('data-id');
-                            await handleRecommendationAddToCart(id);
+                            await handleRecommendationAddToCart(id, btn);
                         });
                     });
 
-                    grid.querySelectorAll('.talk-to-seller-btn').forEach(btn => {
-                        btn.addEventListener('click', async (e) => {
+                    grid.querySelectorAll('.customize-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             const id = btn.getAttribute('data-id');
-                            await handleRecommendationTalkToSeller(id, btn);
+                            window.location.href = `/buyer/product.html?id=${id}`;
                         });
                     });
 
@@ -2445,6 +2461,7 @@
         // DOMContentLoaded may have already fired before this listener is registered.
         async function initPage() {
             await checkAuthState();
+            await updateNavCartBadge();
             await loadProduct();
             if (product) {
                 await loadRecommendations();

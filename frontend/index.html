@@ -878,7 +878,7 @@
     }
   }
 
-  async function handleAddToCart(productId) {
+  async function handleAddToCart(productId, btn) {
     if (!isLoggedIn) {
       window.Toast?.show("Please log in to purchase items", "error");
       setTimeout(() => {
@@ -887,30 +887,51 @@
       return;
     }
 
+    let originalHtml = '';
+    if (btn) {
+      if (btn.disabled) return;
+      originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = 'Adding...';
+    }
+
     try {
       const res = await apiClient.post('/cart/items', { product_id: String(productId).trim(), quantity: 1 });
       if (res.data && res.data.success) {
-        window.Toast?.show("Added to cart successfully!", "success");
+        window.Toast?.show("Added to cart!", "success");
+        if (btn) btn.innerHTML = 'Added! ✓';
         await updateCartBadge();
+      } else {
+        if (btn) btn.innerHTML = originalHtml;
       }
     } catch (err) {
       console.error("Cart error:", err);
+      window.Toast?.show(err.response?.data?.message || err.message || "Failed to add to cart", "error");
+      if (btn) btn.innerHTML = originalHtml;
+    } finally {
+      if (btn) {
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+        }, 1500);
+      }
     }
   }
 
   async function updateCartBadge() {
     try {
-      const badge = document.getElementById('nav-cart-badge');
-      if (!badge) return;
       const res = await apiClient.get('/cart');
       if (res.data && res.data.success) {
-        const count = res.data.data.items?.length || 0;
-        if (count > 0) {
-          badge.textContent = count;
-          badge.classList.remove('hidden');
-        } else {
-          badge.classList.add('hidden');
-        }
+        const count = res.data.data?.item_count || res.data.data?.items?.length || 0;
+        const badges = document.querySelectorAll('#nav-cart-badge, .cart-badge, #mobile-cart-badge');
+        badges.forEach(badge => {
+          if (count > 0) {
+            badge.textContent = count;
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        });
       }
     } catch (e) {}
   }
@@ -1006,18 +1027,25 @@
            <span class="material-symbols-outlined text-[15px] sm:text-[17px] ${isWishlisted ? 'fill-icon text-red-500' : 'text-[#14381F]'}" style="font-variation-settings: 'FILL' ${isWishlisted ? 1 : 0};">favorite</span>
          </button>`;
 
-    const isCustomized = product.listing_type === 'custom' || product.customization_mode === 'fixed' || product.customization_mode === 'open';
+    const isCustomized = product.listing_type === 'custom' || (product.customization_mode && product.customization_mode !== 'none') || Boolean(product.is_customizable);
+    const stock = product.stock_qty !== undefined ? product.stock_qty : (product.stock_quantity !== undefined ? product.stock_quantity : (product.stock !== undefined ? product.stock : null));
+    const isOutOfStock = !isCustomized && (product.status === 'sold_out' || (stock !== null && stock <= 0));
+
     const actionBtnHtml = isOwner
-      ? `<button class="w-full py-1.5 px-2 rounded-md sm:rounded-lg font-semibold text-[11px] sm:text-xs bg-[#14381F]/20 text-[#605e57] opacity-60 cursor-not-allowed" disabled onclick="event.stopPropagation();">
+      ? `<button class="w-full py-1.5 px-2 rounded-md sm:rounded-lg font-semibold text-[11px] sm:text-xs bg-[#14381F]/20 text-[#605e57] opacity-60 cursor-not-allowed" disabled onclick="event.preventDefault(); event.stopPropagation();">
            Own Product
          </button>`
-      : isCustomized
-        ? `<button class="w-full py-1.5 px-2 rounded-md sm:rounded-lg font-semibold text-[11px] sm:text-xs text-white bg-[#14381F] transition-opacity hover:opacity-90 active:scale-[0.98] talk-to-seller-btn" data-id="${product.id}" onclick="event.stopPropagation();">
-             Talk to Seller
+      : isOutOfStock
+        ? `<button class="w-full bg-stone-200 text-stone-500 py-1.5 px-2 rounded-md sm:rounded-lg font-semibold cursor-not-allowed text-[11px] sm:text-xs" disabled onclick="event.preventDefault(); event.stopPropagation();">
+             Out of Stock
            </button>`
-        : `<button class="w-full py-1.5 px-2 rounded-md sm:rounded-lg font-semibold text-[11px] sm:text-xs text-white bg-[#14381F] transition-opacity hover:opacity-90 active:scale-[0.98] add-to-cart-btn" data-id="${product.id}" onclick="event.stopPropagation();">
-             Add to Cart
-           </button>`;
+        : isCustomized
+          ? `<button class="w-full py-1.5 px-2 rounded-md sm:rounded-lg font-semibold text-[11px] sm:text-xs text-[#FAF6EE] bg-[#14381F] transition-all hover:bg-[#285C3A] active:scale-[0.98] customize-btn cursor-pointer flex items-center justify-center gap-1" data-id="${product.id}" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/buyer/product.html?id=${product.id}';">
+               <span class="material-symbols-outlined text-[14px]">auto_fix_high</span> Customize Product
+             </button>`
+          : `<button class="w-full py-1.5 px-2 rounded-md sm:rounded-lg font-semibold text-[11px] sm:text-xs text-white bg-[#14381F] transition-opacity hover:opacity-90 active:scale-[0.98] add-to-cart-btn cursor-pointer" data-id="${product.id}" onclick="event.preventDefault(); event.stopPropagation();">
+               Add to Cart
+             </button>`;
 
     card.innerHTML = `
       <div>
@@ -1038,7 +1066,7 @@
               : `<span class="bg-[#14381F]/10 text-[#14381F] text-[9px] sm:text-[10px] font-mono font-bold px-1 sm:px-1.5 py-0.5 rounded tracking-wider uppercase">New</span>`}
           </div>
           <h4 class="font-bold text-xs sm:text-sm leading-snug text-[#1C1C1A] line-clamp-2 min-h-[32px] sm:min-h-[38px]" style="font-family: 'Playfair Display', serif;">${escapeHtml(product.name)}</h4>
-          <span class="text-[10px] sm:text-xs text-[#7a7a6e] hover:underline cursor-pointer truncate block" onclick="event.stopPropagation(); window.location.href='/buyer/seller-profile.html?id=${product.seller_id}'" style="font-family: 'DM Sans', sans-serif;">By ${escapeHtml(sellerName)}</span>
+          <span class="text-[10px] sm:text-xs text-[#7a7a6e] hover:underline cursor-pointer truncate block" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/buyer/seller-profile.html?id=${product.seller_id}'" style="font-family: 'DM Sans', sans-serif;">By ${escapeHtml(sellerName)}</span>
         </div>
       </div>
       <div class="px-2 pb-2 sm:px-3 sm:pb-3 pt-0">
@@ -1050,6 +1078,7 @@
     const wishlistBtn = card.querySelector('.toggle-wishlist-btn');
     if (wishlistBtn) {
       wishlistBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
         e.stopPropagation();
         const wishlisted = wishlistBtn.getAttribute('data-wishlisted') === 'true';
         await handleToggleWishlist(product.id, wishlisted, wishlistBtn);
@@ -1059,16 +1088,18 @@
     const addToCartBtn = card.querySelector('.add-to-cart-btn');
     if (addToCartBtn) {
       addToCartBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
         e.stopPropagation();
-        await handleAddToCart(product.id);
+        await handleAddToCart(product.id, addToCartBtn);
       });
     }
 
-    const talkToSellerBtn = card.querySelector('.talk-to-seller-btn');
-    if (talkToSellerBtn) {
-      talkToSellerBtn.addEventListener('click', async (e) => {
+    const customizeBtn = card.querySelector('.customize-btn');
+    if (customizeBtn) {
+      customizeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
-        await handleTalkToSeller(product.id, talkToSellerBtn);
+        window.location.href = `/buyer/product.html?id=${product.id}`;
       });
     }
 

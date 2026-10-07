@@ -95,13 +95,22 @@
       <!-- Revenue Chart (2/3 width) -->
       <div class="lg:col-span-2 bg-[#FFF8E7] p-6 rounded-xl border border-outline-variant/30 shadow-sm">
         <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
-          <h3 class="font-headline-md text-lg text-primary">Revenue Timeline</h3>
+          <div class="flex items-center gap-3">
+            <h3 class="font-headline-md text-lg text-primary">Revenue Timeline</h3>
+            <span id="period-revenue-badge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#14381F]/10 text-[#14381F]">Period: ₹0</span>
+          </div>
           <!-- Range Controls -->
-          <div class="flex items-center gap-2 bg-[#FFF8E7] p-1 rounded-full">
+          <div class="flex items-center gap-2 bg-[#FFF8E7] p-1 rounded-full flex-wrap">
             <button id="btn-chart-7d" class="px-4 py-1 rounded-full text-xs font-bold bg-[#14381F] text-white shadow-sm transition-all duration-200">7D</button>
             <button id="btn-chart-30d" class="px-4 py-1 rounded-full text-xs font-bold text-text-default hover:bg-outline-variant/10 transition-all duration-200">30D</button>
+            <button id="btn-chart-90d" class="px-4 py-1 rounded-full text-xs font-bold text-text-default hover:bg-outline-variant/10 transition-all duration-200">90D</button>
+            <button id="btn-chart-all" class="px-4 py-1 rounded-full text-xs font-bold text-text-default hover:bg-outline-variant/10 transition-all duration-200">All</button>
             <button id="btn-chart-custom" class="px-4 py-1 rounded-full text-xs font-bold text-text-default hover:bg-outline-variant/10 transition-all duration-200">Custom</button>
           </div>
+        </div>
+        <div id="no-transactions-helper" class="hidden text-xs text-amber-700 bg-amber-50 border border-amber-200/60 rounded-md p-2 mb-3 flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-sm text-amber-600">info</span>
+          <span>No transactions in this window — try selecting 30D or All Time</span>
         </div>
         <!-- Custom date inputs (hidden by default) -->
         <div id="custom-date-picker" class="hidden flex gap-4 mb-4 items-center bg-[#FFF8E7]/50 p-3 rounded-lg border border-outline-variant/20">
@@ -223,6 +232,7 @@
         }
         const revRes = await adminApiClient.get(revUrl);
         const revData = revRes.data.success ? revRes.data.data : [];
+        const summary = revRes.data.summary || {};
 
         // 2. Fetch Footfall
         let ffUrl = `/admin/dashboard/footfall?period=${period}`;
@@ -240,8 +250,31 @@
         const revLabels = revData.map(d => d.date);
         const revValues = revData.map(d => (d.revenue || 0) / 100);
 
+        const periodRevenueRupees = summary.period_revenue_paise !== undefined
+          ? summary.period_revenue_paise / 100
+          : revValues.reduce((acc, val) => acc + val, 0);
+
+        const badgeEl = document.getElementById('period-revenue-badge');
+        if (badgeEl) {
+          badgeEl.textContent = `Period: ₹${periodRevenueRupees.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        const helperEl = document.getElementById('no-transactions-helper');
+        if (helperEl) {
+          if (periodRevenueRupees === 0) {
+            helperEl.classList.remove('hidden');
+          } else {
+            helperEl.classList.add('hidden');
+          }
+        }
+
         if (revenueChart) revenueChart.destroy();
         const ctxRev = document.getElementById('revenueChart').getContext('2d');
+
+        const gradient = ctxRev.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(20, 56, 31, 0.2)');
+        gradient.addColorStop(1, 'rgba(20, 56, 31, 0.0)');
+
         revenueChart = new Chart(ctxRev, {
           type: 'line',
           data: {
@@ -250,25 +283,52 @@
               label: 'Revenue (₹)',
               data: revValues,
               borderColor: '#14381F',
-              backgroundColor: 'rgba(61, 107, 79, 0.05)',
-              borderWidth: 2,
+              backgroundColor: gradient,
+              borderWidth: 2.5,
               fill: true,
-              tension: 0.3
+              tension: 0.35,
+              pointRadius: revValues.length > 31 ? 0 : 3,
+              pointHoverRadius: 6,
+              pointBackgroundColor: '#14381F'
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  title: (items) => {
+                    const d = new Date(items[0].label + 'T00:00:00');
+                    return isNaN(d) ? items[0].label : d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                  },
+                  label: (ctx) => ' Revenue: ₹' + Number(ctx.raw || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                }
+              }
+            },
             scales: {
               y: {
                 beginAtZero: true,
+                suggestedMin: 0,
+                suggestedMax: 1000,
                 grid: { color: 'rgba(217, 212, 203, 0.3)' },
-                ticks: { font: { family: 'Space Mono' } }
+                ticks: {
+                  precision: 0,
+                  font: { family: 'Space Mono', size: 11 },
+                  callback: (val) => '₹' + Number(val).toLocaleString('en-IN')
+                }
               },
               x: {
                 grid: { display: false },
-                ticks: { font: { family: 'Space Mono' } }
+                ticks: {
+                  font: { family: 'Space Mono' },
+                  callback: function(val, index) {
+                    const labelStr = this.getLabelForValue(val);
+                    const d = new Date(labelStr + 'T00:00:00');
+                    return isNaN(d) ? labelStr : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+                  }
+                }
               }
             }
           }
@@ -312,7 +372,14 @@
               },
               x: {
                 grid: { display: false },
-                ticks: { font: { family: 'Space Mono' } }
+                ticks: {
+                  font: { family: 'Space Mono' },
+                  callback: function(val, index) {
+                    const labelStr = this.getLabelForValue(val);
+                    const d = new Date(labelStr + 'T00:00:00');
+                    return isNaN(d) ? labelStr : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+                  }
+                }
               }
             }
           }
@@ -413,12 +480,14 @@
     // Tab buttons handling
     const btn7d = document.getElementById('btn-chart-7d');
     const btn30d = document.getElementById('btn-chart-30d');
+    const btn90d = document.getElementById('btn-chart-90d');
+    const btnAll = document.getElementById('btn-chart-all');
     const btnCustom = document.getElementById('btn-chart-custom');
     const customPicker = document.getElementById('custom-date-picker');
 
     function resetActiveButtons() {
-      [btn7d, btn30d, btnCustom].forEach(b => {
-        b.className = "px-4 py-1 rounded-full text-xs font-bold text-text-default hover:bg-outline-variant/10 transition-all duration-200";
+      [btn7d, btn30d, btn90d, btnAll, btnCustom].forEach(b => {
+        if (b) b.className = "px-4 py-1 rounded-full text-xs font-bold text-text-default hover:bg-outline-variant/10 transition-all duration-200";
       });
     }
 
@@ -436,6 +505,22 @@
       customPicker.classList.add('hidden');
       selectedPeriod = '30d';
       updateCharts('30d');
+    });
+
+    btn90d.addEventListener('click', () => {
+      resetActiveButtons();
+      btn90d.className = "px-4 py-1 rounded-full text-xs font-bold bg-[#14381F] text-white shadow-sm transition-all duration-200";
+      customPicker.classList.add('hidden');
+      selectedPeriod = '90d';
+      updateCharts('90d');
+    });
+
+    btnAll.addEventListener('click', () => {
+      resetActiveButtons();
+      btnAll.className = "px-4 py-1 rounded-full text-xs font-bold bg-[#14381F] text-white shadow-sm transition-all duration-200";
+      customPicker.classList.add('hidden');
+      selectedPeriod = 'all';
+      updateCharts('all');
     });
 
     btnCustom.addEventListener('click', () => {

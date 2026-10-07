@@ -103,7 +103,7 @@
 
 <body class="bg-[#FFF8E7] text-on-surface font-body-md min-h-[100dvh] w-full overflow-x-hidden">
   <seller-layout active-tab="catalog">
-    <div class="w-full max-w-full sm:max-w-5xl mx-auto px-3 py-4 sm:px-6 sm:py-6 overflow-x-hidden space-y-6 sm:space-y-8 pb-36 sm:pb-32">
+    <div class="w-full max-w-full sm:max-w-5xl mx-auto px-3 py-4 sm:px-6 sm:py-6 overflow-x-hidden space-y-6 sm:space-y-8 pb-36 sm:pb-12">
       
       <!-- Top Action Bar -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 sm:pb-6 border-b border-[#285C3A]/15">
@@ -478,23 +478,23 @@
 
       </form>
 
-      <!-- Sticky Action Bar for Mobile & Desktop Parity -->
-      <div class="sticky-action-bar -mx-3 sm:-mx-6 px-3 sm:px-6 py-3.5 mt-8 shadow-md">
-        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div class="flex items-center justify-between w-full sm:w-auto">
+      <!-- Mobile Sticky Action Bar (hidden on desktop to avoid duplicate floating bars) -->
+      <div class="sticky-action-bar sm:hidden -mx-3 px-3 py-3.5 mt-8 shadow-md">
+        <div class="max-w-5xl mx-auto flex flex-col items-center justify-between gap-3">
+          <div class="flex items-center justify-between w-full">
             <span id="draft-status-indicator" class="text-xs text-[#587A5B] font-mono hidden">Draft Saved ✓</span>
-            <span class="text-[11px] text-[#587A5B] sm:hidden font-mono">* Required fields to publish</span>
+            <span class="text-[11px] text-[#587A5B] font-mono">* Required fields to publish</span>
           </div>
-          <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-            <button type="button" id="save-draft-btn" class="flex-1 sm:flex-none min-h-[44px] px-4 sm:px-5 py-2.5 rounded-xl sm:rounded-full border border-[#285C3A]/25 bg-[#FFF8E7] text-[#14381F] text-xs font-bold hover:bg-[#DCE6D8] transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 shadow-xs">
+          <div class="flex items-center gap-2 w-full">
+            <button type="button" id="save-draft-btn" class="flex-1 min-h-[44px] px-4 py-2.5 rounded-xl border border-[#285C3A]/25 bg-[#FFF8E7] text-[#14381F] text-xs font-bold hover:bg-[#DCE6D8] transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 shadow-xs">
               <span class="material-symbols-outlined text-[18px]">bookmark_border</span>
               <span>Save Draft</span>
             </button>
-            <button type="button" id="open-preview-btn" class="flex-1 sm:flex-none min-h-[44px] px-4 sm:px-5 py-2.5 rounded-xl sm:rounded-full border border-[#14381F] text-[#14381F] text-xs font-bold hover:bg-[#14381F] hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-xs">
+            <button type="button" id="open-preview-btn" class="flex-1 min-h-[44px] px-4 py-2.5 rounded-xl border border-[#14381F] text-[#14381F] text-xs font-bold hover:bg-[#14381F] hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-xs">
               <span class="material-symbols-outlined text-[18px]">visibility</span>
               <span>Preview</span>
             </button>
-            <button type="button" id="publish-listing-btn" class="flex-[1.5] sm:flex-none min-h-[44px] px-5 sm:px-7 py-2.5 rounded-xl sm:rounded-full bg-[#14381F] text-[#FFF8E7] text-xs font-bold hover:bg-[#285C3A] transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5 active:scale-95">
+            <button type="button" id="publish-listing-btn" class="flex-[1.5] min-h-[44px] px-5 py-2.5 rounded-xl bg-[#14381F] text-[#FFF8E7] text-xs font-bold hover:bg-[#285C3A] transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5 active:scale-95">
               <span class="material-symbols-outlined text-[18px]">publish</span>
               <span>Publish Listing</span>
             </button>

@@ -838,7 +838,7 @@
 
         async function loadSellerProfile() {
             try {
-                const res = await apiClient.get(`/sellers/${sellerId}`);
+                const res = await apiClient.get(`/seller/public/${encodeURIComponent(sellerId)}`);
                 if (res.data && res.data.success && res.data.data) {
                     sellerProfile = res.data.data;
                     sellerId = sellerProfile.user_id || sellerProfile.id || sellerId;
@@ -1055,9 +1055,9 @@
 
         async function ensureProductsLoaded() {
             if (allSellerProducts.length === 0) {
-                const res = await apiClient.get(`/sellers/${sellerId}/products?limit=250`);
+                const res = await apiClient.get(`/products/seller/${encodeURIComponent(sellerId)}?limit=250`);
                 if (res.data && res.data.success) {
-                    allSellerProducts = res.data.data.products || [];
+                    allSellerProducts = res.data.data?.products || res.data.products || [];
                     updateCustomBtnVisibility();
                 }
             }
@@ -1178,10 +1178,12 @@
             let actionBtnHtml = '';
             if (isOwner) {
                 actionBtnHtml = `<button type="button" class="w-full bg-[#14381F]/15 text-[#587A5B] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold opacity-60 cursor-not-allowed text-[11px] sm:text-xs" disabled>Own Product</button>`;
+            } else if (isSoldOut) {
+                actionBtnHtml = `<button type="button" class="w-full bg-stone-200 text-stone-500 py-1.5 px-2 rounded-md sm:rounded-lg font-semibold cursor-not-allowed text-[11px] sm:text-xs" disabled>Sold Out</button>`;
             } else if (isCustomized) {
-                actionBtnHtml = `<button type="button" data-action="customise" data-product-id="${p.id}" class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs cursor-pointer shadow-xs">Customise</button>`;
+                actionBtnHtml = `<button type="button" data-action="customise" data-product-id="${p.id}" class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs customize-btn cursor-pointer shadow-xs flex items-center justify-center gap-1"><span class="material-symbols-outlined text-[14px]">auto_fix_high</span> Customize Product</button>`;
             } else {
-                actionBtnHtml = `<button type="button" data-action="cart" data-product-id="${p.id}" class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs cursor-pointer shadow-xs ${isSoldOut ? 'opacity-50 pointer-events-none' : ''}">${isSoldOut ? 'Sold Out' : 'Add to Cart'}</button>`;
+                actionBtnHtml = `<button type="button" data-action="cart" data-product-id="${p.id}" class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs add-to-cart-btn cursor-pointer shadow-xs">Add to Cart</button>`;
             }
 
             const card = document.createElement('div');
@@ -1578,6 +1580,7 @@
             grid.addEventListener('click', (e) => {
                 const btn = e.target.closest('button');
                 if (btn) {
+                    e.preventDefault();
                     e.stopPropagation();
                     const action = btn.dataset.action;
                     const pid = btn.dataset.productId;
@@ -1586,7 +1589,7 @@
                     } else if (action === 'cart') {
                         addToCart(pid, btn);
                     } else if (action === 'customise') {
-                        window.location.href = `/buyer/customization-form.html?productId=${pid}`;
+                        window.location.href = `/buyer/product.html?id=${pid}`;
                     }
                     return;
                 }
@@ -1603,11 +1606,9 @@
                 window.Toast?.show("Sellers cannot purchase their own products", "error");
                 return;
             }
-            if (!isLoggedIn) {
-                window.Toast?.show("Please log in to purchase items", "error");
-                return;
-            }
+            if (btnEl && btnEl.disabled) return;
 
+            const originalText = btnEl ? btnEl.innerText : 'Add to Cart';
             if (btnEl) {
                 btnEl.disabled = true;
                 btnEl.innerText = 'Adding...';
@@ -1619,16 +1620,27 @@
                     quantity: 1
                 });
                 if (response.data && response.data.success) {
-                    window.Toast?.show("Added to cart successfully!", "success");
+                    window.Toast?.show("Added to cart!", "success");
+                    if (btnEl) {
+                        btnEl.innerText = 'Added! ✓';
+                        btnEl.classList.add('bg-[#285C3A]');
+                    }
                     await updateCartBadge();
+                    setTimeout(() => {
+                        if (btnEl) {
+                            btnEl.disabled = false;
+                            btnEl.innerText = originalText;
+                            btnEl.classList.remove('bg-[#285C3A]');
+                        }
+                    }, 1500);
                 }
             } catch (err) {
                 console.error("Failed to add to cart:", err);
-                window.Toast?.show("Failed to add to cart", "error");
-            } finally {
+                const errMsg = err?.response?.data?.message || err?.message || "Failed to add to cart";
+                window.Toast?.show(errMsg, "error");
                 if (btnEl) {
                     btnEl.disabled = false;
-                    btnEl.innerText = 'Add to Cart';
+                    btnEl.innerText = originalText;
                 }
             }
         }
@@ -1684,17 +1696,17 @@
         async function updateCartBadge() {
             try {
                 const res = await apiClient.get('/cart');
+                const badges = document.querySelectorAll('#nav-cart-badge, .cart-badge, #mobile-cart-badge');
                 if (res.data && res.data.success) {
                     const count = res.data.data.item_count || 0;
-                    const navBadge = document.getElementById('nav-cart-badge');
-                    if (navBadge) {
+                    badges.forEach(badge => {
                         if (count > 0) {
-                            navBadge.innerText = count;
-                            navBadge.classList.remove('hidden');
+                            badge.innerText = count;
+                            badge.classList.remove('hidden');
                         } else {
-                            navBadge.classList.add('hidden');
+                            badge.classList.add('hidden');
                         }
-                    }
+                    });
                 }
             } catch (e) { /* ignore */ }
         }

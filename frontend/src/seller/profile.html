@@ -612,17 +612,6 @@
       </span>
     </div>
 
-    <!-- Same as Billing Toggle -->
-    <div class="mb-6 p-4 rounded-xl bg-surface-container-low border border-outline-variant/40 flex items-center justify-between gap-4">
-      <div>
-        <p class="text-sm font-semibold text-on-surface">Pickup address is same as billing address</p>
-        <p class="text-xs text-on-surface-variant">Automatically copy street, city, state, and PIN code from your Registered Billing Address above.</p>
-      </div>
-      <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
-        <input type="checkbox" id="same-as-billing-toggle" class="sr-only peer" />
-        <div class="w-11 h-6 bg-outline-variant rounded-full peer peer-checked:bg-primary transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
-      </label>
-    </div>
 
     <form id="seller-pickup-form" class="space-y-5" novalidate>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -1030,64 +1019,6 @@ function updateBillingStatusBadge(hasBilling, hasBanking) {
   }
 }
 
-// ─── Same as Billing Address Toggle ───────────────────────────────────────────
-const sameAsBillingToggle = document.getElementById('same-as-billing-toggle');
-
-function copyBillingToPickup() {
-  const getVal = id => (document.getElementById(id)?.value || '').trim();
-  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
-
-  setVal('p-line1', getVal('b-line1'));
-  setVal('p-line2', getVal('b-line2'));
-  setVal('p-landmark', getVal('b-landmark'));
-  setVal('p-city', getVal('b-city'));
-  setVal('p-state', getVal('b-state'));
-  setVal('p-pincode', getVal('b-pincode'));
-
-  if (!getVal('p-contact-name')) {
-    setVal('p-contact-name', getVal('b-holder-name') || getVal('b-legal-name') || getVal('f-shop-name'));
-  }
-  if (!getVal('p-facility-name')) {
-    setVal('p-facility-name', getVal('f-shop-name') || getVal('b-legal-name'));
-  }
-
-  const pin = getVal('p-pincode');
-  if (/^\d{6}$/.test(pin)) {
-    verifyPickupPincodeServiceability(pin);
-  }
-}
-
-function togglePickupAddressLock(locked) {
-  ['p-line1', 'p-line2', 'p-landmark', 'p-city', 'p-state', 'p-pincode'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.readOnly = locked;
-    el.classList.toggle('opacity-70', locked);
-    el.classList.toggle('cursor-not-allowed', locked);
-  });
-}
-
-if (sameAsBillingToggle) {
-  sameAsBillingToggle.addEventListener('change', () => {
-    if (sameAsBillingToggle.checked) {
-      copyBillingToPickup();
-      togglePickupAddressLock(true);
-    } else {
-      togglePickupAddressLock(false);
-    }
-  });
-}
-
-['b-line1', 'b-line2', 'b-landmark', 'b-city', 'b-state', 'b-pincode'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) {
-    el.addEventListener('input', () => {
-      if (sameAsBillingToggle && sameAsBillingToggle.checked) {
-        copyBillingToPickup();
-      }
-    });
-  }
-});
 
 // ─── Live PIN Code Serviceability Check (iThink Logistics) ────────────────────
 let pincodeCheckTimer;
@@ -1227,7 +1158,7 @@ document.getElementById('seller-billing-form').addEventListener('submit', async 
         legal_business_name: legalName,
         gstin,
         pan_number: pan,
-        same_as_billing: Boolean(sameAsBillingToggle && sameAsBillingToggle.checked),
+        same_as_billing: false,
         billing_address: {
           legal_business_name: legalName,
           gstin,
@@ -1283,9 +1214,7 @@ document.getElementById('seller-billing-form').addEventListener('submit', async 
       set('b-upi', bk.upi_id || upi);
     }
 
-    if (sameAsBillingToggle && sameAsBillingToggle.checked) {
-      copyBillingToPickup();
-    } else if (resultData.pickup_address && resultData.pickup_address.address_line1 && !document.getElementById('p-line1').value.trim()) {
+    if (resultData.pickup_address && resultData.pickup_address.address_line1 && !document.getElementById('p-line1').value.trim()) {
       const p = resultData.pickup_address;
       const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
       set('p-contact-name', p.contact_name);
@@ -1327,10 +1256,6 @@ document.getElementById('seller-pickup-form').addEventListener('submit', async (
     const el = document.getElementById(id); if (el) el.textContent = '';
   });
 
-  if (sameAsBillingToggle && sameAsBillingToggle.checked) {
-    copyBillingToPickup();
-  }
-
   const contactName = document.getElementById('p-contact-name').value.trim();
   const phone = document.getElementById('p-phone').value.trim().replace(/\D/g, '').slice(-10);
   const facilityName = document.getElementById('p-facility-name').value.trim();
@@ -1365,7 +1290,7 @@ document.getElementById('seller-pickup-form').addEventListener('submit', async (
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
       body: JSON.stringify({
-        same_as_billing: Boolean(sameAsBillingToggle && sameAsBillingToggle.checked),
+        same_as_billing: false,
         pickup_address: {
           contact_name: contactName,
           phone,
@@ -1377,7 +1302,7 @@ document.getElementById('seller-pickup-form').addEventListener('submit', async (
           state,
           pincode,
           country: 'India',
-          same_as_billing: Boolean(sameAsBillingToggle && sameAsBillingToggle.checked)
+          same_as_billing: false
         }
       })
     });
@@ -1529,10 +1454,6 @@ function populateProfile(data) {
   set('p-state', pickup.state);
   set('p-pincode', pickup.pincode);
 
-  if (sameAsBillingToggle && pickup.same_as_billing) {
-    sameAsBillingToggle.checked = true;
-    togglePickupAddressLock(true);
-  }
   if (pickup.pincode && /^\d{6}$/.test(String(pickup.pincode))) {
     verifyPickupPincodeServiceability(String(pickup.pincode));
   }

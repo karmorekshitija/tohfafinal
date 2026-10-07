@@ -215,7 +215,7 @@ function setupUIInteractions() {
 }
 
 function handlePhotoFiles(files) {
-  const fileList = Array.from(files).filter(file => file.type.startsWith('image/'));
+  const fileList = Array.from(files).filter(file => file.type && file.type.startsWith('image/'));
   if (fileList.length === 0) return;
 
   const progressContainer = document.getElementById('photos-upload-progress');
@@ -231,12 +231,28 @@ function handlePhotoFiles(files) {
 
   let processed = 0;
   fileList.forEach(file => {
+    // Immediately begin background compression concurrently
+    const compressPromise = compressImage(file).catch(err => {
+      console.warn('Background image compression error:', err);
+      return file;
+    });
+
+    const photoObj = {
+      file,
+      compressedFile: null,
+      compressedPromise: compressPromise,
+      dataUrl: ''
+    };
+
+    compressPromise.then(compressed => {
+      photoObj.compressedFile = compressed;
+    });
+
+    uploadedPhotos.push(photoObj);
+
     const reader = new FileReader();
     reader.onload = (e) => {
-      uploadedPhotos.push({
-        file,
-        dataUrl: e.target.result
-      });
+      photoObj.dataUrl = e.target.result;
       processed++;
       const pct = Math.round((processed / fileList.length) * 100);
       if (progressBar) progressBar.style.width = `${pct}%`;
@@ -899,7 +915,7 @@ async function handleSubmit(e) {
 
       let photoUploadFailed = false;
 
-      // Upload photos if any selected (with client-side lossless compression)
+      // Upload photos if any selected (using pre-compressed files or parallel background compression)
       if (uploadedPhotos.length > 0) {
         if (progressContainer) {
           progressContainer.classList.remove('hidden');
@@ -910,23 +926,43 @@ async function handleSubmit(e) {
           if (progressPercent) progressPercent.textContent = '30%';
         }
 
+        const compressedFiles = await Promise.all(
+          uploadedPhotos.map(async (p) => {
+            if (p.compressedFile) {
+              return p.compressedFile;
+            }
+            if (p.compressedPromise) {
+              try {
+                const comp = await p.compressedPromise;
+                if (comp) return comp;
+              } catch (_) {}
+            }
+            let file = p.file;
+            if (!file && p.dataUrl && p.dataUrl.startsWith('data:')) {
+              try {
+                const fetchRes = await fetch(p.dataUrl);
+                const blob = await fetchRes.blob();
+                file = new File([blob], 'product_image.jpg', { type: blob.type || 'image/jpeg' });
+              } catch (_) {
+                return null;
+              }
+            }
+            if (file) {
+              return await compressImage(file).catch(() => file);
+            }
+            return null;
+          })
+        );
+
         const formData = new FormData();
         let fileCount = 0;
-        for (const p of uploadedPhotos) {
-          let file = p.file;
-          if (!file && p.dataUrl && p.dataUrl.startsWith('data:')) {
-            try {
-              const fetchRes = await fetch(p.dataUrl);
-              const blob = await fetchRes.blob();
-              file = new File([blob], 'product_image.jpg', { type: blob.type || 'image/jpeg' });
-            } catch (_) { /* skip unrecoverable dataUrl */ }
-          }
+        for (const file of compressedFiles) {
           if (file) {
-            const compressed = await compressImage(file);
-            formData.append('images', compressed);
+            formData.append('images', file);
             fileCount++;
           }
         }
+
         if (fileCount > 0) {
           try {
             if (progressBar) progressBar.style.width = '60%';

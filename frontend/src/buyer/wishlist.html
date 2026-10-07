@@ -253,15 +253,17 @@
     async function updateCartBadge() {
         try {
             const cartRes = await apiClient.get('/cart');
-            const navBadge = document.getElementById('nav-cart-badge');
-            if (navBadge && cartRes.data && cartRes.data.success) {
+            const badges = document.querySelectorAll('#nav-cart-badge, .cart-badge, #mobile-cart-badge');
+            if (cartRes.data && cartRes.data.success) {
                 const count = cartRes.data.data.item_count || 0;
-                if (count > 0) {
-                    navBadge.innerText = count;
-                    navBadge.classList.remove('hidden');
-                } else {
-                    navBadge.classList.add('hidden');
-                }
+                badges.forEach(badge => {
+                    if (count > 0) {
+                        badge.innerText = count;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                });
             }
         } catch(e){}
     }
@@ -269,15 +271,17 @@
     async function updateWishlistBadge() {
         try {
             const wishlistRes = await apiClient.get('/wishlist');
-            const navWishlistBadge = document.getElementById('nav-wishlist-badge');
-            if (navWishlistBadge && wishlistRes.data && wishlistRes.data.success) {
+            const badges = document.querySelectorAll('#nav-wishlist-badge, .wishlist-badge');
+            if (wishlistRes.data && wishlistRes.data.success) {
                 const count = wishlistRes.data.data.count || 0;
-                if (count > 0) {
-                    navWishlistBadge.innerText = count;
-                    navWishlistBadge.classList.remove('hidden');
-                } else {
-                    navWishlistBadge.classList.add('hidden');
-                }
+                badges.forEach(badge => {
+                    if (count > 0) {
+                        badge.innerText = count;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                });
             }
         } catch(e){}
     }
@@ -364,22 +368,24 @@
                            </button>`
                         : `<button class="absolute top-1.5 right-1.5 w-6 h-6 sm:w-[26px] sm:h-[26px] min-w-0 min-h-0 flex items-center justify-center bg-[#FFF8E7]/80 backdrop-blur-sm rounded-full text-primary hover:scale-110 transition-transform remove-wishlist-btn p-0 z-10" data-id="${item.product_id}">
                                <span class="material-symbols-outlined active-heart text-[15px] sm:text-[17px] text-primary" style="font-variation-settings: 'FILL' 1;">favorite</span>
-                           </button>`;
-
-                    const isCustomized = item.listing_type === 'custom' || item.customization_mode === 'fixed' || item.customization_mode === 'open' || Boolean(item.is_customizable);
+                           </button>`;                    const isCustomized = item.listing_type === 'custom' || item.customization_mode === 'fixed' || item.customization_mode === 'open' || Boolean(item.is_customizable);
                     const stock = item.stock_qty !== undefined ? item.stock_qty : (item.stock_quantity !== undefined ? item.stock_quantity : (item.stock !== undefined ? item.stock : null));
                     const isOutOfStock = !isCustomized && (item.status === 'sold_out' || (stock !== null && stock <= 0));
                     const addToCartBtnHtml = isOwner
-                        ? `<button class="w-full py-sm px-md border border-secondary text-secondary font-body-md text-body-md rounded-lg opacity-50 cursor-not-allowed bg-[#14381F]/20 mt-auto" disabled onclick="event.stopPropagation();">
+                        ? `<button class="w-full py-sm px-md border border-secondary text-secondary font-body-md text-body-md rounded-lg opacity-50 cursor-not-allowed bg-[#14381F]/20 mt-auto" disabled onclick="event.preventDefault(); event.stopPropagation();">
                                Own Product
                            </button>`
-                        : isCustomized
-                            ? `<button class="w-full py-sm px-md border border-secondary text-secondary font-body-md text-body-md rounded-lg hover:bg-secondary hover:text-white transition-all active:scale-[0.98] talk-to-seller-btn mt-auto" data-id="${item.product_id}">
-                                   Talk to Seller
+                        : isOutOfStock
+                            ? `<button class="w-full py-sm px-md border border-stone-300 text-stone-500 font-body-md text-body-md rounded-lg bg-stone-200 cursor-not-allowed mt-auto" disabled onclick="event.preventDefault(); event.stopPropagation();">
+                                   Out of Stock
                                </button>`
-                            : `<button class="w-full py-sm px-md border border-secondary text-secondary font-body-md text-body-md rounded-lg hover:bg-secondary hover:text-white transition-all active:scale-[0.98] add-to-cart-btn mt-auto ${item.in_cart ? 'bg-secondary text-white border-transparent cursor-default font-semibold' : ''}" data-id="${item.product_id}" ${item.in_cart ? 'disabled' : ''}>
-                                   ${item.in_cart ? 'Added ✓' : 'Add to cart'}
-                               </button>`;
+                            : isCustomized
+                                ? `<button class="w-full py-sm px-md bg-[#14381F] text-[#FAF6EE] font-body-md text-body-md rounded-lg hover:bg-[#285C3A] transition-all active:scale-[0.98] customize-btn cursor-pointer flex items-center justify-center gap-1 mt-auto" data-id="${item.product_id}" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/buyer/product.html?id=${item.product_id}';">
+                                       <span class="material-symbols-outlined text-[14px]">auto_fix_high</span> Customize Product
+                                   </button>`
+                                : `<button class="w-full py-sm px-md border border-secondary text-secondary font-body-md text-body-md rounded-lg hover:bg-secondary hover:text-white transition-all active:scale-[0.98] add-to-cart-btn cursor-pointer mt-auto" data-id="${item.product_id}" onclick="event.preventDefault(); event.stopPropagation();">
+                                       Add to Cart
+                                   </button>`;
 
                     return `
                         <div class="bg-[#FFF8E7] p-lg rounded-xl border border-outline-variant hover:shadow-[0_8px_30px_rgb(58,51,40,0.08)] transition-all group flex flex-col justify-between cursor-pointer ${isOutOfStock ? 'is-out-of-stock' : ''}" onclick="window.location.href='/buyer/product.html?id=${item.product_id}'">
@@ -436,29 +442,38 @@
                         const id = btn.getAttribute('data-id');
                         try {
                             btn.disabled = true;
+                            const originalText = btn.innerText;
                             btn.innerText = 'Adding...';
                             await apiClient.post('/cart/items', { product_id: String(id).trim(), quantity: 1 });
-                            Toast.show('Added to cart successfully!', 'success');
-                            btn.innerText = 'Added ✓';
+                            Toast.show('Added to cart!', 'success');
+                            btn.innerText = 'Added! ✓';
                             btn.classList.add('bg-secondary', 'text-white', 'border-transparent', 'cursor-default', 'font-semibold');
                             btn.classList.remove('text-secondary', 'hover:bg-secondary', 'hover:text-white');
-                            updateCartBadge();
+                            await updateCartBadge();
+                            setTimeout(() => {
+                                btn.disabled = false;
+                                btn.innerText = originalText;
+                                btn.classList.remove('bg-secondary', 'text-white', 'border-transparent', 'cursor-default', 'font-semibold');
+                                btn.classList.add('text-secondary', 'hover:bg-secondary', 'hover:text-white');
+                            }, 1500);
                         } catch (err) {
                             btn.disabled = false;
-                            btn.innerText = 'Add to cart';
+                            btn.innerText = 'Add to Cart';
                             console.error('Error adding to cart:', err);
+                            const msg = err.response?.data?.error?.message || err.response?.data?.message || 'Failed to add to cart';
+                            Toast.show(msg, 'error');
                         }
                     });
                 });
 
-                grid.querySelectorAll('.talk-to-seller-btn').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
+                grid.querySelectorAll('.customize-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
                         e.stopPropagation();
                         e.preventDefault();
                         const id = btn.getAttribute('data-id');
-                        await handleTalkToSeller(id, btn);
+                        window.location.href = `/buyer/product.html?id=${id}`;
                     });
-                });
+                });     });
             } else {
                 gridSection.classList.add('hidden');
                 emptyState.classList.remove('hidden');
@@ -529,6 +544,8 @@
     window.addEventListener('DOMContentLoaded', async () => {
         await checkAuthState();
         await window.loadWishlist();
+        await updateCartBadge();
+        await updateWishlistBadge();
     });
 </script>
 

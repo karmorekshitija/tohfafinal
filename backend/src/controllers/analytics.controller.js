@@ -303,7 +303,7 @@ async function getAdminStats(req, res, next) {
 /**
  * Helper: parse period query params into a SQL date range condition.
  *
- * @param {string} period   '7d' | '30d' | 'custom'
+ * @param {string} period   '7d' | '30d' | '90d' | '1y' | 'all' | 'custom'
  * @param {string} start    ISO date string (for 'custom')
  * @param {string} end      ISO date string (for 'custom')
  * @param {number} baseIdx  1-based index of the first param slot available
@@ -312,42 +312,68 @@ async function getAdminStats(req, res, next) {
 function buildDateRange(period, start, end, baseIdx = 1) {
   if (period === 'custom' && start && end) {
     return {
-      condition: `DATE(created_at) BETWEEN $${baseIdx} AND $${baseIdx + 1}`,
+      condition: `DATE(created_at AT TIME ZONE 'Asia/Kolkata') BETWEEN $${baseIdx} AND $${baseIdx + 1}`,
       params: [start, end],
     };
   }
-  const days = period === '30d' ? 30 : 7;
+  if (period === 'all') {
+    return {
+      condition: `1=1`,
+      params: [],
+    };
+  }
+  const daysMap = { '7d': 7, '30d': 30, '90d': 90, '1y': 365 };
+  const days = daysMap[period] || 7;
   return {
     condition: `created_at >= NOW() - INTERVAL '${days} days'`,
     params: [],
   };
 }
 
-function generateDateSequence(period, start, end) {
+function formatDateStr(d) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function generateDateSequence(period, start, end, earliestDateStr = null) {
   const dates = [];
   if (period === 'custom' && start && end) {
-    let curr = new Date(start);
-    const stop = new Date(end);
+    let curr = new Date(start + 'T00:00:00');
+    const stop = new Date(end + 'T00:00:00');
     while (curr <= stop) {
-      dates.push(curr.toISOString().slice(0, 10));
+      dates.push(formatDateStr(curr));
       curr.setDate(curr.getDate() + 1);
     }
     return dates;
   }
 
-  const days = period === '30d' ? 30 : 7;
+  if (period === 'all') {
+    const today = new Date();
+    let curr = earliestDateStr ? new Date(earliestDateStr + 'T00:00:00') : new Date();
+    if (!earliestDateStr) curr.setDate(today.getDate() - 30);
+    while (curr <= today) {
+      dates.push(formatDateStr(curr));
+      curr.setDate(curr.getDate() + 1);
+    }
+    return dates;
+  }
+
+  const daysMap = { '7d': 7, '30d': 30, '90d': 90, '1y': 365 };
+  const days = daysMap[period] || 7;
   const today = new Date();
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date();
     d.setDate(today.getDate() - i);
-    dates.push(d.toISOString().slice(0, 10));
+    dates.push(formatDateStr(d));
   }
   return dates;
 }
 
 /**
  * GET /api/admin/dashboard/revenue-chart
- * Query params: period=7d|30d|custom, start=YYYY-MM-DD, end=YYYY-MM-DD
+ * Query params: period=7d|30d|90d|1y|all|custom, start=YYYY-MM-DD, end=YYYY-MM-DD
  * Returns: [{ date: 'YYYY-MM-DD', revenue: <paise integer> }]
  * Revenue is in paise (rupees × 100) — updateCharts() divides by 100 before rendering.
  */
@@ -357,28 +383,28 @@ async function getRevenueChart(req, res, next) {
     const { condition, params } = buildDateRange(period, start, end, 1);
 
     const { rows } = await query(
-      `SELECT DATE(created_at) AS date,
-              COALESCE(SUM(COALESCE(total_paise / 100.0, total_amount, 0)), 0) AS revenue_rupees
+      `SELECT TO_CHAR(created_at AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD') AS date,
+              COALESCE(SUM(COALESCE(NULLIF(total_paise, 0) / 100.0, CASE WHEN total_amount >= 10000 THEN total_amount / 100.0 ELSE total_amount END, 0)), 0) AS revenue_rupees
        FROM orders
-       WHERE payment_status = 'paid'
+       WHERE LOWER(COALESCE(payment_status, '')) = 'paid'
+         AND LOWER(COALESCE(status, '')) NOT IN ('cancelled', 'refunded')
          AND ${condition}
-       GROUP BY DATE(created_at)
+       GROUP BY TO_CHAR(created_at AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD')
        ORDER BY date ASC`,
       params
     );
 
-    const dateSeq = generateDateSequence(period, start, end);
+    const earliestDate = rows.length > 0 ? rows[0].date : null;
+    const dateSeq = generateDateSequence(period, start, end, earliestDate);
     const dateMap = {};
-    dateSeq.forEach(d => {
-      dateMap[d] = 0;
-    });
+    dateSeq.forEach(d => { dateMap[d] = 0; });
 
+    let totalPeriodPaise = 0;
     rows.forEach(r => {
-      const d = r.date instanceof Date
-        ? r.date.toISOString().slice(0, 10)
-        : String(r.date).slice(0, 10);
-      const val = Math.round(parseFloat(r.revenue_rupees) * 100);
-      dateMap[d] = val;
+      const d = String(r.date).slice(0, 10);
+      const paiseVal = Math.round(parseFloat(r.revenue_rupees) * 100);
+      dateMap[d] = paiseVal;
+      totalPeriodPaise += paiseVal;
     });
 
     const data = Object.keys(dateMap).sort().map(d => ({
@@ -386,7 +412,14 @@ async function getRevenueChart(req, res, next) {
       revenue: dateMap[d] || 0
     }));
 
-    return res.json({ success: true, data });
+    return res.json({
+      success: true,
+      data,
+      summary: {
+        period_revenue_paise: totalPeriodPaise,
+        order_count: rows.length
+      }
+    });
   } catch (err) {
     next(err);
   }
@@ -394,43 +427,41 @@ async function getRevenueChart(req, res, next) {
 
 /**
  * GET /api/admin/dashboard/footfall
- * Query params: period=7d|30d|custom, start=YYYY-MM-DD, end=YYYY-MM-DD
+ * Query params: period=7d|30d|90d|1y|all|custom, start=YYYY-MM-DD, end=YYYY-MM-DD
  * Returns: [{ date: 'YYYY-MM-DD', unique_visitors: number, new_signups: number }]
- * NOTE: unique_visitors is estimated from order placements per day (orders.buyer_id). A dedicated product_views event table would give more accurate data.
  */
 async function getFootfall(req, res, next) {
   try {
     const { period = '7d', start = '', end = '' } = req.query;
     const { condition, params } = buildDateRange(period, start, end, 1);
 
-    // Proxy for daily active buyers: count distinct buyers who placed orders that day
     const { rows: activeRows } = await query(
-      `SELECT DATE(created_at) AS date, COUNT(DISTINCT buyer_id) AS unique_visitors
+      `SELECT TO_CHAR(created_at AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD') AS date, COUNT(DISTINCT buyer_id) AS unique_visitors
        FROM orders
        WHERE ${condition}
-       GROUP BY DATE(created_at)
+       GROUP BY TO_CHAR(created_at AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD')
        ORDER BY date ASC`,
       params
     );
 
-    // New user signups per day
     const { rows: signupRows } = await query(
-      `SELECT DATE(created_at) AS date, COUNT(id) AS new_signups
+      `SELECT TO_CHAR(created_at AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD') AS date, COUNT(id) AS new_signups
        FROM users
        WHERE ${condition}
-       GROUP BY DATE(created_at)
+       GROUP BY TO_CHAR(created_at AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD')
        ORDER BY date ASC`,
       params
     );
 
-    const dateSeq = generateDateSequence(period, start, end);
+    const earliestDate = activeRows.length > 0 ? activeRows[0].date : (signupRows.length > 0 ? signupRows[0].date : null);
+    const dateSeq = generateDateSequence(period, start, end, earliestDate);
     const byDate = {};
     dateSeq.forEach(d => {
       byDate[d] = { date: d, unique_visitors: 0, new_signups: 0 };
     });
 
     for (const r of activeRows) {
-      const d = r.date instanceof Date ? r.date.toISOString().slice(0, 10) : String(r.date).slice(0, 10);
+      const d = String(r.date).slice(0, 10);
       if (byDate[d]) {
         byDate[d].unique_visitors = parseInt(r.unique_visitors, 10);
       } else {
@@ -438,7 +469,7 @@ async function getFootfall(req, res, next) {
       }
     }
     for (const r of signupRows) {
-      const d = r.date instanceof Date ? r.date.toISOString().slice(0, 10) : String(r.date).slice(0, 10);
+      const d = String(r.date).slice(0, 10);
       if (byDate[d]) {
         byDate[d].new_signups = parseInt(r.new_signups, 10);
       } else {

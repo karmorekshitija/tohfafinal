@@ -1905,16 +1905,29 @@ async function uploadImages(req, res, next) {
     );
     let sortOrder = parseInt(maxRows[0].max_order, 10) + 1;
 
-    const inserted = [];
-    for (const filePath of uniqueImageUrls(req.files.map(file => file.path))) {
+    const uniqueUrls = uniqueImageUrls(req.files.map(file => file.path));
+    let inserted = [];
+
+    if (uniqueUrls.length > 0) {
+      const valueTuples = [];
+      const queryParams = [];
+      let paramIndex = 1;
+
+      for (let i = 0; i < uniqueUrls.length; i++) {
+        const filePath = uniqueUrls[i];
+        valueTuples.push(`($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2})`);
+        queryParams.push(id, filePath, sortOrder + i);
+        paramIndex += 3;
+      }
+
       const { rows } = await query(
         `INSERT INTO product_images (product_id, url, sort_order)
-         VALUES ($1, $2, $3)
+         VALUES ${valueTuples.join(', ')}
          ON CONFLICT (product_id, url) DO UPDATE SET sort_order = EXCLUDED.sort_order
          RETURNING id, url, sort_order`,
-        [id, filePath, sortOrder++]
+        queryParams
       );
-      inserted.push(rows[0]);
+      inserted = rows;
     }
 
     // Sync the denormalized products.images TEXT[] column so the sanitizeProduct

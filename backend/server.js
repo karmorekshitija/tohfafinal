@@ -230,13 +230,12 @@ app.get('/api/home/feed', productController.forYouFeed);
 app.get('/api/ui-settings/public', adminController.listBanners);
 app.get('/api/sellers/:id', sellerController.getPublicSellerProfile);
 app.get('/api/sellers/:id/products', (req, res, next) => {
-  req.query.seller_id = req.params.id;
-  req.query.include_ratings = 'true';
-  return productController.listProducts(req, res, next);
+  req.params.sellerId = req.params.id;
+  return productController.getSellerProducts(req, res, next);
 });
 app.get('/api/products/seller/:id', (req, res, next) => {
-  req.query.seller_id = req.params.id;
-  return productController.listProducts(req, res, next);
+  req.params.sellerId = req.params.id;
+  return productController.getSellerProducts(req, res, next);
 });
 app.all('/api/capacity/check', (req, res) => res.json({ success: true, data: { available: true, is_available: true, message: 'Maker is accepting orders.' } }));
 app.all('/api/capacity/check-cart', (req, res) => res.json({ success: true, data: { available: true, is_available: true, items: [] } }));

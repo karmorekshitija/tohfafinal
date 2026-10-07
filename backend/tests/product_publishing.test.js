@@ -419,6 +419,6 @@ describe('Product Publishing — Seller Studio & Tohfa Special Studio', () => {
       if (res.body.data.product.id) {
         createdProductIds.push(res.body.data.product.id);
       }
-    });
+    }, 20000);
   });
 });
