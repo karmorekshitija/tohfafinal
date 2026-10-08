@@ -252,11 +252,12 @@ async function markOrderPaid(orderId, paymentDetails = {}, externalClient = null
     const gatewayAccount = paymentDetails.gateway_account || 'primary';
 
     // 3. Reserve product inventory exactly once, with row locks and stock guards.
-    const productStockRes = await client.query(
+    // For non-variant items (variant_id IS NULL), reserve from products table.
+    const nonVariantItemsRes = await client.query(
       `WITH requested AS (
          SELECT product_id, SUM(quantity)::INTEGER AS quantity
          FROM order_items
-         WHERE order_id = $1
+         WHERE order_id = $1 AND variant_id IS NULL
          GROUP BY product_id
        )
        UPDATE products p
@@ -268,18 +269,20 @@ async function markOrderPaid(orderId, paymentDetails = {}, externalClient = null
        RETURNING p.id`,
       [orderId]
     );
-    const { rows: productCountRows } = await client.query(
+    const { rows: nonVariantCountRows } = await client.query(
       `SELECT COUNT(DISTINCT product_id)::INTEGER AS count
        FROM order_items
-       WHERE order_id = $1`,
+       WHERE order_id = $1 AND variant_id IS NULL`,
       [orderId]
     );
-    if (productStockRes.rowCount !== productCountRows[0].count) {
+    const nonVariantCount = parseInt(nonVariantCountRows[0]?.count || 0, 10);
+    if (nonVariantCount > 0 && nonVariantItemsRes.rowCount !== nonVariantCount) {
       const stockError = new Error('One or more products no longer have enough stock.');
       stockError.status = 409;
       throw stockError;
     }
 
+    // For variant items (variant_id IS NOT NULL), reserve from product_variants table.
     const variantStockRes = await client.query(
       `WITH requested AS (
          SELECT variant_id, SUM(quantity)::INTEGER AS quantity
@@ -301,10 +304,29 @@ async function markOrderPaid(orderId, paymentDetails = {}, externalClient = null
        WHERE order_id = $1 AND variant_id IS NOT NULL`,
       [orderId]
     );
-    if (variantStockRes.rowCount !== variantCountRows[0].count) {
+    const variantCount = parseInt(variantCountRows[0]?.count || 0, 10);
+    if (variantCount > 0 && variantStockRes.rowCount !== variantCount) {
       const stockError = new Error('One or more selected variants no longer have enough stock.');
       stockError.status = 409;
       throw stockError;
+    }
+
+    // Synchronize parent product stock for variant orders (graceful aggregate deduction)
+    if (variantCount > 0) {
+      await client.query(
+        `WITH requested AS (
+           SELECT product_id, SUM(quantity)::INTEGER AS quantity
+           FROM order_items
+           WHERE order_id = $1 AND variant_id IS NOT NULL
+           GROUP BY product_id
+         )
+         UPDATE products p
+         SET stock_quantity = GREATEST(0, p.stock_quantity - requested.quantity),
+             updated_at = NOW()
+         FROM requested
+         WHERE p.id = requested.product_id`,
+        [orderId]
+      );
     }
 
     // 4. Atomically update orders table after inventory reservation succeeds.
