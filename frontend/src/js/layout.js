@@ -409,9 +409,10 @@ export function renderTanya() {
           products.forEach(p => {
             const price = p.base_price || p.price;
             const priceStr = price ? `₹${Number(price).toLocaleString('en-IN')}` : '';
-            const isCustom = p.listing_type === 'custom' || p.customization_mode === 'fixed' || p.customization_mode === 'open' || Boolean(p.is_customizable);
+            const isCustom = p.listing_type === 'custom' || (p.customization_mode && p.customization_mode !== 'none') || Boolean(p.is_customizable);
             const stock = p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : (p.stock !== undefined ? p.stock : null));
             const isOutOfStock = !isCustom && (p.status === 'sold_out' || (stock !== null && stock <= 0));
+            const imgSrc = p.image_url || p.primary_image || (Array.isArray(p.images) && p.images[0]?.url) || (Array.isArray(p.images) && typeof p.images[0] === 'string' ? p.images[0] : '') || '/img/placeholder-product.png';
             const card = document.createElement('a');
             card.href = p.link || `/buyer/product.html?id=${p.id}`;
             card.className = `tanya-product-card ${isOutOfStock ? 'is-out-of-stock' : ''}`;

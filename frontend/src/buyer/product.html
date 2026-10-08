@@ -739,6 +739,7 @@
 
     <script type="module">
         import apiClient, { requireAuth, getAuthToken, isAuthenticated } from '/src/utils/apiClient.js';
+        import Toast from '/src/components/Toast.js';
         import { formatPaise } from '/src/utils/currency.js';
         import { logout } from '/src/utils/auth.js';
         import { initSearchOverlay } from '/buyer/searchOverlay.js';
@@ -1100,22 +1101,29 @@
                         });
                     }
 
-                    // Helper to get image URLs for a variant (or base product fallback)
+                    // Base product photos from Seller Studio
+                    const baseProductImages = (Array.isArray(product.images) && product.images.length > 0)
+                        ? product.images.map(img => typeof img === 'string' ? img : (img.url || img.image_url || img)).filter(Boolean)
+                        : (product.image_url ? [product.image_url] : ['https://placehold.co/600x600/f4ede3/516447?text=Handcrafted']);
+
+                    // Returns a consolidated gallery preserving base product images
                     function getVariantImages(variant) {
+                        let variantImgs = [];
                         if (variant) {
                             if (Array.isArray(variant.images) && variant.images.length > 0) {
-                                const valid = variant.images.map(img => typeof img === 'string' ? img : (img.url || img.image_url || img)).filter(Boolean);
-                                if (valid.length > 0) return valid;
-                            }
-                            if (variant.image_url) {
-                                return [variant.image_url];
+                                variantImgs = variant.images.map(img => typeof img === 'string' ? img : (img.url || img.image_url || img)).filter(Boolean);
+                            } else if (variant.image_url) {
+                                variantImgs = [variant.image_url];
                             }
                         }
-                        if (Array.isArray(product.images) && product.images.length > 0) {
-                            const valid = product.images.map(img => typeof img === 'string' ? img : (img.url || img.image_url || img)).filter(Boolean);
-                            if (valid.length > 0) return valid;
+
+                        if (variantImgs.length > 0) {
+                            // Show selected variant images FIRST, followed by all base product images (deduplicated)
+                            return Array.from(new Set([...variantImgs, ...baseProductImages]));
                         }
-                        return [product.image_url || 'https://placehold.co/600x600/f4ede3/516447?text=Handcrafted'];
+
+                        // Default to all base product images
+                        return baseProductImages;
                     }
 
                     // Consolidated Single Image Gallery Updater (Desktop & Mobile)
@@ -2219,7 +2227,7 @@
                 ribbonHtml = `<span class="bg-[#d97706] text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">Sponsored</span>`;
             } else if (p.is_bestseller) {
                 ribbonHtml = `<span class="bg-[#C4622D] text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">Best Seller</span>`;
-            } else if (p.is_customized || p.listing_type === 'custom') {
+            } else if (p.is_customized || p.listing_type === 'custom' || (p.customization_mode && p.customization_mode !== 'none') || Boolean(p.is_customizable)) {
                 ribbonHtml = `<span class="bg-[#587A5B] text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">Custom</span>`;
             }
 
@@ -2232,11 +2240,11 @@
                        <span class="material-symbols-outlined text-[15px] transition-all ${p.is_wishlisted ? 'fill-icon text-red-500' : 'text-secondary'}" style="font-variation-settings: 'FILL' ${p.is_wishlisted ? 1 : 0};">favorite</span>
                    </button>`;
 
-            const isCustom = p.is_customized || p.listing_type === 'custom' || p.customization_mode === 'fixed' || p.customization_mode === 'open' || Boolean(p.is_customizable);
+            const isCustom = p.listing_type === 'custom' || (p.customization_mode && p.customization_mode !== 'none') || Boolean(p.is_customizable) || Boolean(p.is_customized);
             const recStock = p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : (p.stock !== undefined ? p.stock : null));
             const isOutOfStock = !isCustom && (p.status === 'sold_out' || (recStock !== null && recStock <= 0));
             const actionBtnHtml = isOwner
-                ? `<button class="w-full bg-[#14381F]/15 text-[#605e57] py-1.5 rounded-lg font-semibold opacity-50 cursor-not-allowed text-xs" disabled onclick="event.preventDefault(); event.stopPropagation();">
+                ? `<button class="w-full bg-[#14381F]/15 text-[#587A5B] py-1.5 rounded-lg font-semibold opacity-60 cursor-not-allowed text-xs" disabled onclick="event.preventDefault(); event.stopPropagation();">
                        Own Product
                    </button>`
                 : isOutOfStock
@@ -2247,7 +2255,7 @@
                     ? `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-xs customize-btn cursor-pointer flex items-center justify-center gap-1 shadow-sm" data-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/buyer/product.html?id=${p.id}';">
                            <span class="material-symbols-outlined text-[14px]">auto_fix_high</span> Customize Product
                        </button>`
-                    : `<button class="w-full bg-[#14381F] text-white py-1.5 rounded-lg font-semibold hover:bg-[#0D2614] active:scale-[0.98] transition-all text-xs add-rec-to-cart-btn shadow-sm cursor-pointer" data-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation();">
+                    : `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-xs add-rec-to-cart-btn shadow-sm cursor-pointer" data-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation();">
                            Add to Cart
                        </button>`;
 
@@ -2297,7 +2305,7 @@
                 const cartRes = await apiClient.get('/cart');
                 const badges = document.querySelectorAll('#nav-cart-badge, .cart-badge, #mobile-cart-badge');
                 if (cartRes.data && cartRes.data.success) {
-                    const count = cartRes.data.data.item_count || 0;
+                    const count = cartRes.data.data?.item_count || cartRes.data.data?.items?.length || 0;
                     badges.forEach(badge => {
                         if (count > 0) {
                             badge.innerText = count;
@@ -2321,7 +2329,7 @@
                 }
                 const res = await apiClient.post('/cart/items', { product_id: String(productId).trim(), quantity: 1 });
                 if (res.data && res.data.success) {
-                    window.Toast?.show("Added to cart!", "success");
+                    Toast.show("Added to cart!", "success");
                     if (btn) {
                         btn.innerText = 'Added! ✓';
                         btn.classList.add('bg-[#285C3A]');
@@ -2351,7 +2359,7 @@
             } catch (err) {
                 console.error("Cart error:", err);
                 const errMsg = err?.response?.data?.message || err?.message || "Failed to add item to cart.";
-                window.Toast?.show(errMsg, "error");
+                Toast.show(errMsg, "error");
                 if (btn) {
                     btn.disabled = false;
                     btn.innerText = originalText;

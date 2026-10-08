@@ -1,6 +1,7 @@
 /**
  * Tohfa v2 — Tanya AI Gift Assistant Service
- * Connects directly to Google Gemini API (gemini-1.5-flash) and queries live PostgreSQL catalog.
+ * File: backend/src/services/tanya.service.js
+ * Connects directly to Google Gemini API (gemini-1.5-flash) with robust catalog fallback.
  */
 'use strict';
 
@@ -10,7 +11,7 @@ const { query } = require('../config/db');
 function getGeminiClient() {
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY') {
-    throw new Error('GEMINI_API_KEY is not configured in environment variables. Set GEMINI_API_KEY or GOOGLE_API_KEY in .env and restart the server.');
+    return null;
   }
   return new GoogleGenAI({ apiKey });
 }
@@ -19,31 +20,28 @@ const systemInstruction = `
 You are "Tanya", the AI Concierge for Tohfa (thetohfa.in) - an online marketplace for authentic Indian handmade, customized, and artisanal gifts.
 
 YOUR BEHAVIOR:
+1. Gifting / Shopping: If the user is looking for gifts or occasions (birthdays, anniversaries, corporate, festive, weddings), recommend suitable categories and product ideas. Mention 2-3 specific product names from the live catalog provided.
+2. Support / Issue Inquiries: If the user mentions an order issue, shipping delay, payment problem, refund, bug, or complaint, respond with empathetic support guidance ONLY. Direct them to their Orders tab or to tohfa126@gmail.com. Do NOT recommend products for support queries.
+3. Conversational: For greetings or questions about Tohfa, respond warmly, politely, and concisely.
 
-INTENT RECOGNITION:
-
-Gifting / Shopping: If the user is looking for gifts, occasions (birthdays, anniversaries, corporate, festive), recommend suitable categories and product ideas. Return relevant product suggestions from the catalog.
-
-Support / Issue Inquiries: If the user mentions an order issue, shipping delay, payment problem, refund, bug, complaint, or any support topic — respond with empathetic support guidance ONLY. Direct them to the Orders tab in their profile or to tohfa126@gmail.com. Do NOT recommend products. Return products: [].
-
-Conversational: For greetings or questions about Tohfa, respond warmly and concisely.
-
-CRITICAL RULE: Never recommend gift products when the user is reporting an issue or seeking support. Keep the two intents strictly separate.
-
-FORMATTING: Never use Markdown formatting in your responses. Do not use asterisks (*) for bold or italic text. If you want to list items, use standard hyphens (-) instead.
-
-TONE: Warm, helpful, professional, polite. Keep responses concise (under 3-4 sentences unless detailed recommendations are asked).
+RULES:
+- Never recommend gift products when the user is reporting an issue or seeking support.
+- FORMATTING: Never use raw Markdown asterisks (*) for bold or italic text. If listing items, use standard hyphens (-) instead.
+- TONE: Warm, graceful, professional, and concise (under 3-4 sentences).
 `;
 
-async function getActiveProducts() {
+async function getActiveProducts(limit = 15) {
   try {
     const { rows } = await query(
-      `SELECT p.id, p.name, p.base_price AS price, p.slug, c.name AS category_name
+      `SELECT p.id, p.name, p.base_price AS price, p.slug, c.name AS category_name,
+              COALESCE(sp.store_name, 'Artisan Studio') AS store_name
        FROM products p
        LEFT JOIN categories c ON p.category_id = c.id
-       WHERE p.is_active = TRUE
+       LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
+       WHERE p.status = 'active' OR p.is_active = TRUE
        ORDER BY p.created_at DESC
-       LIMIT 20;`
+       LIMIT $1;`,
+      [limit]
     );
     return rows.map(p => ({
       id: p.id,
@@ -51,6 +49,7 @@ async function getActiveProducts() {
       base_price: p.price,
       price: p.price,
       slug: p.slug,
+      store_name: p.store_name,
       category_name: p.category_name || 'Handcrafted Gift'
     }));
   } catch (err) {
@@ -59,64 +58,89 @@ async function getActiveProducts() {
   }
 }
 
+/**
+ * Smart offline fallback in case Gemini API is down, slow, or unconfigured
+ */
+function generateFallbackResponse(userMessage, activeProducts) {
+  const lower = userMessage.toLowerCase();
+  const supportKeywords = ['order', 'stuck', 'bug', 'issue', 'problem', 'payment', 'failed', 'refund', 'seller', 'shipping', 'delivery', 'support', 'cancel', 'complaint', 'tracking', 'return', 'exchange', 'contact'];
+  const isSupport = supportKeywords.some(kw => lower.includes(kw));
+
+  if (isSupport) {
+    return {
+      reply: "I am here to help. For real-time updates regarding your order, dispatch status, or refunds, please visit your Orders tab or reach our direct support team at tohfa126@gmail.com. We are happy to assist you.",
+      products: []
+    };
+  }
+
+  const sampleProducts = activeProducts.slice(0, 3).map(p => ({
+    id: p.id,
+    name: p.name,
+    base_price: p.base_price,
+    store_name: p.store_name,
+    category_name: p.category_name,
+    link: `/buyer/product.html?id=${p.id}`
+  }));
+
+  return {
+    reply: "Welcome to Tohfa! I would love to help you discover authentic handcrafted creations from artisan studios across India. Here are some of our trending gifts to explore:",
+    products: sampleProducts
+  };
+}
+
 async function chat(userMessage, history = []) {
-  try {
-    // ── Catalog retrieval: isolated try/catch so a DB error NEVER kills the chat ──
-    let activeProducts = [];
-    let catalogContext = '';
-    try {
-      const { rows: products } = await query(
-        `SELECT p.id, p.name, p.base_price AS price, p.slug, c.name AS category_name
-         FROM products p
-         LEFT JOIN categories c ON p.category_id = c.id
-         WHERE p.is_active = TRUE
-         ORDER BY p.created_at DESC
-         LIMIT 15;`
-      );
-      activeProducts = products.map(p => ({
-        id: p.id,
-        name: p.name,
-        base_price: p.price,
-        price: p.price,
-        slug: p.slug,
-        category_name: p.category_name || 'Handmade'
-      }));
-      catalogContext = activeProducts.length > 0
-        ? activeProducts.map(p => `- ${p.name} (₹${p.price}, ${p.category_name})`).join('\n')
-        : 'Catalog is currently empty.';
-    } catch (dbErr) {
-      console.warn('[Tanya] Non-fatal catalog query warning:', dbErr.message);
-      // Fallback: chat still works for policy/support questions without product data
-      catalogContext = 'Marketplace items: Handmade gifts, candles, hampers, personalized crafts.';
-    }
+  const activeProducts = await getActiveProducts(15);
+  const catalogContext = activeProducts.length > 0
+    ? activeProducts.map(p => `- ${p.name} (₹${p.base_price}, ${p.category_name})`).join('\n')
+    : 'Handmade scented candles, customized resin art, personalized jewelry, artisanal gift hampers.';
 
-    // getGeminiClient() throws a clear error if the API key is missing or placeholder
-    const ai = getGeminiClient();
+  const ai = getGeminiClient();
 
-    const prompt = `
+  // If no Gemini API key is configured, gracefully fall back immediately
+  if (!ai) {
+    console.warn('[Tanya] No Gemini API key found. Using catalog fallback.');
+    return {
+      success: true,
+      data: generateFallbackResponse(userMessage, activeProducts)
+    };
+  }
+
+  const prompt = `
 Live Platform Catalog:
 ${catalogContext}
 
 User Query: "${userMessage}"
 
 Respond directly to the user following your system instructions.
-If the user is asking for gifts and any catalog items fit, mention 2-3 specific product names from the catalog above.
-If they are reporting an issue, shipping problem, order query, or any support concern, answer their support request directly and direct them to their Orders tab or tohfa126@gmail.com — do NOT recommend products.
+If the user is asking for gift recommendations, mention 2-3 specific product names from the catalog.
+If they are reporting an issue, shipping problem, or support inquiry, answer their support request directly and direct them to their Orders tab or tohfa126@gmail.com — do NOT recommend products.
 `;
 
-    const result = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
+  try {
+    // 8-second timeout promise race to prevent user-facing lag
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Gemini API timeout')), 8000)
+    );
+
+    const apiPromise = ai.models.generateContent({
+      model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
       contents: prompt,
-      config: { systemInstruction }
+      config: {
+        systemInstruction,
+        temperature: 0.7,
+        maxOutputTokens: 450
+      }
     });
-    const responseText = result.text;
+
+    const result = await Promise.race([apiPromise, timeoutPromise]);
+    const responseText = result?.text || '';
 
     const lowerMessage = userMessage.toLowerCase();
-    const supportKeywords = ['order', 'stuck', 'bug', 'issue', 'problem', 'payment', 'failed', 'refund', 'seller', 'shipping', 'delivery', 'support', 'cancel', 'complaint', 'tracking', 'return', 'exchange', 'dispute'];
+    const supportKeywords = ['order', 'stuck', 'bug', 'issue', 'problem', 'payment', 'failed', 'refund', 'seller', 'shipping', 'delivery', 'support', 'cancel', 'complaint', 'tracking', 'return', 'exchange', 'contact'];
     const isSupportQuery = supportKeywords.some(kw => lowerMessage.includes(kw));
 
     let matchedProducts = [];
-    if (!isSupportQuery) {
+    if (!isSupportQuery && responseText) {
       const lowerResponse = responseText.toLowerCase();
       matchedProducts = activeProducts.filter(p =>
         lowerResponse.includes(p.name.toLowerCase()) ||
@@ -125,24 +149,37 @@ If they are reporting an issue, shipping problem, order query, or any support co
         id: p.id,
         name: p.name,
         base_price: p.base_price,
+        store_name: p.store_name,
         category_name: p.category_name,
         link: `/buyer/product.html?id=${p.id}`
       }));
+
+      // If Gemini didn't mention exact names, provide top catalog items
+      if (matchedProducts.length === 0 && activeProducts.length > 0) {
+        matchedProducts = activeProducts.slice(0, 3).map(p => ({
+          id: p.id,
+          name: p.name,
+          base_price: p.base_price,
+          store_name: p.store_name,
+          category_name: p.category_name,
+          link: `/buyer/product.html?id=${p.id}`
+        }));
+      }
     }
 
     return {
       success: true,
       data: {
         reply: responseText,
-        products: matchedProducts // Always [] for support queries
+        products: matchedProducts
       }
     };
   } catch (error) {
-    console.error('[Tanya] Gemini API Error:', error.message);
+    console.warn('[Tanya] Gemini call failed or timed out:', error.message, '— Activating fallback.');
+    // Never crash the chat. Return clean catalog fallback instead.
     return {
-      success: false,
-      statusCode: 500,
-      message: `Tanya service error: ${error.message}`
+      success: true,
+      data: generateFallbackResponse(userMessage, activeProducts)
     };
   }
 }
