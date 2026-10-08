@@ -616,8 +616,8 @@ function addVariantRow(data = {}) {
     
     <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
       <div class="sm:col-span-6">
-        <label class="block text-[11px] font-bold text-[#14381F] uppercase font-mono mb-1">Variant Name / Attribute *</label>
-        <input type="text" class="field-input min-h-[44px] text-base sm:text-xs variant-name-input" placeholder="e.g. Large / Indigo / Oak" value="${data.variant_name || data.name || data.color_name || ''}" required />
+        <label class="block text-[11px] font-bold text-[#14381F] uppercase font-mono mb-1">Variant Name / Attribute</label>
+        <input type="text" class="field-input min-h-[44px] text-base sm:text-xs variant-name-input" placeholder="e.g. Large / Indigo / Oak (defaults to Option 1, Option 2...)" value="${data.variant_name || data.name || data.color_name || ''}" />
       </div>
       <div class="grid grid-cols-2 sm:col-span-6 gap-2.5 sm:gap-3">
         <div>
@@ -808,9 +808,11 @@ function getVariantsData() {
   if (!container) return [];
 
   const variants = [];
-  container.querySelectorAll('[id^="variant-row-"]').forEach(row => {
-    const name = row.querySelector('.variant-name-input')?.value.trim();
-    if (!name) return;
+  container.querySelectorAll('[id^="variant-row-"]').forEach((row, idx) => {
+    let name = row.querySelector('.variant-name-input')?.value.trim();
+    if (!name) {
+      name = `Option ${idx + 1}`;
+    }
 
     const additionalPrice = parseFloat(row.querySelector('.variant-price-input')?.value || '0');
     const stockQty = parseInt(row.querySelector('.variant-stock-input')?.value || '50', 10);
