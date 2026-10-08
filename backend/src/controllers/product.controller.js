@@ -996,7 +996,7 @@ async function getProduct(req, res, next) {
                     'stock_qty', pv.stock_qty,
                     'image_url', pv.image_url,
                     'images', COALESCE(pv.images, CASE WHEN pv.image_url IS NOT NULL THEN ARRAY[pv.image_url] ELSE '{}'::text[] END)
-                  ) ORDER BY pv.id ASC
+                  ) ORDER BY pv.created_at ASC, pv.id ASC
                 ) FROM product_variants pv WHERE pv.product_id = p.id),
                 '[]'
               ) AS variants,
@@ -1451,13 +1451,11 @@ async function createProduct(req, res, next) {
         );
       }
 
-      if (totalVariantStock > 0) {
-        await query(
-          'UPDATE products SET stock_quantity = $1 WHERE id = $2',
-          [totalVariantStock, product.id]
-        );
-        product.stock_quantity = totalVariantStock;
-      }
+      await query(
+        'UPDATE products SET stock_quantity = $1 WHERE id = $2',
+        [totalVariantStock, product.id]
+      );
+      product.stock_quantity = totalVariantStock;
 
       if (uniqueRawImagesList.length === 0) {
         const firstVariantImg = variants.flatMap(v => Array.isArray(v.images) ? v.images : (v.image_url ? [v.image_url] : [])).find(Boolean);
@@ -1866,6 +1864,9 @@ async function updateProduct(req, res, next) {
           `UPDATE products SET stock_quantity = $1 WHERE id = $2`,
           [stockSumRows[0].total_variant_stock, id]
         );
+        if (rows[0]) {
+          rows[0].stock_quantity = stockSumRows[0].total_variant_stock;
+        }
       }
     }
 

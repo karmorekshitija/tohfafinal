@@ -656,16 +656,17 @@ window.handleDeleteProduct = async function(e, productId, productTitle) {
   if (!confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`)) return false;
 
   try {
-    const token = localStorage.getItem('token') ||
-                  localStorage.getItem('adminToken') ||
+    const switchCtx = sessionStorage.getItem('tohfa_admin_switch_context');
+    const token = (typeof window !== 'undefined' && window.authStorage?.getToken?.()) ||
                   sessionStorage.getItem('tohfa_access_token') ||
                   localStorage.getItem('tohfa_access_token') ||
-                  sessionStorage.getItem('token') ||
-                  sessionStorage.getItem('adminToken');
+                  (switchCtx ? (localStorage.getItem('token') ||
+                                localStorage.getItem('adminToken') ||
+                                sessionStorage.getItem('token') ||
+                                sessionStorage.getItem('adminToken')) : null);
 
     let activeShopId = localStorage.getItem('activeShopId') || '';
     if (!activeShopId) {
-      const switchCtx = sessionStorage.getItem('tohfa_admin_switch_context');
       if (switchCtx) {
         try {
           const parsed = JSON.parse(switchCtx);
