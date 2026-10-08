@@ -305,6 +305,17 @@
 
 <script>
 const API_BASE = window.location.origin;
+
+function getAuthToken() {
+    return (typeof window !== 'undefined' && window.authStorage?.getToken?.()) ||
+           sessionStorage.getItem('tohfa_access_token') ||
+           localStorage.getItem('tohfa_access_token') ||
+           sessionStorage.getItem('tohfa_token') ||
+           localStorage.getItem('tohfa_token') ||
+           localStorage.getItem('token') ||
+           localStorage.getItem('accessToken');
+}
+
 let currentPage  = 1;
 let searchQuery  = '';
 let searchTimer  = null;
@@ -324,7 +335,7 @@ async function loadStats() {
     const localLowStock = activeAndPaused.filter(l => l.stock_count <= 5).length;
     const localOnDiscount = activeAndPaused.filter(l => l.discount_active === true || l.discount_active === 1).length;
 
-    const token = sessionStorage.getItem('tohfa_access_token');
+    const token = getAuthToken();
     if (token) {
         try {
             const res = await fetch(`${API_BASE}/api/seller/catalog/summary`, {
@@ -380,7 +391,7 @@ async function toggleDiscount(id, targetActive) {
 }
 
 async function applyDiscountAPI(id, percentage, active) {
-    const token = sessionStorage.getItem('tohfa_access_token');
+    const token = getAuthToken();
     try {
         const body = { discount_active: active };
         if (active) {
@@ -476,7 +487,7 @@ async function applyBulkDiscount() {
         return;
     }
     
-    const token = sessionStorage.getItem('tohfa_access_token');
+    const token = getAuthToken();
     try {
         let res;
         if (bulkDiscountTrigger === 'apply-to-all') {
@@ -519,7 +530,7 @@ async function applyBulkDiscount() {
 }
 
 async function clearBulkDiscount() {
-    const token = sessionStorage.getItem('tohfa_access_token');
+    const token = getAuthToken();
     try {
         let res;
         if (bulkDiscountTrigger === 'apply-to-all') {
@@ -740,7 +751,7 @@ async function loadListings(forceFetch = false) {
         error.classList.add('hidden');
         pgn.classList.add('hidden');
 
-        const token = sessionStorage.getItem('tohfa_access_token');
+        const token = getAuthToken();
 
         try {
             if (!token) {
@@ -903,7 +914,7 @@ function attachCardListeners() {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const id = btn.dataset.id;
-            const token = sessionStorage.getItem('tohfa_access_token');
+            const token = getAuthToken();
             try {
                 const res = await fetch(`${API_BASE}/api/seller/products/${id}/sponsor`, {
                     method: 'POST',
@@ -932,7 +943,7 @@ function attachCardListeners() {
             e.stopPropagation();
             const id = btn.dataset.id;
             const status = btn.dataset.status;
-            const token = sessionStorage.getItem('tohfa_access_token');
+            const token = getAuthToken();
             const isPaused = status === 'paused';
 
             if (isPaused) {
@@ -1118,7 +1129,7 @@ if (nextBtnEl) nextBtnEl.addEventListener('click', () => {
 
 // ── DOMContentLoaded ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-    const token = sessionStorage.getItem('tohfa_access_token');
+    const token = getAuthToken();
 
     // Role guard (only check if token is present)
     if (token) {

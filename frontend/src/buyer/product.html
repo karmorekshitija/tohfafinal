@@ -1345,7 +1345,15 @@
                         if (stickyBarPrice) stickyBarPrice.innerText = formattedPrice;
 
                         // 6. Refresh gallery
-                        updateGallery(getVariantImages(variant), 0);
+                        if (isInitial && baseProductImages && baseProductImages.length > 0) {
+                            const variantGallery = getVariantImages(variant);
+                            const initialGallery = baseProductImages[0] && variantGallery.includes(baseProductImages[0])
+                                ? [baseProductImages[0], ...variantGallery.filter(img => img !== baseProductImages[0])]
+                                : (variantGallery.length > 0 ? variantGallery : baseProductImages);
+                            updateGallery(initialGallery, 0);
+                        } else {
+                            updateGallery(getVariantImages(variant), 0);
+                        }
                     }
 
                     if (variants.length === 1 && variantsContainer) {
