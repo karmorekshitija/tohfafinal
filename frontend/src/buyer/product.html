@@ -1106,23 +1106,28 @@
                         ? product.images.map(img => typeof img === 'string' ? img : (img.url || img.image_url || img)).filter(Boolean)
                         : (product.image_url ? [product.image_url] : ['https://placehold.co/600x600/f4ede3/516447?text=Handcrafted']);
 
-                    // Returns a consolidated gallery preserving base product images
+                    // Returns variant photos exclusively if present, or falls back to base product images
                     function getVariantImages(variant) {
                         let variantImgs = [];
                         if (variant) {
-                            if (Array.isArray(variant.images) && variant.images.length > 0) {
-                                variantImgs = variant.images.map(img => typeof img === 'string' ? img : (img.url || img.image_url || img)).filter(Boolean);
-                            } else if (variant.image_url) {
-                                variantImgs = [variant.image_url];
+                            let rawImgs = variant.images;
+                            if (typeof rawImgs === 'string') {
+                                try { rawImgs = JSON.parse(rawImgs); } catch (e) { rawImgs = []; }
+                            }
+                            if (Array.isArray(rawImgs) && rawImgs.length > 0) {
+                                variantImgs = rawImgs.map(img => typeof img === 'string' ? img : (img.url || img.image_url || img)).filter(Boolean);
+                            }
+                            if (variant.image_url && !variantImgs.includes(variant.image_url)) {
+                                variantImgs.unshift(variant.image_url);
                             }
                         }
 
                         if (variantImgs.length > 0) {
-                            // Show selected variant images FIRST, followed by all base product images (deduplicated)
-                            return Array.from(new Set([...variantImgs, ...baseProductImages]));
+                            // Isolate variant photos: return ONLY that variant's own photos
+                            return Array.from(new Set(variantImgs));
                         }
 
-                        // Default to all base product images
+                        // Default to base product images if variant has no photos
                         return baseProductImages;
                     }
 
