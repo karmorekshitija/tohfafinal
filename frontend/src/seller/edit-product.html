@@ -479,6 +479,36 @@
         return json.url || json.data?.url;
     }
 
+    function syncEditStockFromVariants() {
+        const toggle = document.getElementById('toggle-has-variants');
+        const stockInput = document.getElementById('stock-count');
+        if (!stockInput) return;
+
+        if (toggle && toggle.checked) {
+            const variants = getVariantsData();
+            if (variants.length > 0) {
+                const totalStock = variants.reduce((sum, v) => sum + (parseInt(v.stock_qty, 10) || 0), 0);
+                stockInput.value = totalStock;
+                stockInput.readOnly = true;
+                stockInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+                let helper = document.getElementById('variant-stock-sync-hint-edit');
+                if (!helper) {
+                    helper = document.createElement('span');
+                    helper.id = 'variant-stock-sync-hint-edit';
+                    helper.className = 'text-[11px] text-forest font-medium block mt-1';
+                    stockInput.parentNode.appendChild(helper);
+                }
+                helper.textContent = `Auto-calculated from ${variants.length} variant${variants.length === 1 ? '' : 's'} (${totalStock} total)`;
+                return;
+            }
+        }
+
+        stockInput.readOnly = false;
+        stockInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+        const helper = document.getElementById('variant-stock-sync-hint-edit');
+        if (helper) helper.remove();
+    }
+
     function addVariantRow(data = {}) {
         const container = document.getElementById('variants-list-container');
         if (!container) return;
@@ -497,6 +527,7 @@
             initialImages = [data.image_url];
         }
         row._variantImages = initialImages;
+        row._variantId = data.id || null;
         row._uploadingCount = 0;
 
         row.innerHTML = `
@@ -681,10 +712,22 @@
                 row._uploadingCount = 0;
             }
             row.remove();
+            syncEditStockFromVariants();
+        });
+
+        row.querySelectorAll('input').forEach(inp => {
+            if (inp.type !== 'file') {
+                inp.addEventListener('input', () => {
+                    if (inp.classList.contains('variant-stock-input')) {
+                        syncEditStockFromVariants();
+                    }
+                });
+            }
         });
 
         renderThumbnails();
         container.appendChild(row);
+        syncEditStockFromVariants();
     }
 
     function getVariantsData() {
@@ -705,7 +748,7 @@
             const stockQty = parseInt(row.querySelector('.variant-stock-input')?.value || '50', 10);
             const images = Array.isArray(row._variantImages) ? [...row._variantImages] : [];
 
-            variants.push({
+            const variantObj = {
                 variant_name: name,
                 color_name: null,
                 color_hex: null,
@@ -714,7 +757,11 @@
                 stock_qty: isNaN(stockQty) ? 50 : stockQty,
                 images: images,
                 image_url: images[0] || null
-            });
+            };
+            if (row._variantId) {
+                variantObj.id = row._variantId;
+            }
+            variants.push(variantObj);
         });
 
         return variants;
@@ -750,12 +797,15 @@
             } else {
                 panel?.classList.add('hidden');
             }
+            syncEditStockFromVariants();
         });
         document.getElementById('add-variant-row-btn')?.addEventListener('click', () => {
             addVariantRow();
+            syncEditStockFromVariants();
         });
         document.getElementById('add-variant-row-btn-bottom')?.addEventListener('click', () => {
             addVariantRow();
+            syncEditStockFromVariants();
         });
     });
 
@@ -992,9 +1042,11 @@
                 if (toggleVariants) toggleVariants.checked = true;
                 variantsPanel?.classList.remove('hidden');
                 variantsList.forEach(v => addVariantRow(v));
+                syncEditStockFromVariants();
             } else {
                 if (toggleVariants) toggleVariants.checked = false;
                 variantsPanel?.classList.add('hidden');
+                syncEditStockFromVariants();
             }
 
             // Customization Data Population
@@ -1202,19 +1254,6 @@
         }
         const price = priceNum;
 
-        // Check that at least one photo exists before uploading
-        const hasAnyPhoto = photoUrls.some((u, i) => (u && !u.startsWith('blob:')) || Boolean(photoFiles[i])) || extraPhotoUrls.length > 0;
-        if (!hasAnyPhoto) {
-            showToast('Please keep at least one photo.', 'error');
-            return;
-        }
-
-        const token = getAuthToken();
-        if (!token) {
-            showToast('Please log in to save changes.', 'error');
-            return;
-        }
-
         if (activeVariantUploadsCount > 0) {
             showToast('Variant photos are still uploading. Please wait for uploads to finish before saving.', 'error');
             return;
@@ -1224,6 +1263,20 @@
         const variantsData = hasVariantsEnabled ? getVariantsData() : [];
         if (hasVariantsEnabled && variantsData.length === 0) {
             showToast('Please specify at least one named variant option, or disable variants.', 'error');
+            return;
+        }
+
+        // Check that at least one photo exists before uploading (either parent photo or variant photo)
+        const hasVariantPhotos = variantsData.some(v => (Array.isArray(v.images) && v.images.length > 0) || v.image_url);
+        const hasAnyPhoto = photoUrls.some((u, i) => (u && !u.startsWith('blob:')) || Boolean(photoFiles[i])) || extraPhotoUrls.length > 0 || hasVariantPhotos;
+        if (!hasAnyPhoto) {
+            showToast('Please keep at least one photo.', 'error');
+            return;
+        }
+
+        const token = getAuthToken();
+        if (!token) {
+            showToast('Please log in to save changes.', 'error');
             return;
         }
 
@@ -1303,6 +1356,17 @@
                 });
             }
         });
+
+        if (photosPayload.length === 0 && hasVariantPhotos) {
+            const firstVPhoto = variantsData.flatMap(v => Array.isArray(v.images) ? v.images : (v.image_url ? [v.image_url] : [])).find(Boolean);
+            if (firstVPhoto) {
+                photosPayload.push({
+                    url: firstVPhoto,
+                    sort_order: 0,
+                    is_cover: true
+                });
+            }
+        }
 
         if (photosPayload.length === 0) {
             showToast('Please keep at least one photo.', 'error');

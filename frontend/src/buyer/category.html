@@ -67,6 +67,7 @@
   
   <script type="module" src="/src/components/ReportWidget.js" defer></script>
   <script type="module" src="/src/components/ProtectedRoute.js"></script>
+  <script type="module" src="/src/utils/imageHelper.js"></script>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -156,7 +157,7 @@
   <!-- Top Navigation Bar -->
   <header
     class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-3 sm:px-6 md:px-8 lg:px-12 h-14 md:h-20 transition-colors"
-    style="background-color: #273328; background-image: url('/img/taskbar-texture.png'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
+    style="background-color: #273328; background-image: url('/img/taskbar-texture.webp'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
   >
     <!-- Brand Logo -->
     <div class="flex items-center flex-shrink-0">
@@ -782,15 +783,25 @@
       });
     }
 
-    function getProductCardHtml(p, isCarousel = false) {
+    function getProductCardHtml(p, isCarousel = false, cardIndex = 0) {
       let rawImg = (p.images && p.images[0] && (p.images[0].url || p.images[0].image_url || (typeof p.images[0] === 'string' ? p.images[0] : null))) || p.cover_image || p.image_url || p.imagePath || p.img_url || '/img/ceramic_bowls.jpg';
       if (typeof rawImg === 'string' && (rawImg.startsWith('/uploads/') || rawImg.startsWith('/media/'))) {
         const cdnPrefix = window.TOHFA_CDN_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '' : 'https://thetohfa.in');
         rawImg = cdnPrefix + rawImg;
       }
       const imageUrl = (typeof window.optimizeImageUrl === 'function') ? window.optimizeImageUrl(rawImg, { width: 500 }) : rawImg;
-      const priceNum = p.price_paise !== undefined ? (p.price_paise / 100) : (p.base_price || p.price || 0);
-      const price = `₹${Number(priceNum).toLocaleString('en-IN')}`;
+      const hasVariants = Boolean(p.has_variants || (p.variant_count && parseInt(p.variant_count, 10) > 0));
+      let price;
+      if (hasVariants && p.min_price != null) {
+        const minP = Number(p.min_price);
+        const maxP = p.max_price != null ? Number(p.max_price) : minP;
+        price = minP !== maxP
+          ? `From ₹${minP.toLocaleString('en-IN')}`
+          : `₹${minP.toLocaleString('en-IN')}`;
+      } else {
+        const priceNum = p.price_paise !== undefined ? (p.price_paise / 100) : (p.base_price || p.price || 0);
+        price = `₹${Number(priceNum).toLocaleString('en-IN')}`;
+      }
 
       let ribbonHtml = '';
       if (p.product_tag === 'Sponsored' || p.type === 'sponsored' || p.is_sponsored) {
@@ -831,8 +842,10 @@
            </button>`;
 
       const isCustomized = p.listing_type === 'custom' || (p.customization_mode && p.customization_mode !== 'none') || Boolean(p.is_customizable);
-      const stock = p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : (p.stock !== undefined ? p.stock : null));
-      const isOutOfStock = !isCustomized && (p.status === 'sold_out' || (stock !== null && stock <= 0));
+      const effectiveStock = (hasVariants && p.effective_stock !== undefined && p.effective_stock !== null)
+        ? Number(p.effective_stock)
+        : (p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : (p.stock !== undefined ? p.stock : null)));
+      const isOutOfStock = !isCustomized && (p.status === 'sold_out' || (effectiveStock !== null && effectiveStock <= 0));
 
       const actionBtnHtml = isOwner
         ? `<button class="w-full bg-[#14381F]/15 text-[#587A5B] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold opacity-60 cursor-not-allowed text-[11px] sm:text-xs" disabled onclick="event.preventDefault(); event.stopPropagation();">
@@ -846,6 +859,10 @@
             ? `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs customize-btn cursor-pointer flex items-center justify-center gap-1" data-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/buyer/product.html?id=${p.id}';">
                  <span class="material-symbols-outlined text-[14px]">auto_fix_high</span> Customize Product
                </button>`
+            : hasVariants
+              ? `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs cursor-pointer flex items-center justify-center gap-1" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/buyer/product.html?id=${p.id}';">
+                   Select Options
+                 </button>`
             : `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs add-to-cart-btn cursor-pointer" data-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation();">
                  Add to Cart
                </button>`;
@@ -855,7 +872,7 @@
           <div>
             <div class="relative aspect-square overflow-hidden rounded-lg bg-[#FAF6EE] mb-2 sm:mb-2.5">
               ${ribbonHtml}
-              <img class="product-img w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="${imageUrl}" alt="${p.name}" onerror="this.src='/img/ceramic_bowls.jpg'" loading="lazy">
+              <img class="product-img w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="${imageUrl}" alt="${p.name}" width="500" height="500" ${(!isCarousel && cardIndex < 4) ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"'} decoding="async" onerror="this.src='/img/ceramic_bowls.jpg'">
               ${wishlistBtnHtml}
             </div>
             <div class="flex flex-col gap-0.5 sm:gap-1 mb-2">
@@ -936,7 +953,7 @@
         const sponsoredCarousel = document.getElementById('sponsored-carousel');
         if (sponsoredProducts.length > 0 && sponsoredSection && sponsoredCarousel) {
           sponsoredSection.classList.remove('hidden');
-          sponsoredCarousel.innerHTML = sponsoredProducts.map(p => getProductCardHtml(p, true)).join('');
+          sponsoredCarousel.innerHTML = sponsoredProducts.map((p, idx) => getProductCardHtml(p, true, idx)).join('');
         } else if (sponsoredSection) {
           sponsoredSection.classList.add('hidden');
         }
@@ -997,7 +1014,7 @@
           return;
         }
 
-        grid.innerHTML = displayProducts.map(p => getProductCardHtml(p, false)).join('');
+        grid.innerHTML = displayProducts.map((p, idx) => getProductCardHtml(p, false, idx)).join('');
 
         // Wire event listeners on rendered cards
         const cardContainers = [grid, sponsoredCarousel];

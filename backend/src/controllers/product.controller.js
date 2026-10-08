@@ -71,11 +71,27 @@ function sanitizeProduct(p) {
     };
   });
 
+  const variantCount = parseInt(p.variant_count ?? variants.length, 10);
+  const minVarDelta = (p.min_variant_additional_price !== undefined && p.min_variant_additional_price !== null)
+    ? parseFloat(p.min_variant_additional_price)
+    : (variants.length > 0 ? Math.min(...variants.map(v => v.additional_price || 0)) : 0);
+  const maxVarDelta = (p.max_variant_additional_price !== undefined && p.max_variant_additional_price !== null)
+    ? parseFloat(p.max_variant_additional_price)
+    : (variants.length > 0 ? Math.max(...variants.map(v => v.additional_price || 0)) : 0);
+  const totalVariantStock = (p.total_variant_stock !== undefined && p.total_variant_stock !== null)
+    ? parseInt(p.total_variant_stock, 10)
+    : (variants.length > 0 ? variants.reduce((acc, v) => acc + (v.stock_qty || 0), 0) : null);
+
   return {
     ...p,
     title: p.name || p.title,
     tags: Array.isArray(p.tags) ? p.tags : [],
     variants,
+    has_variants: variantCount > 0,
+    variant_count: variantCount,
+    min_price: Math.max(0, parseFloat((price + minVarDelta).toFixed(2))),
+    max_price: Math.max(0, parseFloat((price + maxVarDelta).toFixed(2))),
+    effective_stock: totalVariantStock !== null ? totalVariantStock : (p.stock_quantity ?? p.stock_qty ?? 50),
     images,
     special_packaging_available: p.special_packaging_available !== false,
     price,
@@ -520,6 +536,10 @@ async function listProducts(req, res, next) {
                 '{}'::text[]
               ) AS occasions,
               COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
+              COALESCE((SELECT COUNT(*) FROM product_variants pv WHERE pv.product_id = p.id), 0) AS variant_count,
+              (SELECT MIN(pv.additional_price) FROM product_variants pv WHERE pv.product_id = p.id) AS min_variant_additional_price,
+              (SELECT MAX(pv.additional_price) FROM product_variants pv WHERE pv.product_id = p.id) AS max_variant_additional_price,
+              (SELECT SUM(pv.stock_qty) FROM product_variants pv WHERE pv.product_id = p.id) AS total_variant_stock,
               COALESCE(
                 json_agg(pi ORDER BY pi.sort_order) FILTER (WHERE pi.id IS NOT NULL),
                 '[]'
@@ -1386,6 +1406,7 @@ async function createProduct(req, res, next) {
       } catch {}
     }
     if (Array.isArray(variants) && variants.length > 0) {
+      let totalVariantStock = 0;
       for (const v of variants) {
         let vImgs = [];
         if (Array.isArray(v.images) && v.images.length > 0) {
@@ -1394,6 +1415,8 @@ async function createProduct(req, res, next) {
           vImgs = [v.image_url];
         }
         const primaryImg = vImgs[0] || v.image_url || null;
+        const vStock = Math.max(0, parseInt(v.stock_qty ?? v.stock_quantity ?? v.stock ?? 50, 10));
+        totalVariantStock += vStock;
 
         await query(
           `INSERT INTO product_variants
@@ -1405,12 +1428,37 @@ async function createProduct(req, res, next) {
             v.color_name || v.color || null,
             v.color_hex || null,
             v.size || null,
-            v.stock_qty ?? v.stock_quantity ?? v.stock ?? 50,
+            vStock,
             v.additional_price ?? v.price_modifier ?? 0,
             primaryImg,
             vImgs
           ]
         );
+      }
+
+      if (totalVariantStock > 0) {
+        await query(
+          'UPDATE products SET stock_quantity = $1 WHERE id = $2',
+          [totalVariantStock, product.id]
+        );
+        product.stock_quantity = totalVariantStock;
+      }
+
+      if (uniqueRawImagesList.length === 0) {
+        const firstVariantImg = variants.flatMap(v => Array.isArray(v.images) ? v.images : (v.image_url ? [v.image_url] : [])).find(Boolean);
+        if (firstVariantImg) {
+          await query(
+            `INSERT INTO product_images (product_id, url, sort_order)
+             VALUES ($1, $2, 0)
+             ON CONFLICT (product_id, url) DO NOTHING`,
+            [product.id, firstVariantImg]
+          );
+          await query('UPDATE products SET images = $1 WHERE id = $2', [[firstVariantImg], product.id]);
+          product.images = [firstVariantImg];
+          product.product_images = [{ id: 'img_0', url: firstVariantImg, sort_order: 0 }];
+          product.image_url = firstVariantImg;
+          product.primary_image = firstVariantImg;
+        }
       }
     }
 
@@ -1709,9 +1757,15 @@ async function updateProduct(req, res, next) {
       }
     }
 
-    // If variants array is provided, replace variants
+    // If variants array is provided, differential upsert variants and sync stock
     if (Array.isArray(variants)) {
-      await query('DELETE FROM product_variants WHERE product_id = $1', [id]);
+      const { rows: currentDbVariants } = await query(
+        'SELECT id FROM product_variants WHERE product_id = $1',
+        [id]
+      );
+      const existingDbIds = new Set(currentDbVariants.map(r => String(r.id)));
+      const retainedIds = [];
+
       for (const v of variants) {
         let vImgs = [];
         if (Array.isArray(v.images) && v.images.length > 0) {
@@ -1720,22 +1774,71 @@ async function updateProduct(req, res, next) {
           vImgs = [v.image_url || v.imagePath];
         }
         const primaryImg = vImgs[0] || v.image_url || v.imagePath || null;
+        const vId = v.id ? String(v.id) : null;
 
+        if (vId && existingDbIds.has(vId)) {
+          await query(
+            `UPDATE product_variants
+             SET variant_name = $1, color_name = $2, color_hex = $3, size = $4,
+                 stock_qty = $5, additional_price = $6, image_url = $7, images = $8
+             WHERE id = $9 AND product_id = $10`,
+            [
+              v.variant_name || v.name || v.variant_label || null,
+              v.color_name || v.color || null,
+              v.color_hex || null,
+              v.size || null,
+              v.stock_qty ?? v.stock_quantity ?? v.stock ?? 50,
+              v.additional_price ?? v.price_modifier ?? 0,
+              primaryImg,
+              vImgs,
+              vId,
+              id
+            ]
+          );
+          retainedIds.push(vId);
+        } else {
+          const { rows: insRows } = await query(
+            `INSERT INTO product_variants
+               (product_id, variant_name, color_name, color_hex, size, stock_qty, additional_price, image_url, images)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+             RETURNING id`,
+            [
+              id,
+              v.variant_name || v.name || v.variant_label || null,
+              v.color_name || v.color || null,
+              v.color_hex || null,
+              v.size || null,
+              v.stock_qty ?? v.stock_quantity ?? v.stock ?? 50,
+              v.additional_price ?? v.price_modifier ?? 0,
+              primaryImg,
+              vImgs
+            ]
+          );
+          if (insRows && insRows[0]) {
+            retainedIds.push(String(insRows[0].id));
+          }
+        }
+      }
+
+      // Delete variants that were removed
+      if (retainedIds.length > 0) {
         await query(
-          `INSERT INTO product_variants
-             (product_id, variant_name, color_name, color_hex, size, stock_qty, additional_price, image_url, images)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-          [
-            id,
-            v.variant_name || v.name || v.variant_label || null,
-            v.color_name || v.color || null,
-            v.color_hex || null,
-            v.size || null,
-            v.stock_qty ?? v.stock_quantity ?? v.stock ?? 50,
-            v.additional_price ?? v.price_modifier ?? 0,
-            primaryImg,
-            vImgs
-          ]
+          'DELETE FROM product_variants WHERE product_id = $1 AND NOT (id::text = ANY($2::text[]))',
+          [id, retainedIds]
+        );
+      } else {
+        await query('DELETE FROM product_variants WHERE product_id = $1', [id]);
+      }
+
+      // Recalculate parent stock_quantity if product has variants
+      const { rows: stockSumRows } = await query(
+        `SELECT COALESCE(SUM(stock_qty), 0)::int as total_variant_stock, COUNT(*)::int as variant_count FROM product_variants WHERE product_id = $1`,
+        [id]
+      );
+      if (stockSumRows[0] && stockSumRows[0].variant_count > 0) {
+        await query(
+          `UPDATE products SET stock_quantity = $1 WHERE id = $2`,
+          [stockSumRows[0].total_variant_stock, id]
         );
       }
     }
@@ -1972,42 +2075,95 @@ async function upsertVariants(req, res, next) {
     const client = await getClient();
     try {
       await client.query('BEGIN');
-      // Remove existing variants for this product
-      await client.query(
-        'DELETE FROM product_variants WHERE product_id = $1',
+      const { rows: currentDbVariants } = await client.query(
+        'SELECT id FROM product_variants WHERE product_id = $1',
         [id]
       );
-      const inserted = [];
+      const existingDbIds = new Set(currentDbVariants.map(r => String(r.id)));
+      const retainedIds = [];
+      const resultVariants = [];
+
       for (const v of variants) {
         let vImgs = [];
         if (Array.isArray(v.images) && v.images.length > 0) {
           vImgs = uniqueImageUrls(v.images);
-        } else if (v.image_url) {
-          vImgs = [v.image_url];
+        } else if (v.image_url || v.imagePath) {
+          vImgs = [v.image_url || v.imagePath];
         }
-        const primaryImg = vImgs[0] || v.image_url || null;
+        const primaryImg = vImgs[0] || v.image_url || v.imagePath || null;
+        const vId = v.id ? String(v.id) : null;
 
-        const { rows } = await client.query(
-          `INSERT INTO product_variants
-             (product_id, variant_name, color_name, color_hex, size, stock_qty, additional_price, image_url, images)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-           RETURNING id, product_id, variant_name, color_name, color_hex, size, stock_qty, additional_price, image_url, images`,
-          [
-            id,
-            v.variant_name || v.name || v.variant_label || null,
-            v.color_name || v.color || null,
-            v.color_hex || null,
-            v.size || null,
-            v.stock_qty ?? v.stock_quantity ?? v.stock ?? 50,
-            v.additional_price ?? v.price_modifier ?? 0,
-            primaryImg,
-            vImgs
-          ]
-        );
-        inserted.push(rows[0]);
+        if (vId && existingDbIds.has(vId)) {
+          const { rows } = await client.query(
+            `UPDATE product_variants
+             SET variant_name = $1, color_name = $2, color_hex = $3, size = $4,
+                 stock_qty = $5, additional_price = $6, image_url = $7, images = $8
+             WHERE id = $9 AND product_id = $10
+             RETURNING id, product_id, variant_name, color_name, color_hex, size, stock_qty, additional_price, image_url, images`,
+            [
+              v.variant_name || v.name || v.variant_label || null,
+              v.color_name || v.color || null,
+              v.color_hex || null,
+              v.size || null,
+              v.stock_qty ?? v.stock_quantity ?? v.stock ?? 50,
+              v.additional_price ?? v.price_modifier ?? 0,
+              primaryImg,
+              vImgs,
+              vId,
+              id
+            ]
+          );
+          retainedIds.push(vId);
+          if (rows[0]) resultVariants.push(rows[0]);
+        } else {
+          const { rows } = await client.query(
+            `INSERT INTO product_variants
+               (product_id, variant_name, color_name, color_hex, size, stock_qty, additional_price, image_url, images)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+             RETURNING id, product_id, variant_name, color_name, color_hex, size, stock_qty, additional_price, image_url, images`,
+            [
+              id,
+              v.variant_name || v.name || v.variant_label || null,
+              v.color_name || v.color || null,
+              v.color_hex || null,
+              v.size || null,
+              v.stock_qty ?? v.stock_quantity ?? v.stock ?? 50,
+              v.additional_price ?? v.price_modifier ?? 0,
+              primaryImg,
+              vImgs
+            ]
+          );
+          if (rows[0]) {
+            retainedIds.push(String(rows[0].id));
+            resultVariants.push(rows[0]);
+          }
+        }
       }
+
+      // Delete removed variants
+      if (retainedIds.length > 0) {
+        await client.query(
+          'DELETE FROM product_variants WHERE product_id = $1 AND NOT (id::text = ANY($2::text[]))',
+          [id, retainedIds]
+        );
+      } else {
+        await client.query('DELETE FROM product_variants WHERE product_id = $1', [id]);
+      }
+
+      // Recalculate parent stock_quantity if product has variants
+      const { rows: stockSumRows } = await client.query(
+        `SELECT COALESCE(SUM(stock_qty), 0)::int as total_variant_stock, COUNT(*)::int as variant_count FROM product_variants WHERE product_id = $1`,
+        [id]
+      );
+      if (stockSumRows[0] && stockSumRows[0].variant_count > 0) {
+        await client.query(
+          `UPDATE products SET stock_quantity = $1 WHERE id = $2`,
+          [stockSumRows[0].total_variant_stock, id]
+        );
+      }
+
       await client.query('COMMIT');
-      return res.status(201).json({ success: true, data: { variants: inserted } });
+      return res.status(201).json({ success: true, data: { variants: resultVariants } });
     } catch (err) {
       await client.query('ROLLBACK');
       throw err;

@@ -9,10 +9,12 @@ const { createProduct, getProduct } = require('../src/controllers/product.contro
 async function runTests() {
   console.log('🧪 Starting Generic Variants Verification Tests...\n');
 
-  // Step 1: Find a test seller
+  // Step 1: Find a test seller and category
   const { rows: sellers } = await query('SELECT id, user_id FROM seller_profiles LIMIT 1');
   const sellerId = sellers[0]?.user_id || 1;
-  console.log(`👤 Using seller user_id: ${sellerId}`);
+  const { rows: categories } = await query('SELECT id FROM categories LIMIT 1');
+  const categoryId = categories[0]?.id || 1;
+  console.log(`👤 Using seller user_id: ${sellerId}, category_id: ${categoryId}`);
 
   // Step 2: Test Create Product with non-color variants
   console.log('\n--- 1. Testing Product Creation with Non-Color Variants ---');
@@ -25,7 +27,7 @@ async function runTests() {
       description: 'Handcrafted solid oak coffee table with size and finish options.',
       base_price: 4999.00,
       stock_quantity: 20,
-      category_id: null,
+      category_id: categoryId,
       variants: [
         {
           variant_name: 'Size: Standard (100x60cm)',
