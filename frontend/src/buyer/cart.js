@@ -116,6 +116,7 @@ export async function loadCart() {
             <div class="cart-item__info flex-1 min-w-0">
               <h4 class="cart-item__title font-headline-lg text-base font-semibold text-[#1A3A32] truncate" style="font-family: 'Playfair Display', serif;">${item.product_name || item.name}</h4>
               <div class="cart-item__seller text-xs text-[#1A3A32]/70 font-['DM_Sans'] mt-0.5">by ${item.seller_name || 'Artisan'}</div>
+              ${item.variant_name ? `<span class="cart-item__variant inline-block mt-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-[#1A3A32]/10 text-[#1A3A32] border border-[#1A3A32]/15 font-['DM_Sans']">${item.variant_name}</span>` : ''}
               <div class="cart-item__price font-data-price font-bold text-[#1A3A32] mt-1">${formatPrice(item.price_paise !== undefined ? item.price_paise / 100 : (item.price || item.unit_price || 0))}</div>
             </div>
           </div>

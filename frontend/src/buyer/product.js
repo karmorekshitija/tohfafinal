@@ -137,7 +137,7 @@ function renderProductUI(p) {
                 type="button"
                 class="variant-btn ${isActive ? 'active' : ''}"
                 style="display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 9999px; border: 1.5px solid ${isActive ? 'var(--color-primary)' : 'rgba(20,56,31,0.2)'}; background: ${isActive ? 'rgba(20,56,31,0.08)' : 'white'}; cursor: pointer; transition: all 0.2s ease;"
-                onclick="selectVariant(${v.id}, this)"
+                onclick="selectVariant('${v.id}', this)"
               >
                 ${thumbImg ? `<img src="${thumbImg}" alt="${v.variant_name || v.color_name || 'Variant'}" loading="lazy" decoding="async" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(0,0,0,0.15);" onerror="this.style.display='none'">` : (hasHex ? `<span style="width: 14px; height: 14px; border-radius: 50%; background-color: ${v.color_hex}; border: 1px solid rgba(0,0,0,0.2); display: inline-block;"></span>` : '')}
                 <span style="font-size: 13px; font-weight: 600; color: var(--color-primary);">${v.variant_name || v.color_name || 'Option'}</span>
@@ -335,7 +335,7 @@ window.selectVariant = (variantId, el) => {
   }
 
   const variants = currentProduct?.variants || [];
-  selectedVariant = variants.find(v => v.id === variantId) || null;
+  selectedVariant = variants.find(v => String(v.id) === String(variantId)) || null;
 
   if (selectedVariant) {
     const labelEl = document.getElementById('variantLabel');

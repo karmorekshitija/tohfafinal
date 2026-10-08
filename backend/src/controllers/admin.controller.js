@@ -1312,32 +1312,90 @@ async function updateProduct(req, res, next) {
     }
 
     if (Array.isArray(variants)) {
-      await query('DELETE FROM product_variants WHERE product_id = $1', [id]);
+      const { rows: currentDbVariants } = await query(
+        'SELECT id FROM product_variants WHERE product_id = $1',
+        [id]
+      );
+      const existingDbIds = new Set(currentDbVariants.map(r => String(r.id)));
+      const retainedIds = [];
+
       for (const v of variants) {
         let vImgs = [];
         if (Array.isArray(v.images) && v.images.length > 0) {
-          vImgs = v.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || ''))).filter(Boolean);
-        } else if (v.image_url) {
-          vImgs = [v.image_url];
+          vImgs = v.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || img.imagePath || ''))).filter(Boolean);
+        } else if (v.image_url || v.imagePath) {
+          vImgs = [v.image_url || v.imagePath];
         }
-        const primaryImg = vImgs[0] || v.image_url || null;
+        const primaryImg = vImgs[0] || v.image_url || v.imagePath || null;
+        const vId = v.id ? String(v.id) : null;
 
+        if (vId && existingDbIds.has(vId)) {
+          await query(
+            `UPDATE product_variants
+             SET variant_name = $1, color_name = $2, color_hex = $3, size = $4,
+                 stock_qty = $5, additional_price = $6, image_url = $7, images = $8
+             WHERE id = $9 AND product_id = $10`,
+            [
+              v.variant_name || v.name || v.variant_label || null,
+              v.color_name || v.color || null,
+              v.color_hex || null,
+              v.size || null,
+              v.stock_qty ?? v.stock_quantity ?? v.stock ?? 0,
+              v.additional_price ?? v.price_modifier ?? 0,
+              primaryImg,
+              vImgs,
+              vId,
+              id
+            ]
+          );
+          retainedIds.push(vId);
+        } else {
+          const { rows: insRows } = await query(
+            `INSERT INTO product_variants
+               (product_id, variant_name, color_name, color_hex, size, stock_qty, additional_price, image_url, images)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+             RETURNING id`,
+            [
+              id,
+              v.variant_name || v.name || v.variant_label || null,
+              v.color_name || v.color || null,
+              v.color_hex || null,
+              v.size || null,
+              v.stock_qty ?? v.stock_quantity ?? v.stock ?? 0,
+              v.additional_price ?? v.price_modifier ?? 0,
+              primaryImg,
+              vImgs
+            ]
+          );
+          if (insRows && insRows[0]) {
+            retainedIds.push(String(insRows[0].id));
+          }
+        }
+      }
+
+      // Delete variants that were removed
+      if (retainedIds.length > 0) {
         await query(
-          `INSERT INTO product_variants
-             (product_id, variant_name, color_name, color_hex, size, stock_qty, additional_price, image_url, images)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-          [
-            id,
-            v.variant_name || v.name || v.variant_label || null,
-            v.color_name || v.color || null,
-            v.color_hex || null,
-            v.size || null,
-            v.stock_qty ?? v.stock ?? 0,
-            v.additional_price ?? v.price_modifier ?? 0,
-            primaryImg,
-            vImgs
-          ]
+          'DELETE FROM product_variants WHERE product_id = $1 AND NOT (id::text = ANY($2::text[]))',
+          [id, retainedIds]
         );
+      } else {
+        await query('DELETE FROM product_variants WHERE product_id = $1', [id]);
+      }
+
+      // Recalculate parent stock_quantity if product has variants
+      const { rows: stockSumRows } = await query(
+        `SELECT COALESCE(SUM(stock_qty), 0)::int as total_variant_stock, COUNT(*)::int as variant_count FROM product_variants WHERE product_id = $1`,
+        [id]
+      );
+      if (stockSumRows[0] && stockSumRows[0].variant_count > 0) {
+        await query(
+          `UPDATE products SET stock_quantity = $1 WHERE id = $2`,
+          [stockSumRows[0].total_variant_stock, id]
+        );
+        if (result && result.rows && result.rows[0]) {
+          result.rows[0].stock_quantity = stockSumRows[0].total_variant_stock;
+        }
       }
     }
 
