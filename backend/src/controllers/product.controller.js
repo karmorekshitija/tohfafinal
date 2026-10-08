@@ -548,7 +548,12 @@ async function listProducts(req, res, next) {
        LEFT JOIN categories c ON c.id = p.category_id
        LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
        LEFT JOIN sellers s ON s.user_id = p.seller_id
-       LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
+       LEFT JOIN product_images pi ON pi.id = (
+         SELECT pi_sub.id FROM product_images pi_sub
+         WHERE pi_sub.product_id = p.id
+         ORDER BY pi_sub.sort_order ASC, pi_sub.id ASC
+         LIMIT 1
+       )
        WHERE ${where}
        GROUP BY p.id, sp.store_name, s.store_name, p.special_packaging_available, c.name, c.slug
        ORDER BY ${checkFeatured ? 'p.is_sponsored DESC, p.view_count DESC, ' : ''}p.created_at DESC
@@ -611,7 +616,12 @@ async function forYouFeed(req, res, next) {
          FROM products p
          LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
          LEFT JOIN sellers s ON s.user_id = p.seller_id
-         LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
+         LEFT JOIN product_images pi ON pi.id = (
+           SELECT pi_sub.id FROM product_images pi_sub
+           WHERE pi_sub.product_id = p.id
+           ORDER BY pi_sub.sort_order ASC, pi_sub.id ASC
+           LIMIT 1
+         )
          WHERE p.status = 'active' AND (p.is_active IS NULL OR p.is_active = TRUE)
            AND (
              sp.verification_status = 'verified'
@@ -651,7 +661,12 @@ async function forYouFeed(req, res, next) {
          FROM products p
          LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_id
          LEFT JOIN sellers s ON s.user_id = p.seller_id
-         LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.sort_order = 0
+         LEFT JOIN product_images pi ON pi.id = (
+           SELECT pi_sub.id FROM product_images pi_sub
+           WHERE pi_sub.product_id = p.id
+           ORDER BY pi_sub.sort_order ASC, pi_sub.id ASC
+           LIMIT 1
+         )
          WHERE p.status = 'active' AND (p.is_active IS NULL OR p.is_active = TRUE)
            AND (
              sp.verification_status = 'verified'
@@ -1742,7 +1757,7 @@ async function updateProduct(req, res, next) {
       const seenImageKeys = new Set();
       for (const image of sortedPhotos) {
         const url = uniqueImageUrls([image])[0];
-        if (!url || typeof url !== 'string' || url.startsWith('blob:')) continue;
+        if (!url || typeof url !== 'string' || url.startsWith('blob:') || (url.startsWith('data:') && url.length > 2000)) continue;
         const imageKey = url.split('?')[0].replace(/\.(jpe?g|png|webp)$/i, '').toLowerCase();
         if (!imageKey || seenImageKeys.has(imageKey)) continue;
         seenImageKeys.add(imageKey);
@@ -1755,6 +1770,17 @@ async function updateProduct(req, res, next) {
           [id, url, assignedOrder]
         );
       }
+
+      // Sync the denormalized products.images TEXT[] column so sanitizeProduct,
+      // direct_images, category cards, and cart queries stay completely current.
+      const { rows: allImgRows } = await query(
+        'SELECT url FROM product_images WHERE product_id = $1 ORDER BY sort_order ASC',
+        [id]
+      );
+      await query(
+        'UPDATE products SET images = $1 WHERE id = $2',
+        [allImgRows.map(r => r.url), id]
+      );
     }
 
     // If variants array is provided, differential upsert variants and sync stock
@@ -1987,11 +2013,23 @@ async function updateProductStatus(req, res, next) {
 async function uploadImages(req, res, next) {
   try {
     const { id } = req.params;
-    const sellerId = req.user.id;
+    const isAdmin = req.user?.role === 'admin' || req.user?.role === 'master_admin';
+
+    // Retrieve all valid seller identity representations (user_id and sellers.id / seller_profiles.id)
+    const { rows: sRows } = await query(
+      'SELECT id, user_id FROM sellers WHERE user_id = $1 UNION SELECT id, user_id FROM seller_profiles WHERE user_id = $1',
+      [req.user.id]
+    );
+    const validSellerIds = Array.from(new Set([
+      req.user.id,
+      req.seller?.id,
+      req.seller?.user_id,
+      ...sRows.flatMap(s => [s.id, s.user_id])
+    ].filter(v => v != null && String(v).trim() !== '')));
 
     const { rows: existing } = await query(
-      'SELECT id FROM products WHERE id = $1 AND (seller_id = $2 OR $3 = TRUE)',
-      [id, sellerId, req.user?.role === 'admin' || req.user?.role === 'master_admin']
+      'SELECT id FROM products WHERE (id::text = $1 OR slug = $1) AND (seller_id::text = ANY($2::text[]) OR $3 = TRUE)',
+      [String(id), validSellerIds, isAdmin]
     );
     if (!existing.length) {
       return res.status(404).json({ success: false, message: 'Product not found.' });
@@ -2007,8 +2045,14 @@ async function uploadImages(req, res, next) {
       [id]
     );
     let sortOrder = parseInt(maxRows[0].max_order, 10) + 1;
+    if (req.body.sort_order !== undefined && req.body.sort_order !== null && req.body.sort_order !== '') {
+      const parsedSortOrder = parseInt(req.body.sort_order, 10);
+      if (!isNaN(parsedSortOrder) && parsedSortOrder >= 0) {
+        sortOrder = parsedSortOrder;
+      }
+    }
 
-    const uniqueUrls = uniqueImageUrls(req.files.map(file => file.path));
+    const uniqueUrls = uniqueImageUrls(req.files.map(file => file.path)).filter(u => !(typeof u === 'string' && u.startsWith('data:') && u.length > 2000));
     let inserted = [];
 
     if (uniqueUrls.length > 0) {

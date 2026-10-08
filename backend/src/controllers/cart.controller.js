@@ -71,7 +71,12 @@ async function getCart(req, res, next) {
            p.status AS product_status,
            p.seller_id,
            COALESCE(sp.store_name, 'Artisan Studio') AS store_name,
-           COALESCE(pv.image_url, (pv.images)[1], (p.images)[1]) AS product_image,
+           COALESCE(
+             pv.image_url,
+             (pv.images)[1],
+             (SELECT url FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.sort_order ASC LIMIT 1),
+             (p.images)[1]
+           ) AS product_image,
            pv.variant_name AS variant_name,
            pv.color_name AS color,
            pv.size AS size,
