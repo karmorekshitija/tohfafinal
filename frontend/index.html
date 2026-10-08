@@ -783,6 +783,7 @@
 
 <script type="module">
   import apiClient from '/src/utils/apiClient.js';
+  import Toast from '/src/components/Toast.js';
   import { logout } from '/src/utils/auth.js';
   import { initSearchOverlay } from '/buyer/searchOverlay.js';
   import { categoryUrl } from '/src/utils/categoryLinks.js';
@@ -880,7 +881,7 @@
 
   async function handleAddToCart(productId, btn) {
     if (!isLoggedIn) {
-      window.Toast?.show("Please log in to purchase items", "error");
+      Toast.show("Please log in to purchase items", "error");
       setTimeout(() => {
         window.location.href = '/auth/login.html';
       }, 1500);
@@ -898,7 +899,7 @@
     try {
       const res = await apiClient.post('/cart/items', { product_id: String(productId).trim(), quantity: 1 });
       if (res.data && res.data.success) {
-        window.Toast?.show("Added to cart!", "success");
+        Toast.show("Added to cart!", "success");
         if (btn) btn.innerHTML = 'Added! ✓';
         await updateCartBadge();
       } else {
@@ -906,7 +907,7 @@
       }
     } catch (err) {
       console.error("Cart error:", err);
-      window.Toast?.show(err.response?.data?.message || err.message || "Failed to add to cart", "error");
+      Toast.show(err.response?.data?.message || err.message || "Failed to add to cart", "error");
       if (btn) btn.innerHTML = originalHtml;
     } finally {
       if (btn) {
@@ -938,7 +939,7 @@
 
   async function handleToggleWishlist(productId, isWishlisted, btn) {
     if (!isLoggedIn) {
-      window.Toast?.show("Please log in to add to wishlist", "error");
+      Toast.show("Please log in to add to wishlist", "error");
       setTimeout(() => {
         window.location.href = '/auth/login.html';
       }, 1500);
@@ -959,7 +960,7 @@
             iconEl.classList.add('text-[#14381F]');
             iconEl.style.fontVariationSettings = "'FILL' 0";
           }
-          window.Toast?.show("Removed from wishlist!", "success");
+          Toast.show("Removed from wishlist!", "success");
         }
       } else {
         const res = await apiClient.post(`/wishlist/${productId}`);
@@ -970,7 +971,7 @@
             iconEl.classList.remove('text-[#14381F]');
             iconEl.style.fontVariationSettings = "'FILL' 1";
           }
-          window.Toast?.show("Added to wishlist!", "success");
+          Toast.show("Added to wishlist!", "success");
         }
       }
       if (window.updateWishlistBadge) {
@@ -1028,7 +1029,7 @@
          </button>`;
 
     const actionBtnHtml = isOwner
-      ? `<button class="w-full py-1.5 px-2 rounded-md sm:rounded-lg font-semibold text-[11px] sm:text-xs bg-[#14381F]/20 text-[#605e57] opacity-60 cursor-not-allowed" disabled onclick="event.preventDefault(); event.stopPropagation();">
+      ? `<button class="w-full bg-[#14381F]/15 text-[#587A5B] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold opacity-60 cursor-not-allowed text-[11px] sm:text-xs" disabled onclick="event.preventDefault(); event.stopPropagation();">
            Own Product
          </button>`
       : isOutOfStock
@@ -1036,10 +1037,10 @@
              Out of Stock
            </button>`
         : isCustomized
-          ? `<button class="w-full py-1.5 px-2 rounded-md sm:rounded-lg font-semibold text-[11px] sm:text-xs text-[#FAF6EE] bg-[#14381F] transition-all hover:bg-[#285C3A] active:scale-[0.98] customize-btn cursor-pointer flex items-center justify-center gap-1" data-id="${product.id}" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/buyer/product.html?id=${product.id}';">
+          ? `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs customize-btn cursor-pointer flex items-center justify-center gap-1" data-id="${product.id}" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/buyer/product.html?id=${product.id}';">
                <span class="material-symbols-outlined text-[14px]">auto_fix_high</span> Customize Product
              </button>`
-          : `<button class="w-full py-1.5 px-2 rounded-md sm:rounded-lg font-semibold text-[11px] sm:text-xs text-white bg-[#14381F] transition-opacity hover:opacity-90 active:scale-[0.98] add-to-cart-btn cursor-pointer" data-id="${product.id}" onclick="event.preventDefault(); event.stopPropagation();">
+          : `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs add-to-cart-btn cursor-pointer" data-id="${product.id}" onclick="event.preventDefault(); event.stopPropagation();">
                Add to Cart
              </button>`;
 

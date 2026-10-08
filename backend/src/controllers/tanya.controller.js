@@ -30,15 +30,6 @@ async function chat(req, res, next) {
       });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-    if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY') {
-      console.error("FATAL: GEMINI_API_KEY is not defined in environment variables.");
-      return res.status(500).json({
-        success: false,
-        message: 'Gemini API key is not configured on the server. Please check .env.'
-      });
-    }
-
     const MAX_HISTORY_TURNS = 20;
     const safeHistory = Array.isArray(conversationHistory || history) 
       ? (conversationHistory || history).slice(-MAX_HISTORY_TURNS) 

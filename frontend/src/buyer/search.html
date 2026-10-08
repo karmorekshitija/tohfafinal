@@ -571,7 +571,8 @@
 
     <script type="module">
         import apiClient from '/src/utils/apiClient.js';
-    import { logout } from '/src/utils/auth.js';
+        import Toast from '/src/components/Toast.js';
+        import { logout } from '/src/utils/auth.js';
         import { formatPaise } from '/src/utils/currency.js';
 
     function isProductOwned(sellerId) {
@@ -708,7 +709,7 @@
                 const stock = p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : (p.stock !== undefined ? p.stock : null));
                 const isOutOfStock = !isCustomized && (p.status === 'sold_out' || (stock !== null && stock <= 0));
                 const addToCartBtnHtml = isOwner
-                    ? `<button class="w-full bg-[#14381F]/20 text-[#605e57] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold opacity-50 cursor-not-allowed text-[11px] sm:text-xs" disabled onclick="event.preventDefault(); event.stopPropagation();">
+                    ? `<button class="w-full bg-[#14381F]/15 text-[#587A5B] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold opacity-60 cursor-not-allowed text-[11px] sm:text-xs" disabled onclick="event.preventDefault(); event.stopPropagation();">
                             Own Product
                         </button>`
                     : isOutOfStock
@@ -719,7 +720,7 @@
                             ? `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs customize-btn cursor-pointer flex items-center justify-center gap-1" data-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/buyer/product.html?id=${p.id}';">
                                    <span class="material-symbols-outlined text-[14px]">auto_fix_high</span> Customize Product
                                </button>`
-                            : `<button class="w-full bg-[#14381F] text-white py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:opacity-90 active:scale-[0.98] transition-all text-[11px] sm:text-xs add-to-cart-btn cursor-pointer" data-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation();">
+                            : `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs add-to-cart-btn cursor-pointer" data-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation();">
                                    Add to Cart
                                </button>`;
 
@@ -1208,11 +1209,11 @@
                            <span class="material-symbols-outlined text-[15px] sm:text-[17px] transition-all ${isWishlisted ? 'fill-icon text-red-500' : 'text-[#14381F]'}" style="font-variation-settings: 'FILL' ${isWishlisted ? 1 : 0};">favorite</span>
                        </button>`;
 
-                const isCustomized = p.listing_type === 'custom' || p.customization_mode === 'fixed' || p.customization_mode === 'open' || Boolean(p.is_customizable);
+                const isCustomized = p.listing_type === 'custom' || (p.customization_mode && p.customization_mode !== 'none') || Boolean(p.is_customizable);
                 const stock = p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : (p.stock !== undefined ? p.stock : null));
                 const isOutOfStock = !isCustomized && (p.status === 'sold_out' || (stock !== null && stock <= 0));
                 const addToCartBtnHtml = isOwner
-                    ? `<button class="w-full bg-[#14381F]/20 text-[#605e57] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold opacity-50 cursor-not-allowed text-[11px] sm:text-xs" disabled onclick="event.preventDefault(); event.stopPropagation();">
+                    ? `<button class="w-full bg-[#14381F]/15 text-[#587A5B] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold opacity-60 cursor-not-allowed text-[11px] sm:text-xs" disabled onclick="event.preventDefault(); event.stopPropagation();">
                            Own Product
                        </button>`
                     : isOutOfStock
@@ -1223,7 +1224,7 @@
                             ? `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs customize-btn cursor-pointer flex items-center justify-center gap-1" data-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/buyer/product.html?id=${p.id}';">
                                    <span class="material-symbols-outlined text-[14px]">auto_fix_high</span> Customize Product
                                </button>`
-                            : `<button class="w-full bg-[#14381F] text-white py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:opacity-90 active:scale-[0.98] transition-all text-[11px] sm:text-xs add-to-cart-btn cursor-pointer" data-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation();">
+                            : `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs add-to-cart-btn cursor-pointer" data-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation();">
                                    Add to Cart
                                </button>`;
 
@@ -1354,7 +1355,7 @@
                         const stock = p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity !== undefined ? p.stock_quantity : (p.stock !== undefined ? p.stock : null));
                         const isOutOfStock = !isCustomized && (p.status === 'sold_out' || (stock !== null && stock <= 0));
                         const addToCartBtnHtml = isOwner
-                            ? `<button class="w-full bg-[#14381F]/20 text-[#605e57] py-2 rounded-lg font-semibold opacity-50 cursor-not-allowed text-sm" disabled onclick="event.preventDefault(); event.stopPropagation();">
+                            ? `<button class="w-full bg-[#14381F]/15 text-[#587A5B] py-2 rounded-lg font-semibold opacity-60 cursor-not-allowed text-sm" disabled onclick="event.preventDefault(); event.stopPropagation();">
                                    Own Product
                                </button>`
                             : isOutOfStock
@@ -1365,7 +1366,7 @@
                                     ? `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-2 rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-sm customize-btn cursor-pointer flex items-center justify-center gap-1" data-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/buyer/product.html?id=${p.id}';">
                                            <span class="material-symbols-outlined text-[16px]">auto_fix_high</span> Customize Product
                                        </button>`
-                                    : `<button class="w-full bg-[#14381F] text-white py-2 rounded-lg font-semibold hover:opacity-90 active:scale-[0.98] transition-all text-sm add-to-cart-btn cursor-pointer" data-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation();">
+                                    : `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-2 rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-sm add-to-cart-btn cursor-pointer" data-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation();">
                                            Add to Cart
                                        </button>`;
 
@@ -1483,7 +1484,7 @@
             try {
                 const res = await apiClient.post('/cart/items', { product_id: String(productId).trim(), quantity: 1 });
                 if (res.data && res.data.success) {
-                    showToast("Added to cart!", "success");
+                    Toast.show("Added to cart!", "success");
                     if (btn) btn.innerHTML = 'Added! ✓';
                     await updateNavCartBadge();
                 } else {
@@ -1491,7 +1492,7 @@
                 }
             } catch (err) {
                 console.error("Cart error:", err);
-                showToast(err.response?.data?.message || err.message || "Failed to add to cart", "error");
+                Toast.show(err.response?.data?.message || err.message || "Failed to add to cart", "error");
                 if (btn) btn.innerHTML = originalHtml;
             } finally {
                 if (btn) {
