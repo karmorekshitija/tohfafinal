@@ -3282,7 +3282,7 @@ async function markWhatsAppOutboxDone(req, res, next) {
 
 // ---------------------------------------------------------------------------
 // GET /api/admin/whatsapp/outbox/:id/done?token=<hmac>  (public, token-protected)
-// One-click "Mark as Sent" from owner email link.
+// Renders confirmation page with a POST form to protect against email scanner prefetching.
 // ---------------------------------------------------------------------------
 async function markWhatsAppOutboxDoneByToken(req, res) {
   const { id } = req.params;
@@ -3315,16 +3315,75 @@ async function markWhatsAppOutboxDoneByToken(req, res) {
       return res.status(200).send('<html><body style="font-family:Arial,sans-serif;max-width:500px;margin:60px auto;text-align:center;"><h1>\u2705 Already Marked as Sent</h1><p>This task was already confirmed. You can close this tab.</p><p style="color:#888;font-size:13px;">Team Tohfa</p></body></html>');
     }
 
+    const cleanToken = String(token || '').replace(/[^a-f0-9]/gi, '');
+    return res.status(200).send(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirm WhatsApp Task — Tohfa</title>
+</head>
+<body style="font-family:Arial,sans-serif;max-width:500px;margin:60px auto;padding:20px;text-align:center;">
+  <h2>\uD83D\uDCF1 Confirm WhatsApp Task</h2>
+  <p style="color:#555;font-size:15px;margin:16px 0 24px;">Please confirm that you have sent this WhatsApp message.</p>
+  <form method="POST" action="/api/admin/whatsapp/outbox/${encodeURIComponent(id)}/confirm-sent">
+    <input type="hidden" name="token" value="${cleanToken}">
+    <button type="submit" style="background:#25D366;color:white;border:none;padding:12px 28px;font-size:16px;font-weight:bold;border-radius:6px;cursor:pointer;">Confirm: I sent it</button>
+  </form>
+  <p style="color:#888;font-size:13px;margin-top:28px;">Team Tohfa</p>
+</body>
+</html>`);
+  } catch (err) {
+    console.error('[Admin] markWhatsAppOutboxDoneByToken error:', err.message);
+    return res.status(200).send('<html><body><h1>Error</h1><p>Something went wrong. Please use the admin panel.</p></body></html>');
+  }
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/admin/whatsapp/outbox/:id/confirm-sent  (public, token-protected)
+// Confirms that the WhatsApp task was sent, guarded by status='manual_pending'.
+// ---------------------------------------------------------------------------
+async function confirmWhatsAppOutboxSentByToken(req, res) {
+  const { id } = req.params;
+  const token = req.body?.token || req.query?.token;
+
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    return res.status(200).send('<html><body><h1>Link not configured</h1><p>CRON_SECRET is not set on this server. Use the admin panel instead.</p></body></html>');
+  }
+
+  try {
+    const crypto = require('crypto');
+    const expected = crypto.createHmac('sha256', cronSecret).update(String(id)).digest('hex').slice(0, 32);
+    const bufToken = Buffer.from(typeof token === 'string' ? token : '');
+    const bufExpected = Buffer.from(expected);
+    const valid = bufToken.length === bufExpected.length && crypto.timingSafeEqual(bufToken, bufExpected);
+
+    if (!valid) {
+      return res.status(200).send('<html><body><h1>\u274C Invalid Link</h1><p>This link is invalid or has expired. Please use the admin panel.</p></body></html>');
+    }
+
+    const { rows: existing } = await query(
+      `SELECT id, status FROM whatsapp_outbox WHERE id = $1`,
+      [id]
+    );
+    if (!existing.length) {
+      return res.status(200).send('<html><body><h1>Not found</h1><p>This outbox entry no longer exists.</p></body></html>');
+    }
+    if (existing[0].status === 'manual_done') {
+      return res.status(200).send('<html><body style="font-family:Arial,sans-serif;max-width:500px;margin:60px auto;text-align:center;"><h1>\u2705 Already Marked as Sent</h1><p>This task was already confirmed. You can close this tab.</p><p style="color:#888;font-size:13px;">Team Tohfa</p></body></html>');
+    }
+
     await query(
       `UPDATE whatsapp_outbox
        SET status = 'manual_done', manual_done_at = NOW(), updated_at = NOW()
-       WHERE id = $1`,
+       WHERE id = $1 AND status = 'manual_pending'`,
       [id]
     );
 
     return res.status(200).send('<html><body style="font-family:Arial,sans-serif;max-width:500px;margin:60px auto;text-align:center;"><h1>\u2705 Marked as Sent</h1><p>The WhatsApp task has been confirmed. You can close this tab.</p><p style="color:#888;font-size:13px;">Team Tohfa</p></body></html>');
   } catch (err) {
-    console.error('[Admin] markWhatsAppOutboxDoneByToken error:', err.message);
+    console.error('[Admin] confirmWhatsAppOutboxSentByToken error:', err.message);
     return res.status(200).send('<html><body><h1>Error</h1><p>Something went wrong. Please use the admin panel.</p></body></html>');
   }
 }
@@ -3417,6 +3476,7 @@ module.exports = {
   getWhatsAppOutbox,
   markWhatsAppOutboxDone,
   markWhatsAppOutboxDoneByToken,
+  confirmWhatsAppOutboxSentByToken,
   getPlatformStats,
   listSellers,
   getAllSellers: listSellers,

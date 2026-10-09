@@ -40,6 +40,14 @@ function isEnabled() {
 }
 
 /**
+ * Resolves owner email from OWNER_NOTIFY_EMAIL or ADMIN_EMAIL fallback.
+ * @returns {string}
+ */
+function getOwnerEmail() {
+  return (process.env.OWNER_NOTIFY_EMAIL || process.env.ADMIN_EMAIL || '').trim();
+}
+
+/**
  * Returns the current WhatsApp operating mode.
  * 1. WHATSAPP_ENABLED === 'true'                                    → 'api'
  * 2. WHATSAPP_MANUAL_MODE !== 'false' AND OWNER_NOTIFY_EMAIL set   → 'manual'
@@ -50,7 +58,7 @@ function isEnabled() {
 function getMode() {
   if (process.env.WHATSAPP_ENABLED === 'true') return 'api';
   const manualOff = process.env.WHATSAPP_MANUAL_MODE === 'false';
-  const hasEmail = !!process.env.OWNER_NOTIFY_EMAIL;
+  const hasEmail = !!getOwnerEmail();
   if (!manualOff && hasEmail) return 'manual';
   return 'suppressed';
 }
@@ -189,6 +197,7 @@ checkStartupWarning();
 module.exports = {
   isEnabled,
   getMode,
+  getOwnerEmail,
   redirectTo,
   sanitizeParam,
   templates,
