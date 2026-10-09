@@ -10,6 +10,7 @@
 const { ithinkRequest, isIThinkEnabled } = require('../config/ithink');
 const { query } = require('../config/db');
 const { createNotification } = require('../controllers/notification.controller');
+const { getOwnerEmail } = require('../config/whatsapp');
 let ownerNotifyService = null;
 try {
   ownerNotifyService = require('./ownerNotify.service');
@@ -297,9 +298,10 @@ async function createShipment(orderOrId, options = {}) {
       ).catch(() => {});
 
       // Alert admin via email
-      if (ownerNotifyService && typeof ownerNotifyService.sendMail === 'function' && process.env.OWNER_NOTIFY_EMAIL) {
+      const ownerEmail = getOwnerEmail();
+      if (ownerNotifyService && typeof ownerNotifyService.sendMail === 'function' && ownerEmail) {
         ownerNotifyService.sendMail(
-          process.env.OWNER_NOTIFY_EMAIL,
+          ownerEmail,
           `[Tohfa Logistics Alert] iThink Booking Failed for Order #${String(order.id).slice(0, 8)}`,
           `<h3>Logistics Booking Failure</h3>
            <p><strong>Order ID:</strong> ${order.id}</p>

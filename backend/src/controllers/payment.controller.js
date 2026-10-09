@@ -265,16 +265,14 @@ async function verifyPayment(req, res, next) {
       }
 
       for (const seller of sellersToNotify) {
-        if (seller.whatsapp_number) {
-          whatsappService.sendSellerOrderNotification(seller.whatsapp_number, {
-            orderId: confirmedOrder.id,
-            sellerOrderId: seller.seller_order_id || null,
-            sellerId: seller.seller_id,
-            recipientUserId: seller.seller_id,
-            buyerName: req.user?.name || 'Customer',
-            amount: seller.subtotal || confirmedOrder.total_amount,
-          }).catch(e => console.error('[WhatsApp Seller Alert Error]:', e.message));
-        }
+        whatsappService.sendSellerOrderNotification(seller.whatsapp_number, {
+          orderId: confirmedOrder.id,
+          sellerOrderId: seller.seller_order_id || null,
+          sellerId: seller.seller_id,
+          recipientUserId: seller.seller_id,
+          buyerName: req.user?.name || 'Customer',
+          amount: seller.subtotal || confirmedOrder.total_amount,
+        }).catch(e => console.error('[WhatsApp Seller Alert Error]:', e.message));
 
         if (seller.is_admin_managed) {
           // Admin alert for special orders

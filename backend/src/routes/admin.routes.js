@@ -30,6 +30,7 @@ router.post('/reports', authMiddleware, adminController.createReport);
 
 // Public token-based one-click "Mark as Sent" from owner email link
 router.get('/whatsapp/outbox/:id/done', adminController.markWhatsAppOutboxDoneByToken);
+router.post('/whatsapp/outbox/:id/confirm-sent', adminController.confirmWhatsAppOutboxSentByToken);
 
 // All other endpoints require Admin privilege
 router.use(authMiddleware, adminOnly);
