@@ -269,6 +269,10 @@
         <input type="text" id="addr-fullname" required class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
       </div>
       <div class="space-y-xs">
+        <label class="block text-xs font-semibold text-on-surface-variant uppercase">Contact Phone (10-digit Mobile)</label>
+        <input type="tel" id="addr-phone" required pattern="[6-9][0-9]{9}" placeholder="10-digit mobile number" class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
+      </div>
+      <div class="space-y-xs">
         <label class="block text-xs font-semibold text-on-surface-variant uppercase">Address Line 1</label>
         <input type="text" id="addr-line1" required class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
       </div>
@@ -833,6 +837,7 @@
         document.getElementById('address-form-title').innerText = "Add Address";
         document.getElementById('address-id-field').value = "";
         document.getElementById('addr-fullname').value = "";
+        document.getElementById('addr-phone').value = "";
         document.getElementById('addr-line1').value = "";
         document.getElementById('addr-line2').value = "";
         document.getElementById('addr-city').value = "";
@@ -851,6 +856,7 @@
         document.getElementById('address-form-title').innerText = "Edit Address";
         document.getElementById('address-id-field').value = addr.id;
         document.getElementById('addr-fullname').value = addr.full_name;
+        document.getElementById('addr-phone').value = addr.phone || "";
         document.getElementById('addr-line1').value = addr.line1;
         document.getElementById('addr-line2').value = addr.line2 || "";
         document.getElementById('addr-city').value = addr.city;
@@ -865,8 +871,17 @@
     async function saveAddress(event) {
         event.preventDefault();
         const id = document.getElementById('address-id-field').value;
+        const phoneVal = document.getElementById('addr-phone').value.trim();
+        const cleanedPhone = phoneVal.replace(/[\s\-\+\(\)]/g, '');
+        const finalPhone = cleanedPhone.length > 10 ? cleanedPhone.slice(-10) : cleanedPhone;
+        if (!/^[6-9]\d{9}$/.test(finalPhone)) {
+            alert("Please enter a valid 10-digit Indian mobile number.");
+            return;
+        }
+
         const body = {
             full_name: document.getElementById('addr-fullname').value.trim(),
+            phone: finalPhone,
             line1: document.getElementById('addr-line1').value.trim(),
             line2: document.getElementById('addr-line2').value.trim() || null,
             city: document.getElementById('addr-city').value.trim(),
@@ -929,6 +944,14 @@
             return;
         }
 
+        const activeAddr = savedAddresses.find(a => a.id === selectedAddressId);
+        if (activeAddr && (!activeAddr.phone || activeAddr.phone.replace(/[\s\-\+\(\)]/g, '').length < 10)) {
+            alert("Please edit your shipping address to include a valid 10-digit mobile number for delivery and payment.");
+            openAddressModal();
+            editAddress(selectedAddressId);
+            return;
+        }
+
         const btn = document.getElementById('btn-place-order');
         btn.disabled = true;
         btn.innerHTML = `<span>Processing...</span>`;
@@ -965,7 +988,8 @@
                         order_id: payData.razorpay_order_id,
                         name: "Tohfa Artisan Studio",
                         description: `Order Ref: ${orderRef}`,
-                        prefill: payData.prefill,
+                        prefill: payData.prefill || {},
+                        theme: { color: '#1A3A32' },
                         handler: async function (response) {
                             // Helper: attempt verify, retry once on 401 (token refresh)
                             async function doVerify() {

@@ -59,6 +59,49 @@ async function createOrder(req, res, next) {
     const { rows: userRows } = await query('SELECT name, email, phone FROM users WHERE id = $1', [buyerId]);
     const user = userRows[0] || {};
 
+    // Robust phone resolution: check users table -> order.shipping_address -> addresses table
+    let contactPhone = (user.phone || '').toString().trim();
+    let recipientName = (user.name || '').toString().trim();
+
+    if (order.shipping_address) {
+      let shipAddr = order.shipping_address;
+      if (typeof shipAddr === 'string') {
+        try { shipAddr = JSON.parse(shipAddr); } catch (_) { shipAddr = {}; }
+      }
+      if (!contactPhone) {
+        contactPhone = (shipAddr.phone || shipAddr.contact_phone || shipAddr.mobile || '').toString().trim();
+      }
+      if (!recipientName) {
+        recipientName = (shipAddr.full_name || shipAddr.name || shipAddr.recipient_name || '').toString().trim();
+      }
+    }
+
+    if (!contactPhone && order.address_id) {
+      const { rows: addrRows } = await query('SELECT phone, name, full_name, recipient_name FROM addresses WHERE id = $1', [order.address_id]).catch(() => ({ rows: [] }));
+      if (addrRows.length && addrRows[0]) {
+        if (!contactPhone && addrRows[0].phone) {
+          contactPhone = addrRows[0].phone.toString().trim();
+        }
+        if (!recipientName) {
+          recipientName = (addrRows[0].full_name || addrRows[0].name || addrRows[0].recipient_name || '').toString().trim();
+        }
+      }
+    }
+
+    // Sanitize Indian phone (strip +91, non-digits, keep last 10 digits if valid)
+    let cleanPhone = contactPhone ? contactPhone.replace(/[\s\-\+\(\)]/g, '') : '';
+    if (cleanPhone.startsWith('91') && cleanPhone.length > 10) {
+      cleanPhone = cleanPhone.slice(2);
+    }
+    if (cleanPhone.length > 10) {
+      cleanPhone = cleanPhone.slice(-10);
+    }
+
+    // Backfill phone into users table if previously missing (e.g. Google OAuth signups)
+    if (cleanPhone && cleanPhone.length === 10 && !user.phone) {
+      await query('UPDATE users SET phone = $1 WHERE id = $2 AND (phone IS NULL OR phone = \'\')', [cleanPhone, buyerId]).catch(() => {});
+    }
+
     const keyId = razorpayOrder.keyId || process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_PRIMARY_KEY_ID || 'rzp_test_placeholder';
     const amountPaise = razorpayOrder.amount || (order.total_paise ? Number(order.total_paise) : Math.round(Number(order.total_amount) * 100));
 
@@ -77,9 +120,9 @@ async function createOrder(req, res, next) {
         name: 'Tohfa Gifting',
         description: `Order #${String(order.id).slice(0, 8)}`,
         prefill: {
-          name: user.name || '',
+          name: recipientName || user.name || '',
           email: user.email || '',
-          contact: user.phone || '',
+          contact: cleanPhone || user.phone || '',
         },
       },
     });

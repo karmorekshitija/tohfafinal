@@ -883,37 +883,6 @@
 
   const isWishlistUpdating = {};
 
-  async function handleTalkToSeller(productId, btn) {
-    if (!isLoggedIn) {
-      window.Toast?.show("Please log in to contact the seller", "error");
-      setTimeout(() => {
-        window.location.href = '/auth/login.html';
-      }, 1500);
-      return;
-    }
-
-    btn.disabled = true;
-    const originalText = btn.innerText;
-    btn.innerText = 'Starting chat...';
-
-    try {
-      const res = await apiClient.post('/requests', {
-        listing_id: String(productId).trim(),
-        request_type: 'customization',
-        quantity: 1
-      });
-      if (res.data && res.data.success) {
-        const convId = res.data.conversation_id;
-        window.location.href = `/buyer/chat.html?conversationId=${convId}`;
-      } else {
-        throw new Error("Invalid response");
-      }
-    } catch (err) {
-      console.error("Failed to start customization request:", err);
-      btn.disabled = false;
-      btn.innerText = originalText;
-    }
-  }
 
   async function handleAddToCart(productId, btn) {
     if (!isLoggedIn) {
@@ -1019,20 +988,33 @@
       isWishlistUpdating[productId] = false;
     }
   }
+
   // Helper to create product card template matching new design
   function createProductCard(product, extraClasses = '', cardIndex = 99) {
     const card = document.createElement('a');
     card.href = `/buyer/product.html?id=${product.id}`;
     const isCustomized = product.listing_type === 'custom' || (product.customization_mode && product.customization_mode !== 'none') || Boolean(product.is_customizable);
-    const stock = product.stock_qty !== undefined ? product.stock_qty : (product.stock_quantity !== undefined ? product.stock_quantity : (product.stock !== undefined ? product.stock : null));
-    const isOutOfStock = !isCustomized && (product.status === 'sold_out' || (stock !== null && stock <= 0));
+    const hasVariants = Boolean(product.has_variants || (product.variant_count && parseInt(product.variant_count, 10) > 0));
+    const effectiveStock = (hasVariants && product.effective_stock !== undefined && product.effective_stock !== null)
+      ? Number(product.effective_stock)
+      : (product.stock_qty !== undefined ? product.stock_qty : (product.stock_quantity !== undefined ? product.stock_quantity : (product.stock !== undefined ? product.stock : null)));
+    const isOutOfStock = !isCustomized && (product.status === 'sold_out' || (effectiveStock !== null && effectiveStock <= 0));
     card.className = `group rounded-xl border flex flex-col justify-between overflow-hidden cursor-pointer transition-shadow duration-300 hover:shadow-md bg-[#FAF6EE] border-[rgba(20,56,31,0.15)] no-underline text-inherit ${isOutOfStock ? 'is-out-of-stock' : ''} ${extraClasses}`;
 
     const ribbonHtml = getRibbonHtml(product);
-    const rawPrice = product.price_paise !== undefined && product.price_paise !== null
-      ? (product.price_paise / 100)
-      : (parseFloat(product.base_price || product.price || 0));
-    const formattedPrice = `₹${rawPrice.toLocaleString('en-IN')}`;
+    let formattedPrice;
+    if (hasVariants && product.min_price != null) {
+      const minP = Number(product.min_price);
+      const maxP = product.max_price != null ? Number(product.max_price) : minP;
+      formattedPrice = minP !== maxP
+        ? `From ₹${minP.toLocaleString('en-IN')}`
+        : `₹${minP.toLocaleString('en-IN')}`;
+    } else {
+      const rawPrice = product.price_paise !== undefined && product.price_paise !== null
+        ? (product.price_paise / 100)
+        : (parseFloat(product.base_price || product.price || 0));
+      formattedPrice = `₹${rawPrice.toLocaleString('en-IN')}`;
+    }
     const isWishlisted = !!product.is_wishlisted;
 
     let rawImageUrl = product.image_url ||
@@ -1075,9 +1057,13 @@
           ? `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs customize-btn cursor-pointer flex items-center justify-center gap-1" data-id="${product.id}" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/buyer/product.html?id=${product.id}';">
                <span class="material-symbols-outlined text-[14px]">auto_fix_high</span> Customize Product
              </button>`
-          : `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs add-to-cart-btn cursor-pointer" data-id="${product.id}" onclick="event.preventDefault(); event.stopPropagation();">
-               Add to Cart
-             </button>`;
+          : hasVariants
+            ? `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs cursor-pointer flex items-center justify-center gap-1" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/buyer/product.html?id=${product.id}';">
+                 Select Options
+               </button>`
+            : `<button class="w-full bg-[#14381F] text-[#FAF6EE] py-1.5 px-2 rounded-md sm:rounded-lg font-semibold hover:bg-[#285C3A] active:scale-[0.98] transition-all text-[11px] sm:text-xs add-to-cart-btn cursor-pointer" data-id="${product.id}" onclick="event.preventDefault(); event.stopPropagation();">
+                 Add to Cart
+               </button>`;
 
     const isPriority = typeof cardIndex === 'number' && cardIndex < 4;
     const loadingAttr = isPriority ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"';
@@ -1141,36 +1127,37 @@
     return card;
   }
 
-  // --- For You Products Loader ---
-  const FALLBACK_FEED = [];
 
+  // --- For You Products Loader ---
   async function loadForYouProducts() {
     if (skeletons) skeletons.style.setProperty('display', 'grid', 'important');
     try {
-      const response = await apiClient.get('/products/feed?page=1&limit=30');
-      const products = response.data?.data?.products || response.data?.products || [];
-      const filteredProducts = products.filter(product => product.type !== 'sponsored' && !product.is_sponsored);
-      const forYouProducts = filteredProducts.length > 0 ? filteredProducts.slice(0, 16) : products.slice(0, 16);
+      let products = [];
+
+      // Primary: personalized feed endpoint
+      try {
+        const response = await apiClient.get('/products/feed');
+        const raw = response.data?.data?.products || response.data?.products || [];
+        products = raw.filter(p => !p.is_sponsored && p.type !== 'sponsored').slice(0, 16);
+        if (products.length === 0) products = raw.slice(0, 16);
+      } catch (feedErr) {
+        console.warn('Feed endpoint unavailable, falling back to catalog:', feedErr);
+      }
+
+      // Fallback: general catalog — always ensures something is shown
+      if (products.length === 0) {
+        const fallback = await apiClient.get('/products?limit=16');
+        const raw = fallback.data?.data?.products || fallback.data?.products || [];
+        products = raw.slice(0, 16);
+      }
 
       grid.innerHTML = '';
-      if (forYouProducts.length > 0) {
-        forYouProducts.forEach((product, idx) => {
-          const card = createProductCard(product, '', idx);
-          grid.appendChild(card);
-        });
-      } else {
-        FALLBACK_FEED.forEach((product, idx) => {
-          const card = createProductCard(product, '', idx);
-          grid.appendChild(card);
-        });
-      }
-    } catch (error) {
-      console.error('Failed to load For You products, using fallbacks:', error);
-      grid.innerHTML = '';
-      FALLBACK_FEED.forEach((product, idx) => {
-        const card = createProductCard(product, '', idx);
-        grid.appendChild(card);
+      products.forEach((product, idx) => {
+        grid.appendChild(createProductCard(product, '', idx));
       });
+    } catch (error) {
+      console.error('Failed to load For You products:', error);
+      grid.innerHTML = '';
     } finally {
       if (skeletons) skeletons.style.setProperty('display', 'none', 'important');
     }
@@ -1481,20 +1468,6 @@
         container.scrollBy({ left: 260, behavior: 'smooth' });
       });
     }
-
-    // Touch swipe gesture support for mobile (Guideline #957)
-    let touchStartX = 0;
-    let touchScrollLeft = 0;
-    container.addEventListener('touchstart', (e) => {
-      touchStartX = e.touches[0].pageX;
-      touchScrollLeft = container.scrollLeft;
-    }, { passive: true });
-
-    container.addEventListener('touchmove', (e) => {
-      const touchX = e.touches[0].pageX;
-      const walk = (touchX - touchStartX) * 1.2;
-      container.scrollLeft = touchScrollLeft - walk;
-    }, { passive: true });
 
     // Drag to scroll for desktop mouse users
     let isDown = false;

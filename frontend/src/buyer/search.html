@@ -684,7 +684,7 @@
             }
 
             container.innerHTML = products.map((p, idx) => {
-                let rawImg = p.image_url || (Array.isArray(p.images) && p.images.length && p.images[0]?.url ? p.images[0].url : null) || p.primary_image || 'https://placehold.co/400x400/f4ede3/516447?text=Handcrafted';
+                let rawImg = p.image_url || (Array.isArray(p.images) && p.images.length && p.images[0]?.url ? p.images[0].url : null) || p.primary_image || '/img/categories/artisan_showcase.webp';
                 if (typeof rawImg === 'string' && (rawImg.startsWith('/uploads/') || rawImg.startsWith('/media/'))) {
                     const cdnPrefix = window.TOHFA_CDN_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '' : 'https://thetohfa.in');
                     rawImg = cdnPrefix + rawImg;
@@ -1195,7 +1195,7 @@
         // Render matching products
         function renderProductGrid(products) {
             resultsGrid.innerHTML = products.map((p, idx) => {
-                let rawImg = p.image_url || (Array.isArray(p.images) && p.images.length && p.images[0]?.url ? p.images[0].url : null) || p.primary_image || 'https://placehold.co/400x400/f4ede3/516447?text=Handcrafted';
+                let rawImg = p.image_url || (Array.isArray(p.images) && p.images.length && p.images[0]?.url ? p.images[0].url : null) || p.primary_image || '/img/categories/artisan_showcase.webp';
                 if (typeof rawImg === 'string' && (rawImg.startsWith('/uploads/') || rawImg.startsWith('/media/'))) {
                     const cdnPrefix = window.TOHFA_CDN_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '' : 'https://thetohfa.in');
                     rawImg = cdnPrefix + rawImg;
@@ -1341,7 +1341,7 @@
 
                     const items = products.slice(0, 8); // Display up to 8
                     grid.innerHTML = items.map(p => {
-                        let rawImg = p.image_url || p.primary_image || (Array.isArray(p.images) && p.images[0]?.url) || 'https://placehold.co/400x400/f4ede3/516447?text=Handcrafted';
+                        let rawImg = p.image_url || p.primary_image || (Array.isArray(p.images) && p.images[0]?.url) || '/img/categories/artisan_showcase.webp';
                         if (typeof rawImg === 'string' && (rawImg.startsWith('/uploads/') || rawImg.startsWith('/media/'))) {
                             const cdnPrefix = window.TOHFA_CDN_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '' : 'https://thetohfa.in');
                             rawImg = cdnPrefix + rawImg;
@@ -1472,36 +1472,6 @@
         }
 
         // Cart and Wishlist operations
-        // Cart and Wishlist operations
-        async function handleTalkToSeller(productId, btn) {
-            const token = sessionStorage.getItem('tohfa_access_token');
-            if (!token) {
-                // login check bypassed
-                return;
-            }
-
-            btn.disabled = true;
-            const originalText = btn.innerText;
-            btn.innerText = 'Starting chat...';
-
-            try {
-                const res = await apiClient.post('/requests', {
-                    listing_id: String(productId).trim(),
-                    request_type: 'customization',
-                    quantity: 1
-                });
-                if (res.data && res.data.success) {
-                    const convId = res.data.conversation_id;
-                    window.location.href = `/buyer/chat.html?conversationId=${convId}`;
-                } else {
-                    throw new Error("Invalid response");
-                }
-            } catch (err) {
-                console.error("Failed to start customization request:", err);
-                btn.disabled = false;
-                btn.innerText = originalText;
-            }
-        }
 
         async function handleAddToCart(productId, btn) {
             const token = sessionStorage.getItem('tohfa_access_token');

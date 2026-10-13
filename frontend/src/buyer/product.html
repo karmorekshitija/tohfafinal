@@ -200,7 +200,7 @@
         }
     </style>
 </head>
-<body class="bg-[#FFF8E7] text-on-background min-h-screen font-body-md overflow-x-hidden">
+<body class="bg-[#FFF8E7] text-on-background min-h-screen font-body-md overflow-x-hidden pb-20 md:pb-0">
     <!-- TopNavBar -->
     <!-- Top Navigation Bar (LOCKED) -->
 <header
@@ -460,14 +460,11 @@
                         <div id="pincode-check-result" class="mt-2 text-secondary leading-relaxed"></div>
                     </div>
 
-                    <div id="overflow-container" class="hidden space-y-xs">
-                        <button id="chat-with-seller-btn" class="w-full bg-primary hover:bg-[#14381F] text-white py-4 rounded-xl font-semibold uppercase tracking-widest hover:shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-sm">
-                            <span class="material-symbols-outlined">chat</span>
-                            <span>Chat with Seller</span>
-                        </button>
-                        <p id="overflow-msg" class="text-xs text-amber-700 bg-amber-50/50 border border-amber-200/60 rounded-lg p-sm leading-relaxed">
-                            Today's daily fulfillment limit for this product has been reached. Chat with the seller to arrange your order.
-                        </p>
+                    <div id="overflow-container" class="hidden space-y-2">
+                        <div class="flex items-center gap-2 p-3.5 rounded-xl bg-amber-50/80 border border-amber-200/80 text-amber-900 text-xs font-medium">
+                            <span class="material-symbols-outlined text-[18px] text-amber-700 shrink-0">inventory_2</span>
+                            <p id="overflow-msg" class="leading-relaxed">Today's daily fulfillment limit for this craft has been reached. Next available batch: tomorrow.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -479,11 +476,11 @@
                     </div>
                     <p class="text-xs text-purple-600">Please wait — we're checking availability for you.</p>
                 </div>
-                <div id="contention-lost" class="hidden mt-4 p-4 border-2 border-red-200 bg-red-50 rounded-2xl">
-                    <p class="font-semibold text-red-800 text-sm text-center mb-2">Someone else just grabbed the last one.</p>
-                    <button id="remake-request-btn" class="hidden w-full mt-2 border border-primary text-primary py-3 rounded-xl font-semibold text-sm transition-all hover:bg-primary hover:text-white">
-                        Request a Custom Remake
-                    </button>
+                <div id="contention-lost" class="hidden mt-4 p-4 border-2 border-red-200 bg-red-50 rounded-2xl text-center">
+                    <p class="font-semibold text-red-800 text-sm mb-3">Someone else just grabbed the last one.</p>
+                    <a href="/buyer/categories.html" id="remake-request-btn" class="inline-block w-full py-3 px-4 bg-[#14381F] text-[#FAF6EE] text-xs font-semibold rounded-xl hover:bg-[#285C3A] transition-colors no-underline">
+                        Explore Similar Handcrafted Pieces
+                    </a>
                 </div>
 
                 <!-- Phase 2: Paused state container (hidden by default) -->
@@ -993,6 +990,8 @@
 
                     const basePricePaise = product.price_paise || (product.base_price ? Math.round(product.base_price * 100) : 0);
                     document.getElementById('product-price').innerText = formatPaise(basePricePaise);
+                    const stickyBarPriceInit = document.getElementById('sticky-bar-price');
+                    if (stickyBarPriceInit) stickyBarPriceInit.innerText = formatPaise(basePricePaise);
                     document.getElementById('product-seller').innerText = product.seller?.seller_name || product.store_name || 'Artisan';
 
                     // Premium Craftsmanship Video Walkthrough (> ₹5,000)
@@ -1105,7 +1104,7 @@
                     // Base product photos from Seller Studio
                     const baseProductImages = (Array.isArray(product.images) && product.images.length > 0)
                         ? product.images.map(img => typeof img === 'string' ? img : (img.url || img.image_url || img)).filter(Boolean)
-                        : (product.image_url ? [product.image_url] : ['https://placehold.co/600x600/f4ede3/516447?text=Handcrafted']);
+                        : (product.image_url ? [product.image_url] : ['/img/categories/artisan_showcase.webp']);
 
                     // Returns variant photos exclusively if present, or falls back to base product images
                     function getVariantImages(variant) {
@@ -1137,7 +1136,7 @@
                     function updateGallery(imagesList, activeIndex = 0) {
                         const list = (Array.isArray(imagesList) && imagesList.length > 0)
                             ? imagesList
-                            : [product.image_url || 'https://placehold.co/600x600/f4ede3/516447?text=Handcrafted'];
+                            : [product.image_url || '/img/categories/artisan_showcase.webp'];
 
                         const verticalThumbs = document.getElementById('product-vertical-thumbs');
                         const mainImg = document.getElementById('main-product-image');
@@ -1647,7 +1646,7 @@
                                 preview: true 
                             });
                             if (checkRes.data && checkRes.data.overflow) {
-                                showOverflowState("Today's capacity reached � next available: tomorrow");
+                                showOverflowState("Today's capacity reached — next available: tomorrow");
                             }
                         } catch (e) {
                             console.error("Error checking capacity status on load:", e);
@@ -1662,11 +1661,6 @@
                             addToCartBtn.querySelector('span:last-child').innerText = 'Shop on Break';
                             addToCartBtn.disabled = true;
                             addToCartBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                        }
-                        const chatBtn = document.getElementById('chat-with-seller-btn');
-                        if (chatBtn) {
-                            chatBtn.disabled = true;
-                            chatBtn.classList.add('opacity-50', 'cursor-not-allowed');
                         }
                         // Insert notice below the button group
                         const btnContainer = addToCartBtn?.parentElement;
@@ -1726,18 +1720,6 @@
                             addToCartBtn.classList.add('opacity-50', 'cursor-not-allowed');
                             const spanLabel = addToCartBtn.querySelector('span:last-child');
                             if (spanLabel) spanLabel.innerText = 'Own Product';
-                        }
-                        const chatBtn = document.getElementById('chat-with-seller-btn');
-                        if (chatBtn) {
-                            chatBtn.disabled = true;
-                            chatBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                            const spanLabel = chatBtn.querySelector('span:last-child');
-                            if (spanLabel) spanLabel.innerText = 'Own Shop';
-                        }
-                        const remakeBtn = document.getElementById('remake-request-btn');
-                        if (remakeBtn) {
-                            remakeBtn.disabled = true;
-                            remakeBtn.classList.add('opacity-50', 'cursor-not-allowed');
                         }
                         const wishlistBtn = document.getElementById('wishlist-toggle-btn');
                         if (wishlistBtn) {
@@ -1947,37 +1929,6 @@
             }
         }
 
-        async function handleChatWithSeller() {
-            if (currentUser && product && product.seller && currentUser.id === product.seller.id) {
-                window.Toast?.show("Sellers cannot start a chat with themselves", "error");
-                return;
-            }
-            if (product && product.holiday_mode_active) return;
-            if (!requireAuth({ type: 'start_chat', productId: String(productId).trim() })) {
-                return;
-            }
-            const btn = document.getElementById('chat-with-seller-btn');
-            if (!btn) return;
-            btn.disabled = true;
-            btn.querySelector('span:last-child').innerText = 'Starting chat...';
-
-            try {
-                const res = await apiClient.post('/conversations', {
-                    listing_id: String(productId).trim(),
-                    product_type_tag: 'overflow',
-                    quantity: qty,
-                    bypass_intake: true
-                });
-                const convId = res.data.conversation_id;
-                window.location.href = `/buyer/chat.html?conversationId=${convId}`;
-            } catch (e) {
-                console.error("Failed to start chat with seller:", e);
-                window.Toast?.show("Failed to start chat. Please try again.", "error");
-            } finally {
-                btn.disabled = false;
-                btn.querySelector('span:last-child').innerText = 'Chat with Seller';
-            }
-        }
 
         window.updateCharCount = function(input, idx) {
             const counter = document.getElementById(`cust-char-count-${idx}`);
@@ -2032,7 +1983,10 @@
             });
 
             const activeTotal = base + variantExtra + baseCustomFee + selectedChoiceExtra;
-            document.getElementById('product-price').innerText = formatPaise(Math.round(activeTotal * 100));
+            const formattedTotal = formatPaise(Math.round(activeTotal * 100));
+            document.getElementById('product-price').innerText = formattedTotal;
+            const stickyBarCustPrice = document.getElementById('sticky-bar-price');
+            if (stickyBarCustPrice) stickyBarCustPrice.innerText = formattedTotal;
         };
 
         async function handleAddToCart() {
@@ -2284,10 +2238,10 @@
             overlay?.classList.remove('hidden');
             if (addToCartBtn) {
                 addToCartBtn.disabled = true;
-                addToCartBtn.querySelector('span:last-child').innerText = 'Checking�';
+                addToCartBtn.querySelector('span:last-child').innerText = 'Checking...';
             }
 
-            const MAX_POLLS = 12; // 12 � 1500ms = 18s max wait
+            const MAX_POLLS = 12; // 12 × 1500ms = 18s max wait
             let polls = 0;
 
             const poll = async () => {
@@ -2302,7 +2256,7 @@
                             addToCartBtn.disabled = false;
                             addToCartBtn.querySelector('span:last-child').innerText = 'Add to Cart';
                         }
-                        window.Toast?.show('Great news! The item is yours. Adding to cart�', 'success');
+                        window.Toast?.show('Great news! The item is yours. Adding to cart...', 'success');
                         // Add to cart automatically for the winner
                         try {
                             await apiClient.post('/cart/items', { product_id: String(productId).trim(), quantity: qty });
@@ -2351,35 +2305,6 @@
             setTimeout(poll, 1500);
         }
 
-        async function handleRemakeRequest() {
-            if (currentUser && product && product.seller && String(currentUser.id) === String(product.seller.id)) {
-                window.Toast?.show("Sellers cannot request a remake of their own product", "error");
-                return;
-            }
-            if (!requireAuth({ type: 'start_chat', productId: String(productId).trim(), productTypeTag: 'remake' })) {
-                return;
-            }
-            const btn = document.getElementById('remake-request-btn');
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = 'Starting chat…';
-            }
-            try {
-                const res = await apiClient.post('/conversations', {
-                    listing_id: String(productId).trim(),
-                    product_type_tag: 'remake',
-                    bypass_intake: true
-                });
-                const convId = res.data.conversation_id;
-                window.location.href = `/buyer/chat.html?conversationId=${convId}`;
-            } catch (e) {
-                console.error("Failed to start remake request:", e);
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = 'Request a Custom Remake';
-                }
-            }
-        }
         // -- Recommendations ("You May Also Like") Helper Functions --------------
         function isProductOwned(sellerId) {
             try {
@@ -2391,7 +2316,7 @@
         }
 
         function getRecommendationCardHtml(p) {
-            let rawImg = p.image_url || p.primary_image || (Array.isArray(p.images) && p.images[0]?.url) || 'https://placehold.co/400x400/f4ede3/516447?text=Handcrafted';
+            let rawImg = p.image_url || p.primary_image || (Array.isArray(p.images) && p.images[0]?.url) || '/img/categories/artisan_showcase.webp';
             if (typeof rawImg === 'string' && (rawImg.startsWith('/uploads/') || rawImg.startsWith('/media/'))) {
                 const cdnPrefix = window.TOHFA_CDN_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '' : 'https://thetohfa.in');
                 rawImg = cdnPrefix + rawImg;
@@ -2657,8 +2582,7 @@
 
             document.getElementById('wishlist-toggle-btn')?.addEventListener('click', handleToggleWishlist);
             document.getElementById('add-to-cart-btn')?.addEventListener('click', handleAddToCart);
-            document.getElementById('chat-with-seller-btn')?.addEventListener('click', handleChatWithSeller);
-            document.getElementById('remake-request-btn')?.addEventListener('click', handleRemakeRequest);
+            document.getElementById('mobile-cart-btn')?.addEventListener('click', handleAddToCart);
 
             document.getElementById('pincode-check-btn')?.addEventListener('click', () => {
                 const input = document.getElementById('pincode-check-input');
@@ -2908,6 +2832,19 @@ document.addEventListener('click', function(e) {
     </div>
   </div>
 </div>
+
+<!-- Sticky Mobile Conversion Bar (Bottom Fixed on Mobile) -->
+<aside id="mobile-sticky-bar" aria-label="Mobile purchase bar" class="fixed bottom-0 left-0 right-0 z-40 bg-[#FFF8E7]/95 backdrop-blur-md border-t border-[#14381F]/15 px-4 py-3 md:hidden flex items-center justify-between gap-3 shadow-[0_-4px_16px_rgba(20,56,31,0.08)]">
+  <div class="flex flex-col min-w-0">
+    <span class="text-[10px] text-[#516447] uppercase tracking-wider font-semibold">Total Price</span>
+    <span class="text-base font-bold text-[#14381F] font-data-price leading-tight" id="sticky-bar-price">₹0</span>
+  </div>
+  <button id="mobile-cart-btn" type="button" class="flex-1 max-w-[210px] bg-[#14381F] text-[#FAF6EE] py-2.5 px-4 rounded-full font-semibold text-xs flex items-center justify-center gap-1.5 shadow-md hover:bg-[#285C3A] active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#14381F]">
+    <span class="material-symbols-outlined text-[18px]">shopping_bag</span>
+    <span>Add to Cart</span>
+  </button>
+</aside>
+
   <!-- Shared Footer -->
   <div id="tohfa-footer"></div>
   <script type="module" src="/src/components/tohfa-include.js"></script>

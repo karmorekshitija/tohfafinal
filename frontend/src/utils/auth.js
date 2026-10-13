@@ -34,18 +34,13 @@ export function isTokenExpired(token) {
 
 export const authStorage = {
   getToken: () => {
-    const token = localStorage.getItem(TOKEN_KEY) ||
-                  sessionStorage.getItem(TOKEN_KEY) ||
-                  localStorage.getItem('tohfa_access_token') ||
-                  sessionStorage.getItem('tohfa_access_token') ||
-                  localStorage.getItem('auth_token') ||
-                  sessionStorage.getItem('auth_token') ||
-                  null;
-    if (token && isTokenExpired(token)) {
-      authStorage.clear();
-      return null;
-    }
-    return token;
+    return localStorage.getItem(TOKEN_KEY) ||
+           sessionStorage.getItem(TOKEN_KEY) ||
+           localStorage.getItem('tohfa_access_token') ||
+           sessionStorage.getItem('tohfa_access_token') ||
+           localStorage.getItem('auth_token') ||
+           sessionStorage.getItem('auth_token') ||
+           null;
   },
 
   setToken: (token) => {

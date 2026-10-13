@@ -883,37 +883,6 @@
 
   const isWishlistUpdating = {};
 
-  async function handleTalkToSeller(productId, btn) {
-    if (!isLoggedIn) {
-      window.Toast?.show("Please log in to contact the seller", "error");
-      setTimeout(() => {
-        window.location.href = '/auth/login.html';
-      }, 1500);
-      return;
-    }
-
-    btn.disabled = true;
-    const originalText = btn.innerText;
-    btn.innerText = 'Starting chat...';
-
-    try {
-      const res = await apiClient.post('/requests', {
-        listing_id: String(productId).trim(),
-        request_type: 'customization',
-        quantity: 1
-      });
-      if (res.data && res.data.success) {
-        const convId = res.data.conversation_id;
-        window.location.href = `/buyer/chat.html?conversationId=${convId}`;
-      } else {
-        throw new Error("Invalid response");
-      }
-    } catch (err) {
-      console.error("Failed to start customization request:", err);
-      btn.disabled = false;
-      btn.innerText = originalText;
-    }
-  }
 
   async function handleAddToCart(productId, btn) {
     if (!isLoggedIn) {

@@ -153,7 +153,7 @@
     <div class="relative z-10">
       <p class="font-label-caps text-[10px] text-gold mb-2">NEVER MISS A SPECIAL MOMENT ?</p>
       <h1 class="font-headline-lg italic text-[26px] text-on-surface mb-2">My Occasions</h1>
-      <p class="font-body-md text-[13px] text-[#6E6453] max-w-sm">Track birthdays, anniversaries, weddings and more � we'll remind you before every important date.</p>
+      <p class="font-body-md text-[13px] text-[#6E6453] max-w-sm">Track birthdays, anniversaries, weddings and more — we'll remind you before every important date.</p>
     </div>
     <!-- Watermark -->
     <div class="absolute right-4 top-1/2 -translate-y-1/2 opacity-[0.07] pointer-events-none">
@@ -165,7 +165,7 @@
   <section class="relative bg-[#FFF8E7] h-[88px] flex items-center justify-between px-md mb-xl">
     <div class="flex flex-col">
       <h2 class="font-headline-lg italic text-primary text-lg">Upcoming occasions ?</h2>
-      <p id="upcoming-subtitle" class="font-body-md text-[13px] text-on-surface-variant">Loading your upcoming occasions�</p>
+      <p id="upcoming-subtitle" class="font-body-md text-[13px] text-on-surface-variant">Loading your upcoming occasions...</p>
     </div>
     <div class="flex items-center relative">
       <span class="material-symbols-outlined text-[48px] text-primary opacity-30">cake</span>
@@ -281,7 +281,7 @@
         <label class="font-label-caps text-[10px] text-gold uppercase tracking-widest flex justify-between">
           Occasion Title <span class="text-[8px] opacity-50">REQUIRED</span>
         </label>
-        <input id="occ-title" type="text" placeholder="e.g. Mom's Birthday, Our Anniversary�"
+        <input id="occ-title" type="text" placeholder="e.g. Mom's Birthday, Our Anniversary..."
           class="w-full bg-ivory border border-sage px-md py-sm rounded-lg font-body-md text-[15px] focus:outline-none focus:border-gold-brand transition-colors" />
       </div>
 
@@ -335,7 +335,7 @@
       <!-- Notes -->
       <div class="space-y-xs">
         <label class="font-label-caps text-[10px] text-gold uppercase tracking-widest">Notes <span class="text-[8px] opacity-40">(OPTIONAL)</span></label>
-        <textarea id="occ-notes" rows="2" placeholder="e.g. She loves handmade candles, prefers earthy tones�"
+        <textarea id="occ-notes" rows="2" placeholder="e.g. She loves handmade candles, prefers earthy tones..."
           class="w-full bg-ivory border border-sage px-md py-sm rounded-lg font-body-md text-[15px] focus:outline-none focus:border-gold-brand transition-colors resize-none"></textarea>
       </div>
 
@@ -465,7 +465,7 @@ function renderUpcomingStrip(occasions) {
       <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style="background:${meta.color}">
         <span class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1;">${meta.icon}</span>
       </div>
-      <span class="font-title-serif text-[11px] text-on-surface text-center leading-tight px-xs">${o.title.length > 10 ? o.title.slice(0,9)+'�' : o.title}</span>
+      <span class="font-title-serif text-[11px] text-on-surface text-center leading-tight px-xs">${o.title.length > 10 ? o.title.slice(0,9)+'…' : o.title}</span>
       <span class="font-data-price text-[10px] text-gold">${formatDate(o.date).split(' ').slice(0,2).join(' ')}</span>
       <div class="${badge.cls} px-2 py-0.5 rounded-full">
         <span class="font-label-caps text-[8px]">${badge.label}</span>
@@ -518,7 +518,7 @@ function renderList(occasions) {
           </div>
           <div>
             <h3 class="font-title-serif text-lg text-on-surface leading-tight">${o.title}</h3>
-            <p class="font-label-caps text-[10px] text-on-surface-variant">${meta.label.toUpperCase()} � ${formatDate(o.date).toUpperCase()}</p>
+            <p class="font-label-caps text-[10px] text-on-surface-variant">${meta.label.toUpperCase()} · ${formatDate(o.date).toUpperCase()}</p>
           </div>
         </div>
         <div class="${badge.cls} px-3 py-1 rounded-full flex-shrink-0 ml-sm ${days === 0 ? 'animate-pulse' : ''}">
@@ -634,7 +634,7 @@ async function saveOccasion() {
   const payload = { title, occasion_type: type, date, reminder_days: reminder, notes: notes || null };
 
   const btn = document.getElementById('save-occ-btn');
-  btn.disabled = true; btn.innerText = 'Saving�';
+  btn.disabled = true; btn.innerText = 'Saving...';
 
   try {
     if (editingId) {

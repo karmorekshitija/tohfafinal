@@ -307,17 +307,18 @@
         const json = await res.json();
 
         if (json.success) {
-          alert('Cancellation requests for paid orders are submitted to Admin for refund verification. Your request has been recorded.');
+          alert(json.message || 'Your order cancellation request has been submitted successfully.');
           window.location.href = '/buyer/orders.html';
         } else {
-          // If backend returns 403 / sellerOnly error, inform user gracefully
-          alert('Cancellation requests for paid orders are submitted to Admin for refund verification. Your request has been recorded.');
-          window.location.href = '/buyer/orders.html';
+          alert(json.message || 'Unable to cancel this order. If your order has already been dispatched, please contact customer support.');
+          confirmBtn.disabled = false;
+          confirmBtn.innerHTML = `<span class="material-symbols-outlined text-base">cancel</span><span>Confirm Cancellation</span>`;
         }
       } catch (err) {
         console.error('Cancellation error:', err);
-        alert('Cancellation requests for paid orders are submitted to Admin for refund verification. Your request has been recorded.');
-        window.location.href = '/buyer/orders.html';
+        alert('A network error occurred while processing your cancellation. Please check your connection and try again.');
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = `<span class="material-symbols-outlined text-base">cancel</span><span>Confirm Cancellation</span>`;
       }
     });
 
