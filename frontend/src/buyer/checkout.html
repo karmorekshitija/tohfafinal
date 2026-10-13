@@ -380,8 +380,8 @@
       </div>
 
       <div class="space-y-xs">
-        <label for="addr-phone" class="block text-xs font-semibold text-on-surface-variant uppercase">Phone (Optional)</label>
-        <input type="text" id="addr-phone" class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
+        <label for="addr-phone" class="block text-xs font-semibold text-on-surface-variant uppercase">Contact Phone (10-digit Mobile)</label>
+        <input type="tel" id="addr-phone" required pattern="[6-9][0-9]{9}" placeholder="10-digit mobile number" class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
       </div>
 
       <!-- Billing address same as shipping checkbox (Guideline #1204) -->

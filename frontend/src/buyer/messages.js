@@ -25,6 +25,15 @@ const comingSoonHTML = `
   </div>
 `;
 
-if (threadList) threadList.innerHTML = comingSoonHTML;
-if (activeChatArea) activeChatArea.style.display = 'none';
-if (chatEmpty) chatEmpty.style.display = 'none';
+const messagesLayout = document.querySelector('.messages-layout');
+if (messagesLayout) {
+  messagesLayout.innerHTML = comingSoonHTML;
+  messagesLayout.style.display = 'flex';
+  messagesLayout.style.alignItems = 'center';
+  messagesLayout.style.justifyContent = 'center';
+  messagesLayout.style.background = 'var(--color-surface, #FAF6EE)';
+} else {
+  if (threadList) threadList.innerHTML = comingSoonHTML;
+  if (activeChatArea) activeChatArea.style.display = 'none';
+  if (chatEmpty) chatEmpty.style.display = 'none';
+}

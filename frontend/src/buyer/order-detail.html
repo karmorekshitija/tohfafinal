@@ -135,9 +135,10 @@
     let orderId = null;
 
     async function initOrderDetail() {
-        const token = sessionStorage.getItem('tohfa_access_token');
+        const token = sessionStorage.getItem('tohfa_access_token') || localStorage.getItem('tohfa_access_token');
         if (!token) {
-            // login check bypassed
+            sessionStorage.setItem('tohfa_return_to', window.location.pathname + window.location.search);
+            window.location.href = `/auth/login.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
             return;
         }
 
@@ -173,7 +174,7 @@
         const params = new URLSearchParams(window.location.search);
         orderId = params.get('id');
         if (!orderId) {
-            window.location.href = 'orders.html';
+            window.location.href = '/buyer/orders.html';
             return;
         }
 
@@ -334,7 +335,7 @@
                     <div class="space-y-sm">
                         <h4 class="font-label-caps text-label-caps text-primary tracking-widest uppercase mb-xs">ITEMS IN ORDER</h4>
                         ${o.items.map(item => {
-                            const imgUrl = item.image_url ? item.image_url : 'https://placehold.co/120x120/f4ede3/516447?text=Handcrafted';
+                            const imgUrl = item.image_url ? item.image_url : '/img/categories/artisan_showcase.webp';
                             return `
                                 <div class="bg-[#FFF8E7] border border-sage/30 rounded-xl p-md flex flex-col gap-sm shadow-sm">
                                     <div class="flex gap-md">
@@ -345,7 +346,7 @@
                                             <div>
                                                 <h3 onclick="window.location.href='product.html?id=${item.product_id}'" class="font-title-serif text-[15px] text-primary hover:underline cursor-pointer font-semibold">${item.product_name}</h3>
                                                 ${item.variant_name ? `<span class="inline-block mt-1 mb-1 px-2 py-[2px] text-[11px] font-semibold rounded-full bg-primary/10 text-primary border border-primary/20">${item.variant_name}</span>` : ''}
-                                                <p class="font-data-price text-on-surface-variant text-[12px] mt-1">Qty ${item.quantity} � ${formatPaise(item.unit_price_paise)}</p>
+                                                <p class="font-data-price text-on-surface-variant text-[12px] mt-1">Qty ${item.quantity} · ${formatPaise(item.unit_price_paise)}</p>
                                             </div>
                                             <div class="text-right">
                                                 <span class="font-data-price text-[#14381F] text-[15px] font-bold">${formatPaise(item.unit_price_paise * item.quantity)}</span>

@@ -615,16 +615,6 @@
     init();
     updateCartBadge();
 
-    function loadAndOpenChat() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const openChat = urlParams.get('open_chat');
-        const conversationId = urlParams.get('conversation_id');
-        
-        if (openChat === 'true' && conversationId) {
-            window.location.href = `/buyer/chat.html?conversationId=${conversationId}`;
-        }
-    }
-    loadAndOpenChat();
 
     let isLoggedIn = false;
     async function checkAuthState() {
@@ -689,7 +679,7 @@
         
         const previewImg = document.getElementById('edit-avatar-preview');
         if (previewImg) {
-            previewImg.src = profileData.avatar_url || `https://placehold.co/150x150/f4ede3/516447?text=${encodeURIComponent((profileData.display_name || profileData.full_name || 'A').charAt(0).toUpperCase())}`;
+            previewImg.src = profileData.avatar_url || '/img/default-avatar.webp';
         }
 
         editOverlay.classList.remove('hidden');
@@ -1025,7 +1015,7 @@
             <div class="flex flex-col items-center gap-3">
                 <label class="font-sans text-xs font-semibold text-[#6B6B6B] self-start uppercase tracking-wider">Profile Picture</label>
                 <div id="edit-avatar-trigger-div" class="relative group cursor-pointer w-20 h-20 rounded-full border-2 border-[#14381F]/30 overflow-hidden bg-[#FFF8E7] flex-shrink-0">
-                    <img id="edit-avatar-preview" class="w-full h-full object-cover transition-opacity group-hover:opacity-75" src="https://placehold.co/150x150/f4ede3/516447?text=U" alt="Preview" loading="lazy">
+                    <img id="edit-avatar-preview" class="w-full h-full object-cover transition-opacity group-hover:opacity-75" src="/img/default-avatar.webp" alt="Preview" loading="lazy">
                     <div class="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
                         <span class="material-symbols-outlined text-white text-lg">photo_camera</span>
                     </div>

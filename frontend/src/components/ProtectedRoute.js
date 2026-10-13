@@ -94,7 +94,9 @@
   const PUBLIC_BUYER_PAGES = new Set([
     'home', 'categories', 'category', 'product',
     'seller-profile', 'search', 'zip-gift', 'faq', 'bulk',
-    'terms-conditions', 'occasions', 'cart', 'cart-empty', 'checkout'
+    'terms-conditions', 'occasions', 'cart', 'cart-empty', 'checkout',
+    'about', 'contact', 'privacy', 'returns',
+    'payment-success', 'payment-failure', 'receipt'
   ]);
 
   let guardsRun = false;

@@ -119,7 +119,8 @@ async function _request(method, path, body = null, opts = {}) {
     return typeof body === 'string' ? body : JSON.stringify(body);
   };
 
-  const cleanPath = path.startsWith('/api') ? path : (path.startsWith('/') ? path : `/${path}`);
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  const cleanPath = normalized.startsWith('/api') ? normalized : `/api${normalized}`;
   const targetUrl = `${BACKEND_URL}${cleanPath}`;
 
   let response = await fetch(targetUrl, {
