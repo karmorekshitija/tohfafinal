@@ -87,6 +87,7 @@ async function runTests() {
   };
   process.env.OWNER_NOTIFY_EMAIL = 'admin@thetohfa.in';
   process.env.EMAIL_HOST = 'smtp.test.com';
+  process.env.EMAIL_USER = 'sender@test.com';
   process.env.EMAIL_PASS = 'secret';
 
   await ownerNotifyService.sendAdminAlertEmail('seller_created', {
