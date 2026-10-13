@@ -455,7 +455,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const token = sessionStorage.getItem('tohfa_access_token');
+        const token = sessionStorage.getItem('tohfa_access_token') || localStorage.getItem('tohfa_access_token') || localStorage.getItem('token') || localStorage.getItem('accessToken');
         if (!token) { window.location.href = '/auth/login.html'; return; }
 
         // Role verification

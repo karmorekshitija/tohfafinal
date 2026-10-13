@@ -5,7 +5,8 @@
   <link rel="shortcut icon" href="/favicon.ico">
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <script type="module" src="/src/components/ReportWidget.js" defer></script>
-<script type="module" src="/src/components/ProtectedRoute.js"></script>
+  <script type="module" src="/src/components/ProtectedRoute.js"></script>
+  <script type="module" src="/src/utils/imageHelper.js"></script>
     <meta charset="utf-8"/>
     <title>Tohfa | Product Details</title>
     <link rel="canonical" href="https://thetohfa.in/buyer/product"/>
@@ -199,12 +200,12 @@
         }
     </style>
 </head>
-<body class="bg-[#FFF8E7] text-on-background min-h-screen font-body-md overflow-x-hidden">
+<body class="bg-[#FFF8E7] text-on-background min-h-screen font-body-md overflow-x-hidden pb-20 md:pb-0">
     <!-- TopNavBar -->
     <!-- Top Navigation Bar (LOCKED) -->
 <header
   class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-4 md:px-8 lg:px-12 h-16 md:h-20 transition-colors"
-  style="background-color: #273328; background-image: url('/img/taskbar-texture.png'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
+  style="background-color: #273328; background-image: url('/img/taskbar-texture.webp'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
 >
   <!-- Brand Logo -->
   <div class="flex items-center flex-1">
@@ -459,14 +460,11 @@
                         <div id="pincode-check-result" class="mt-2 text-secondary leading-relaxed"></div>
                     </div>
 
-                    <div id="overflow-container" class="hidden space-y-xs">
-                        <button id="chat-with-seller-btn" class="w-full bg-primary hover:bg-[#14381F] text-white py-4 rounded-xl font-semibold uppercase tracking-widest hover:shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-sm">
-                            <span class="material-symbols-outlined">chat</span>
-                            <span>Chat with Seller</span>
-                        </button>
-                        <p id="overflow-msg" class="text-xs text-amber-700 bg-amber-50/50 border border-amber-200/60 rounded-lg p-sm leading-relaxed">
-                            Today's daily fulfillment limit for this product has been reached. Chat with the seller to arrange your order.
-                        </p>
+                    <div id="overflow-container" class="hidden space-y-2">
+                        <div class="flex items-center gap-2 p-3.5 rounded-xl bg-amber-50/80 border border-amber-200/80 text-amber-900 text-xs font-medium">
+                            <span class="material-symbols-outlined text-[18px] text-amber-700 shrink-0">inventory_2</span>
+                            <p id="overflow-msg" class="leading-relaxed">Today's daily fulfillment limit for this craft has been reached. Next available batch: tomorrow.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -478,11 +476,11 @@
                     </div>
                     <p class="text-xs text-purple-600">Please wait — we're checking availability for you.</p>
                 </div>
-                <div id="contention-lost" class="hidden mt-4 p-4 border-2 border-red-200 bg-red-50 rounded-2xl">
-                    <p class="font-semibold text-red-800 text-sm text-center mb-2">Someone else just grabbed the last one.</p>
-                    <button id="remake-request-btn" class="hidden w-full mt-2 border border-primary text-primary py-3 rounded-xl font-semibold text-sm transition-all hover:bg-primary hover:text-white">
-                        Request a Custom Remake
-                    </button>
+                <div id="contention-lost" class="hidden mt-4 p-4 border-2 border-red-200 bg-red-50 rounded-2xl text-center">
+                    <p class="font-semibold text-red-800 text-sm mb-3">Someone else just grabbed the last one.</p>
+                    <a href="/buyer/categories.html" id="remake-request-btn" class="inline-block w-full py-3 px-4 bg-[#14381F] text-[#FAF6EE] text-xs font-semibold rounded-xl hover:bg-[#285C3A] transition-colors no-underline">
+                        Explore Similar Handcrafted Pieces
+                    </a>
                 </div>
 
                 <!-- Phase 2: Paused state container (hidden by default) -->
@@ -992,6 +990,8 @@
 
                     const basePricePaise = product.price_paise || (product.base_price ? Math.round(product.base_price * 100) : 0);
                     document.getElementById('product-price').innerText = formatPaise(basePricePaise);
+                    const stickyBarPriceInit = document.getElementById('sticky-bar-price');
+                    if (stickyBarPriceInit) stickyBarPriceInit.innerText = formatPaise(basePricePaise);
                     document.getElementById('product-seller').innerText = product.seller?.seller_name || product.store_name || 'Artisan';
 
                     // Premium Craftsmanship Video Walkthrough (> ₹5,000)
@@ -1104,7 +1104,7 @@
                     // Base product photos from Seller Studio
                     const baseProductImages = (Array.isArray(product.images) && product.images.length > 0)
                         ? product.images.map(img => typeof img === 'string' ? img : (img.url || img.image_url || img)).filter(Boolean)
-                        : (product.image_url ? [product.image_url] : ['https://placehold.co/600x600/f4ede3/516447?text=Handcrafted']);
+                        : (product.image_url ? [product.image_url] : ['/img/categories/artisan_showcase.webp']);
 
                     // Returns variant photos exclusively if present, or falls back to base product images
                     function getVariantImages(variant) {
@@ -1123,8 +1123,9 @@
                         }
 
                         if (variantImgs.length > 0) {
-                            // Isolate variant photos: return ONLY that variant's own photos
-                            return Array.from(new Set(variantImgs));
+                            // Variant photos first, followed by base product photos for rich gallery
+                            const combined = [...variantImgs, ...baseProductImages];
+                            return Array.from(new Set(combined));
                         }
 
                         // Default to base product images if variant has no photos
@@ -1135,15 +1136,21 @@
                     function updateGallery(imagesList, activeIndex = 0) {
                         const list = (Array.isArray(imagesList) && imagesList.length > 0)
                             ? imagesList
-                            : [product.image_url || 'https://placehold.co/600x600/f4ede3/516447?text=Handcrafted'];
+                            : [product.image_url || '/img/categories/artisan_showcase.webp'];
 
                         const verticalThumbs = document.getElementById('product-vertical-thumbs');
                         const mainImg = document.getElementById('main-product-image');
                         const counterBadge = document.getElementById('image-counter-badge');
 
                         if (mainImg) {
-                            mainImg.src = list[activeIndex] || list[0];
+                            const rawUrl = list[activeIndex] || list[0];
+                            const optimizedMain = (typeof window.optimizeImageUrl === 'function')
+                                ? window.optimizeImageUrl(rawUrl, { width: 1000 })
+                                : rawUrl;
+                            mainImg.src = optimizedMain;
                             mainImg.alt = product.name;
+                            mainImg.setAttribute('decoding', 'async');
+                            mainImg.setAttribute('fetchpriority', 'high');
                             mainImg.classList.remove('opacity-0', 'hidden', 'opacity-80');
                             mainImg.classList.add('opacity-100');
                             const mainImgSkeleton = document.getElementById('main-image-skeleton');
@@ -1167,18 +1174,26 @@
                                 // Show the vertical thumbs strip (use flex, not block)
                                 verticalThumbs.classList.remove('hidden');
                                 verticalThumbs.style.display = 'flex';
-                                verticalThumbs.innerHTML = list.map((url, idx) => `
+                                verticalThumbs.innerHTML = list.map((url, idx) => {
+                                    const thumbUrl = (typeof window.optimizeImageUrl === 'function')
+                                        ? window.optimizeImageUrl(url, { width: 160 })
+                                        : url;
+                                    return `
                                     <div class="product-vert-thumb group relative aspect-square w-11 h-11 sm:w-16 sm:h-16 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shrink-0 bg-white ${idx === activeIndex ? 'border-[#14381F] ring-2 ring-[#14381F]/30 scale-[1.02] shadow-sm opacity-100' : 'border-[#14381F]/20 opacity-70 hover:opacity-100 hover:border-[#14381F]/60'}" data-index="${idx}" data-img-url="${url}">
-                                        <img src="${url}" alt="${product.name} - Thumbnail ${idx + 1}" class="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
+                                        <img src="${thumbUrl}" alt="${product.name} - Thumbnail ${idx + 1}" width="64" height="64" class="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy" decoding="async" />
                                     </div>
-                                `).join('');
+                                    `;
+                                }).join('');
 
                                 verticalThumbs.querySelectorAll('.product-vert-thumb').forEach(thumb => {
                                     thumb.addEventListener('click', () => {
                                         const url = thumb.getAttribute('data-img-url');
                                         const idx = parseInt(thumb.getAttribute('data-index'), 10);
                                         if (mainImg && url) {
-                                            mainImg.src = url;
+                                            const optimizedMain = (typeof window.optimizeImageUrl === 'function')
+                                                ? window.optimizeImageUrl(url, { width: 1000 })
+                                                : url;
+                                            mainImg.src = optimizedMain;
                                             mainImg.classList.remove('opacity-80');
                                             mainImg.classList.add('opacity-100');
                                         }
@@ -1199,7 +1214,170 @@
                     const variantsContainer = document.getElementById('product-variants-container');
                     const variants = Array.isArray(product.variants) ? product.variants : [];
 
-                    if (variants.length > 0 && variantsContainer) {
+                    function applyVariantState(variant, isInitial = false) {
+                        if (!variant) return;
+                        currentSelectedVariant = variant;
+
+                        // 1. Update selected label & active tile styling
+                        const lbl = document.getElementById('variant-selected-label');
+                        if (lbl) {
+                            lbl.textContent = variant.variant_name || variant.color_name || '';
+                        }
+                        const tilesList = document.getElementById('variant-tiles-list');
+                        if (tilesList) {
+                            tilesList.querySelectorAll('.variant-tile').forEach(t => {
+                                if (String(t.getAttribute('data-variant-id')) === String(variant.id)) {
+                                    t.classList.add('active');
+                                } else {
+                                    t.classList.remove('active');
+                                }
+                            });
+                        }
+
+                        // 2. Isolate stock to selected variant
+                        const variantStock = parseInt(variant.stock_qty ?? variant.stock_quantity ?? 0, 10);
+                        maxStock = variantStock;
+
+                        if (qty > maxStock && maxStock > 0) {
+                            qty = maxStock;
+                            const qVal = document.getElementById('qty-value');
+                            if (qVal) qVal.innerText = qty;
+                            const qInput = document.getElementById('qty-input');
+                            if (qInput) qInput.value = qty;
+                        }
+
+                        const isVariantSoldOut = !isCustomized && maxStock <= 0;
+
+                        // 3. Update stock badge
+                        const stockBadge = document.getElementById('product-stock-badge');
+                        if (stockBadge) {
+                            if (isCustomized) {
+                                stockBadge.innerText = 'Made to Order';
+                                stockBadge.className = 'text-xs bg-purple-100 text-purple-700 border border-purple-200 px-sm py-[2px] rounded font-semibold';
+                            } else if (isVariantSoldOut) {
+                                stockBadge.innerText = 'Sold Out';
+                                stockBadge.className = 'text-xs bg-red-100 text-red-700 border border-red-200 px-sm py-[2px] rounded font-semibold';
+                            } else if (maxStock <= 3) {
+                                stockBadge.innerText = `Only ${maxStock} left!`;
+                                stockBadge.className = 'text-xs bg-amber-100 text-amber-700 border border-amber-200 px-sm py-[2px] rounded font-semibold';
+                            } else {
+                                stockBadge.innerText = 'In Stock';
+                                stockBadge.className = 'text-xs bg-green-100 text-green-700 border border-green-200 px-sm py-[2px] rounded font-semibold';
+                            }
+                        }
+
+                        // 4. Update CTA buttons state
+                        const addToCartBtn = document.getElementById('add-to-cart-btn');
+                        const buyNowBtn = document.getElementById('buy-now-btn');
+                        const mobileBuyBtn = document.getElementById('mobile-buy-btn');
+                        const mobileCartBtn = document.getElementById('mobile-cart-btn');
+                        const qtySelector = document.getElementById('qty-selector-container');
+                        const mainImg = document.getElementById('main-product-image');
+                        const verticalThumbs = document.getElementById('product-vertical-thumbs');
+
+                        if (isVariantSoldOut) {
+                            if (qtySelector) qtySelector.style.display = 'none';
+                            if (addToCartBtn) {
+                                addToCartBtn.disabled = true;
+                                addToCartBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                                const cartTextSpan = addToCartBtn.querySelector('span:last-child');
+                                if (cartTextSpan) cartTextSpan.innerText = 'Sold Out';
+                            }
+                            if (buyNowBtn) {
+                                buyNowBtn.disabled = true;
+                                buyNowBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                            }
+                            if (mobileBuyBtn) {
+                                mobileBuyBtn.disabled = true;
+                                mobileBuyBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                                mobileBuyBtn.innerText = 'Sold Out';
+                            }
+                            if (mobileCartBtn) {
+                                mobileCartBtn.disabled = true;
+                                mobileCartBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                            }
+                            if (mainImg) mainImg.classList.add('is-out-of-stock');
+                            if (mainImg?.parentElement) mainImg.parentElement.classList.add('is-out-of-stock');
+                            if (verticalThumbs) verticalThumbs.classList.add('is-out-of-stock');
+                        } else {
+                            if (qtySelector) qtySelector.style.display = 'flex';
+                            if (addToCartBtn) {
+                                addToCartBtn.disabled = false;
+                                addToCartBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                                const cartTextSpan = addToCartBtn.querySelector('span:last-child');
+                                const hasCustomNow = Boolean(product.is_customizable || (product.customization_mode && product.customization_mode !== 'none'));
+                                if (cartTextSpan) cartTextSpan.innerText = hasCustomNow ? 'Add to Cart (Personalised)' : 'Add to Cart';
+                            }
+                            if (buyNowBtn) {
+                                buyNowBtn.disabled = false;
+                                buyNowBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            }
+                            if (mobileBuyBtn) {
+                                mobileBuyBtn.disabled = false;
+                                mobileBuyBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                                mobileBuyBtn.innerText = 'Buy Now';
+                            }
+                            if (mobileCartBtn) {
+                                mobileCartBtn.disabled = false;
+                                mobileCartBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            }
+                            if (mainImg) mainImg.classList.remove('is-out-of-stock');
+                            if (mainImg?.parentElement) mainImg.parentElement.classList.remove('is-out-of-stock');
+                            if (verticalThumbs) verticalThumbs.classList.remove('is-out-of-stock');
+                        }
+
+                        // 5. Update price display
+                        const base = Number(product.base_price || (product.price_paise ? product.price_paise / 100 : 0));
+                        let choiceExtra = 0;
+                        document.querySelectorAll('#customization-fields-list select').forEach(sel => {
+                            const opt = sel.options[sel.selectedIndex];
+                            if (opt && opt.dataset.delta) {
+                                choiceExtra += parseFloat(opt.dataset.delta) || 0;
+                            }
+                        });
+                        const activePrice = base + Number(variant.additional_price || 0) + choiceExtra;
+                        const formattedPrice = formatPaise(Math.round(activePrice * 100));
+                        const priceEl = document.getElementById('product-price');
+                        if (priceEl) priceEl.innerText = formattedPrice;
+
+                        const stickyBarPrice = document.getElementById('sticky-bar-price');
+                        if (stickyBarPrice) stickyBarPrice.innerText = formattedPrice;
+
+                        // 6. Refresh gallery
+                        if (isInitial && baseProductImages && baseProductImages.length > 0) {
+                            const variantGallery = getVariantImages(variant);
+                            const initialGallery = baseProductImages[0] && variantGallery.includes(baseProductImages[0])
+                                ? [baseProductImages[0], ...variantGallery.filter(img => img !== baseProductImages[0])]
+                                : (variantGallery.length > 0 ? variantGallery : baseProductImages);
+                            updateGallery(initialGallery, 0);
+                        } else {
+                            updateGallery(getVariantImages(variant), 0);
+                        }
+                    }
+
+                    if (variants.length === 1 && variantsContainer) {
+                        currentSelectedVariant = variants[0];
+                        variantsContainer.classList.remove('hidden');
+
+                        const singleV = variants[0];
+                        const diff = Number(singleV.additional_price || 0);
+                        const diffStr = diff !== 0 ? ` (+&#8377;${diff})` : '';
+                        const labelName = (singleV.variant_name || singleV.color_name || 'Standard Edition') + diffStr;
+
+                        variantsContainer.innerHTML = `
+                            <div class="pt-1 pb-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider text-[#14381F] font-['DM_Sans']">Option:</span>
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#FAF6EE] border border-[#285C3A]/25 text-xs font-semibold text-[#14381F]">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-[#14381F]"></span>
+                                        ${escapeHtml(labelName)}
+                                    </span>
+                                </div>
+                            </div>
+                        `;
+
+                        applyVariantState(singleV, true);
+                    } else if (variants.length > 1 && variantsContainer) {
                         currentSelectedVariant = variants[0];
                         variantsContainer.classList.remove('hidden');
 
@@ -1218,6 +1396,8 @@
                                         const diffStr = diff !== 0 ? ` +&#8377;${diff}` : '';
                                         const shortName = (v.variant_name || v.color_name || 'Option ' + (idx + 1));
                                         const fullLabel = shortName + diffStr;
+                                        const vStock = parseInt(v.stock_qty ?? v.stock_quantity ?? 0, 10);
+                                        const isOOS = vStock <= 0;
 
                                         // Get variant's primary image
                                         let thumbUrl = '';
@@ -1230,10 +1410,11 @@
 
                                         if (thumbUrl) {
                                             return `
-                                                <div class="variant-tile${isSel ? ' active' : ''}" data-variant-id="${v.id}" title="${escapeHtml(fullLabel)}">
-                                                    <div class="variant-tile-img">
+                                                <div class="variant-tile${isSel ? ' active' : ''}${isOOS ? ' opacity-60' : ''}" data-variant-id="${v.id}" title="${escapeHtml(fullLabel)}${isOOS ? ' (Out of stock)' : ''}">
+                                                    <div class="variant-tile-img relative">
                                                         <img src="${thumbUrl}" alt="${escapeHtml(fullLabel)}" loading="lazy" />
                                                         ${hasHex ? `<span style="position:absolute;bottom:4px;right:4px;width:10px;height:10px;border-radius:50%;background:${v.color_hex};border:1.5px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,0.25);"></span>` : ''}
+                                                        ${isOOS ? `<span class="absolute inset-0 bg-black/40 flex items-center justify-center text-[9px] font-bold text-white uppercase font-mono">Sold Out</span>` : ''}
                                                     </div>
                                                     <div class="variant-tile-label">${escapeHtml(shortName)}</div>
                                                 </div>
@@ -1243,12 +1424,13 @@
                                             const bgStyle = hasHex ? `background-color:${v.color_hex};` : 'background:#FAF6EE;border:1px solid rgba(20,56,31,0.2);';
                                             const textColor = hasHex ? '#fff' : '#14381F';
                                             return `
-                                                <div class="variant-tile${isSel ? ' active' : ''}" data-variant-id="${v.id}" title="${escapeHtml(fullLabel)}">
-                                                    <div class="variant-tile-color" style="${bgStyle}color:${textColor};display:flex;align-items:center;justify-content:center;padding:4px;text-align:center;">
+                                                <div class="variant-tile${isSel ? ' active' : ''}${isOOS ? ' opacity-60' : ''}" data-variant-id="${v.id}" title="${escapeHtml(fullLabel)}${isOOS ? ' (Out of stock)' : ''}">
+                                                    <div class="variant-tile-color relative" style="${bgStyle}color:${textColor};display:flex;align-items:center;justify-content:center;padding:4px;text-align:center;">
                                                         ${hasHex
                                                             ? `<span style="font-size:9px;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,0.4);">${escapeHtml(shortName)}</span>`
                                                             : `<span style="font-size:10px;font-weight:600;line-height:1.2;word-break:break-word;">${escapeHtml(shortName)}</span>`
                                                         }
+                                                        ${isOOS ? `<span class="absolute inset-0 bg-black/50 flex items-center justify-center text-[9px] font-bold text-white uppercase font-mono rounded">Sold Out</span>` : ''}
                                                     </div>
                                                     <div class="variant-tile-label">${escapeHtml(shortName)}</div>
                                                 </div>
@@ -1259,32 +1441,17 @@
                             </div>
                         `;
 
-                        // Initialize gallery with first variant's photos
-                        updateGallery(getVariantImages(currentSelectedVariant), 0);
-
-                        // Variant tile click: update active state, gallery (main image + vertical thumbs), price
+                        // Variant tile click: update active state, gallery, stock, and price via applyVariantState
                         variantsContainer.querySelectorAll('.variant-tile').forEach(tile => {
                             tile.addEventListener('click', () => {
                                 const vId = String(tile.getAttribute('data-variant-id'));
-                                currentSelectedVariant = variants.find(v => String(v.id) === vId) || variants[0];
-
-                                // Update active tile styling
-                                variantsContainer.querySelectorAll('.variant-tile').forEach(t => t.classList.remove('active'));
-                                tile.classList.add('active');
-
-                                // Update selected label
-                                const lbl = document.getElementById('variant-selected-label');
-                                if (lbl) lbl.textContent = currentSelectedVariant.variant_name || currentSelectedVariant.color_name || '';
-
-                                // Update price display
-                                const base = Number(product.base_price || (product.price_paise ? product.price_paise / 100 : 0));
-                                const activePrice = base + Number(currentSelectedVariant.additional_price || 0);
-                                document.getElementById('product-price').innerText = formatPaise(Math.round(activePrice * 100));
-
-                                // Refresh gallery: main image + vertical thumbs → this variant's photos
-                                updateGallery(getVariantImages(currentSelectedVariant), 0);
+                                const selected = variants.find(v => String(v.id) === vId) || variants[0];
+                                applyVariantState(selected, false);
                             });
                         });
+
+                        // Synchronize initial variant state
+                        applyVariantState(variants[0], true);
                     } else {
                         if (variantsContainer) variantsContainer.classList.add('hidden');
                         // Initialize gallery with base product images
@@ -1479,7 +1646,7 @@
                                 preview: true 
                             });
                             if (checkRes.data && checkRes.data.overflow) {
-                                showOverflowState("Today's capacity reached � next available: tomorrow");
+                                showOverflowState("Today's capacity reached — next available: tomorrow");
                             }
                         } catch (e) {
                             console.error("Error checking capacity status on load:", e);
@@ -1494,11 +1661,6 @@
                             addToCartBtn.querySelector('span:last-child').innerText = 'Shop on Break';
                             addToCartBtn.disabled = true;
                             addToCartBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                        }
-                        const chatBtn = document.getElementById('chat-with-seller-btn');
-                        if (chatBtn) {
-                            chatBtn.disabled = true;
-                            chatBtn.classList.add('opacity-50', 'cursor-not-allowed');
                         }
                         // Insert notice below the button group
                         const btnContainer = addToCartBtn?.parentElement;
@@ -1558,18 +1720,6 @@
                             addToCartBtn.classList.add('opacity-50', 'cursor-not-allowed');
                             const spanLabel = addToCartBtn.querySelector('span:last-child');
                             if (spanLabel) spanLabel.innerText = 'Own Product';
-                        }
-                        const chatBtn = document.getElementById('chat-with-seller-btn');
-                        if (chatBtn) {
-                            chatBtn.disabled = true;
-                            chatBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                            const spanLabel = chatBtn.querySelector('span:last-child');
-                            if (spanLabel) spanLabel.innerText = 'Own Shop';
-                        }
-                        const remakeBtn = document.getElementById('remake-request-btn');
-                        if (remakeBtn) {
-                            remakeBtn.disabled = true;
-                            remakeBtn.classList.add('opacity-50', 'cursor-not-allowed');
                         }
                         const wishlistBtn = document.getElementById('wishlist-toggle-btn');
                         if (wishlistBtn) {
@@ -1779,37 +1929,6 @@
             }
         }
 
-        async function handleChatWithSeller() {
-            if (currentUser && product && product.seller && currentUser.id === product.seller.id) {
-                window.Toast?.show("Sellers cannot start a chat with themselves", "error");
-                return;
-            }
-            if (product && product.holiday_mode_active) return;
-            if (!requireAuth({ type: 'start_chat', productId: String(productId).trim() })) {
-                return;
-            }
-            const btn = document.getElementById('chat-with-seller-btn');
-            if (!btn) return;
-            btn.disabled = true;
-            btn.querySelector('span:last-child').innerText = 'Starting chat...';
-
-            try {
-                const res = await apiClient.post('/conversations', {
-                    listing_id: String(productId).trim(),
-                    product_type_tag: 'overflow',
-                    quantity: qty,
-                    bypass_intake: true
-                });
-                const convId = res.data.conversation_id;
-                window.location.href = `/buyer/chat.html?conversationId=${convId}`;
-            } catch (e) {
-                console.error("Failed to start chat with seller:", e);
-                window.Toast?.show("Failed to start chat. Please try again.", "error");
-            } finally {
-                btn.disabled = false;
-                btn.querySelector('span:last-child').innerText = 'Chat with Seller';
-            }
-        }
 
         window.updateCharCount = function(input, idx) {
             const counter = document.getElementById(`cust-char-count-${idx}`);
@@ -1864,7 +1983,10 @@
             });
 
             const activeTotal = base + variantExtra + baseCustomFee + selectedChoiceExtra;
-            document.getElementById('product-price').innerText = formatPaise(Math.round(activeTotal * 100));
+            const formattedTotal = formatPaise(Math.round(activeTotal * 100));
+            document.getElementById('product-price').innerText = formattedTotal;
+            const stickyBarCustPrice = document.getElementById('sticky-bar-price');
+            if (stickyBarCustPrice) stickyBarCustPrice.innerText = formattedTotal;
         };
 
         async function handleAddToCart() {
@@ -2116,10 +2238,10 @@
             overlay?.classList.remove('hidden');
             if (addToCartBtn) {
                 addToCartBtn.disabled = true;
-                addToCartBtn.querySelector('span:last-child').innerText = 'Checking�';
+                addToCartBtn.querySelector('span:last-child').innerText = 'Checking...';
             }
 
-            const MAX_POLLS = 12; // 12 � 1500ms = 18s max wait
+            const MAX_POLLS = 12; // 12 × 1500ms = 18s max wait
             let polls = 0;
 
             const poll = async () => {
@@ -2134,7 +2256,7 @@
                             addToCartBtn.disabled = false;
                             addToCartBtn.querySelector('span:last-child').innerText = 'Add to Cart';
                         }
-                        window.Toast?.show('Great news! The item is yours. Adding to cart�', 'success');
+                        window.Toast?.show('Great news! The item is yours. Adding to cart...', 'success');
                         // Add to cart automatically for the winner
                         try {
                             await apiClient.post('/cart/items', { product_id: String(productId).trim(), quantity: qty });
@@ -2183,35 +2305,6 @@
             setTimeout(poll, 1500);
         }
 
-        async function handleRemakeRequest() {
-            if (currentUser && product && product.seller && String(currentUser.id) === String(product.seller.id)) {
-                window.Toast?.show("Sellers cannot request a remake of their own product", "error");
-                return;
-            }
-            if (!requireAuth({ type: 'start_chat', productId: String(productId).trim(), productTypeTag: 'remake' })) {
-                return;
-            }
-            const btn = document.getElementById('remake-request-btn');
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = 'Starting chat…';
-            }
-            try {
-                const res = await apiClient.post('/conversations', {
-                    listing_id: String(productId).trim(),
-                    product_type_tag: 'remake',
-                    bypass_intake: true
-                });
-                const convId = res.data.conversation_id;
-                window.location.href = `/buyer/chat.html?conversationId=${convId}`;
-            } catch (e) {
-                console.error("Failed to start remake request:", e);
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = 'Request a Custom Remake';
-                }
-            }
-        }
         // -- Recommendations ("You May Also Like") Helper Functions --------------
         function isProductOwned(sellerId) {
             try {
@@ -2223,7 +2316,12 @@
         }
 
         function getRecommendationCardHtml(p) {
-            const imageUrl = p.image_url || p.primary_image || (Array.isArray(p.images) && p.images[0]?.url) || 'https://placehold.co/400x400/f4ede3/516447?text=Handcrafted';
+            let rawImg = p.image_url || p.primary_image || (Array.isArray(p.images) && p.images[0]?.url) || '/img/categories/artisan_showcase.webp';
+            if (typeof rawImg === 'string' && (rawImg.startsWith('/uploads/') || rawImg.startsWith('/media/'))) {
+                const cdnPrefix = window.TOHFA_CDN_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '' : 'https://thetohfa.in');
+                rawImg = cdnPrefix + rawImg;
+            }
+            const imageUrl = (typeof window.optimizeImageUrl === 'function') ? window.optimizeImageUrl(rawImg, { width: 300 }) : rawImg;
             const pricePaise = p.price_paise || (p.base_price ? Math.round(p.base_price * 100) : (p.price ? Math.round(p.price * 100) : 0));
             const priceFormatted = formatPaise(pricePaise);
 
@@ -2271,7 +2369,7 @@
                 <div class="group bg-white border border-[#14381F]/15 rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-300 flex gap-3 cursor-pointer relative ${isOutOfStock ? 'is-out-of-stock' : ''}" onclick="window.location.href='product.html?id=${p.id}'">
                     <!-- Left: Thumbnail Image -->
                     <div class="relative w-20 sm:w-24 self-stretch flex-shrink-0 overflow-hidden rounded-xl bg-[#FAF6EE] border border-[#14381F]/10">
-                        <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="${imageUrl}" alt="${p.name}" loading="lazy" />
+                        <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="${imageUrl}" alt="${p.name}" width="100" height="100" loading="lazy" decoding="async" />
                         ${wishlistBtnHtml}
                     </div>
 
@@ -2484,8 +2582,7 @@
 
             document.getElementById('wishlist-toggle-btn')?.addEventListener('click', handleToggleWishlist);
             document.getElementById('add-to-cart-btn')?.addEventListener('click', handleAddToCart);
-            document.getElementById('chat-with-seller-btn')?.addEventListener('click', handleChatWithSeller);
-            document.getElementById('remake-request-btn')?.addEventListener('click', handleRemakeRequest);
+            document.getElementById('mobile-cart-btn')?.addEventListener('click', handleAddToCart);
 
             document.getElementById('pincode-check-btn')?.addEventListener('click', () => {
                 const input = document.getElementById('pincode-check-input');
@@ -2735,6 +2832,19 @@ document.addEventListener('click', function(e) {
     </div>
   </div>
 </div>
+
+<!-- Sticky Mobile Conversion Bar (Bottom Fixed on Mobile) -->
+<aside id="mobile-sticky-bar" aria-label="Mobile purchase bar" class="fixed bottom-0 left-0 right-0 z-40 bg-[#FFF8E7]/95 backdrop-blur-md border-t border-[#14381F]/15 px-4 py-3 md:hidden flex items-center justify-between gap-3 shadow-[0_-4px_16px_rgba(20,56,31,0.08)]">
+  <div class="flex flex-col min-w-0">
+    <span class="text-[10px] text-[#516447] uppercase tracking-wider font-semibold">Total Price</span>
+    <span class="text-base font-bold text-[#14381F] font-data-price leading-tight" id="sticky-bar-price">₹0</span>
+  </div>
+  <button id="mobile-cart-btn" type="button" class="flex-1 max-w-[210px] bg-[#14381F] text-[#FAF6EE] py-2.5 px-4 rounded-full font-semibold text-xs flex items-center justify-center gap-1.5 shadow-md hover:bg-[#285C3A] active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#14381F]">
+    <span class="material-symbols-outlined text-[18px]">shopping_bag</span>
+    <span>Add to Cart</span>
+  </button>
+</aside>
+
   <!-- Shared Footer -->
   <div id="tohfa-footer"></div>
   <script type="module" src="/src/components/tohfa-include.js"></script>

@@ -21,7 +21,7 @@
 <!-- Top Navigation Bar (LOCKED) -->
 <header
   class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-4 md:px-8 lg:px-12 h-16 md:h-20 transition-colors"
-  style="background-color: #273328; background-image: url('/img/taskbar-texture.png'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
+  style="background-color: #273328; background-image: url('/img/taskbar-texture.webp'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
 >
   <!-- Brand Logo -->
   <div class="flex items-center flex-1">
@@ -286,37 +286,7 @@
         } catch(e){}
     }
 
-    async function handleTalkToSeller(productId, btn) {
-        if (!isLoggedIn) {
-            Toast.show("Please log in to contact the seller", "error");
-            setTimeout(() => {
-                // login check bypassed
-            }, 1500);
-            return;
-        }
-
-        btn.disabled = true;
-        const originalText = btn.innerText;
-        btn.innerText = 'Starting chat...';
-
-        try {
-            const res = await apiClient.post('/requests', {
-                listing_id: String(productId).trim(),
-                request_type: 'customization',
-                quantity: 1
-            });
-            if (res.data && res.data.success) {
-                const convId = res.data.conversation_id;
-                window.location.href = `/buyer/chat.html?conversationId=${convId}`;
-            } else {
-                throw new Error("Invalid response");
-            }
-        } catch (err) {
-            console.error("Failed to start customization request:", err);
-            btn.disabled = false;
-            btn.innerText = originalText;
-        }
-    }    window.loadWishlist = async function loadWishlist() {
+    window.loadWishlist = async function loadWishlist() {
         const gridSection = document.getElementById('makes-grid-section');
         const grid = document.getElementById('makes-grid');
         const emptyState = document.getElementById('empty-state');

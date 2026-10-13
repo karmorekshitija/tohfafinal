@@ -175,14 +175,24 @@ function setupUIInteractions() {
   variantsToggle?.addEventListener('change', (e) => {
     variantsPanel?.classList.toggle('hidden', !e.target.checked);
     if (e.target.checked && variantsContainer && variantsContainer.children.length === 0) {
-      addVariantRow();
+      const mainStockVal = parseInt(document.getElementById('prod-stock')?.value || '10', 10);
+      const mainPhotos = (uploadedPhotos || []).map(p => p.dataUrl).filter(Boolean);
+      addVariantRow({
+        variant_name: '',
+        additional_price: 0,
+        stock_qty: isNaN(mainStockVal) ? 10 : mainStockVal,
+        images: mainPhotos,
+        is_variant_1: true
+      }, true);
     }
+    syncStockFromVariants();
     triggerAutoSave();
   });
 
   ['add-variant-row-btn', 'add-variant-row-btn-bottom'].forEach(btnId => {
     document.getElementById(btnId)?.addEventListener('click', () => {
       addVariantRow();
+      syncStockFromVariants();
       triggerAutoSave();
     });
   });
@@ -473,6 +483,7 @@ function loadDraft() {
         if (container) {
           container.innerHTML = '';
           draft.variants.forEach(v => addVariantRow(v));
+          syncStockFromVariants();
         }
       }
     }
@@ -583,9 +594,41 @@ function getModularCustomizationSchema() {
   };
 }
 
-function addVariantRow(data = {}) {
+function syncStockFromVariants() {
+  const toggle = document.getElementById('toggle-has-variants');
+  const stockInput = document.getElementById('prod-stock');
+  if (!stockInput) return;
+
+  if (toggle && toggle.checked) {
+    const variants = getVariantsData();
+    if (variants.length > 0) {
+      const totalStock = variants.reduce((sum, v) => sum + (parseInt(v.stock_qty, 10) || 0), 0);
+      stockInput.value = totalStock;
+      stockInput.readOnly = true;
+      stockInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+      let helper = document.getElementById('variant-stock-sync-hint');
+      if (!helper) {
+        helper = document.createElement('span');
+        helper.id = 'variant-stock-sync-hint';
+        helper.className = 'text-[11px] text-[#285C3A] font-medium block mt-1';
+        stockInput.parentNode.appendChild(helper);
+      }
+      helper.textContent = `Auto-calculated from ${variants.length} variant${variants.length === 1 ? '' : 's'} (${totalStock} total)`;
+      return;
+    }
+  }
+
+  stockInput.readOnly = false;
+  stockInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+  const helper = document.getElementById('variant-stock-sync-hint');
+  if (helper) helper.remove();
+}
+
+function addVariantRow(data = {}, isFirst = false) {
   const container = document.getElementById('variants-list-container');
   if (!container) return;
+
+  const isVariant1 = Boolean(isFirst || data.is_variant_1 || (container.children.length === 0 && !data.id));
 
   const rowId = 'variant-row-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
   const row = document.createElement('div');
@@ -601,28 +644,35 @@ function addVariantRow(data = {}) {
     initialImages = [data.image_url];
   }
   row._variantImages = initialImages;
+  row._variantId = data.id || null;
   row._uploadingCount = 0;
+  row._isVariant1 = isVariant1;
 
   row.innerHTML = `
     <div class="flex items-center justify-between pb-2 border-b border-[#285C3A]/10">
       <div class="flex items-center gap-2">
-        <span class="w-6 h-6 rounded-full bg-[#14381F]/10 text-[#14381F] text-[11px] font-bold font-mono flex items-center justify-center">#</span>
-        <span class="text-xs font-bold text-[#14381F] uppercase font-mono">Variant Option</span>
+        <span class="w-6 h-6 rounded-full bg-[#14381F]/10 text-[#14381F] text-[11px] font-bold font-mono flex items-center justify-center">${isVariant1 ? '1' : '#'}</span>
+        <span class="text-xs font-bold text-[#14381F] uppercase font-mono">${isVariant1 ? 'Variant 1 (Main Product Option)' : 'Variant Option'}</span>
       </div>
+      ${isVariant1 ? `
+      <span class="text-[11px] text-[#285C3A] font-medium" title="Turn off 'Has variants' to remove all variants">Main Option</span>
+      ` : `
       <button type="button" class="min-w-[44px] min-h-[44px] p-2 rounded-full text-red-500 hover:text-red-700 hover:bg-red-50 flex items-center justify-center remove-variant-btn cursor-pointer transition-colors active:scale-95" title="Remove Variant" aria-label="Remove Variant">
         <span class="material-symbols-outlined text-[20px]">delete</span>
       </button>
+      `}
     </div>
     
     <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
       <div class="sm:col-span-6">
         <label class="block text-[11px] font-bold text-[#14381F] uppercase font-mono mb-1">Variant Name / Attribute</label>
-        <input type="text" class="field-input min-h-[44px] text-base sm:text-xs variant-name-input" placeholder="e.g. Large / Indigo / Oak (defaults to Option 1, Option 2...)" value="${data.variant_name || data.name || data.color_name || ''}" />
+        <input type="text" class="field-input min-h-[44px] text-base sm:text-xs variant-name-input" placeholder="${isVariant1 ? 'e.g. Red / Standard / Option 1' : 'e.g. Blue / Large / Option 2'}" value="${data.variant_name || data.name || data.color_name || ''}" />
       </div>
       <div class="grid grid-cols-2 sm:col-span-6 gap-2.5 sm:gap-3">
         <div>
           <label class="block text-[11px] font-bold text-[#14381F] uppercase font-mono mb-1">Price (+<span class="font-sans font-semibold">₹</span>)</label>
-          <input type="number" class="field-input min-h-[44px] text-base sm:text-xs font-mono variant-price-input" placeholder="0" value="${data.additional_price ?? 0}" />
+          <input type="number" class="field-input min-h-[44px] text-base sm:text-xs font-mono variant-price-input ${isVariant1 ? 'bg-gray-100 cursor-not-allowed' : ''}" placeholder="0" value="${isVariant1 ? 0 : (data.additional_price ?? 0)}" ${isVariant1 ? 'readonly' : ''} />
+          <span class="text-[10px] ${isVariant1 ? 'text-[#285C3A] font-medium' : 'text-[#587A5B]'} block mt-1">${isVariant1 ? 'Variant 1 costs base price (+₹0 adjustment)' : 'Price adjustment added to base price'}</span>
         </div>
         <div>
           <label class="block text-[11px] font-bold text-[#14381F] uppercase font-mono mb-1">Stock Qty</label>
@@ -787,17 +837,24 @@ function addVariantRow(data = {}) {
       row._uploadingCount = 0;
     }
     row.remove();
+    syncStockFromVariants();
     triggerAutoSave();
   });
 
   row.querySelectorAll('input').forEach(inp => {
     if (inp.type !== 'file') {
-      inp.addEventListener('input', triggerAutoSave);
+      inp.addEventListener('input', () => {
+        if (inp.classList.contains('variant-stock-input')) {
+          syncStockFromVariants();
+        }
+        triggerAutoSave();
+      });
     }
   });
 
   renderThumbnails();
   container.appendChild(row);
+  syncStockFromVariants();
 }
 
 function getVariantsData() {
@@ -807,6 +864,7 @@ function getVariantsData() {
   const container = document.getElementById('variants-list-container');
   if (!container) return [];
 
+  const mainPhotos = (uploadedPhotos || []).map(p => p.dataUrl).filter(Boolean);
   const variants = [];
   container.querySelectorAll('[id^="variant-row-"]').forEach((row, idx) => {
     let name = row.querySelector('.variant-name-input')?.value.trim();
@@ -814,11 +872,14 @@ function getVariantsData() {
       name = `Option ${idx + 1}`;
     }
 
-    const additionalPrice = parseFloat(row.querySelector('.variant-price-input')?.value || '0');
+    const additionalPrice = idx === 0 ? 0 : parseFloat(row.querySelector('.variant-price-input')?.value || '0');
     const stockQty = parseInt(row.querySelector('.variant-stock-input')?.value || '50', 10);
-    const images = Array.isArray(row._variantImages) ? [...row._variantImages] : [];
+    let images = Array.isArray(row._variantImages) ? [...row._variantImages] : [];
+    if (idx === 0 && images.length === 0 && mainPhotos.length > 0) {
+      images = [...mainPhotos];
+    }
 
-    variants.push({
+    const variantObj = {
       variant_name: name,
       color_name: null,
       color_hex: null,
@@ -827,7 +888,11 @@ function getVariantsData() {
       stock_qty: isNaN(stockQty) ? 50 : stockQty,
       images: images,
       image_url: images[0] || null
-    });
+    };
+    if (row._variantId) {
+      variantObj.id = row._variantId;
+    }
+    variants.push(variantObj);
   });
 
   return variants;
@@ -856,9 +921,17 @@ async function handleSubmit(e) {
     return;
   }
 
-  // Require at least one product image before listing
-  if (uploadedPhotos.length === 0) {
-    alert('Please add at least one product photo before publishing. Listings without images are not allowed.');
+  const variantsList = getVariantsData();
+  const mainPhotos = (uploadedPhotos || []).map(p => p.dataUrl).filter(Boolean);
+  if (variantsList.length > 0 && (!variantsList[0].images || variantsList[0].images.length === 0) && mainPhotos.length > 0) {
+    variantsList[0].images = [...mainPhotos];
+    variantsList[0].image_url = mainPhotos[0] || null;
+  }
+  const allVariantPhotos = variantsList.flatMap(v => Array.isArray(v.images) ? v.images : (v.image_url ? [v.image_url] : []));
+
+  // Require at least one product image before listing (either uploaded in section 2 or attached to variants)
+  if (uploadedPhotos.length === 0 && allVariantPhotos.length === 0) {
+    alert('Please add at least one product photo (or variant photo) before publishing. Listings without images are not allowed.');
     return;
   }
 
@@ -866,7 +939,6 @@ async function handleSubmit(e) {
   const customMode = isCustom ? 'fixed' : 'none';
   const customizationSchema = getModularCustomizationSchema();
 
-  const variantsList = getVariantsData();
   const subcategoryId = document.getElementById('prod-subcategory')?.value || null;
 
   const craftingTimeText = document.getElementById('custom-crafting-time')?.value || '5-7 days';
@@ -886,7 +958,11 @@ async function handleSubmit(e) {
     is_customizable: isCustom,
     customization_mode: customMode,
     customization_schema: customizationSchema,
-    variants: variantsList
+    variants: variantsList,
+    ...(uploadedPhotos.length === 0 && allVariantPhotos.length > 0 ? {
+      images: allVariantPhotos.slice(0, 5),
+      photos: allVariantPhotos.slice(0, 5)
+    } : {})
   };
 
   publishBtns.forEach(btn => {

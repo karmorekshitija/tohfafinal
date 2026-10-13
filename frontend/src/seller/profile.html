@@ -1509,7 +1509,7 @@ document.getElementById('retry-btn').addEventListener('click', loadProfile);
 async function handleFooterSellerLink(e) {
   if (e) e.preventDefault();
   const isMobile = window.innerWidth < 768;
-  const token = sessionStorage.getItem('tohfa_access_token');
+  const token = getAuthToken();
   if (!token) {
     sessionStorage.setItem('tohfa_redirect_seller', 'true');
     window.location.href = '/auth/login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
@@ -1545,7 +1545,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const needsRedirect = sessionStorage.getItem('tohfa_redirect_seller');
   if (needsRedirect === 'true') {
     sessionStorage.removeItem('tohfa_redirect_seller');
-    const token = sessionStorage.getItem('tohfa_access_token');
+    const token = getAuthToken();
     if (token) {
       handleFooterSellerLink();
     }

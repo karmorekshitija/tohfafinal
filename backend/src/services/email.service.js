@@ -451,7 +451,18 @@ async function sendSellerRejectionEmail(email, { sellerName, rejectionReason } =
   return await sendMail(email, subject, html);
 }
 
+/**
+ * Checks whether valid email sending credentials (Resend API key or SMTP user/pass) are configured.
+ * @returns {boolean}
+ */
+function isEmailConfigured() {
+  if (getResendApiKey() !== null) return true;
+  const { user, pass } = sanitizeCredentials();
+  return Boolean(user && pass);
+}
+
 module.exports = {
+  isEmailConfigured,
   sendMail,
   sendPasswordResetEmail,
   sendOrderConfirmationEmail,

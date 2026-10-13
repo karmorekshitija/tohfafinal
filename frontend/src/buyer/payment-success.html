@@ -73,7 +73,7 @@
 <!-- Top Navigation Bar (LOCKED) -->
 <header
   class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-4 md:px-8 lg:px-12 h-16 md:h-20 transition-colors"
-  style="background-color: #273328; background-image: url('/img/taskbar-texture.png'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
+  style="background-color: #273328; background-image: url('/img/taskbar-texture.webp'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
 >
   <!-- Brand Logo -->
   <div class="flex items-center flex-1">
@@ -299,7 +299,7 @@
                     const summaryCard = document.getElementById('order-summary-card');
                     if (itemsContainer && summaryCard && items.length > 0) {
                         itemsContainer.innerHTML = items.map(item => {
-                            const imgUrl = item.image_url ? item.image_url : 'https://placehold.co/120x120/f4ede3/516447?text=Handcrafted';
+                            const imgUrl = item.image_url ? item.image_url : '/img/categories/artisan_showcase.webp';
                             return `
                                 <div class="flex gap-3.5 items-center p-2 rounded-xl hover:bg-[#FAF6EE]/80 transition-colors">
                                     <div class="w-14 h-14 bg-[#FAF6EE] rounded-xl overflow-hidden flex-shrink-0 border border-[#273328]/15 shadow-xs">
@@ -412,19 +412,7 @@
 
     checkAuthState();
 </script>
-<script>
-    // Micro-interaction for the "Order Placed" star icon
-    document.addEventListener('DOMContentLoaded', () => {
-        const h1 = document.querySelector('h1');
-        h1.addEventListener('mouseenter', () => {
-            const colors = ['#14381F', '#7B5EA7', '#49663f'];
-            h1.style.color = colors[Math.floor(Math.random() * colors.length)];
-        });
-        h1.addEventListener('mouseleave', () => {
-            h1.style.color = '#14381F';
-        });
-    });
-</script>
+
   <!-- Shared Footer -->
   <div id="tohfa-footer"></div>
   <script type="module" src="/src/components/tohfa-include.js"></script>

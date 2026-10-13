@@ -1312,32 +1312,90 @@ async function updateProduct(req, res, next) {
     }
 
     if (Array.isArray(variants)) {
-      await query('DELETE FROM product_variants WHERE product_id = $1', [id]);
+      const { rows: currentDbVariants } = await query(
+        'SELECT id FROM product_variants WHERE product_id = $1',
+        [id]
+      );
+      const existingDbIds = new Set(currentDbVariants.map(r => String(r.id)));
+      const retainedIds = [];
+
       for (const v of variants) {
         let vImgs = [];
         if (Array.isArray(v.images) && v.images.length > 0) {
-          vImgs = v.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || ''))).filter(Boolean);
-        } else if (v.image_url) {
-          vImgs = [v.image_url];
+          vImgs = v.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || img.imagePath || ''))).filter(Boolean);
+        } else if (v.image_url || v.imagePath) {
+          vImgs = [v.image_url || v.imagePath];
         }
-        const primaryImg = vImgs[0] || v.image_url || null;
+        const primaryImg = vImgs[0] || v.image_url || v.imagePath || null;
+        const vId = v.id ? String(v.id) : null;
 
+        if (vId && existingDbIds.has(vId)) {
+          await query(
+            `UPDATE product_variants
+             SET variant_name = $1, color_name = $2, color_hex = $3, size = $4,
+                 stock_qty = $5, additional_price = $6, image_url = $7, images = $8
+             WHERE id = $9 AND product_id = $10`,
+            [
+              v.variant_name || v.name || v.variant_label || null,
+              v.color_name || v.color || null,
+              v.color_hex || null,
+              v.size || null,
+              v.stock_qty ?? v.stock_quantity ?? v.stock ?? 0,
+              v.additional_price ?? v.price_modifier ?? 0,
+              primaryImg,
+              vImgs,
+              vId,
+              id
+            ]
+          );
+          retainedIds.push(vId);
+        } else {
+          const { rows: insRows } = await query(
+            `INSERT INTO product_variants
+               (product_id, variant_name, color_name, color_hex, size, stock_qty, additional_price, image_url, images)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+             RETURNING id`,
+            [
+              id,
+              v.variant_name || v.name || v.variant_label || null,
+              v.color_name || v.color || null,
+              v.color_hex || null,
+              v.size || null,
+              v.stock_qty ?? v.stock_quantity ?? v.stock ?? 0,
+              v.additional_price ?? v.price_modifier ?? 0,
+              primaryImg,
+              vImgs
+            ]
+          );
+          if (insRows && insRows[0]) {
+            retainedIds.push(String(insRows[0].id));
+          }
+        }
+      }
+
+      // Delete variants that were removed
+      if (retainedIds.length > 0) {
         await query(
-          `INSERT INTO product_variants
-             (product_id, variant_name, color_name, color_hex, size, stock_qty, additional_price, image_url, images)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-          [
-            id,
-            v.variant_name || v.name || v.variant_label || null,
-            v.color_name || v.color || null,
-            v.color_hex || null,
-            v.size || null,
-            v.stock_qty ?? v.stock ?? 0,
-            v.additional_price ?? v.price_modifier ?? 0,
-            primaryImg,
-            vImgs
-          ]
+          'DELETE FROM product_variants WHERE product_id = $1 AND NOT (id::text = ANY($2::text[]))',
+          [id, retainedIds]
         );
+      } else {
+        await query('DELETE FROM product_variants WHERE product_id = $1', [id]);
+      }
+
+      // Recalculate parent stock_quantity if product has variants
+      const { rows: stockSumRows } = await query(
+        `SELECT COALESCE(SUM(stock_qty), 0)::int as total_variant_stock, COUNT(*)::int as variant_count FROM product_variants WHERE product_id = $1`,
+        [id]
+      );
+      if (stockSumRows[0] && stockSumRows[0].variant_count > 0) {
+        await query(
+          `UPDATE products SET stock_quantity = $1 WHERE id = $2`,
+          [stockSumRows[0].total_variant_stock, id]
+        );
+        if (result && result.rows && result.rows[0]) {
+          result.rows[0].stock_quantity = stockSumRows[0].total_variant_stock;
+        }
       }
     }
 
@@ -3224,7 +3282,7 @@ async function markWhatsAppOutboxDone(req, res, next) {
 
 // ---------------------------------------------------------------------------
 // GET /api/admin/whatsapp/outbox/:id/done?token=<hmac>  (public, token-protected)
-// One-click "Mark as Sent" from owner email link.
+// Renders confirmation page with a POST form to protect against email scanner prefetching.
 // ---------------------------------------------------------------------------
 async function markWhatsAppOutboxDoneByToken(req, res) {
   const { id } = req.params;
@@ -3257,16 +3315,75 @@ async function markWhatsAppOutboxDoneByToken(req, res) {
       return res.status(200).send('<html><body style="font-family:Arial,sans-serif;max-width:500px;margin:60px auto;text-align:center;"><h1>\u2705 Already Marked as Sent</h1><p>This task was already confirmed. You can close this tab.</p><p style="color:#888;font-size:13px;">Team Tohfa</p></body></html>');
     }
 
+    const cleanToken = String(token || '').replace(/[^a-f0-9]/gi, '');
+    return res.status(200).send(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirm WhatsApp Task — Tohfa</title>
+</head>
+<body style="font-family:Arial,sans-serif;max-width:500px;margin:60px auto;padding:20px;text-align:center;">
+  <h2>\uD83D\uDCF1 Confirm WhatsApp Task</h2>
+  <p style="color:#555;font-size:15px;margin:16px 0 24px;">Please confirm that you have sent this WhatsApp message.</p>
+  <form method="POST" action="/api/admin/whatsapp/outbox/${encodeURIComponent(id)}/confirm-sent">
+    <input type="hidden" name="token" value="${cleanToken}">
+    <button type="submit" style="background:#25D366;color:white;border:none;padding:12px 28px;font-size:16px;font-weight:bold;border-radius:6px;cursor:pointer;">Confirm: I sent it</button>
+  </form>
+  <p style="color:#888;font-size:13px;margin-top:28px;">Team Tohfa</p>
+</body>
+</html>`);
+  } catch (err) {
+    console.error('[Admin] markWhatsAppOutboxDoneByToken error:', err.message);
+    return res.status(200).send('<html><body><h1>Error</h1><p>Something went wrong. Please use the admin panel.</p></body></html>');
+  }
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/admin/whatsapp/outbox/:id/confirm-sent  (public, token-protected)
+// Confirms that the WhatsApp task was sent, guarded by status='manual_pending'.
+// ---------------------------------------------------------------------------
+async function confirmWhatsAppOutboxSentByToken(req, res) {
+  const { id } = req.params;
+  const token = req.body?.token || req.query?.token;
+
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    return res.status(200).send('<html><body><h1>Link not configured</h1><p>CRON_SECRET is not set on this server. Use the admin panel instead.</p></body></html>');
+  }
+
+  try {
+    const crypto = require('crypto');
+    const expected = crypto.createHmac('sha256', cronSecret).update(String(id)).digest('hex').slice(0, 32);
+    const bufToken = Buffer.from(typeof token === 'string' ? token : '');
+    const bufExpected = Buffer.from(expected);
+    const valid = bufToken.length === bufExpected.length && crypto.timingSafeEqual(bufToken, bufExpected);
+
+    if (!valid) {
+      return res.status(200).send('<html><body><h1>\u274C Invalid Link</h1><p>This link is invalid or has expired. Please use the admin panel.</p></body></html>');
+    }
+
+    const { rows: existing } = await query(
+      `SELECT id, status FROM whatsapp_outbox WHERE id = $1`,
+      [id]
+    );
+    if (!existing.length) {
+      return res.status(200).send('<html><body><h1>Not found</h1><p>This outbox entry no longer exists.</p></body></html>');
+    }
+    if (existing[0].status === 'manual_done') {
+      return res.status(200).send('<html><body style="font-family:Arial,sans-serif;max-width:500px;margin:60px auto;text-align:center;"><h1>\u2705 Already Marked as Sent</h1><p>This task was already confirmed. You can close this tab.</p><p style="color:#888;font-size:13px;">Team Tohfa</p></body></html>');
+    }
+
     await query(
       `UPDATE whatsapp_outbox
        SET status = 'manual_done', manual_done_at = NOW(), updated_at = NOW()
-       WHERE id = $1`,
+       WHERE id = $1 AND status = 'manual_pending'`,
       [id]
     );
 
     return res.status(200).send('<html><body style="font-family:Arial,sans-serif;max-width:500px;margin:60px auto;text-align:center;"><h1>\u2705 Marked as Sent</h1><p>The WhatsApp task has been confirmed. You can close this tab.</p><p style="color:#888;font-size:13px;">Team Tohfa</p></body></html>');
   } catch (err) {
-    console.error('[Admin] markWhatsAppOutboxDoneByToken error:', err.message);
+    console.error('[Admin] confirmWhatsAppOutboxSentByToken error:', err.message);
     return res.status(200).send('<html><body><h1>Error</h1><p>Something went wrong. Please use the admin panel.</p></body></html>');
   }
 }
@@ -3359,6 +3476,7 @@ module.exports = {
   getWhatsAppOutbox,
   markWhatsAppOutboxDone,
   markWhatsAppOutboxDoneByToken,
+  confirmWhatsAppOutboxSentByToken,
   getPlatformStats,
   listSellers,
   getAllSellers: listSellers,

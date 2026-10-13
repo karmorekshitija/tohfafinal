@@ -35,7 +35,7 @@
 <!-- Top Navigation Bar (LOCKED) -->
 <header
   class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-4 md:px-8 lg:px-12 h-16 md:h-20 transition-colors"
-  style="background-color: #273328; background-image: url('/img/taskbar-texture.png'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
+  style="background-color: #273328; background-image: url('/img/taskbar-texture.webp'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
 >
   <!-- Brand Logo -->
   <div class="flex items-center flex-1">
@@ -335,7 +335,7 @@
             let imagesHtml = '';
             const urls = o.image_urls && o.image_urls.length > 0 
                 ? o.image_urls.slice(0, 3) 
-                : [o.primary_image_url || 'https://placehold.co/120x120/f4ede3/516447?text=Handcrafted'];
+                : [o.primary_image_url || '/img/categories/artisan_showcase.webp'];
 
             const isCancelled = o.status === 'Cancelled';
             const imagesOpacityClass = isCancelled ? 'opacity-40' : '';
@@ -343,7 +343,7 @@
             const actionIcon = isCancelled ? 'close' : 'chevron_right';
 
             imagesHtml = `<div class="flex -space-x-6 ${imagesOpacityClass}">` + urls.map(url => `
-                <img class="w-12 h-12 rounded-lg object-cover border-2 border-ivory shadow-sm flex-shrink-0" src="${url || 'https://placehold.co/120x120/f4ede3/516447?text=Handcrafted'}" alt="${o.item_preview}" loading="lazy">
+                <img class="w-12 h-12 rounded-lg object-cover border-2 border-ivory shadow-sm flex-shrink-0" src="${url || '/img/categories/artisan_showcase.webp'}" alt="${o.item_preview}" loading="lazy">
             `).join('') + `</div>`;
 
             return `
@@ -355,7 +355,7 @@
                         <div>
                             <div class="flex items-center gap-sm mb-xs flex-wrap">
                                 <span class="font-data-price text-label-caps text-on-surface-variant opacity-60">#${displayRef}</span>
-                                <span class="text-outline opacity-40">�</span>
+                                <span class="text-outline opacity-40">·</span>
                                 <span class="font-data-price text-label-caps text-on-surface-variant opacity-60">${formattedDate}</span>
                             </div>
                             <h3 class="font-lora text-title-serif text-on-surface mb-sm font-semibold">${o.item_preview}</h3>

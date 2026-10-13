@@ -67,7 +67,7 @@ async function sendMail(to, subject, html, text) {
 
 /** Resolve recipient email address from OWNER_NOTIFY_EMAIL or ADMIN_EMAIL fallback */
 function getRecipientEmail() {
-  return (process.env.OWNER_NOTIFY_EMAIL || process.env.ADMIN_EMAIL || '').trim();
+  return whatsappConfig.getOwnerEmail();
 }
 
 /** HTML-escape a string for safe insertion into HTML bodies */
@@ -121,19 +121,7 @@ function isConfigured() {
   const ownerEmail = getRecipientEmail();
   const hasEmail = Boolean(ownerEmail);
 
-  const resendKey = (process.env.RESEND_API_KEY || '').trim();
-  const isPlaceholder = (val) => !val || val.includes('placeholder') || val.includes('YOUR_') || val.includes('example.com') || val === 're_xxxx';
-  const hasResend = Boolean(resendKey && !isPlaceholder(resendKey));
-
-  const host = (process.env.EMAIL_HOST || process.env.SMTP_HOST || '').trim();
-  const user = (process.env.EMAIL_USER || process.env.SMTP_USER || '').trim();
-  const pass = (process.env.EMAIL_PASS || process.env.SMTP_PASS || '').replace(/\s+/g, '');
-
-  const hasHostOrUser = Boolean((host && !isPlaceholder(host)) || (user && !isPlaceholder(user)));
-  const hasPass = Boolean(pass && !isPlaceholder(pass));
-  const hasSmtp = hasHostOrUser && hasPass;
-
-  const configured = hasEmail && (hasResend || hasSmtp);
+  const configured = hasEmail && emailService.isEmailConfigured();
 
   if (!configured && !_startupWarned && whatsappConfig.getMode() === 'manual') {
     _startupWarned = true;
@@ -397,6 +385,7 @@ const ADMIN_LINKS = {
 async function queueTaskEmail(row) {
   if (!isConfigured()) return;
   if (!row || !row.id) return;
+  if (row.status !== 'manual_pending') return;
   if (row.kind === 'occasion_reminder') return; // occasions go in digest
 
   try {
@@ -514,6 +503,8 @@ async function processManualQueue() {
     const { rows: retryRows } = await query(`
       SELECT * FROM whatsapp_outbox
       WHERE kind IN ('seller_new_order', 'buyer_quote', 'buyer_proof')
+        AND status = 'manual_pending'
+        AND created_at > NOW() - INTERVAL '48 hours'
         AND owner_email_status IN ('pending', 'failed')
         AND owner_email_attempts < 5
         AND (
@@ -546,22 +537,31 @@ async function processManualQueue() {
         AND status = 'manual_pending'
         AND escalated_at IS NULL
         AND created_at < NOW() - ($1 * INTERVAL '1 minute')
+        AND created_at > NOW() - INTERVAL '48 hours'
       ORDER BY created_at ASC
       LIMIT 20
     `, [escalationMinutes]);
 
     for (const row of escalateRows) {
       try {
+        let extra = {};
+        if (row.kind === 'seller_new_order') {
+          extra = await fetchSellerItemLines(row);
+        } else if (row.kind === 'buyer_quote' || row.kind === 'buyer_proof') {
+          const bName = await fetchBuyerName(row);
+          extra = { buyerName: bName };
+        }
+
         const v = row.variables || {};
         const kind = KIND_LABELS[row.kind] || row.kind;
         const name = row.kind === 'seller_new_order'
-          ? san(v.storeName, 'the seller')
-          : san(v.buyerName, 'the buyer');
+          ? san(v.storeName || extra.storeName, 'the seller')
+          : san(v.buyerName || extra.buyerName, 'the buyer');
         const shortId = String(row.id).slice(0, 8);
 
         const subject = `[Tohfa] Still waiting: send WhatsApp to ${name} (#${shortId})`;
         const waPhone = (row.intended_to || '').replace(/\D/g, '');
-        const message = buildReadyMessage(row);
+        const message = buildReadyMessage(row, extra);
         const waUrl = waPhone
           ? `https://wa.me/${waPhone}?text=${encodeURIComponent(message.slice(0, 1500))}`
           : null;
@@ -660,17 +660,21 @@ ${htmlSections.join('<hr style="margin:24px 0">')}`;
     const text = `Occasion Reminder Digest (${count})\nPlease send each of the following WhatsApp messages:\n\n${'='.repeat(50)}\n${sections.join('='.repeat(50) + '\n')}`;
 
     const recipientEmail = getRecipientEmail();
-    await sendMail(recipientEmail, subject, html, text);
+    const result = await sendMail(recipientEmail, subject, html, text);
 
-    // Mark rows as emailed
-    const ids = rows.map((r) => r.id).filter(Boolean);
-    if (ids.length) {
-      await query(
-        `UPDATE whatsapp_outbox
-         SET owner_email_status = 'sent', owner_emailed_at = NOW(), updated_at = NOW()
-         WHERE id = ANY($1::uuid[])`,
-        [ids]
-      );
+    if (result && result.success === true) {
+      // Mark rows as emailed
+      const ids = rows.map((r) => r.id).filter(Boolean);
+      if (ids.length) {
+        await query(
+          `UPDATE whatsapp_outbox
+           SET owner_email_status = 'sent', owner_emailed_at = NOW(), updated_at = NOW()
+           WHERE id = ANY($1::uuid[])`,
+          [ids]
+        );
+      }
+    } else {
+      console.warn('[Owner Notify] sendOccasionDigest failed to send email — leaving rows untouched');
     }
   } catch (err) {
     console.error('[Owner Notify] sendOccasionDigest error:', err.message);

@@ -1745,7 +1745,7 @@ async function getSellerOrders(req, res, next) {
                   'unit_price', COALESCE(oi.unit_price, (oi.unit_price_paise::numeric / 100.0), 0),
                   'customization_data', oi.customization_data,
                   'customization_details', oi.customization_details,
-                  'variant_name', (SELECT pv.title FROM product_variants pv WHERE pv.id = oi.variant_id LIMIT 1),
+                  'variant_name', (SELECT pv.variant_name FROM product_variants pv WHERE pv.id = oi.variant_id LIMIT 1),
                   'proof_image_url', oi.proof_image_url,
                   'customization_status', oi.customization_status,
                   'image_url', (SELECT url FROM product_images pi WHERE pi.product_id = oi.product_id ORDER BY sort_order ASC LIMIT 1)
@@ -1913,7 +1913,7 @@ async function getSellerOrderDetail(req, res, next) {
                   'unit_price', COALESCE(oi.unit_price, (oi.unit_price_paise::numeric / 100.0), 0),
                   'customization_data', oi.customization_data,
                   'customization_details', oi.customization_details,
-                  'variant_name', (SELECT pv.title FROM product_variants pv WHERE pv.id = oi.variant_id LIMIT 1),
+                  'variant_name', (SELECT pv.variant_name FROM product_variants pv WHERE pv.id = oi.variant_id LIMIT 1),
                   'proof_image_url', oi.proof_image_url,
                   'customization_status', oi.customization_status,
                   'image_url', (SELECT url FROM product_images pi WHERE pi.product_id = oi.product_id ORDER BY sort_order ASC LIMIT 1)

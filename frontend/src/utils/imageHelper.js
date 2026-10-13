@@ -31,27 +31,60 @@ export function optimizeImageUrl(url, options = {}) {
 
   // Cloudinary URL optimization
   if (url.includes('res.cloudinary.com')) {
-    // Check if transformations already exist
     const parts = url.split('/image/upload/');
     if (parts.length === 2) {
       const prefix = parts[0] + '/image/upload/';
       const rest = parts[1];
 
-      // Build transformation string
-      const transforms = ['f_auto', 'q_auto'];
-      if (width) transforms.push(`w_${width}`);
-      if (height) transforms.push(`h_${height}`);
-      if (width || height) transforms.push(`c_${crop}`);
+      // Check if existing transformation segment exists (e.g. f_auto,q_auto/ or w_1000,c_limit/)
+      const match = rest.match(/^((?:[a-z]_[a-z0-9_.-]+,?)+)\/(.*)$/);
+      let existingTransforms = [];
+      let assetPath = rest;
 
-      const transformStr = transforms.join(',');
-
-      // If the URL already has transformations in path
-      if (/^(?:[a-z]_[a-z0-9_]+,?)+\//.test(rest)) {
-        // Already transformed, replace or return
-        return url;
+      if (match) {
+        existingTransforms = match[1].split(',').filter(Boolean);
+        assetPath = match[2];
       }
 
-      return `${prefix}${transformStr}/${rest}`;
+      // Build dictionary of transformations
+      const transformMap = new Map();
+      existingTransforms.forEach(t => {
+        const idx = t.indexOf('_');
+        if (idx !== -1) {
+          transformMap.set(t.substring(0, idx), t.substring(idx + 1));
+        } else {
+          transformMap.set(t, true);
+        }
+      });
+
+      // Ensure modern format and quality
+      if (!transformMap.has('f')) transformMap.set('f', 'auto');
+      if (!transformMap.has('q')) transformMap.set('q', 'auto');
+
+      // Set width/height/crop if requested
+      if (width) transformMap.set('w', String(width));
+      if (height) transformMap.set('h', String(height));
+      if (options.crop) {
+        transformMap.set('c', options.crop);
+      } else if ((width || height) && !transformMap.has('c')) {
+        transformMap.set('c', crop);
+      }
+
+      // Reconstruct transformation string
+      const transforms = [];
+      if (transformMap.has('f')) transforms.push(`f_${transformMap.get('f')}`);
+      if (transformMap.has('q')) transforms.push(`q_${transformMap.get('q')}`);
+      if (transformMap.has('c')) transforms.push(`c_${transformMap.get('c')}`);
+      if (transformMap.has('w')) transforms.push(`w_${transformMap.get('w')}`);
+      if (transformMap.has('h')) transforms.push(`h_${transformMap.get('h')}`);
+
+      for (const [k, v] of transformMap.entries()) {
+        if (!['f', 'q', 'c', 'w', 'h'].includes(k)) {
+          transforms.push(v === true ? k : `${k}_${v}`);
+        }
+      }
+
+      return `${prefix}${transforms.join(',')}/${assetPath}`;
     }
   }
 

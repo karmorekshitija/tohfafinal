@@ -29,7 +29,7 @@
 <!-- Top Navigation Bar (LOCKED) -->
 <header
   class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-4 md:px-8 lg:px-12 h-16 md:h-20 transition-colors"
-  style="background-color: #273328; background-image: url('/img/taskbar-texture.png'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
+  style="background-color: #273328; background-image: url('/img/taskbar-texture.webp'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
 >
   <!-- Brand Logo -->
   <div class="flex items-center flex-1">
@@ -380,8 +380,8 @@
       </div>
 
       <div class="space-y-xs">
-        <label for="addr-phone" class="block text-xs font-semibold text-on-surface-variant uppercase">Phone (Optional)</label>
-        <input type="text" id="addr-phone" class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
+        <label for="addr-phone" class="block text-xs font-semibold text-on-surface-variant uppercase">Contact Phone (10-digit Mobile)</label>
+        <input type="tel" id="addr-phone" required pattern="[6-9][0-9]{9}" placeholder="10-digit mobile number" class="w-full border-outline-variant rounded-lg text-sm px-sm py-xs focus:ring-primary focus:border-primary"/>
       </div>
 
       <!-- Billing address same as shipping checkbox (Guideline #1204) -->
