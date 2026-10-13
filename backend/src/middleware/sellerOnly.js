@@ -14,4 +14,5 @@ const sellerOnly = (req, res, next) => {
   return res.status(403).json({ success: false, message: 'Seller or Admin access required' });
 };
 
-module.exports = { sellerOnly };
+module.exports = sellerOnly;
+module.exports.sellerOnly = sellerOnly;

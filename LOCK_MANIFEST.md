@@ -115,3 +115,4 @@ Tohfa-LOCK-OPEN-2024
 | Date | Commit | What Changed | Unlocked By |
 |------|--------|-------------|-------------|
 | 2026-10-01 | f528ff8 | Initial lock — buyer + admin frozen | Kshitija |
+| 2026-10-13 | 149d233 | Admin & Seller Studio bug audit validation, sellerOnly dual-export sync, migrate.js runner sync | User (Tohfa-LOCK-OPEN-2024) |

@@ -121,3 +121,29 @@ Reads can expose the duplication through both `product_images` aggregation and t
 6. **P1:** Deduplicate image URLs/files, reconcile `products.images` with `product_images`, clean existing duplicates, then add an appropriate unique index and tests.
 7. **P1/P2:** Consolidate migrations and seller/cart compatibility columns, document the required migration order, and run a schema verification against the production database.
 8. **P2:** Normalize route aliases and add automated route-contract tests covering every frontend API call and the six critical journeys (auth, listing, cart, checkout, image upload, seller order).
+
+## 7. Admin & Seller Studio Bug Audit Remediation Verification (2026-10-13)
+
+The findings from the `Architectural Remediation & Bug Audit Master Plan: Tohfa Platform` (`tohfa-bug-audit-remediation-plan.pdf`) have been audited, cross-verified, and validated across backend services and frontend clients:
+
+| Item / Defect | Implementation / Fix Layer | Verification Status | Evidence / Test |
+|---|---|---|---|
+| **Crochet Lady Storefront Update** | `backend/src/routes/admin.routes.js` (`/shops/special`), `backend/src/controllers/admin.controller.js` (`updateSpecialShop`) | ✅ Resolved | Routes registered; atomic persistence to `sellers` and `seller_profiles`. |
+| **The Candle Story Inventory Mod** | `backend/src/controllers/product.controller.js` (`resolveCategoryId`) | ✅ Resolved | Category lookup resolves numeric IDs, slugs, and names without SQL enum crash. |
+| **Nails Diva Commission Setting** | `backend/src/controllers/admin.controller.js` (`updateSpecialShop`) | ✅ Resolved | Returns non-empty updated record; sets `commission_rate` in DB. |
+| **Admin Real-Time Sales Metrics** | `backend/src/controllers/analytics.controller.js` (`getAdminStats`) | ✅ Resolved | Live aggregate queries for GMV and order counts; no hardcoded stats. |
+| **Session Ghosting / Expiration** | `frontend/src/utils/adminApiClient.js`, `apiClient.js` | ✅ Resolved | 401 response interceptor with token refresh queue & session cleanup. |
+| **Seller Onboarding Wallet Link** | `backend/src/db/auto_sync.js`, `auth.service.js`, `seller.controller.js` | ✅ Resolved | Enforces `fk_seller_wallet`; auto-creates wallet on registration & upsert on read. |
+| **Product Uploads & Multer** | `backend/src/middleware/upload.js` | ✅ Resolved | Memory storage + Cloudinary/DataURI fallback; 10MB limit; dangerous file extensions blocked. |
+| **Product PUT/DELETE Route Handlers** | `backend/src/routes/product.routes.js`, `seller.routes.js` | ✅ Resolved | `PUT /api/products/:id`, `DELETE /api/products/:id`, `DELETE /api/seller/listings/:id` registered. |
+| **Bespoke Customizations JSON Parsing**| `backend/src/controllers/product.controller.js` | ✅ Resolved | Tolerates stringified JSON & Object inputs without 500 error. |
+| **Fulfillment Status Notifications** | `backend/src/controllers/order.controller.js`, `seller.controller.js` | ✅ Resolved | Buyer notification dispatched on each status transition. |
+| **Wallet Payouts & Bank Details** | `backend/src/controllers/seller.controller.js`, `admin.controller.js` | ✅ Resolved | Bank account verified on request; UTR tracked on admin disburse. |
+| **Product Payload Mismatch** | `backend/src/controllers/product.controller.js` | ✅ Resolved | Accepts both `img_url` and `imagePath` interchangeably. |
+| **Admin Orders 403 Toast Fallback** | `frontend/src/components/DetailModal.js` | ✅ Resolved | Explicit access denied alert shown on 403; no false success toast. |
+| **JWT Secret Hardening** | `backend/src/middleware/auth.js`, `backend/src/services/auth.service.js` | ✅ Resolved | Strictly loads 256-bit environment secrets; no default/fallback string. |
+| **IDOR Prevention Middleware** | `backend/src/middleware/ownership.js` (`verifySellerOwnership`) | ✅ Resolved | Applied to seller order and listing mutate/inspect routes; 403 on mismatch. |
+| **Razorpay Webhook Verification** | `backend/src/controllers/webhook.controller.js` | ✅ Resolved | HMAC-SHA256 signature verification rejects spoofed events with 400. |
+| **CORS Controls** | `backend/server.js` | ✅ Resolved | Restricted to `thetohfa.in` and approved preview subdomains (no wildcard `*`). |
+| **Image Pathing / CDN Prefixing** | `frontend/src/buyer/home.html`, `category.html` | ✅ Resolved | Prepends CDN URL to relative `/uploads/` and `/media/` image paths. |
+| **Migration Runner Synchronization** | `backend/src/db/migrate.js` | ✅ Resolved | Registered sequential migrations `035` and `038`–`043` in `MIGRATION_FILES`. |

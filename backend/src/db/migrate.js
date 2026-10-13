@@ -49,8 +49,15 @@ const MIGRATION_FILES = [
   path.join(__dirname, 'migrations', '032_special_orders_status_constraint.sql'),
   path.join(__dirname, 'migrations', '033_fix_missing_order_columns.sql'),
   path.join(__dirname, 'migrations', '034_categories_cover_image.sql'),
+  path.join(__dirname, 'migrations', '035_keep_only_six_categories.sql'),
   path.join(__dirname, 'migrations', '036_fix_product_images_unique_constraint.sql'),
   path.join(__dirname, 'migrations', '037_set_special_shops_capacity_limit.sql'),
+  path.join(__dirname, 'migrations', '038_whatsapp_outbox.sql'),
+  path.join(__dirname, 'migrations', '039_ithink_logistics_fulfillment.sql'),
+  path.join(__dirname, 'migrations', '040_sync_boolean_column_types.sql'),
+  path.join(__dirname, 'migrations', '041_seller_onboarding_gating.sql'),
+  path.join(__dirname, 'migrations', '042_sync_customization_pipeline.sql'),
+  path.join(__dirname, 'migrations', '043_add_dashboard_performance_indexes.sql'),
 ];
 
 async function runMigrations() {
