@@ -56,7 +56,7 @@ export async function loadWishlist() {
     if (grid) {
       grid.innerHTML = items.map(item => `
         <div class="product-card" id="wishlist-item-${item.id || item.product_id}">
-          <img src="${item.product_image || item.image_url || 'https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?w=500&auto=format&fit=crop&q=60'}" alt="${item.product_name || item.name}" class="product-card__image" loading="lazy">
+          <img src="${item.product_image || item.image_url || '/img/placeholder-product.png'}" alt="${item.product_name || item.name}" class="product-card__image" loading="lazy">
           <div class="product-card__body">
             <h4 class="product-card__title">${item.product_name || item.name}</h4>
             <div class="product-card__price">${formatPrice((item.price_paise !== undefined ? item.price_paise / 100 : (item.price || item.unit_price || item.base_price || 0)))}</div>

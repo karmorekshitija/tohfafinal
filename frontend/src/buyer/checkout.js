@@ -88,7 +88,7 @@ async function loadCartItems() {
         return `
           <div class="flex justify-between items-center" style="padding:var(--space-2) 0; border-bottom:1px solid var(--color-border);">
             <div class="flex items-center gap-3">
-              <img src="${item.primary_image || item.image_url || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=100&q=80'}" style="width:48px; height:48px; border-radius:var(--radius-sm); object-fit:cover;">
+              <img src="${item.primary_image || item.image_url || '/img/placeholder-product.png'}" style="width:48px; height:48px; border-radius:var(--radius-sm); object-fit:cover;">
               <div>
                 <div style="font-size:var(--text-sm); font-weight:var(--weight-medium);">${item.product_name || item.name}</div>
                 <div class="text-xs" style="color:var(--color-text-muted);">Qty: ${item.quantity || 1} • by ${group.seller_store_name || item.seller_name || 'Artisan'}</div>

@@ -112,7 +112,7 @@ export async function loadCart() {
       itemsContainer.innerHTML = items.map(item => `
         <div class="cart-item flex gap-4 p-4 bg-white/80 border border-[#1A3A32]/15 rounded-2xl items-center justify-between" id="cart-item-${item.id}">
           <div class="flex gap-4 items-center min-w-0 flex-1">
-            <img src="${item.image_url || item.primary_image || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&q=80'}" class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl object-cover flex-shrink-0 border border-[#1A3A32]/10" alt="${item.product_name || item.name}" loading="lazy">
+            <img src="${item.image_url || item.primary_image || '/img/placeholder-product.png'}" class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl object-cover flex-shrink-0 border border-[#1A3A32]/10" alt="${item.product_name || item.name}" loading="lazy" onerror="this.src='/img/placeholder-product.png'">
             <div class="cart-item__info flex-1 min-w-0">
               <h4 class="cart-item__title font-headline-lg text-base font-semibold text-[#1A3A32] truncate" style="font-family: 'Playfair Display', serif;">${item.product_name || item.name}</h4>
               <div class="cart-item__seller text-xs text-[#1A3A32]/70 font-['DM_Sans'] mt-0.5">by ${item.seller_name || 'Artisan'}</div>

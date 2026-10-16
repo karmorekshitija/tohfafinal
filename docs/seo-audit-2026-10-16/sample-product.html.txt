@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta charset="utf-8"/>
+    <title>Wine Cherry Blossom Press-On Nails | Nails &amp; Beauty | Tohfa</title>
+    <link rel="canonical" href="https://thetohfa.in/products/wine-cherry-blossom-press-on-nails-dd4dd2"/>
+    <meta name="description" content="Sophisticated deep burgundy and cherry blossom press-on nails with reinforced salon tips. Hand-crafted with ultra-gloss gel finish for a luxurious, high-fashion"/>
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:site_name" content="Tohfa"/>
+    <meta property="og:type" content="product"/>
+    <meta property="og:title" content="Wine Cherry Blossom Press-On Nails | Tohfa"/>
+    <meta property="og:description" content="Sophisticated deep burgundy and cherry blossom press-on nails with reinforced salon tips. Hand-crafted with ultra-gloss gel finish for a luxurious, high-fashion"/>
+    <meta property="og:url" content="https://thetohfa.in/products/wine-cherry-blossom-press-on-nails-dd4dd2"/>
+    <meta property="og:image" content="https://thetohfa.in/img/products/meesho_tohfa/wine-nails/1.webp"/>
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:title" content="Tohfa | Product Details"/>
+    <meta name="twitter:description" content="Explore and purchase unique handcrafted products directly from independent artisans."/>
+    <meta name="twitter:image" content="https://thetohfa.in/img/products/meesho_tohfa/wine-nails/1.webp"/>
+    <meta name="twitter:url" content="https://thetohfa.in/buyer/product"/>
+
+    <script>
+      (function() {
+        try {
+          var p = new URLSearchParams(window.location.search);
+          var id = p.get('id');
+          if (id) {
+            var canonicalUrl = 'https://thetohfa.in/buyer/product?id=' + encodeURIComponent(id);
+            var can = document.querySelector('link[rel="canonical"]');
+            if (can) can.setAttribute('href', canonicalUrl);
+            var ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) ogUrl.setAttribute('content', canonicalUrl);
+            var twUrl = document.querySelector('meta[name="twitter:url"]');
+            if (twUrl) twUrl.setAttribute('content', canonicalUrl);
+          }
+        } catch(e) {}
+      })();
+    </script>
+
+    <!-- Structured Data / JSON-LD -->
+    <script type="application/ld+json" id="product-jsonld">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://thetohfa.in/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Nails & Beauty",
+          "item": "https://thetohfa.in/category/nails-beauty"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Wine Cherry Blossom Press-On Nails",
+          "item": "https://thetohfa.in/products/wine-cherry-blossom-press-on-nails-dd4dd2"
+        }
+      ]
+    },
+    {
+      "@type": "Product",
+      "name": "Wine Cherry Blossom Press-On Nails",
+      "description": "Sophisticated deep burgundy and cherry blossom press-on nails with reinforced salon tips. Hand-crafted with ultra-gloss gel finish for a luxurious, high-fashion evening look. Includes full application kit.",
+      "image": [
+        "https://thetohfa.in/img/products/meesho_tohfa/wine-nails/1.webp"
+      ],
+      "brand": {
+        "@type": "Brand",
+        "name": "Tohfa"
+      },
+      "offers": {
+        "@type": "Offer",
+        "url": "https://thetohfa.in/products/wine-cherry-blossom-press-on-nails-dd4dd2",
+        "priceCurrency": "INR",
+        "price": "389.00",
+        "availability": "https://schema.org/InStock",
+        "seller": {
+          "@type": "Organization",
+          "name": "Nails Diva"
+        }
+      }
+    }
+  ]
+}
+</script>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet">
+      <style>
+        .material-symbols-outlined {
+          font-family: 'Material Symbols Outlined' !important;
+          font-weight: normal;
+          font-style: normal;
+          font-size: 24px;
+          line-height: 1;
+          letter-spacing: normal;
+          text-transform: none;
+          display: inline-block;
+          white-space: nowrap;
+          word-wrap: normal;
+          direction: ltr;
+          -webkit-font-feature-settings: 'liga';
+          -webkit-font-smoothing: antialiased;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .watercolour-wash { background: linear-gradient(135deg, #FFF8E7 0%, rgba(20,56,31,0.2) 100%); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .carousel-dot { width: 8px; height: 8px; border-radius: 50%; transition: all 0.2s ease; cursor: pointer; }
+
+        /* ── Variant Strip (horizontal row below main image) ── */
+        .variant-strip {
+          display: flex;
+          flex-direction: row;
+          gap: 10px;
+          overflow-x: auto;
+          padding: 4px 2px 8px;
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .variant-strip::-webkit-scrollbar { display: none; }
+
+        /* ── Individual Variant Tile ── */
+        .variant-tile {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+          cursor: pointer;
+          flex-shrink: 0;
+          width: 76px;
+        }
+        .variant-tile-img {
+          width: 76px;
+          height: 76px;
+          border-radius: 12px;
+          overflow: hidden;
+          border: 2px solid rgba(20,56,31,0.2);
+          background: #fff;
+          transition: border-color 0.18s, box-shadow 0.18s, transform 0.15s;
+          position: relative;
+        }
+        .variant-tile-img img {
+          width: 100%;
+          height: 100%;
+          -o-object-fit: cover;
+             object-fit: cover;
+          transition: transform 0.2s;
+        }
+        .variant-tile:hover .variant-tile-img {
+          border-color: rgba(20,56,31,0.55);
+          transform: translateY(-1px);
+        }
+        .variant-tile.active .variant-tile-img {
+          border-color: #14381F;
+          box-shadow: 0 0 0 3px rgba(20,56,31,0.18);
+          transform: scale(1.03);
+        }
+        .variant-tile-label {
+          font-size: 10px;
+          font-weight: 600;
+          color: #14381F;
+          text-align: center;
+          line-height: 1.2;
+          max-width: 76px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-family: 'DM Sans', sans-serif;
+        }
+        .variant-tile.active .variant-tile-label {
+          color: #0D2614;
+          font-weight: 700;
+        }
+
+        /* Color-swatch fallback tile (no image) */
+        .variant-tile-color {
+          width: 76px;
+          height: 76px;
+          border-radius: 12px;
+          border: 2px solid rgba(20,56,31,0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 11px;
+          font-weight: 600;
+          color: #fff;
+          font-family: 'DM Sans', sans-serif;
+          background: #dce6d8;
+          transition: border-color 0.18s, box-shadow 0.18s, transform 0.15s;
+          cursor: pointer;
+          flex-direction: column;
+          gap: 3px;
+        }
+        .variant-tile:hover .variant-tile-color {
+          border-color: rgba(20,56,31,0.55);
+          transform: translateY(-1px);
+        }
+        .variant-tile.active .variant-tile-color {
+          border-color: #14381F;
+          box-shadow: 0 0 0 3px rgba(20,56,31,0.18);
+          transform: scale(1.03);
+        }
+    </style>
+  <script type="module" crossorigin src="/assets/buyer-product-CG3y3VMa.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="modulepreload" crossorigin href="/assets/ReportWidget-BH7UBzfb.js">
+  <link rel="modulepreload" crossorigin href="/assets/ProtectedRoute-B7hGSQoA.js">
+  <link rel="modulepreload" crossorigin href="/assets/imageHelper-3W68gBya.js">
+  <link rel="modulepreload" crossorigin href="/assets/index-CzApALvg.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-BvJRIWaj.js">
+  <link rel="modulepreload" crossorigin href="/assets/apiClient-DXnVeDev.js">
+  <link rel="modulepreload" crossorigin href="/assets/currency-DHcEXBaK.js">
+  <link rel="modulepreload" crossorigin href="/assets/searchOverlay-lMPL5pEo.js">
+  <link rel="modulepreload" crossorigin href="/assets/categoryLinks-B-LYs_p-.js">
+  <link rel="modulepreload" crossorigin href="/assets/tohfa-include-BYywPgjm.js">
+  <link rel="stylesheet" crossorigin href="/assets/tailwind-phRRqZ-a.css">
+</head>
+<body class="bg-[#FFF8E7] text-on-background min-h-screen font-body-md overflow-x-hidden pb-20 md:pb-0">
+    <!-- TopNavBar -->
+    <!-- Top Navigation Bar (LOCKED) -->
+<header
+  class="w-full sticky top-0 z-50 border-b flex justify-between items-center px-4 md:px-8 lg:px-12 h-16 md:h-20 transition-colors"
+  style="background-color: #273328; background-image: url('/img/taskbar-texture.webp'); background-repeat: repeat; background-size: auto; background-position: center; border-color: rgba(250,246,238,0.12);"
+>
+  <!-- Brand Logo -->
+  <div class="flex items-center flex-1">
+    <a
+      href="/buyer/home.html"
+      class="select-none"
+      style="font-family: 'Playfair Display', serif; font-size: clamp(24px, 4vw, 32px); font-style: italic; color: #FAF6EE; text-decoration: none;"
+    >
+      Tohfa<span style="color: #FAF6EE; opacity: 0.7;">.</span>
+    </a>
+  </div>
+
+  <!-- Desktop Navigation Links -->
+  <nav aria-label="Main Navigation" class="hidden md:flex items-center justify-center gap-6 lg:gap-8 h-full">
+    <a
+      href="/buyer/home.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-lg"
+    >
+      <span class="material-symbols-outlined text-[20px]">home</span>
+      <span>Home</span>
+    </a>
+    <a
+      href="/buyer/categories.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-lg"
+    >
+      <span class="material-symbols-outlined text-[20px]">category</span>
+      <span>Category</span>
+    </a>
+    <a
+      href="/buyer/zip-gift.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-lg"
+    >
+      <span class="material-symbols-outlined text-[20px]">bolt</span>
+      <span>ZipGift</span>
+    </a>
+    <a
+      href="/buyer/profile.html"
+      class="flex items-center gap-1.5 h-full px-1 font-['DM_Sans'] text-[15px] text-[#FAF6EE]/75 hover:text-[#FAF6EE] border-b-2 border-transparent transition-colors no-underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE] rounded-lg"
+    >
+      <span class="material-symbols-outlined text-[20px]">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <!-- Right side items -->
+  <div class="flex items-center justify-end flex-1 gap-1 sm:gap-2">
+    <!-- Search Button -->
+    <a
+      href="/buyer/search.html?focus=true"
+      id="header-search-btn"
+      aria-label="Search the marketplace"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
+      title="Search"
+    >
+      <span class="material-symbols-outlined text-[22px]">search</span>
+    </a>
+
+    <!-- Wishlist Button -->
+    <a
+      href="/buyer/wishlist.html"
+      aria-label="View Saved Makes"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
+      title="Saved Makes"
+    >
+      <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+      <span id="nav-wishlist-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+    </a>
+
+    <!-- Cart Button -->
+    <a
+      href="/buyer/cart.html"
+      aria-label="View Shopping Cart"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
+      title="Shopping Cart"
+    >
+      <span class="material-symbols-outlined text-[20px] sm:text-[22px]" aria-hidden="true">shopping_bag</span>
+      <span id="nav-cart-badge" class="absolute -top-1 -right-1 bg-[#FAF6EE] text-[#273328] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden shadow-sm">0</span>
+    </a>
+
+    <!-- Notifications Button -->
+    <a
+      href="/buyer/notifications.html"
+      aria-label="View Notifications"
+      class="p-2 rounded-full text-[#FAF6EE] hover:bg-[#FAF6EE]/10 active:scale-95 transition-all flex items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FAF6EE]"
+      title="Notifications"
+    >
+      <span class="material-symbols-outlined text-[22px]">notifications</span>
+      <span id="nav-notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
+      <span id="nav-notif-badge" class="absolute top-1 right-1 w-2 h-2 bg-[#C85A32] rounded-full hidden"></span>
+    </a>
+
+    <!-- Auth Container -->
+    <div id="auth-buttons-container" class="flex items-center gap-2 ml-2 md:ml-4"></div>
+  </div>
+</header>
+
+    <main class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8 md:py-12">
+        <!-- 1. BREADCRUMBS & BACK NAV -->
+        <div class="flex items-center justify-between mb-6 md:mb-8">
+            <div class="flex items-center gap-1 md:gap-2 text-[10px] md:text-xs text-outline font-label-caps uppercase tracking-wider min-w-0 flex-1 mr-2">
+                <a href="/buyer/home.html" class="hover:text-primary transition-colors shrink-0">Home</a>
+                <span class="material-symbols-outlined text-[9px] md:text-[10px] shrink-0">chevron_right</span>
+                <a id="breadcrumb-category" href="/buyer/categories.html" class="hover:text-primary transition-colors hidden sm:block truncate max-w-[80px] md:max-w-none shrink-0"><span class="inline-block w-16 h-3.5 bg-black/5 rounded animate-pulse align-middle"></span></a>
+                <span class="material-symbols-outlined text-[9px] md:text-[10px] hidden sm:block shrink-0">chevron_right</span>
+                <span id="breadcrumb-product" class="text-primary font-bold truncate min-w-0 block max-w-[120px] sm:max-w-[200px] md:max-w-none"><span class="inline-block w-24 h-3.5 bg-black/5 rounded animate-pulse align-middle"></span></span>
+            </div>
+            <button onclick="window.history.back()" class="flex items-center gap-1 md:gap-xs text-secondary hover:text-primary transition-colors text-xs md:text-sm font-semibold group focus:outline-none shrink-0">
+                <span class="material-symbols-outlined text-base md:text-lg group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                <span class="hidden sm:inline">Back</span>
+            </button>
+        </div>
+
+        <div id="product-details-container" class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+            <!-- Left: Gallery & Style Selector -->
+            <div class="lg:col-span-7 flex flex-col gap-6">
+                
+                <!-- Single Image Gallery Container -->
+                <div class="flex gap-2 sm:gap-3 md:gap-4 items-start w-full">
+
+                    <!-- Vertical Thumbnails Strip (desktop: left stacked column; mobile: horizontal row below) -->
+                    <div id="product-vertical-thumbs" class="flex-shrink-0 w-11 sm:w-16 md:w-16 flex flex-col gap-2 sm:gap-2.5 overflow-y-auto max-h-[300px] sm:max-h-[420px] md:max-h-[560px] no-scrollbar py-1">
+                        <div class="aspect-square w-11 h-11 sm:w-16 sm:h-16 rounded-xl bg-black/5 animate-pulse shrink-0"></div>
+                        <div class="aspect-square w-11 h-11 sm:w-16 sm:h-16 rounded-xl bg-black/5 animate-pulse shrink-0"></div>
+                        <div class="aspect-square w-11 h-11 sm:w-16 sm:h-16 rounded-xl bg-black/5 animate-pulse shrink-0"></div>
+                    </div>
+
+                    <!-- Right block: Main image stacked on top of variant strip -->
+                    <div class="flex-1 flex flex-col gap-3 min-w-0">
+
+                        <!-- Main Showcase Display Container -->
+                        <div class="relative bg-[#FAF6EE] border border-[#14381F]/15 rounded-2xl overflow-hidden shadow-sm aspect-square flex items-center justify-center group w-full">
+                            <div id="main-image-skeleton" class="absolute inset-0 bg-black/5 animate-pulse rounded-2xl z-0"></div>
+                            <img id="main-product-image" alt="Artisan Piece" class="w-full h-full object-contain transition-all duration-300 group-hover:scale-[1.02] opacity-0 hidden relative z-1" />
+                            
+                            <!-- Image counter badge -->
+                            <div id="image-counter-badge" class="absolute bottom-4 left-4 bg-[#14381F]/80 text-[#FAF6EE] text-[11px] font-mono font-medium px-2.5 py-1 rounded-full backdrop-blur-sm shadow-sm hidden z-10">
+                                1 / 1
+                            </div>
+
+                            <!-- Wishlist toggle button -->
+                            <button id="wishlist-toggle-btn" class="absolute top-3 right-3 sm:top-4 sm:right-4 w-10 h-10 min-w-0 min-h-0 flex items-center justify-center p-0 bg-[#FAF6EE]/90 backdrop-blur-md rounded-full shadow-md hover:scale-105 active:scale-95 transition-all text-[#14381F] focus:outline-none z-10 border border-[#14381F]/10">
+                                <span id="wishlist-icon" class="material-symbols-outlined text-[20px] sm:text-[22px]">favorite</span>
+                            </button>
+                        </div>
+
+                        <!-- Product Variants / Style Selector — horizontal row directly below the main image -->
+                        <div id="product-variants-container" class="hidden">
+                            <!-- Dynamically populated variant tiles -->
+                        </div>
+
+                    </div><!-- /right block -->
+                </div><!-- /gallery container -->
+
+            </div>
+
+
+            <!-- Right: Product Information -->
+            <div class="lg:col-span-5 space-y-6 bg-[#FAF6EE]/60 p-6 md:p-8 border border-[#14381F]/15 rounded-2xl shadow-sm">
+                <div class="space-y-sm">
+                    <div id="product-tags-container" class="flex flex-wrap gap-2 mb-2"></div>
+                    <h1 id="product-name" class="font-headline-lg text-primary text-3xl leading-tight font-semibold min-h-[36px]" style="font-family: 'Playfair Display', serif;"><span class="inline-block w-3/4 h-8 bg-black/5 rounded animate-pulse"></span></h1>
+                    <div id="product-rating-container" class="flex items-center gap-1.5 text-amber-500 text-sm mt-1 hidden"></div>
+                    <div class="flex items-center gap-md pt-sm">
+                        <span class="text-2xl font-data-price text-[#14381F] font-bold" id="product-price"><span class="inline-block w-24 h-7 bg-black/5 rounded animate-pulse"></span></span>
+                        <span class="text-xs bg-success-container/20 text-success border border-success/20 px-sm py-[2px] rounded font-semibold" id="product-stock-badge">In Stock</span>
+                    </div>
+
+                </div>
+
+                <a id="seller-profile-link" href="#" class="border-t border-b border-[#14381F]/10 py-md flex items-center gap-md hover:opacity-85 transition-opacity duration-200">
+                    <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm overflow-hidden" id="seller-avatar">✨</div>
+                    <div>
+                        <p class="text-xs text-outline uppercase tracking-wider font-label-caps">Shaped By</p>
+                        <p class="font-title-serif text-primary text-base font-semibold" id="product-seller"><span class="inline-block w-28 h-4 bg-black/5 rounded animate-pulse"></span></p>
+                    </div>
+                </a>
+
+                <div class="space-y-sm">
+                    <h4 class="font-label-caps text-outline text-xs tracking-wider uppercase font-bold">Description</h4>
+                    <p id="product-description" class="text-secondary text-sm leading-relaxed whitespace-pre-line font-['DM_Sans']"><span class="inline-block w-full h-4 bg-black/5 rounded animate-pulse mb-2"></span><span class="inline-block w-4/5 h-4 bg-black/5 rounded animate-pulse mb-2"></span><span class="inline-block w-1/2 h-4 bg-black/5 rounded animate-pulse"></span></p>
+                    <div id="product-subcategories-container" class="flex flex-wrap gap-2 pt-2"></div>
+                </div>
+
+                <!-- Add to Cart Widget -->
+                <div class="space-y-md pt-md border-t border-[#14381F]/10">
+                    <!-- Modular Personalisation Builder (Option 2) -->
+                    <div id="product-customization-container" class="hidden p-5 rounded-2xl bg-[#FAF6EE] border border-[#14381F]/20 space-y-4 shadow-sm mb-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-[#14381F]/10">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[#14381F] text-[20px]">auto_fix_high</span>
+                                <h4 class="font-['Playfair_Display',serif] font-bold text-base text-[#14381F]">Personalise This Item</h4>
+                            </div>
+                            <span id="customization-fee-badge" class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#14381F]/10 text-[#14381F] hidden">+₹0</span>
+                        </div>
+                        <div id="customization-fields-list" class="space-y-3">
+                            <!-- Dynamically Populated Fields -->
+                        </div>
+                    </div>
+
+                    <div id="qty-selector-container" class="flex items-center justify-between">
+                        <span class="font-label-caps text-outline text-xs tracking-wider uppercase font-semibold">Quantity</span>
+                        <div class="flex items-center border border-[#14381F]/20 rounded-lg bg-white overflow-hidden shadow-sm">
+                            <button id="qty-decrease" class="px-md py-sm hover:bg-[#FAF6EE] transition-colors text-primary font-bold focus:outline-none">-</button>
+                            <input type="number" id="qty-input" value="1" min="1" max="99" class="w-12 text-center border-none focus:ring-0 text-sm font-semibold text-primary p-0">
+                            <button id="qty-increase" class="px-md py-sm hover:bg-[#FAF6EE] transition-colors text-primary font-bold focus:outline-none">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Paused Craft Banner (hidden by default) -->
+                    <div id="paused-craft-banner" class="hidden my-3 p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 text-sm font-semibold flex items-center gap-2.5 shadow-xs">
+                        <span class="material-symbols-outlined text-amber-700 text-[20px]">pause_circle</span>
+                        <span>Artisan is currently paused on this craft</span>
+                    </div>
+
+                    <!-- Primary Conversion CTA (Wingify CSF & Baymard #1181, #1182) with 24px negative space -->
+                    <button id="add-to-cart-btn" class="w-full bg-[#1A3A32] text-white hover:bg-opacity-90 py-4 rounded-full font-semibold transition-all shadow-md my-6 flex items-center justify-center gap-2 font-['DM_Sans'] text-base tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3A32] focus-visible:ring-offset-2 active:scale-[0.98]">
+                        <span class="material-symbols-outlined text-[20px]">shopping_bag</span>
+                        <span>Add to Cart</span>
+                    </button>
+
+                    <!-- Verified Craftsmanship Badge & Delivery Micro-Pill (Directly below CTA) -->
+                    <div class="space-y-3">
+                        <button type="button" id="verified-craftsmanship-btn" onclick="openCraftsmanshipModal()" class="w-full py-2.5 px-4 bg-white/80 hover:bg-white border border-[#1A3A32]/20 rounded-xl flex items-center justify-between text-left transition-all hover:shadow-xs group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3A32]">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-7 h-7 rounded-full bg-[#1A3A32]/10 flex items-center justify-center text-[#1A3A32]">
+                                    <span class="material-symbols-outlined text-[16px]">verified</span>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-semibold text-[#1A3A32] leading-tight">Verified Craftsmanship Guarantee</p>
+                                    <p class="text-[10px] text-[#1A3A32]/70 leading-tight">Origin, small batch limits &amp; materials certified</p>
+                                </div>
+                            </div>
+                            <span class="material-symbols-outlined text-base text-[#1A3A32]/60 group-hover:translate-x-0.5 transition-transform">info</span>
+                        </button>
+
+                        <div id="quick-delivery-pill" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1A3A32]/5 border border-[#1A3A32]/10 text-[11px] text-[#1A3A32]/85 w-fit">
+                            <span class="material-symbols-outlined text-[15px] text-[#1A3A32]">local_shipping</span>
+                            <span id="quick-delivery-text">Estimated delivery within 4–7 business days</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Delivery Estimator (BUY-08) -->
+                    <div class="mt-4 p-4 rounded-xl border border-[#14381F]/15 bg-[#FAF6EE] text-xs">
+                        <div class="font-semibold text-primary mb-2 flex items-center gap-1.5 font-['DM_Sans']">
+                            <span class="material-symbols-outlined text-[18px]">local_shipping</span>
+                            <span>Delivery &amp; Crafting Estimator</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" id="pincode-check-input" placeholder="Enter 6-digit Pincode" maxlength="6" class="w-40 px-3 py-2 rounded-lg border border-[#14381F]/20 bg-white text-xs text-on-surface focus:outline-none focus:border-primary">
+                            <button type="button" id="pincode-check-btn" class="px-4 py-2 bg-[#14381F] text-white rounded-lg font-semibold hover:bg-[#0D2614] active:scale-95 transition-all text-xs font-['DM_Sans']">Check</button>
+                        </div>
+                        <div id="pincode-check-result" class="mt-2 text-secondary leading-relaxed"></div>
+                    </div>
+
+                    <div id="overflow-container" class="hidden space-y-2">
+                        <div class="flex items-center gap-2 p-3.5 rounded-xl bg-amber-50/80 border border-amber-200/80 text-amber-900 text-xs font-medium">
+                            <span class="material-symbols-outlined text-[18px] text-amber-700 shrink-0">inventory_2</span>
+                            <p id="overflow-msg" class="leading-relaxed">Today's daily fulfillment limit for this craft has been reached. Next available batch: tomorrow.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 4: Contention pending overlay (hidden by default) -->
+                <div id="contention-overlay" class="hidden mt-4 p-4 border-2 border-purple-200 bg-purple-50 rounded-2xl text-center">
+                    <div class="flex items-center justify-center gap-3 mb-2">
+                        <span id="contention-spinner" style="display:inline-block;width:20px;height:20px;border:2.5px solid #c4b5fd;border-top-color:#7c3aed;border-radius:50%;animation:tohfa-spin 0.7s linear infinite;"></span>
+                        <span class="font-semibold text-purple-800 text-sm">High demand! Confirming your spot...</span>
+                    </div>
+                    <p class="text-xs text-purple-600">Please wait — we're checking availability for you.</p>
+                </div>
+                <div id="contention-lost" class="hidden mt-4 p-4 border-2 border-red-200 bg-red-50 rounded-2xl text-center">
+                    <p class="font-semibold text-red-800 text-sm mb-3">Someone else just grabbed the last one.</p>
+                    <a href="/buyer/categories.html" id="remake-request-btn" class="inline-block w-full py-3 px-4 bg-[#14381F] text-[#FAF6EE] text-xs font-semibold rounded-xl hover:bg-[#285C3A] transition-colors no-underline">
+                        Explore Similar Handcrafted Pieces
+                    </a>
+                </div>
+
+                <!-- Phase 2: Paused state container (hidden by default) -->
+                <div id="paused-state-container" class="hidden"></div>
+            </div>
+        </div>
+
+        <!-- Craftsmanship Video / Audio Walkthrough (For pieces > ₹5,000) -->
+        <section id="craftsmanship-walkthrough-section" class="hidden mt-12 bg-[#FAF6EE] border border-[#14381F]/15 rounded-2xl p-6 md:p-8">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 border-b border-[#14381F]/10 pb-4">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#14381F]/10 text-[#14381F] text-xs font-semibold uppercase tracking-wider mb-2 font-['DM_Sans']">
+                        <span class="material-symbols-outlined text-sm">handyman</span>
+                        <span>Artisan Heritage Edition</span>
+                    </div>
+                    <h2 class="font-headline-lg text-[#14381F] text-2xl md:text-3xl font-semibold" style="font-family: 'Playfair Display', serif;">The Making of This Masterpiece</h2>
+                    <p class="text-sm text-[#14381F]/75 font-['DM_Sans'] mt-1">An intimate look into the specialized handcrafted techniques and raw natural materials used in creating this piece.</p>
+                </div>
+                <div class="flex items-center gap-2 text-xs font-semibold text-[#14381F] bg-white px-3.5 py-2 rounded-xl border border-[#14381F]/10 shadow-xs">
+                    <span class="material-symbols-outlined text-base text-[#C85A32]">movie</span>
+                    <span>Artisan Studio Video Walkthrough</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                <div class="lg:col-span-8 rounded-2xl overflow-hidden shadow-md bg-black relative aspect-video flex items-center justify-center group">
+                    <video id="craftsmanship-video-player" controls poster="/img/botanical-hero.png" class="w-full h-full object-cover">
+                        <source src="https://cdn.coverr.co/videos/coverr-hands-molding-clay-pottery-wheel-5735/1080p.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <div class="lg:col-span-4 space-y-4">
+                    <div class="p-4 bg-white/80 rounded-xl border border-[#14381F]/10">
+                        <p class="text-xs uppercase font-label-caps text-outline tracking-wider font-bold">Technique Spotlight</p>
+                        <p class="text-sm font-semibold text-[#14381F] mt-1" id="craftsmanship-technique-title">Traditional Hand-Crafted Joinery &amp; Shaping</p>
+                        <p class="text-xs text-[#14381F]/70 mt-1 leading-relaxed">Each contour is executed completely by hand with master artisan toolsets without mass factory molds.</p>
+                    </div>
+                    <div class="p-4 bg-white/80 rounded-xl border border-[#14381F]/10">
+                        <p class="text-xs uppercase font-label-caps text-outline tracking-wider font-bold">Crafting Lead Time</p>
+                        <p class="text-xs text-[#14381F]/70 mt-1 leading-relaxed">Requires delicate slow curing and chemical-free botanical finishing to ensure generational longevity.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. LOWER SECTION: Reviews (Left) & More Like This (Right) -->
+        <section class="mt-16 border-t border-[#14381F]/15 pt-12" id="bottom-content-section">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+                
+                <!-- Left: Artisan Reviews Panel (7 cols / ~60%) -->
+                <div class="lg:col-span-7 space-y-8" id="reviews-section">
+                    <div class="flex items-center justify-between border-b border-[#14381F]/10 pb-4">
+                        <div>
+                            <h2 class="font-headline-lg text-primary text-2xl md:text-3xl font-semibold" style="font-family: 'Playfair Display', serif;">Artisan Reviews</h2>
+                            <p class="text-xs text-outline tracking-wider uppercase mt-1 font-['DM_Sans']" id="reviews-summary-text">0 reviews</p>
+                        </div>
+                        <div class="flex items-center gap-xs text-amber-500 font-bold" id="reviews-rating-summary">
+                            <!-- Rating summary -->
+                        </div>
+                    </div>
+
+                    <div id="reviews-list" class="space-y-4">
+                        <!-- Reviews injected here -->
+                    </div>
+
+                    <!-- Write a Review Form -->
+                    <div id="write-review-container" class="mt-8 bg-[#FAF6EE] p-6 border border-[#14381F]/15 rounded-2xl hidden">
+                        <h3 class="font-title-serif text-primary text-xl mb-4 font-semibold" style="font-family: 'Playfair Display', serif;">Write a Review</h3>
+                        <form id="review-form" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-label-caps text-outline uppercase tracking-wider mb-2 font-bold font-['DM_Sans']">Rating</label>
+                                <div class="flex items-center gap-2 text-amber-500" id="star-input-container">
+                                    <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="1">
+                                        <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
+                                    </button>
+                                    <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="2">
+                                        <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
+                                    </button>
+                                    <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="3">
+                                        <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
+                                    </button>
+                                    <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="4">
+                                        <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
+                                    </button>
+                                    <button type="button" class="star-btn focus:outline-none text-3xl transition-transform hover:scale-110 active:scale-95" data-rating="5">
+                                        <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 0;">star</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="review-body" class="block text-xs font-label-caps text-outline uppercase tracking-wider mb-2 font-bold font-['DM_Sans']">Review Comments</label>
+                                <textarea id="review-body" rows="4" class="w-full rounded-xl border border-[#14381F]/20 bg-white p-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none" placeholder="Share your experience with this handmade piece..."></textarea>
+                            </div>
+                            <button type="submit" class="bg-primary hover:bg-[#0D2614] text-white px-6 py-3 rounded-xl font-semibold uppercase tracking-wider transition-all active:scale-95 text-xs font-['DM_Sans'] shadow-sm">
+                                Submit Review
+                            </button>
+                        </form>
+                    </div>
+                    <div id="review-gating-notice" class="mt-6 p-4 bg-[#FAF6EE] border border-dashed border-[#14381F]/25 rounded-xl text-center text-secondary text-xs font-['DM_Sans']">
+                        Only verified buyers who received this item can write a review.
+                    </div>
+                </div>
+
+                <!-- Right: "More like this" Panel (5 cols / ~40%) -->
+                <div class="lg:col-span-5 bg-[#FAF6EE]/80 border border-[#14381F]/15 rounded-2xl p-5 sm:p-6 space-y-5" id="recommendations-section">
+                    <div class="flex items-center justify-between border-b border-[#14381F]/10 pb-4">
+                        <div>
+                            <h3 class="font-headline-lg text-primary text-2xl font-semibold" style="font-family: 'Playfair Display', serif;">More like this</h3>
+                            <p class="text-xs text-secondary/80 font-['DM_Sans'] mt-0.5">Handcrafted pieces with similar keywords &amp; artisan</p>
+                        </div>
+                        <span class="material-symbols-outlined text-[#14381F] text-2xl opacity-70">auto_awesome</span>
+                    </div>
+
+                    <!-- Recommended Cards Grid / Column -->
+                    <div id="recommendations-grid" class="space-y-4">
+                        <!-- Dynamically rendered similar product cards -->
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Product Error State -->
+        <div id="product-error-container" class="hidden text-center py-24">
+            <span class="material-symbols-outlined text-6xl text-error mb-4">error</span>
+            <h3 class="font-headline-lg text-headline-lg mb-2">Product Not Found</h3>
+            <p class="text-secondary max-w-md mx-auto mb-6">The product you're looking for might have been removed, deactivated, or does not exist.</p>
+            <button onclick="window.location.href='/buyer/categories.html'" class="bg-primary text-background px-8 py-3 rounded-lg font-semibold uppercase tracking-wider">Back to Browse</button>
+        </div>
+    </main>
+
+
+
+  <style>
+    /* Recommendations Ribbon Styles */
+    .ribbon-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 120px;
+        height: 120px;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 20;
+    }
+    .ribbon-tag {
+        position: absolute;
+        top: 22px;
+        left: -32px;
+        width: 160px;
+        transform: rotate(-45deg);
+        text-align: center;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #ffffff;
+        line-height: 24px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+    }
+    .ribbon-tag::before, .ribbon-tag::after {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        border-top: 3px solid rgba(0,0,0,0.4);
+        border-left: 3px solid transparent;
+        border-right: 3px solid transparent;
+    }
+    .ribbon-tag::before { left: 0; }
+    .ribbon-tag::after { right: 0; }
+
+    .ribbon-sponsored {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+    .ribbon-bestseller {
+        background: #C85A32;
+    }
+    .ribbon-custom {
+        background: #B492B7;
+    }
+    .ribbon-bestseller-double {
+        top: 13px !important;
+        left: -41px !important;
+    }
+    .ribbon-custom-double {
+        top: 30px !important;
+        left: -24px !important;
+    }
+
+    /* Redefine Ribbon to Flat top-left pills */
+    .ribbon-wrapper {
+        position: absolute !important;
+        top: 8px !important;
+        left: 8px !important;
+        width: auto !important;
+        height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 4px !important;
+        z-index: 20 !important;
+        overflow: visible !important;
+        pointer-events: none !important;
+    }
+
+    @media (min-width: 640px) {
+        .ribbon-wrapper {
+            top: 12px !important;
+            left: 12px !important;
+        }
+    }
+
+    .ribbon-tag {
+        position: static !important;
+        width: auto !important;
+        transform: none !important;
+        text-align: center !important;
+        font-size: 9px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.05em !important;
+        color: #ffffff !important;
+        line-height: 1 !important;
+        padding: 4px 8px !important;
+        border-radius: 9999px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+        display: inline-block !important;
+        white-space: nowrap !important;
+    }
+
+    .ribbon-tag::before,
+    .ribbon-tag::after {
+        display: none !important;
+    }
+
+    .ribbon-bestseller-double,
+    .ribbon-custom-double {
+        top: auto !important;
+        left: auto !important;
+        position: static !important;
+    }
+
+    /* Force Filled White Heart with Green Border style for card wishlist buttons */
+    .toggle-rec-wishlist-btn .material-symbols-outlined {
+        font-variation-settings: 'FILL' 1 !important;
+        -webkit-text-stroke: 1.5px #273328 !important;
+        color: #ffffff !important;
+    }
+
+    .toggle-rec-wishlist-btn[data-wishlisted="true"] .material-symbols-outlined,
+    .toggle-rec-wishlist-btn .text-red-500 {
+        -webkit-text-stroke: 1.5px #ef4444 !important;
+        color: #ef4444 !important;
+    }
+  </style>
+
+
+
+<script>
+async function handleFooterSellerLink(e) {
+  if (e) e.preventDefault();
+  const isMobile = window.innerWidth < 768;
+  const token = sessionStorage.getItem('tohfa_access_token');
+  if (!token) {
+    sessionStorage.setItem('tohfa_redirect_seller', 'true');
+    sessionStorage.setItem('tohfa_return_to', window.location.pathname + window.location.search); window.location.href = '/auth/login.html';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/profile/me', {
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success) {
+        const role = data.data.role;
+        if (role === 'seller') {
+          window.location.href = '/seller/dashboard.html';
+          return;
+        }
+      }
+    }
+  } catch(err) {
+    console.error("Error checking seller status:", err);
+  }
+  
+  window.location.href = '/auth/signup-seller.html';
+}
+
+// Check if we need to auto-redirect back to dashboard/signup after login redirect
+document.addEventListener("DOMContentLoaded", () => {
+  const needsRedirect = sessionStorage.getItem('tohfa_redirect_seller');
+  if (needsRedirect === 'true') {
+    sessionStorage.removeItem('tohfa_redirect_seller');
+    const token = sessionStorage.getItem('tohfa_access_token');
+    if (token) {
+      handleFooterSellerLink();
+    }
+  }
+});
+
+window.openContactModal = function(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const modal = document.getElementById('tohfa-contact-modal');
+  if (modal) {
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeContactModal = function() {
+  const modal = document.getElementById('tohfa-contact-modal');
+  if (modal) {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+};
+
+if (!window.hasContactModalEscListener) {
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      window.closeContactModal();
+    }
+  });
+  window.hasContactModalEscListener = true;
+}
+
+window.openRefundsModal = function(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const modal = document.getElementById('tohfa-refunds-modal');
+  if (modal) {
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeRefundsModal = function() {
+  const modal = document.getElementById('tohfa-refunds-modal');
+  if (modal) {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+};
+
+if (!window.hasRefundsModalEscListener) {
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      window.closeRefundsModal();
+    }
+  });
+  window.hasRefundsModalEscListener = true;
+}
+
+// Verified Craftsmanship Modal
+window.openCraftsmanshipModal = function() {
+  const modal = document.getElementById('craftsmanship-modal');
+  const content = document.getElementById('craftsmanship-modal-content');
+  if (modal && content) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    requestAnimationFrame(() => {
+      content.classList.remove('scale-95', 'opacity-0');
+      content.classList.add('scale-100', 'opacity-100');
+    });
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeCraftsmanshipModal = function() {
+  const modal = document.getElementById('craftsmanship-modal');
+  const content = document.getElementById('craftsmanship-modal-content');
+  if (modal && content) {
+    content.classList.remove('scale-100', 'opacity-100');
+    content.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+      modal.classList.remove('flex');
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }, 200);
+  }
+};
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    window.closeCraftsmanshipModal();
+  }
+});
+document.addEventListener('click', function(e) {
+  const modal = document.getElementById('craftsmanship-modal');
+  if (modal && e.target === modal) {
+    window.closeCraftsmanshipModal();
+  }
+});
+</script>
+
+<!-- Verified Craftsmanship Modal Dialog (Baymard Guideline & Audit Directives) -->
+<div id="craftsmanship-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity duration-300">
+  <div class="relative w-full max-w-lg bg-[#FAF6EE] rounded-2xl shadow-2xl border border-[#1A3A32]/20 overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="craftsmanship-modal-content">
+    <!-- Header -->
+    <div class="p-6 pb-4 border-b border-[#1A3A32]/10 flex items-start justify-between bg-white">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-[#1A3A32]/10 flex items-center justify-center text-[#1A3A32]">
+          <span class="material-symbols-outlined text-[22px]">verified</span>
+        </div>
+        <div>
+          <h3 class="font-headline-lg text-lg text-[#1A3A32] font-semibold" style="font-family: 'Playfair Display', serif;">Verified Craftsmanship Standard</h3>
+          <p class="text-xs text-[#1A3A32]/70 font-['DM_Sans']">Tohfa Authentic Handcrafted Guarantee</p>
+        </div>
+      </div>
+      <button onclick="closeCraftsmanshipModal()" class="text-[#1A3A32]/60 hover:text-[#1A3A32] p-1.5 rounded-full hover:bg-black/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3A32]" aria-label="Close modal">
+        <span class="material-symbols-outlined text-2xl">close</span>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="p-6 space-y-4 font-['DM_Sans'] max-h-[70vh] overflow-y-auto">
+      <!-- Artisan Origin -->
+      <div class="flex items-start gap-3.5 p-3.5 bg-white rounded-xl border border-[#1A3A32]/10 shadow-xs">
+        <span class="material-symbols-outlined text-[#1A3A32] text-xl shrink-0 mt-0.5">pin_drop</span>
+        <div>
+          <h4 class="text-xs uppercase tracking-wider font-bold text-[#1A3A32]">Artisan Origin Verification</h4>
+          <p class="text-xs text-[#1A3A32]/80 mt-1 leading-relaxed" id="modal-artisan-origin">Independently verified workshop located in traditional craft clusters in India. Every listing is tied to a registered master artisan profile.</p>
+        </div>
+      </div>
+
+      <!-- Small Batch Limits -->
+      <div class="flex items-start gap-3.5 p-3.5 bg-white rounded-xl border border-[#1A3A32]/10 shadow-xs">
+        <span class="material-symbols-outlined text-[#1A3A32] text-xl shrink-0 mt-0.5">inventory_2</span>
+        <div>
+          <h4 class="text-xs uppercase tracking-wider font-bold text-[#1A3A32]">Strict Small-Batch Production</h4>
+          <p class="text-xs text-[#1A3A32]/80 mt-1 leading-relaxed">Produced in quantities under 50 pieces per release to ensure individual master attention, structural integrity, and zero mass assembly-line shortcuts.</p>
+        </div>
+      </div>
+
+      <!-- Materials Certification -->
+      <div class="flex items-start gap-3.5 p-3.5 bg-white rounded-xl border border-[#1A3A32]/10 shadow-xs">
+        <span class="material-symbols-outlined text-[#1A3A32] text-xl shrink-0 mt-0.5">eco</span>
+        <div>
+          <h4 class="text-xs uppercase tracking-wider font-bold text-[#1A3A32]">Materials &amp; Non-Toxic Certification</h4>
+          <p class="text-xs text-[#1A3A32]/80 mt-1 leading-relaxed">Formulated using natural, sustainably harvested raw inputs, ethically sourced terracotta clays, botanical dyes, or certified reclaimed timber.</p>
+        </div>
+      </div>
+
+      <!-- 100% Risk Free Return -->
+      <div class="p-3.5 bg-[#1A3A32]/5 rounded-xl border border-[#1A3A32]/15 text-xs text-[#1A3A32] space-y-1.5">
+        <div class="flex items-center gap-1.5 font-semibold">
+          <span class="material-symbols-outlined text-base">support_agent</span>
+          <span>Tohfa Buyer Protection Guarantee</span>
+        </div>
+        <p class="text-[11px] text-[#1A3A32]/80 leading-relaxed">If the craftsmanship arrives flawed or does not match artisan specifications, Tohfa provides an instant replacement or a full prepaid return refund.</p>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="p-4 bg-white border-t border-[#1A3A32]/10 flex justify-end">
+      <button onclick="closeCraftsmanshipModal()" class="px-5 py-2.5 bg-[#1A3A32] text-white rounded-full text-xs font-semibold hover:bg-opacity-90 transition-all font-['DM_Sans'] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3A32]">
+        Understood &amp; Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Sticky Mobile Conversion Bar (Bottom Fixed on Mobile) -->
+<aside id="mobile-sticky-bar" aria-label="Mobile purchase bar" class="fixed bottom-0 left-0 right-0 z-40 bg-[#FFF8E7]/95 backdrop-blur-md border-t border-[#14381F]/15 px-4 py-3 md:hidden flex items-center justify-between gap-3 shadow-[0_-4px_16px_rgba(20,56,31,0.08)]">
+  <div class="flex flex-col min-w-0">
+    <span class="text-[10px] text-[#516447] uppercase tracking-wider font-semibold">Total Price</span>
+    <span class="text-base font-bold text-[#14381F] font-data-price leading-tight" id="sticky-bar-price">₹0</span>
+  </div>
+  <button id="mobile-cart-btn" type="button" class="flex-1 max-w-[210px] bg-[#14381F] text-[#FAF6EE] py-2.5 px-4 rounded-full font-semibold text-xs flex items-center justify-center gap-1.5 shadow-md hover:bg-[#285C3A] active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#14381F]">
+    <span class="material-symbols-outlined text-[18px]">shopping_bag</span>
+    <span>Add to Cart</span>
+  </button>
+</aside>
+
+  <!-- Shared Footer -->
+  <div id="tohfa-footer"></div>
+</body>
+</html>

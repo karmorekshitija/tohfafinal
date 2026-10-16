@@ -28,6 +28,13 @@ describe('Seller Pipeline End-to-End Test Suite (Tohfa Special & Normal Sellers)
   const publicSellerEmail = `e2e_public_${timestamp}@test.dev`;
 
   beforeAll(async () => {
+    // Fail-closed guard: NEVER run writing tests against the application database.
+    const dbName = process.env.DB_NAME || 'tohfa';
+    const isDisposableTestDb = process.env.NODE_ENV === 'test' && (process.env.ALLOW_E2E_DB_MUTATION === 'true' && dbName.endsWith('_test'));
+    if (!isDisposableTestDb) {
+      throw new Error(`[ISOLATION FAIL-CLOSED] seller_pipeline_e2e.test.js cannot run against configured database "${dbName}". A dedicated disposable test database (DB_NAME ending in _test and ALLOW_E2E_DB_MUTATION=true) is strictly required to protect catalog data.`);
+    }
+
     // Find or create admin user for testing
     let { rows: admins } = await query(
       "SELECT id, email, role FROM users WHERE role IN ('admin', 'master_admin') LIMIT 1"

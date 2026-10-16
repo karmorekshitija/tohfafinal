@@ -86,7 +86,7 @@ async function executeSearch() {
     resultsGrid.innerHTML = products.map(p => {
       const imgUrl = (Array.isArray(p.images) && p.images.length && p.images[0]?.url)
         ? p.images[0].url
-        : (p.primary_image || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600&q=80');
+        : (p.primary_image || '/img/placeholder-product.png');
       return `
         <a href="./product.html?id=${p.id}" class="product-card animate-slide-up" style="text-decoration:none;color:inherit;display:block;">
           <div class="product-card__image-wrap">

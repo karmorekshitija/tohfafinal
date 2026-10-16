@@ -62,6 +62,15 @@ export const authStorage = {
     sessionStorage.removeItem('user_role');
     sessionStorage.removeItem('tohfa_admin_token');
     sessionStorage.removeItem('tohfa_admin_refresh_token');
+
+    try {
+      Object.keys(sessionStorage).forEach(k => {
+        if (k.startsWith('tohfa_seller_profile_cache')) sessionStorage.removeItem(k);
+      });
+      if (typeof window !== 'undefined' && typeof window.clearSellerProfileCache === 'function') {
+        window.clearSellerProfileCache();
+      }
+    } catch (e) {}
   },
 
   getUser: () => {

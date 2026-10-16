@@ -252,7 +252,7 @@ async function renderWishlistTab() {
         ${items.map(item => `
           <div class="product-card" onclick="window.location.href='./product.html?id=${item.product_id}'">
             <div class="product-card__image-wrap">
-              <img src="${item.primary_image || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80'}" class="product-card__image">
+              <img src="${item.primary_image || '/img/placeholder-product.png'}" class="product-card__image">
             </div>
             <div class="product-card__body">
               <h3 class="product-card__name">${item.name}</h3>

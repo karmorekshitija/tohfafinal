@@ -167,7 +167,7 @@ function renderProducts(container, products) {
   container.innerHTML = products.map(p => {
     const imgUrl = (Array.isArray(p.images) && p.images.length && p.images[0]?.url)
       ? p.images[0].url
-      : (p.primary_image || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600&q=80');
+      : (p.primary_image || '/img/placeholder-product.png');
 
     const customBadge = p.customization_mode === 'fixed'
       ? `<span class="badge" style="position:absolute; bottom:8px; left:8px; background:var(--color-pale-sage); color:var(--color-primary); font-size:10px; font-weight:600;">Customizable</span>`
@@ -217,7 +217,7 @@ async function renderCategoryStrips(categories) {
           ${list.map(p => {
             const imgUrl = (Array.isArray(p.images) && p.images.length && p.images[0]?.url)
               ? p.images[0].url
-              : (p.primary_image || 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&q=80');
+              : (p.primary_image || '/img/placeholder-product.png');
             return `
               <a href="./product.html?id=${p.id}" class="product-card" style="width: 220px; text-decoration: none; color: inherit;">
                 <div class="product-card__image-wrap">

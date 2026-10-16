@@ -28,9 +28,15 @@
 
   <script type="module">
     import { api } from '../js/api.js';
-    import { requireAuth } from '../js/auth.js';
+    import { requireAuth, authStorage } from '../js/auth.js';
 
     if (requireAuth()) {}
+
+    function parseBool(val) {
+      if (val === true || val === 1 || val === '1') return true;
+      if (typeof val === 'string' && val.trim().toLowerCase() === 'true') return true;
+      return false;
+    }
 
     async function checkStatus() {
       const urlParams = new URLSearchParams(window.location.search);
@@ -47,24 +53,56 @@
         const res = await api.get('/api/seller/application-status');
         const app = res?.data?.application || res?.data;
 
-        if (app?.verification_status === 'suspended' || app?.is_active === false) {
+        const isApproved = parseBool(app?.is_approved);
+        const isSuspended = app?.verification_status === 'suspended' || app?.is_active === false || app?.is_active === 'false' || app?.is_active === 0;
+        const isRejected = !isApproved && (app?.verification_status === 'rejected' || Boolean(app?.rejection_reason));
+
+        if (isSuspended) {
+          const u = authStorage.getUser() || {};
+          u.verification_status = 'suspended';
+          u.is_active = false;
+          authStorage.setUser(u);
+
           document.getElementById('statusIcon').textContent = '🔒';
           document.getElementById('statusTitle').textContent = 'Artisan Account Suspended';
           document.getElementById('statusMsg').textContent = 'Your artisan store is temporarily suspended by administrative review. If you believe this is an error, please contact our artisan support team.';
           document.getElementById('actionContainer').innerHTML = `<a href="mailto:tohfa126@gmail.com" class="btn btn-secondary">Contact Artisan Support</a>`;
-        } else if (app?.is_approved) {
-          document.getElementById('statusIcon').textContent = '🎉';
-          document.getElementById('statusTitle').textContent = 'Application Approved!';
-          document.getElementById('statusMsg').textContent = 'Welcome to Tohfa Studio! Your artisan storefront is now live.';
-          document.getElementById('actionContainer').innerHTML = `<a href="./dashboard.html" class="btn btn-primary btn-full">Enter Seller Studio Dashboard →</a>`;
-        } else if (app?.rejection_reason) {
+        } else if (isApproved) {
+          // Reconcile authoritative server approval into client storage
+          const u = authStorage.getUser() || {};
+          u.is_approved = true;
+          u.verification_status = 'verified';
+          u.is_active = true;
+          authStorage.setUser(u);
+
+          // Approved active sellers reach intended Studio destination without a recurring success-panel stop or redirect loop
+          const returnTo = sessionStorage.getItem('tohfa_return_to') || './dashboard.html';
+          sessionStorage.removeItem('tohfa_return_to');
+          window.location.replace(returnTo);
+        } else if (isRejected) {
+          const u = authStorage.getUser() || {};
+          u.is_approved = false;
+          u.verification_status = 'rejected';
+          authStorage.setUser(u);
+
           document.getElementById('statusIcon').textContent = '⚠️';
           document.getElementById('statusTitle').textContent = 'Application Update';
-          document.getElementById('statusMsg').textContent = `Reason: ${app.rejection_reason}. You may re-apply with updated details.`;
+          document.getElementById('statusMsg').textContent = `Reason: ${app.rejection_reason || 'Application criteria not met'}. You may re-apply with updated details.`;
           document.getElementById('actionContainer').innerHTML = `<a href="/auth/signup-seller.html" class="btn btn-primary">Re-apply as Seller</a>`;
+        } else {
+          // Pending
+          const u = authStorage.getUser() || {};
+          u.is_approved = false;
+          u.verification_status = 'pending_verification';
+          authStorage.setUser(u);
         }
       } catch (err) {
-        console.error(err);
+        if (err?.response?.status === 401 || err?.status === 401) {
+          authStorage.clear();
+          window.location.replace('/auth/login.html');
+          return;
+        }
+        console.error('Failed to fetch application status:', err);
       }
     }
 

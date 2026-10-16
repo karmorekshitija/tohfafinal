@@ -381,14 +381,15 @@ async function main() {
   sitemapXml += '</urlset>';
 
   fs.writeFileSync(path.resolve(distDir, 'sitemap.xml'), sitemapXml, 'utf8');
-  fs.writeFileSync(path.resolve(__dirname, '../public/sitemap.xml'), sitemapXml, 'utf8');
-  console.log('✅ Generated authoritative /sitemap.xml');
+  if (process.env.SYNC_PUBLIC_SEO === 'true') {
+    fs.writeFileSync(path.resolve(__dirname, '../public/sitemap.xml'), sitemapXml, 'utf8');
+    console.log('✅ Synchronized /public/sitemap.xml (SYNC_PUBLIC_SEO=true)');
+  }
+  console.log('✅ Generated authoritative /sitemap.xml in dist');
 
   // 7. Generate Google Merchant Center Product Feed
   const feedsDir = path.resolve(distDir, 'feeds');
-  const publicFeedsDir = path.resolve(__dirname, '../public/feeds');
   if (!fs.existsSync(feedsDir)) fs.mkdirSync(feedsDir, { recursive: true });
-  if (!fs.existsSync(publicFeedsDir)) fs.mkdirSync(publicFeedsDir, { recursive: true });
 
   let merchantXml = '<?xml version="1.0" encoding="UTF-8"?>\n';
   merchantXml += '<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">\n';
@@ -423,8 +424,13 @@ async function main() {
   merchantXml += '  </channel>\n</rss>';
 
   fs.writeFileSync(path.resolve(feedsDir, 'google-merchant.xml'), merchantXml, 'utf8');
-  fs.writeFileSync(path.resolve(publicFeedsDir, 'google-merchant.xml'), merchantXml, 'utf8');
-  console.log('✅ Generated Google Merchant Center product feed at /feeds/google-merchant.xml');
+  if (process.env.SYNC_PUBLIC_SEO === 'true') {
+    const publicFeedsDir = path.resolve(__dirname, '../public/feeds');
+    if (!fs.existsSync(publicFeedsDir)) fs.mkdirSync(publicFeedsDir, { recursive: true });
+    fs.writeFileSync(path.resolve(publicFeedsDir, 'google-merchant.xml'), merchantXml, 'utf8');
+    console.log('✅ Synchronized /public/feeds/google-merchant.xml (SYNC_PUBLIC_SEO=true)');
+  }
+  console.log('✅ Generated Google Merchant Center product feed at dist/feeds/google-merchant.xml');
 
   console.log('🎉 [SEO Prerender] Successfully finished all tasks!');
 }

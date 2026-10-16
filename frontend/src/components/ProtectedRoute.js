@@ -133,14 +133,18 @@
           window.location.replace('/buyer/home.html');
           return;
         }
-        // Unapproved sellers only get onboarding + profile-settings + profile
-        const isApproved = user.is_approved === 1 || user.is_approved === true || user.is_approved === '1' || user.is_approved === 'true';
+        // Normalize approval and status representations explicitly
+        const isSuspended = user.verification_status === 'suspended' || user.is_active === false || user.is_active === 'false' || user.is_active === 0;
+        const isApproved = !isSuspended && (user.is_approved === 1 || user.is_approved === true || user.is_approved === '1' || user.is_approved === 'true' || user.verification_status === 'verified');
+
         if (user.role === 'seller' && !isApproved) {
           const allowed = path.endsWith('/onboarding.html') || path.endsWith('/onboarding') ||
                           path.endsWith('/profile-settings.html') || path.endsWith('/profile-settings') ||
                           path.endsWith('/profile.html') || path.endsWith('/profile');
           if (!allowed) {
-            window.location.replace('/seller/onboarding.html');
+            sessionStorage.setItem('tohfa_return_to', path + window.location.search);
+            const redirectUrl = isSuspended ? '/seller/onboarding.html?status=suspended' : '/seller/onboarding.html';
+            window.location.replace(redirectUrl);
             return;
           }
         }

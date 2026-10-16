@@ -1,0 +1,5490 @@
+{
+  "auditDate": "2026-10-16",
+  "sitemapCount": 86,
+  "results": [
+    {
+      "requested": "https://thetohfa.in/",
+      "final": "https://www.thetohfa.in/",
+      "status": 200,
+      "ms": 429,
+      "robotsHeader": null,
+      "bytes": 45597,
+      "title": "Customized &amp; Handmade Gifts Online in India | Tohfa",
+      "canonical": "https://thetohfa.in/",
+      "h1": [
+        "Tohfa"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              "@id": "https://thetohfa.in/#organization",
+              "name": "Tohfa",
+              "url": "https://thetohfa.in",
+              "logo": "https://thetohfa.in/img/botanical-hero.png",
+              "description": "India's premier curated marketplace for authentic handcrafted treasures, personalized gifts, bespoke studio creations, and artisanal craft directly from master makers.",
+              "contactPoint": {
+                "@type": "ContactPoint",
+                "contactType": "customer support",
+                "email": "tohfa126@gmail.com",
+                "areaServed": "IN",
+                "availableLanguage": [
+                  "en",
+                  "hi"
+                ]
+              },
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Delhi",
+                "addressCountry": "IN"
+              }
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://thetohfa.in/#website",
+              "name": "Tohfa",
+              "url": "https://thetohfa.in",
+              "publisher": {
+                "@id": "https://thetohfa.in/#organization"
+              },
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://thetohfa.in/buyer/search?q={search_term_string}",
+                "query-input": "required name=search_term_string"
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/customized-gifts",
+      "final": "https://www.thetohfa.in/customized-gifts",
+      "status": 200,
+      "ms": 988,
+      "robotsHeader": null,
+      "bytes": 11728,
+      "title": "Customized Gifts Online in India | Personalized & Handmade Gifts | Tohfa",
+      "canonical": "https://thetohfa.in/customized-gifts",
+      "h1": [
+        "Customized Gifts Online in India"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Customized Gifts",
+                  "item": "https://thetohfa.in/customized-gifts"
+                }
+              ]
+            },
+            {
+              "@type": "CollectionPage",
+              "name": "Customized Gifts Online in India",
+              "description": "Explore customized and personalized handcrafted gifts created by independent Indian artisans.",
+              "url": "https://thetohfa.in/customized-gifts"
+            },
+            {
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "How do customized gifts work on Tohfa?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Each customized product allows you to enter custom text, initials, or bespoke specifications directly before adding to cart. The creator hand-crafts the piece according to your request."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "How long does a customized gift take to make and deliver in India?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Most handmade customized gifts require 1-3 business days of preparation by the maker, followed by 3-6 days standard courier delivery across Indian metro and tier-2 cities."
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/categories",
+      "final": "https://www.thetohfa.in/categories",
+      "status": 200,
+      "ms": 465,
+      "robotsHeader": null,
+      "bytes": 15582,
+      "title": "All Craft Categories | Handmade & Personalized Gifts | Tohfa",
+      "canonical": "https://thetohfa.in/categories",
+      "h1": [
+        "Find your gift ✦"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://thetohfa.in/buyer/categories#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/buyer/home"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Categories",
+                  "item": "https://thetohfa.in/buyer/categories"
+                }
+              ]
+            },
+            {
+              "@type": "CollectionPage",
+              "@id": "https://thetohfa.in/buyer/categories#collection",
+              "name": "Explore Handcrafted Craft Categories",
+              "description": "Browse handcrafted treasures across curated craft categories — from candles and ceramics to customized portraits and jewellery — directly from independent makers on Tohfa.",
+              "url": "https://thetohfa.in/buyer/categories"
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/handmade-gifts",
+      "final": "https://www.thetohfa.in/handmade-gifts",
+      "status": 200,
+      "ms": 1637,
+      "robotsHeader": null,
+      "bytes": 8218,
+      "title": "Handmade Gifts Online in India | Handcrafted & Artisanal Treasures | Tohfa",
+      "canonical": "https://thetohfa.in/handmade-gifts",
+      "h1": [
+        "Handmade Gifts Online in India"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Handmade Gifts",
+                  "item": "https://thetohfa.in/handmade-gifts"
+                }
+              ]
+            },
+            {
+              "@type": "CollectionPage",
+              "name": "Handmade Gifts Online in India",
+              "description": "Discover authentic handcrafted and handmade gifts created by independent Indian artisans.",
+              "url": "https://thetohfa.in/handmade-gifts"
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/personalized-gifts",
+      "final": "https://www.thetohfa.in/personalized-gifts",
+      "status": 200,
+      "ms": 1726,
+      "robotsHeader": null,
+      "bytes": 9258,
+      "title": "Personalized Gifts Online in India | Custom Name & Keepsake Gifts | Tohfa",
+      "canonical": "https://thetohfa.in/personalized-gifts",
+      "h1": [
+        "Personalized Gifts Online in India"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Personalized Gifts",
+                  "item": "https://thetohfa.in/personalized-gifts"
+                }
+              ]
+            },
+            {
+              "@type": "CollectionPage",
+              "name": "Personalized Gifts Online in India",
+              "description": "Explore personalized gifts crafted by independent Indian artisans for birthdays, anniversaries, and milestones.",
+              "url": "https://thetohfa.in/personalized-gifts"
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/gifts-in-india",
+      "final": "https://www.thetohfa.in/gifts-in-india",
+      "status": 200,
+      "ms": 1095,
+      "robotsHeader": null,
+      "bytes": 6869,
+      "title": "Gifts in India | Handmade, Personalized & Unique Gifts Online | Tohfa",
+      "canonical": "https://thetohfa.in/gifts-in-india",
+      "h1": [
+        "Gifts in India"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Gifts in India",
+                  "item": "https://thetohfa.in/gifts-in-india"
+                }
+              ]
+            },
+            {
+              "@type": "CollectionPage",
+              "name": "Gifts in India | Curated Indian Gifting Marketplace",
+              "description": "Explore handmade, customized, and thoughtful gifts from independent Indian creators across Delhi, Mumbai, Bengaluru, and beyond.",
+              "url": "https://thetohfa.in/gifts-in-india"
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/bulk",
+      "final": "https://www.thetohfa.in/bulk",
+      "status": 200,
+      "ms": 658,
+      "robotsHeader": null,
+      "bytes": 28202,
+      "title": "Corporate & Bulk Gifting in India | Tohfa",
+      "canonical": "https://thetohfa.in/bulk",
+      "h1": [
+        "Artisanal Gifting, Crafted at Scale."
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://thetohfa.in/buyer/bulk#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/buyer/home"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Bulk & Corporate Gifting",
+                  "item": "https://thetohfa.in/buyer/bulk"
+                }
+              ]
+            },
+            {
+              "@type": "Service",
+              "@id": "https://thetohfa.in/buyer/bulk#service",
+              "name": "Bulk & Corporate Handcrafted Gifting",
+              "provider": {
+                "@type": "Organization",
+                "name": "Tohfa",
+                "url": "https://thetohfa.in"
+              },
+              "description": "Handcrafted corporate gifting, custom wedding favours, and bespoke event packages direct from Indian master artisans.",
+              "areaServed": {
+                "@type": "Country",
+                "name": "India"
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/guides/handmade-gifts-in-india",
+      "final": "https://www.thetohfa.in/guides/handmade-gifts-in-india",
+      "status": 200,
+      "ms": 580,
+      "robotsHeader": null,
+      "bytes": 6023,
+      "title": "Handmade Gifts in India: Why Artisan Craft Outshines Mass Production | Tohfa",
+      "canonical": "https://thetohfa.in/guides/handmade-gifts-in-india",
+      "h1": [
+        "Handmade Gifts in India: Why Artisan Craft Outshines Mass Production"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Gift Guides",
+                  "item": "https://thetohfa.in/guides"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Handmade Gifts in India",
+                  "item": "https://thetohfa.in/guides/handmade-gifts-in-india"
+                }
+              ]
+            },
+            {
+              "@type": "Article",
+              "headline": "Handmade Gifts in India: Why Artisan Craft Outshines Mass Production",
+              "publisher": {
+                "@type": "Organization",
+                "name": "Tohfa",
+                "url": "https://thetohfa.in"
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/guides",
+      "final": "https://www.thetohfa.in/guides",
+      "status": 200,
+      "ms": 575,
+      "robotsHeader": null,
+      "bytes": 10361,
+      "title": "Gift Guides & Artisan Ideas | Curated Gifting Advice | Tohfa",
+      "canonical": "https://thetohfa.in/guides",
+      "h1": [
+        "Tohfa Gifting Guides &amp; Inspiration"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Gift Guides",
+                  "item": "https://thetohfa.in/guides"
+                }
+              ]
+            },
+            {
+              "@type": "CollectionPage",
+              "name": "Tohfa Gift Guides & Artisan Ideas",
+              "description": "Curated editorial guides for finding the perfect handmade and customized gifts in India.",
+              "url": "https://thetohfa.in/guides"
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/guides/best-customized-gifts-in-india",
+      "final": "https://www.thetohfa.in/guides/best-customized-gifts-in-india",
+      "status": 200,
+      "ms": 583,
+      "robotsHeader": null,
+      "bytes": 7970,
+      "title": "Best Customized Gifts in India (2026 Guide) | Personalized Ideas | Tohfa",
+      "canonical": "https://thetohfa.in/guides/best-customized-gifts-in-india",
+      "h1": [
+        "Best Customized Gifts in India (2026 Buyer's Guide)"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Gift Guides",
+                  "item": "https://thetohfa.in/guides"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Best Customized Gifts in India",
+                  "item": "https://thetohfa.in/guides/best-customized-gifts-in-india"
+                }
+              ]
+            },
+            {
+              "@type": "Article",
+              "headline": "Best Customized Gifts in India (2026 Buyer's Guide)",
+              "description": "Comprehensive guide on selecting high quality customized and personalized gifts created by Indian artisans.",
+              "publisher": {
+                "@type": "Organization",
+                "name": "Tohfa",
+                "url": "https://thetohfa.in"
+              },
+              "datePublished": "2026-01-15",
+              "dateModified": "2026-09-20"
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/guides/birthday-gift-guide",
+      "final": "https://www.thetohfa.in/guides/birthday-gift-guide",
+      "status": 200,
+      "ms": 575,
+      "robotsHeader": null,
+      "bytes": 5563,
+      "title": "Unique Birthday Gifts in India: Handpicked by Independent Makers | Tohfa",
+      "canonical": "https://thetohfa.in/guides/birthday-gift-guide",
+      "h1": [
+        "Unique Birthday Gifts in India: Handpicked by Independent Makers"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Gift Guides",
+                  "item": "https://thetohfa.in/guides"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Birthday Gift Guide",
+                  "item": "https://thetohfa.in/guides/birthday-gift-guide"
+                }
+              ]
+            },
+            {
+              "@type": "Article",
+              "headline": "Unique Birthday Gifts in India: Handpicked by Independent Makers",
+              "publisher": {
+                "@type": "Organization",
+                "name": "Tohfa",
+                "url": "https://thetohfa.in"
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/guides/how-to-choose-a-personalized-gift",
+      "final": "https://www.thetohfa.in/guides/how-to-choose-a-personalized-gift",
+      "status": 200,
+      "ms": 566,
+      "robotsHeader": null,
+      "bytes": 5978,
+      "title": "How to Choose a Personalized Gift: 5 Essential Rules | Tohfa",
+      "canonical": "https://thetohfa.in/guides/how-to-choose-a-personalized-gift",
+      "h1": [
+        "How to Choose a Personalized Gift: 5 Essential Rules"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Gift Guides",
+                  "item": "https://thetohfa.in/guides"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "How to Choose a Personalized Gift",
+                  "item": "https://thetohfa.in/guides/how-to-choose-a-personalized-gift"
+                }
+              ]
+            },
+            {
+              "@type": "Article",
+              "headline": "How to Choose a Personalized Gift: 5 Essential Rules",
+              "publisher": {
+                "@type": "Organization",
+                "name": "Tohfa",
+                "url": "https://thetohfa.in"
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/guides/anniversary-gift-guide",
+      "final": "https://www.thetohfa.in/guides/anniversary-gift-guide",
+      "status": 200,
+      "ms": 589,
+      "robotsHeader": null,
+      "bytes": 5615,
+      "title": "Artisan Anniversary Gift Guide: Thoughtful Keepsakes for Couples | Tohfa",
+      "canonical": "https://thetohfa.in/guides/anniversary-gift-guide",
+      "h1": [
+        "Artisan Anniversary Gift Guide: Thoughtful Keepsakes for Couples"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Gift Guides",
+                  "item": "https://thetohfa.in/guides"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Anniversary Gift Guide",
+                  "item": "https://thetohfa.in/guides/anniversary-gift-guide"
+                }
+              ]
+            },
+            {
+              "@type": "Article",
+              "headline": "Artisan Anniversary Gift Guide: Thoughtful Keepsakes for Couples",
+              "publisher": {
+                "@type": "Organization",
+                "name": "Tohfa",
+                "url": "https://thetohfa.in"
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/about",
+      "final": "https://www.thetohfa.in/about",
+      "status": 200,
+      "ms": 577,
+      "robotsHeader": null,
+      "bytes": 13637,
+      "title": "About Us | Handcrafted Gifting Marketplace | Tohfa",
+      "canonical": "https://thetohfa.in/about",
+      "h1": [
+        "Connecting hearts through handcrafted creations."
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://thetohfa.in/buyer/about#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/buyer/home"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "About Us",
+                  "item": "https://thetohfa.in/buyer/about"
+                }
+              ]
+            },
+            {
+              "@type": "AboutPage",
+              "@id": "https://thetohfa.in/buyer/about#aboutpage",
+              "name": "About TOHFA",
+              "description": "Tohfa is an Indian marketplace connecting independent artisans and creative studios directly with people seeking authentic, handmade, and personalized gifts.",
+              "url": "https://thetohfa.in/buyer/about",
+              "mainEntity": {
+                "@type": "Organization",
+                "name": "Tohfa",
+                "url": "https://thetohfa.in",
+                "logo": "https://thetohfa.in/img/botanical-hero.png",
+                "description": "India's marketplace for handmade, customized, and artisanal gifts.",
+                "address": {
+                  "@type": "PostalAddress",
+                  "addressLocality": "Delhi",
+                  "addressCountry": "IN"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/privacy",
+      "final": "https://www.thetohfa.in/privacy",
+      "status": 404,
+      "ms": 427,
+      "robotsHeader": null,
+      "bytes": 79,
+      "h1": [],
+      "schemas": [],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/returns",
+      "final": "https://www.thetohfa.in/returns",
+      "status": 404,
+      "ms": 422,
+      "robotsHeader": null,
+      "bytes": 79,
+      "h1": [],
+      "schemas": [],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/contact",
+      "final": "https://www.thetohfa.in/contact",
+      "status": 200,
+      "ms": 582,
+      "robotsHeader": null,
+      "bytes": 15391,
+      "title": "Contact Us | Support & Artisan Inquiries | Tohfa",
+      "canonical": "https://thetohfa.in/contact",
+      "h1": [
+        "Get in touch with Tohfa"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://thetohfa.in/buyer/contact#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/buyer/home"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Contact Support",
+                  "item": "https://thetohfa.in/buyer/contact"
+                }
+              ]
+            },
+            {
+              "@type": "ContactPage",
+              "@id": "https://thetohfa.in/buyer/contact#contactpage",
+              "name": "Contact Tohfa Support",
+              "description": "Contact channels and customer support information for Tohfa marketplace.",
+              "url": "https://thetohfa.in/buyer/contact",
+              "mainEntity": {
+                "@type": "Organization",
+                "name": "Tohfa",
+                "url": "https://thetohfa.in",
+                "contactPoint": [
+                  {
+                    "@type": "ContactPoint",
+                    "contactType": "Customer Support",
+                    "email": "tohfa126@gmail.com",
+                    "availableLanguage": [
+                      "English",
+                      "Hindi"
+                    ],
+                    "areaServed": "IN"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/faq",
+      "final": "https://www.thetohfa.in/faq",
+      "status": 200,
+      "ms": 561,
+      "robotsHeader": null,
+      "bytes": 21718,
+      "title": "Frequently Asked Questions & Help | Tohfa",
+      "canonical": "https://thetohfa.in/faq",
+      "h1": [
+        "Frequently Asked Questions"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://thetohfa.in/buyer/faq#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/buyer/home"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "FAQ",
+                  "item": "https://thetohfa.in/buyer/faq"
+                }
+              ]
+            },
+            {
+              "@type": "FAQPage",
+              "@id": "https://thetohfa.in/buyer/faq#faqpage",
+              "name": "Tohfa Frequently Asked Questions",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "What is Tohfa and how does it work?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Tohfa is India's curated marketplace for authentic handcrafted gifts and artisanal treasures. You discover verified master artisans, explore unique handcrafted creations, request bespoke customizations, and have them packaged and delivered securely to your doorstep."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "What are the shipping charges across India?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "We offer standard flat-rate shipping of ₹89 across all serviceable pincodes in India. Orders above ₹999 qualify for complimentary free shipping."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "How long does delivery take for handcrafted items?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Standard ready-stock items typically arrive within 4–7 business days. Handcrafted and customized items require time for the artisan to make your piece with care; their turnaround is displayed on the product page and generally takes 7–12 business days."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "How can I track my order status?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Once your order is confirmed, you can track live dispatch and logistics updates by heading to your Profile > Orders page, or by clicking the tracking link sent to your registered email and SMS."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "What payment methods are accepted on Tohfa?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "We accept all major secure payment methods via Razorpay, including UPI (GPay, PhonePe, Paytm), Credit/Debit Cards (Visa, Mastercard, RuPay), and Net Banking."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Can I personalize or customize my gift?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes! Personalization is at the heart of Tohfa. Products with the \"Customisable\" badge allow you to specify names, initials, color palettes, custom dates, or even upload reference images and notes for the maker during checkout."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "What is the \"Open Customization\" quote system?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "For one-of-a-kind bespoke commissions, you can submit an open request with your design requirements. The maker will review your brief and send you a transparent quote and turnaround estimate for your approval before work begins."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Do you offer premium gift packaging and handwritten notes?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes. Every Tohfa package includes the option for eco-friendly, artisanal gift wrapping and a complimentary handwritten wax-sealed message card."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "What is Tohfa's Return & Refund policy?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "If your item arrives damaged, defective, or incorrect, you can request a replacement or full refund within 48 hours of delivery through our online resolution center. Because customized products are created specifically for you, non-defective returns are not accepted once crafted."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "How do refunds get processed?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Approved refunds are automatically credited back to your original payment method (UPI, Card, or Bank) within 5–7 business days."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Can I cancel an order after placing it?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Orders for ready items can be cancelled within 12 hours of placement before the artisan packs the parcel. For bespoke custom orders, cancellation is permitted before the artisan begins custom crafting."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Are the products genuinely handmade by Indian artisans?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Absolutely. Every artisan on Tohfa undergoes a careful verification process to validate their craftsmanship heritage, ethical practices, and material authenticity. No mass-produced plastic factory replicas are permitted."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "How do I care for my handmade products?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Specific care guidelines (such as cleaning instructions for brass, hand-wash rules for handloom textiles, or resin care) are detailed on each product page and enclosed in your parcel packaging."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "How do I apply to sell on Tohfa?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Independent creators, studios, and heritage craft collectives can apply directly by visiting the \"Sell on Tohfa\" page. Our curation team reviews your portfolio within 48 hours."
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/terms-conditions",
+      "final": "https://www.thetohfa.in/terms-conditions",
+      "status": 404,
+      "ms": 421,
+      "robotsHeader": null,
+      "bytes": 79,
+      "h1": [],
+      "schemas": [],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/category/floral-bouquets",
+      "final": "https://www.thetohfa.in/category/floral-bouquets",
+      "status": 200,
+      "ms": 558,
+      "robotsHeader": null,
+      "bytes": 28090,
+      "title": "Floral &amp; Bouquets | Handmade &amp; Personalized Gifts | Tohfa",
+      "canonical": "https://thetohfa.in/category/floral-bouquets",
+      "h1": [
+        "Floral &amp; Bouquets"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://thetohfa.in/buyer/category#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/buyer/home"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Categories",
+                  "item": "https://thetohfa.in/buyer/categories"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Category",
+                  "item": "https://thetohfa.in/buyer/category"
+                }
+              ]
+            },
+            {
+              "@type": "CollectionPage",
+              "@id": "https://thetohfa.in/buyer/category#collection",
+              "name": "Handcrafted Collections",
+              "description": "Explore handcrafted artisanal collections, curated heritage crafts, and customized gifts on Tohfa.",
+              "url": "https://thetohfa.in/buyer/category"
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/category/candles-aromatherapy",
+      "final": "https://www.thetohfa.in/category/candles-aromatherapy",
+      "status": 200,
+      "ms": 579,
+      "robotsHeader": null,
+      "bytes": 28125,
+      "title": "Candles &amp; Aromatherapy | Handmade &amp; Personalized Gifts | Tohfa",
+      "canonical": "https://thetohfa.in/category/candles-aromatherapy",
+      "h1": [
+        "Candles &amp; Aromatherapy"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://thetohfa.in/buyer/category#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/buyer/home"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Categories",
+                  "item": "https://thetohfa.in/buyer/categories"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Category",
+                  "item": "https://thetohfa.in/buyer/category"
+                }
+              ]
+            },
+            {
+              "@type": "CollectionPage",
+              "@id": "https://thetohfa.in/buyer/category#collection",
+              "name": "Handcrafted Collections",
+              "description": "Explore handcrafted artisanal collections, curated heritage crafts, and customized gifts on Tohfa.",
+              "url": "https://thetohfa.in/buyer/category"
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/category/frames",
+      "final": "https://www.thetohfa.in/category/frames",
+      "status": 200,
+      "ms": 643,
+      "robotsHeader": null,
+      "bytes": 27997,
+      "title": "Frames | Handmade &amp; Personalized Gifts | Tohfa",
+      "canonical": "https://thetohfa.in/category/frames",
+      "h1": [
+        "Frames"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://thetohfa.in/buyer/category#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/buyer/home"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Categories",
+                  "item": "https://thetohfa.in/buyer/categories"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Category",
+                  "item": "https://thetohfa.in/buyer/category"
+                }
+              ]
+            },
+            {
+              "@type": "CollectionPage",
+              "@id": "https://thetohfa.in/buyer/category#collection",
+              "name": "Handcrafted Collections",
+              "description": "Explore handcrafted artisanal collections, curated heritage crafts, and customized gifts on Tohfa.",
+              "url": "https://thetohfa.in/buyer/category"
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/category/gifts-keepsakes",
+      "final": "https://www.thetohfa.in/category/gifts-keepsakes",
+      "status": 200,
+      "ms": 556,
+      "robotsHeader": null,
+      "bytes": 28090,
+      "title": "Gifts &amp; Keepsakes | Handmade &amp; Personalized Gifts | Tohfa",
+      "canonical": "https://thetohfa.in/category/gifts-keepsakes",
+      "h1": [
+        "Gifts &amp; Keepsakes"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://thetohfa.in/buyer/category#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/buyer/home"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Categories",
+                  "item": "https://thetohfa.in/buyer/categories"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Category",
+                  "item": "https://thetohfa.in/buyer/category"
+                }
+              ]
+            },
+            {
+              "@type": "CollectionPage",
+              "@id": "https://thetohfa.in/buyer/category#collection",
+              "name": "Handcrafted Collections",
+              "description": "Explore handcrafted artisanal collections, curated heritage crafts, and customized gifts on Tohfa.",
+              "url": "https://thetohfa.in/buyer/category"
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/category/hair-accessories",
+      "final": "https://www.thetohfa.in/category/hair-accessories",
+      "status": 200,
+      "ms": 579,
+      "robotsHeader": null,
+      "bytes": 28067,
+      "title": "Hair Accessories | Handmade &amp; Personalized Gifts | Tohfa",
+      "canonical": "https://thetohfa.in/category/hair-accessories",
+      "h1": [
+        "Hair Accessories"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://thetohfa.in/buyer/category#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/buyer/home"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Categories",
+                  "item": "https://thetohfa.in/buyer/categories"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Category",
+                  "item": "https://thetohfa.in/buyer/category"
+                }
+              ]
+            },
+            {
+              "@type": "CollectionPage",
+              "@id": "https://thetohfa.in/buyer/category#collection",
+              "name": "Handcrafted Collections",
+              "description": "Explore handcrafted artisanal collections, curated heritage crafts, and customized gifts on Tohfa.",
+              "url": "https://thetohfa.in/buyer/category"
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/category/nails-beauty",
+      "final": "https://www.thetohfa.in/category/nails-beauty",
+      "status": 200,
+      "ms": 1089,
+      "robotsHeader": null,
+      "bytes": 28069,
+      "title": "Nails &amp; Beauty | Handmade &amp; Personalized Gifts | Tohfa",
+      "canonical": "https://thetohfa.in/category/nails-beauty",
+      "h1": [
+        "Nails &amp; Beauty"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://thetohfa.in/buyer/category#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/buyer/home"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Categories",
+                  "item": "https://thetohfa.in/buyer/categories"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Category",
+                  "item": "https://thetohfa.in/buyer/category"
+                }
+              ]
+            },
+            {
+              "@type": "CollectionPage",
+              "@id": "https://thetohfa.in/buyer/category#collection",
+              "name": "Handcrafted Collections",
+              "description": "Explore handcrafted artisanal collections, curated heritage crafts, and customized gifts on Tohfa.",
+              "url": "https://thetohfa.in/buyer/category"
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/products/crochet-evil-eye-keychain-269ea9",
+      "final": "https://www.thetohfa.in/products/crochet-evil-eye-keychain-269ea9",
+      "status": 200,
+      "ms": 637,
+      "robotsHeader": null,
+      "bytes": 54467,
+      "title": "Crochet Evil Eye Keychain | Gifts &amp; Keepsakes | Tohfa",
+      "canonical": "https://thetohfa.in/products/crochet-evil-eye-keychain-269ea9",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Gifts & Keepsakes",
+                  "item": "https://thetohfa.in/category/gifts-keepsakes"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Crochet Evil Eye Keychain",
+                  "item": "https://thetohfa.in/products/crochet-evil-eye-keychain-269ea9"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Crochet Evil Eye Keychain",
+              "description": "A round crochet keychain in classic evil-eye blue, white, and black colorway.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa_new/evil eye keychain/IMG_7830.JPG"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/crochet-evil-eye-keychain-269ea9",
+                "priceCurrency": "INR",
+                "price": "149.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/crochet-evil-eye-keychain-269ea9"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/crochet-cat-keychain-4ee620",
+      "final": "https://www.thetohfa.in/products/crochet-cat-keychain-4ee620",
+      "status": 200,
+      "ms": 623,
+      "robotsHeader": null,
+      "bytes": 54475,
+      "title": "Crochet Cat Keychain | Gifts &amp; Keepsakes | Tohfa",
+      "canonical": "https://thetohfa.in/products/crochet-cat-keychain-4ee620",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Gifts & Keepsakes",
+                  "item": "https://thetohfa.in/category/gifts-keepsakes"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Crochet Cat Keychain",
+                  "item": "https://thetohfa.in/products/crochet-cat-keychain-4ee620"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Crochet Cat Keychain",
+              "description": "Sitting white amigurumi kitten keychain with pink nose, beaded eyes, and curled tail. Hand-stitched with love.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/no-catalog/6.jpeg"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/crochet-cat-keychain-4ee620",
+                "priceCurrency": "INR",
+                "price": "249.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/crochet-cat-keychain-4ee620"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/crochet-heart-keychain-c71889",
+      "final": "https://www.thetohfa.in/products/crochet-heart-keychain-c71889",
+      "status": 200,
+      "ms": 652,
+      "robotsHeader": null,
+      "bytes": 54467,
+      "title": "Crochet Heart Keychain | Gifts &amp; Keepsakes | Tohfa",
+      "canonical": "https://thetohfa.in/products/crochet-heart-keychain-c71889",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Gifts & Keepsakes",
+                  "item": "https://thetohfa.in/category/gifts-keepsakes"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Crochet Heart Keychain",
+                  "item": "https://thetohfa.in/products/crochet-heart-keychain-c71889"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Crochet Heart Keychain",
+              "description": "Puffy blush pink crocheted heart plush keychain. A tender everyday reminder and thoughtful small gift.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/no-catalog/7.jpeg"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/crochet-heart-keychain-c71889",
+                "priceCurrency": "INR",
+                "price": "199.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/crochet-heart-keychain-c71889"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/crochet-flower-bag-charm-7a6f02",
+      "final": "https://www.thetohfa.in/products/crochet-flower-bag-charm-7a6f02",
+      "status": 200,
+      "ms": 640,
+      "robotsHeader": null,
+      "bytes": 54627,
+      "title": "Crochet Flower Bag Charm | Gifts &amp; Keepsakes | Tohfa",
+      "canonical": "https://thetohfa.in/products/crochet-flower-bag-charm-7a6f02",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Gifts & Keepsakes",
+                  "item": "https://thetohfa.in/category/gifts-keepsakes"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Crochet Flower Bag Charm",
+                  "item": "https://thetohfa.in/products/crochet-flower-bag-charm-7a6f02"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Crochet Flower Bag Charm",
+              "description": "Charming multi-petal crocheted flower bag charm with green leaf accent and key ring clasp. Adds instant artisanal personality to any tote or backpack.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/no-catalog/3.jpeg"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/crochet-flower-bag-charm-7a6f02",
+                "priceCurrency": "INR",
+                "price": "249.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/crochet-flower-bag-charm-7a6f02"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/crochet-bunny-keychain-b9c5b9",
+      "final": "https://www.thetohfa.in/products/crochet-bunny-keychain-b9c5b9",
+      "status": 200,
+      "ms": 621,
+      "robotsHeader": null,
+      "bytes": 54470,
+      "title": "Crochet Bunny Keychain | Gifts &amp; Keepsakes | Tohfa",
+      "canonical": "https://thetohfa.in/products/crochet-bunny-keychain-b9c5b9",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Gifts & Keepsakes",
+                  "item": "https://thetohfa.in/category/gifts-keepsakes"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Crochet Bunny Keychain",
+                  "item": "https://thetohfa.in/products/crochet-bunny-keychain-b9c5b9"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Crochet Bunny Keychain",
+              "description": "Soft cream amigurumi bunny head keychain with pink blushed cheeks and optional floral charm attachment.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/no-catalog/2.jpeg"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/crochet-bunny-keychain-b9c5b9",
+                "priceCurrency": "INR",
+                "price": "249.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/crochet-bunny-keychain-b9c5b9"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/crochet-cherry-keychain-8c0fe5",
+      "final": "https://www.thetohfa.in/products/crochet-cherry-keychain-8c0fe5",
+      "status": 200,
+      "ms": 984,
+      "robotsHeader": null,
+      "bytes": 54478,
+      "title": "Crochet Cherry Keychain | Gifts &amp; Keepsakes | Tohfa",
+      "canonical": "https://thetohfa.in/products/crochet-cherry-keychain-8c0fe5",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Gifts & Keepsakes",
+                  "item": "https://thetohfa.in/category/gifts-keepsakes"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Crochet Cherry Keychain",
+                  "item": "https://thetohfa.in/products/crochet-cherry-keychain-8c0fe5"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Crochet Cherry Keychain",
+              "description": "Adorably plump twin red cherries crocheted with green leaves on a sturdy stainless steel keychain ring.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/no-catalog/1.jpeg"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/crochet-cherry-keychain-8c0fe5",
+                "priceCurrency": "INR",
+                "price": "199.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/crochet-cherry-keychain-8c0fe5"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/crochet-flower-hair-clip-set-acb21f",
+      "final": "https://www.thetohfa.in/products/crochet-flower-hair-clip-set-acb21f",
+      "status": 200,
+      "ms": 697,
+      "robotsHeader": null,
+      "bytes": 54567,
+      "title": "Crochet Flower Hair Clip Set | Hair Accessories | Tohfa",
+      "canonical": "https://thetohfa.in/products/crochet-flower-hair-clip-set-acb21f",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Hair Accessories",
+                  "item": "https://thetohfa.in/category/hair-accessories"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Crochet Flower Hair Clip Set",
+                  "item": "https://thetohfa.in/products/crochet-flower-hair-clip-set-acb21f"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Crochet Flower Hair Clip Set",
+              "description": "Delightful set of handmade yarn flower and leaf hair clips on sturdy alligator bases. Perfect for casual wear and gifting.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/mix-clips/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/crochet-flower-hair-clip-set-acb21f",
+                "priceCurrency": "INR",
+                "price": "299.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/crochet-flower-hair-clip-set-acb21f"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/crochet-single-sunflower-bouquet-4a3b1f",
+      "final": "https://www.thetohfa.in/products/crochet-single-sunflower-bouquet-4a3b1f",
+      "status": 200,
+      "ms": 617,
+      "robotsHeader": null,
+      "bytes": 54595,
+      "title": "Crochet Single Sunflower Bouquet | Floral &amp; Bouquets | Tohfa",
+      "canonical": "https://thetohfa.in/products/crochet-single-sunflower-bouquet-4a3b1f",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Floral & Bouquets",
+                  "item": "https://thetohfa.in/category/floral-bouquets"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Crochet Single Sunflower Bouquet",
+                  "item": "https://thetohfa.in/products/crochet-single-sunflower-bouquet-4a3b1f"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Crochet Single Sunflower Bouquet",
+              "description": "Individual statement crocheted sunflower stem wrapped in artisanal paper wrap and tied with natural jute twine.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/sunf-paper-beidge/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/crochet-single-sunflower-bouquet-4a3b1f",
+                "priceCurrency": "INR",
+                "price": "399.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/crochet-single-sunflower-bouquet-4a3b1f"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/crochet-bow-hair-clip-maroon-870169",
+      "final": "https://www.thetohfa.in/products/crochet-bow-hair-clip-maroon-870169",
+      "status": 200,
+      "ms": 705,
+      "robotsHeader": null,
+      "bytes": 54539,
+      "title": "Crochet Bow Hair Clip (Maroon) | Hair Accessories | Tohfa",
+      "canonical": "https://thetohfa.in/products/crochet-bow-hair-clip-maroon-870169",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Hair Accessories",
+                  "item": "https://thetohfa.in/category/hair-accessories"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Crochet Bow Hair Clip (Maroon)",
+                  "item": "https://thetohfa.in/products/crochet-bow-hair-clip-maroon-870169"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Crochet Bow Hair Clip (Maroon)",
+              "description": "Elegant crimson maroon crocheted bow hair accessory with vintage textured weave. Secure hold on all hair types.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/red-clip/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/crochet-bow-hair-clip-maroon-870169",
+                "priceCurrency": "INR",
+                "price": "249.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/crochet-bow-hair-clip-maroon-870169"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/crochet-rainbow-daisy-bouquet-pink-box-e4c517",
+      "final": "https://www.thetohfa.in/products/crochet-rainbow-daisy-bouquet-pink-box-e4c517",
+      "status": 200,
+      "ms": 622,
+      "robotsHeader": null,
+      "bytes": 54669,
+      "title": "Crochet Rainbow Daisy Bouquet (Pink Box) | Floral &amp; Bouquets | Tohfa",
+      "canonical": "https://thetohfa.in/products/crochet-rainbow-daisy-bouquet-pink-box-e4c517",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Floral & Bouquets",
+                  "item": "https://thetohfa.in/category/floral-bouquets"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Crochet Rainbow Daisy Bouquet (Pink Box)",
+                  "item": "https://thetohfa.in/products/crochet-rainbow-daisy-bouquet-pink-box-e4c517"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Crochet Rainbow Daisy Bouquet (Pink Box)",
+              "description": "Joyful assortment of colorful crocheted mini daisies presented in a delicate pink keepsake gift box with decorative bow.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/mix-flower-pot/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/crochet-rainbow-daisy-bouquet-pink-box-e4c517",
+                "priceCurrency": "INR",
+                "price": "699.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/crochet-rainbow-daisy-bouquet-pink-box-e4c517"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/crochet-potted-sunflower-78b280",
+      "final": "https://www.thetohfa.in/products/crochet-potted-sunflower-78b280",
+      "status": 200,
+      "ms": 605,
+      "robotsHeader": null,
+      "bytes": 54534,
+      "title": "Crochet Potted Sunflower | Floral &amp; Bouquets | Tohfa",
+      "canonical": "https://thetohfa.in/products/crochet-potted-sunflower-78b280",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Floral & Bouquets",
+                  "item": "https://thetohfa.in/category/floral-bouquets"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Crochet Potted Sunflower",
+                  "item": "https://thetohfa.in/products/crochet-potted-sunflower-78b280"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Crochet Potted Sunflower",
+              "description": "Cheerful hand-crocheted blooming sunflower with detailed center disk and lush leaves in an artisanal knitted planter.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/sunf-pot-cir/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/crochet-potted-sunflower-78b280",
+                "priceCurrency": "INR",
+                "price": "549.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/crochet-potted-sunflower-78b280"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/rainbow-smiley-sunflower-pot-5aa311",
+      "final": "https://www.thetohfa.in/products/rainbow-smiley-sunflower-pot-5aa311",
+      "status": 200,
+      "ms": 640,
+      "robotsHeader": null,
+      "bytes": 54578,
+      "title": "Rainbow Smiley Sunflower Pot | Floral &amp; Bouquets | Tohfa",
+      "canonical": "https://thetohfa.in/products/rainbow-smiley-sunflower-pot-5aa311",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Floral & Bouquets",
+                  "item": "https://thetohfa.in/category/floral-bouquets"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Rainbow Smiley Sunflower Pot",
+                  "item": "https://thetohfa.in/products/rainbow-smiley-sunflower-pot-5aa311"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Rainbow Smiley Sunflower Pot",
+              "description": "Novelty sunshine crochet sunflower featuring a cheerful smiling face center and vibrant multi-color petal accents.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/sunflower-colourful/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/rainbow-smiley-sunflower-pot-5aa311",
+                "priceCurrency": "INR",
+                "price": "499.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/rainbow-smiley-sunflower-pot-5aa311"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/crochet-double-sunflower-pot-c0e52f",
+      "final": "https://www.thetohfa.in/products/crochet-double-sunflower-pot-c0e52f",
+      "status": 200,
+      "ms": 700,
+      "robotsHeader": null,
+      "bytes": 54524,
+      "title": "Crochet Double Sunflower Pot | Floral &amp; Bouquets | Tohfa",
+      "canonical": "https://thetohfa.in/products/crochet-double-sunflower-pot-c0e52f",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Floral & Bouquets",
+                  "item": "https://thetohfa.in/category/floral-bouquets"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Crochet Double Sunflower Pot",
+                  "item": "https://thetohfa.in/products/crochet-double-sunflower-pot-c0e52f"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Crochet Double Sunflower Pot",
+              "description": "Twin blooming sunflowers sharing a single knitted desktop pot with deep chocolate centers and lush foliage.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/two-sunf/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/crochet-double-sunflower-pot-c0e52f",
+                "priceCurrency": "INR",
+                "price": "549.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/crochet-double-sunflower-pot-c0e52f"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/you-are-my-sunshine-crochet-bouquet-a3540a",
+      "final": "https://www.thetohfa.in/products/you-are-my-sunshine-crochet-bouquet-a3540a",
+      "status": 200,
+      "ms": 696,
+      "robotsHeader": null,
+      "bytes": 54658,
+      "title": "You Are My Sunshine Crochet Bouquet | Floral &amp; Bouquets | Tohfa",
+      "canonical": "https://thetohfa.in/products/you-are-my-sunshine-crochet-bouquet-a3540a",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Floral & Bouquets",
+                  "item": "https://thetohfa.in/category/floral-bouquets"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "You Are My Sunshine Crochet Bouquet",
+                  "item": "https://thetohfa.in/products/you-are-my-sunshine-crochet-bouquet-a3540a"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "You Are My Sunshine Crochet Bouquet",
+              "description": "Radiant all-yellow crocheted bouquet radiating warmth and optimism. Includes sunflowers, daisies, and matching yellow wrapping.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/yellow-bouquet/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/you-are-my-sunshine-crochet-bouquet-a3540a",
+                "priceCurrency": "INR",
+                "price": "749.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/you-are-my-sunshine-crochet-bouquet-a3540a"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/crochet-wildflower-bouquet-e0ea84",
+      "final": "https://www.thetohfa.in/products/crochet-wildflower-bouquet-e0ea84",
+      "status": 200,
+      "ms": 678,
+      "robotsHeader": null,
+      "bytes": 54571,
+      "title": "Crochet Wildflower Bouquet | Floral &amp; Bouquets | Tohfa",
+      "canonical": "https://thetohfa.in/products/crochet-wildflower-bouquet-e0ea84",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Floral & Bouquets",
+                  "item": "https://thetohfa.in/category/floral-bouquets"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Crochet Wildflower Bouquet",
+                  "item": "https://thetohfa.in/products/crochet-wildflower-bouquet-e0ea84"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Crochet Wildflower Bouquet",
+              "description": "Bountiful hand-crocheted meadow bouquet combining lilies, sunflowers, wheat stalks, and daisies wrapped in delicate kraft tissue.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/bouquet/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/crochet-wildflower-bouquet-e0ea84",
+                "priceCurrency": "INR",
+                "price": "799.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/crochet-wildflower-bouquet-e0ea84"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/crochet-three-daisy-pot-white-ceramic-e88141",
+      "final": "https://www.thetohfa.in/products/crochet-three-daisy-pot-white-ceramic-e88141",
+      "status": 200,
+      "ms": 723,
+      "robotsHeader": null,
+      "bytes": 54592,
+      "title": "Crochet Three-Daisy Pot (White Ceramic) | Floral &amp; Bouquets | Tohfa",
+      "canonical": "https://thetohfa.in/products/crochet-three-daisy-pot-white-ceramic-e88141",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Floral & Bouquets",
+                  "item": "https://thetohfa.in/category/floral-bouquets"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Crochet Three-Daisy Pot (White Ceramic)",
+                  "item": "https://thetohfa.in/products/crochet-three-daisy-pot-white-ceramic-e88141"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Crochet Three-Daisy Pot (White Ceramic)",
+              "description": "Trio of sunny smiling daisies handcrafted in premium milk cotton yarn, seated in a white textured pot.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/three-flo/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/crochet-three-daisy-pot-white-ceramic-e88141",
+                "priceCurrency": "INR",
+                "price": "599.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/crochet-three-daisy-pot-white-ceramic-e88141"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/crochet-two-tone-tulip-pot-3a0ceb",
+      "final": "https://www.thetohfa.in/products/crochet-two-tone-tulip-pot-3a0ceb",
+      "status": 200,
+      "ms": 615,
+      "robotsHeader": null,
+      "bytes": 54520,
+      "title": "Crochet Two-Tone Tulip Pot | Floral &amp; Bouquets | Tohfa",
+      "canonical": "https://thetohfa.in/products/crochet-two-tone-tulip-pot-3a0ceb",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Floral & Bouquets",
+                  "item": "https://thetohfa.in/category/floral-bouquets"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Crochet Two-Tone Tulip Pot",
+                  "item": "https://thetohfa.in/products/crochet-two-tone-tulip-pot-3a0ceb"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Crochet Two-Tone Tulip Pot",
+              "description": "Charming pastel dual-tulip arrangement featuring baby blue and blossom pink crocheted flowers together in one pot.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/tulip/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/crochet-two-tone-tulip-pot-3a0ceb",
+                "priceCurrency": "INR",
+                "price": "499.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/crochet-two-tone-tulip-pot-3a0ceb"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/crochet-potted-rose-a46b9e",
+      "final": "https://www.thetohfa.in/products/crochet-potted-rose-a46b9e",
+      "status": 200,
+      "ms": 609,
+      "robotsHeader": null,
+      "bytes": 54524,
+      "title": "Crochet Potted Rose | Floral &amp; Bouquets | Tohfa",
+      "canonical": "https://thetohfa.in/products/crochet-potted-rose-a46b9e",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Floral & Bouquets",
+                  "item": "https://thetohfa.in/category/floral-bouquets"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Crochet Potted Rose",
+                  "item": "https://thetohfa.in/products/crochet-potted-rose-a46b9e"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Crochet Potted Rose",
+              "description": "Delicate hand-crocheted blush pink rose in a mini textured yarn planter pot. Soft, everlasting, and wired for custom stem styling.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/pink-rose/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/crochet-potted-rose-a46b9e",
+                "priceCurrency": "INR",
+                "price": "499.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/crochet-potted-rose-a46b9e"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/crochet-potted-tulip-red-2e97a3",
+      "final": "https://www.thetohfa.in/products/crochet-potted-tulip-red-2e97a3",
+      "status": 200,
+      "ms": 608,
+      "robotsHeader": null,
+      "bytes": 54590,
+      "title": "Crochet Potted Tulip (Red) | Floral &amp; Bouquets | Tohfa",
+      "canonical": "https://thetohfa.in/products/crochet-potted-tulip-red-2e97a3",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Floral & Bouquets",
+                  "item": "https://thetohfa.in/category/floral-bouquets"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Crochet Potted Tulip (Red)",
+                  "item": "https://thetohfa.in/products/crochet-potted-tulip-red-2e97a3"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Crochet Potted Tulip (Red)",
+              "description": "Vibrant crimson Dutch tulip hand-crocheted with rich petal folds in an earthen-toned knitted pot. A timeless everlasting floral keepsake.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/red-rose/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/crochet-potted-tulip-red-2e97a3",
+                "priceCurrency": "INR",
+                "price": "529.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/crochet-potted-tulip-red-2e97a3"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/pink-daisy-stick-candle-2dd9d8",
+      "final": "https://www.thetohfa.in/products/pink-daisy-stick-candle-2dd9d8",
+      "status": 200,
+      "ms": 669,
+      "robotsHeader": null,
+      "bytes": 54506,
+      "title": "Pink Daisy Stick Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/pink-daisy-stick-candle-2dd9d8",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Pink Daisy Stick Candle",
+                  "item": "https://thetohfa.in/products/pink-daisy-stick-candle-2dd9d8"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Pink Daisy Stick Candle",
+              "description": "A single pink daisy-shaped candle on a wooden stick with a satin bow, sold individually.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa_new/pink single flower/IMG_7856.JPG"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/pink-daisy-stick-candle-2dd9d8",
+                "priceCurrency": "INR",
+                "price": "129.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/pink-daisy-stick-candle-2dd9d8"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/evil-eye-crochet-flower-pot-eac888",
+      "final": "https://www.thetohfa.in/products/evil-eye-crochet-flower-pot-eac888",
+      "status": 200,
+      "ms": 668,
+      "robotsHeader": null,
+      "bytes": 54597,
+      "title": "Evil Eye Crochet Flower Pot | Floral &amp; Bouquets | Tohfa",
+      "canonical": "https://thetohfa.in/products/evil-eye-crochet-flower-pot-eac888",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Floral & Bouquets",
+                  "item": "https://thetohfa.in/category/floral-bouquets"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Evil Eye Crochet Flower Pot",
+                  "item": "https://thetohfa.in/products/evil-eye-crochet-flower-pot-eac888"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Evil Eye Crochet Flower Pot",
+              "description": "Protective Nazar Evil Eye motif handcrafted in everlasting cotton yarn flower pot. An auspicious and vibrant decorative desk bloom.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/evileye-pot/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/evil-eye-crochet-flower-pot-eac888",
+                "priceCurrency": "INR",
+                "price": "599.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Crochet Lady"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/evil-eye-crochet-flower-pot-eac888"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/rose-favor-candles-on-stick-set-of-6-95f4de",
+      "final": "https://www.thetohfa.in/products/rose-favor-candles-on-stick-set-of-6-95f4de",
+      "status": 200,
+      "ms": 581,
+      "robotsHeader": null,
+      "bytes": 54714,
+      "title": "Rose Favor Candles on Stick (Set of 6) | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/rose-favor-candles-on-stick-set-of-6-95f4de",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Rose Favor Candles on Stick (Set of 6)",
+                  "item": "https://thetohfa.in/products/rose-favor-candles-on-stick-set-of-6-95f4de"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Rose Favor Candles on Stick (Set of 6)",
+              "description": "6 mini ivory rose candles on wooden sticks, each tied with a mint organza bow — great as party favors or cake toppers.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa_new/white stick candle/IMG_7782.JPG"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/rose-favor-candles-on-stick-set-of-6-95f4de",
+                "priceCurrency": "INR",
+                "price": "499.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/rose-favor-candles-on-stick-set-of-6-95f4de"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/blue-daisy-scented-jar-candle-8dbc26",
+      "final": "https://www.thetohfa.in/products/blue-daisy-scented-jar-candle-8dbc26",
+      "status": 200,
+      "ms": 593,
+      "robotsHeader": null,
+      "bytes": 54560,
+      "title": "Blue Daisy Scented Jar Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/blue-daisy-scented-jar-candle-8dbc26",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Blue Daisy Scented Jar Candle",
+                  "item": "https://thetohfa.in/products/blue-daisy-scented-jar-candle-8dbc26"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Blue Daisy Scented Jar Candle",
+              "description": "A handmade soy wax jar candle topped with 3 blue daisy wax embeds, lightly scented.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa_new/scented blue white candle/IMG_7779.JPG"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/blue-daisy-scented-jar-candle-8dbc26",
+                "priceCurrency": "INR",
+                "price": "299.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/blue-daisy-scented-jar-candle-8dbc26"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/classic-pillar-candle-trio-red-1b6d7d",
+      "final": "https://www.thetohfa.in/products/classic-pillar-candle-trio-red-1b6d7d",
+      "status": 200,
+      "ms": 608,
+      "robotsHeader": null,
+      "bytes": 54624,
+      "title": "Classic Pillar Candle Trio (Red) | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/classic-pillar-candle-trio-red-1b6d7d",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Classic Pillar Candle Trio (Red)",
+                  "item": "https://thetohfa.in/products/classic-pillar-candle-trio-red-1b6d7d"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Classic Pillar Candle Trio (Red)",
+              "description": "A set of 3 plain red pillar candles in graduated heights, unscented, ideal for festive table styling.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa_new/red three canldes plain/IMG_7859.JPG"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/classic-pillar-candle-trio-red-1b6d7d",
+                "priceCurrency": "INR",
+                "price": "379.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/classic-pillar-candle-trio-red-1b6d7d"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/heart-rose-candle-06610e",
+      "final": "https://www.thetohfa.in/products/heart-rose-candle-06610e",
+      "status": 200,
+      "ms": 649,
+      "robotsHeader": null,
+      "bytes": 54491,
+      "title": "Heart Rose Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/heart-rose-candle-06610e",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Heart Rose Candle",
+                  "item": "https://thetohfa.in/products/heart-rose-candle-06610e"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Heart Rose Candle",
+              "description": "A heart-shaped rose candle with a small gold bead center, available in soft pink or ivory white.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa_new/pin white love candle/IMG_7760.JPG"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/heart-rose-candle-06610e",
+                "priceCurrency": "INR",
+                "price": "249.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/heart-rose-candle-06610e"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/rose-textured-pillar-candle-41fd1f",
+      "final": "https://www.thetohfa.in/products/rose-textured-pillar-candle-41fd1f",
+      "status": 200,
+      "ms": 640,
+      "robotsHeader": null,
+      "bytes": 54649,
+      "title": "Rose Textured Pillar Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/rose-textured-pillar-candle-41fd1f",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Rose Textured Pillar Candle",
+                  "item": "https://thetohfa.in/products/rose-textured-pillar-candle-41fd1f"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Rose Textured Pillar Candle",
+              "description": "A tall red pillar candle carved all over with a rose-petal relief pattern. Sold individually; product photo shows two for scale.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa_new/red rose candle/IMG_7766.JPG"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/rose-textured-pillar-candle-41fd1f",
+                "priceCurrency": "INR",
+                "price": "329.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/rose-textured-pillar-candle-41fd1f"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/rose-candle-gift-box-set-of-4-083482",
+      "final": "https://www.thetohfa.in/products/rose-candle-gift-box-set-of-4-083482",
+      "status": 200,
+      "ms": 633,
+      "robotsHeader": null,
+      "bytes": 54580,
+      "title": "Rose Candle Gift Box (Set of 4) | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/rose-candle-gift-box-set-of-4-083482",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Rose Candle Gift Box (Set of 4)",
+                  "item": "https://thetohfa.in/products/rose-candle-gift-box-set-of-4-083482"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Rose Candle Gift Box (Set of 4)",
+              "description": "A gift box of 4 rose-shaped pillar candles, two red and two white, individually wrapped inside.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa_new/four lotus candle/IMG_7747.JPG"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/rose-candle-gift-box-set-of-4-083482",
+                "priceCurrency": "INR",
+                "price": "599.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/rose-candle-gift-box-set-of-4-083482"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/pumpkin-ceramic-jar-candle-3955b1",
+      "final": "https://www.thetohfa.in/products/pumpkin-ceramic-jar-candle-3955b1",
+      "status": 200,
+      "ms": 574,
+      "robotsHeader": null,
+      "bytes": 54647,
+      "title": "Pumpkin Ceramic Jar Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/pumpkin-ceramic-jar-candle-3955b1",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Pumpkin Ceramic Jar Candle",
+                  "item": "https://thetohfa.in/products/pumpkin-ceramic-jar-candle-3955b1"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Pumpkin Ceramic Jar Candle",
+              "description": "A ribbed ceramic pumpkin jar with a fitted lid, doubling as a candle holder and a decorative trinket box after the candle is done.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa_new/capsicum candle/IMG_7816.JPG"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/pumpkin-ceramic-jar-candle-3955b1",
+                "priceCurrency": "INR",
+                "price": "449.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/pumpkin-ceramic-jar-candle-3955b1"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/coastal-shell-jar-candle-0634e3",
+      "final": "https://www.thetohfa.in/products/coastal-shell-jar-candle-0634e3",
+      "status": 200,
+      "ms": 686,
+      "robotsHeader": null,
+      "bytes": 54544,
+      "title": "Coastal Shell Jar Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/coastal-shell-jar-candle-0634e3",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Coastal Shell Jar Candle",
+                  "item": "https://thetohfa.in/products/coastal-shell-jar-candle-0634e3"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Coastal Shell Jar Candle",
+              "description": "A soy candle poured into a handcrafted ceramic seashell-shaped jar, perfect for a coastal-themed corner.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa_new/shell candle/IMG_7863.JPG"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/coastal-shell-jar-candle-0634e3",
+                "priceCurrency": "INR",
+                "price": "349.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/coastal-shell-jar-candle-0634e3"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/embracing-couple-candle-88619f",
+      "final": "https://www.thetohfa.in/products/embracing-couple-candle-88619f",
+      "status": 200,
+      "ms": 646,
+      "robotsHeader": null,
+      "bytes": 54518,
+      "title": "Embracing Couple Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/embracing-couple-candle-88619f",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Embracing Couple Candle",
+                  "item": "https://thetohfa.in/products/embracing-couple-candle-88619f"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Embracing Couple Candle",
+              "description": "Romantic poetic sculpture candle depicting two souls in gentle companionable embrace wrapped in floral robes.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/pink-couple/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/embracing-couple-candle-88619f",
+                "priceCurrency": "INR",
+                "price": "699.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/embracing-couple-candle-88619f"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/madonna-bust-candle-b3c0f9",
+      "final": "https://www.thetohfa.in/products/madonna-bust-candle-b3c0f9",
+      "status": 200,
+      "ms": 629,
+      "robotsHeader": null,
+      "bytes": 54519,
+      "title": "Madonna Bust Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/madonna-bust-candle-b3c0f9",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Madonna Bust Candle",
+                  "item": "https://thetohfa.in/products/madonna-bust-candle-b3c0f9"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Madonna Bust Candle",
+              "description": "Classical Greco-Roman inspired bust sculpture candle celebrating feminine serenity and inner strength. A striking centerpiece.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/women/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/madonna-bust-candle-b3c0f9",
+                "priceCurrency": "INR",
+                "price": "799.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/madonna-bust-candle-b3c0f9"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/ocean-shells-gel-candle-6eafe9",
+      "final": "https://www.thetohfa.in/products/ocean-shells-gel-candle-6eafe9",
+      "status": 200,
+      "ms": 733,
+      "robotsHeader": null,
+      "bytes": 54554,
+      "title": "Ocean Shells Gel Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/ocean-shells-gel-candle-6eafe9",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Ocean Shells Gel Candle",
+                  "item": "https://thetohfa.in/products/ocean-shells-gel-candle-6eafe9"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Ocean Shells Gel Candle",
+              "description": "A clear gel candle layered with sand and real seashells, capturing a mini ocean scene in a glass tumbler.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa_new/blue ocean candle/IMG_7743.JPG"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/ocean-shells-gel-candle-6eafe9",
+                "priceCurrency": "INR",
+                "price": "399.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/ocean-shells-gel-candle-6eafe9"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/enchanted-cottage-candle-203a49",
+      "final": "https://www.thetohfa.in/products/enchanted-cottage-candle-203a49",
+      "status": 200,
+      "ms": 644,
+      "robotsHeader": null,
+      "bytes": 54598,
+      "title": "Enchanted Cottage Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/enchanted-cottage-candle-203a49",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Enchanted Cottage Candle",
+                  "item": "https://thetohfa.in/products/enchanted-cottage-candle-203a49"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Enchanted Cottage Candle",
+              "description": "Whimsical fairytale cottage candle complete with thatched roof textures and chimney detail. Scented with warm cinnamon bark and baked apple.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/home/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/enchanted-cottage-candle-203a49",
+                "priceCurrency": "INR",
+                "price": "699.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/enchanted-cottage-candle-203a49"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/rose-pillar-candle-trio-587101",
+      "final": "https://www.thetohfa.in/products/rose-pillar-candle-trio-587101",
+      "status": 200,
+      "ms": 628,
+      "robotsHeader": null,
+      "bytes": 54581,
+      "title": "Rose Pillar Candle Trio | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/rose-pillar-candle-trio-587101",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Rose Pillar Candle Trio",
+                  "item": "https://thetohfa.in/products/rose-pillar-candle-trio-587101"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Rose Pillar Candle Trio",
+              "description": "Trio of gradated rose-pink textured pillar candles infused with organic Bulgarian rose petal extracts and gentle white musk.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/three-pink-candle/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/rose-pillar-candle-trio-587101",
+                "priceCurrency": "INR",
+                "price": "649.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/rose-pillar-candle-trio-587101"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/mother-child-relief-candle-80c2f4",
+      "final": "https://www.thetohfa.in/products/mother-child-relief-candle-80c2f4",
+      "status": 200,
+      "ms": 651,
+      "robotsHeader": null,
+      "bytes": 54567,
+      "title": "Mother &amp; Child Relief Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/mother-child-relief-candle-80c2f4",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Mother & Child Relief Candle",
+                  "item": "https://thetohfa.in/products/mother-child-relief-candle-80c2f4"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Mother & Child Relief Candle",
+              "description": "Heartwarming sculptural candle celebrating motherhood and maternal grace. Meticulously cast in non-toxic natural wax.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/mother/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/mother-child-relief-candle-80c2f4",
+                "priceCurrency": "INR",
+                "price": "799.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/mother-child-relief-candle-80c2f4"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/ribbed-bobbin-candle-c4903b",
+      "final": "https://www.thetohfa.in/products/ribbed-bobbin-candle-c4903b",
+      "status": 200,
+      "ms": 644,
+      "robotsHeader": null,
+      "bytes": 54560,
+      "title": "Ribbed Bobbin Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/ribbed-bobbin-candle-c4903b",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Ribbed Bobbin Candle",
+                  "item": "https://thetohfa.in/products/ribbed-bobbin-candle-c4903b"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Ribbed Bobbin Candle",
+              "description": "Scandinavian-style fluted straight candle with linear ribbed silhouette. Sleek, smokeless, and poured from premium plant waxes.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/single-straight/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/ribbed-bobbin-candle-c4903b",
+                "priceCurrency": "INR",
+                "price": "399.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/ribbed-bobbin-candle-c4903b"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/ribbed-pillar-candle-f7f9ac",
+      "final": "https://www.thetohfa.in/products/ribbed-pillar-candle-f7f9ac",
+      "status": 200,
+      "ms": 625,
+      "robotsHeader": null,
+      "bytes": 54545,
+      "title": "Ribbed Pillar Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/ribbed-pillar-candle-f7f9ac",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Ribbed Pillar Candle",
+                  "item": "https://thetohfa.in/products/ribbed-pillar-candle-f7f9ac"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Ribbed Pillar Candle",
+              "description": "Set of two cylindrical ribbed pillar candles in deep indigo and midnight navy. Creates dramatic ambient shadows when lit.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/night-candle-two/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/ribbed-pillar-candle-f7f9ac",
+                "priceCurrency": "INR",
+                "price": "499.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/ribbed-pillar-candle-f7f9ac"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/bubble-cube-candle-3b6a0c",
+      "final": "https://www.thetohfa.in/products/bubble-cube-candle-3b6a0c",
+      "status": 200,
+      "ms": 663,
+      "robotsHeader": null,
+      "bytes": 54565,
+      "title": "Bubble Cube Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/bubble-cube-candle-3b6a0c",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Bubble Cube Candle",
+                  "item": "https://thetohfa.in/products/bubble-cube-candle-3b6a0c"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Bubble Cube Candle",
+              "description": "Trendy modernist geometric bubble cube candle crafted from organic soy wax. A minimalist aesthetic accent for modern desks and bedside nooks.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/two-grid/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/bubble-cube-candle-3b6a0c",
+                "priceCurrency": "INR",
+                "price": "399.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/bubble-cube-candle-3b6a0c"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/chrysanthemum-flower-candle-033622",
+      "final": "https://www.thetohfa.in/products/chrysanthemum-flower-candle-033622",
+      "status": 200,
+      "ms": 651,
+      "robotsHeader": null,
+      "bytes": 54616,
+      "title": "Chrysanthemum Flower Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/chrysanthemum-flower-candle-033622",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Chrysanthemum Flower Candle",
+                  "item": "https://thetohfa.in/products/chrysanthemum-flower-candle-033622"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Chrysanthemum Flower Candle",
+              "description": "Exquisite chrysanthemum blossom bloom candle hand-poured with intricate multi-layered petal detailing on a natural wooden coaster base.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/two-flo/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/chrysanthemum-flower-candle-033622",
+                "priceCurrency": "INR",
+                "price": "499.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/chrysanthemum-flower-candle-033622"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/heart-trio-candle-gift-box-a050c4",
+      "final": "https://www.thetohfa.in/products/heart-trio-candle-gift-box-a050c4",
+      "status": 200,
+      "ms": 768,
+      "robotsHeader": null,
+      "bytes": 54560,
+      "title": "Heart Trio Candle Gift Box | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/heart-trio-candle-gift-box-a050c4",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Heart Trio Candle Gift Box",
+                  "item": "https://thetohfa.in/products/heart-trio-candle-gift-box-a050c4"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Heart Trio Candle Gift Box",
+              "description": "Artisanal gift box set of three sweet heart-shaped soy candles. Scented with wild rosewater and Madagascar vanilla.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/three-heart/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/heart-trio-candle-gift-box-a050c4",
+                "priceCurrency": "INR",
+                "price": "549.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/heart-trio-candle-gift-box-a050c4"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/flower-top-jar-candle-fd79f5",
+      "final": "https://www.thetohfa.in/products/flower-top-jar-candle-fd79f5",
+      "status": 200,
+      "ms": 632,
+      "robotsHeader": null,
+      "bytes": 54535,
+      "title": "Flower-Top Jar Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/flower-top-jar-candle-fd79f5",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Flower-Top Jar Candle",
+                  "item": "https://thetohfa.in/products/flower-top-jar-candle-fd79f5"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Flower-Top Jar Candle",
+              "description": "Vibrant decorative jar candle topped with hand-sculpted floral wax petals. Infused with refreshing blood orange and bergamot.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/orange/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/flower-top-jar-candle-fd79f5",
+                "priceCurrency": "INR",
+                "price": "449.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/flower-top-jar-candle-fd79f5"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/stacked-owls-candle-7fae0d",
+      "final": "https://www.thetohfa.in/products/stacked-owls-candle-7fae0d",
+      "status": 200,
+      "ms": 627,
+      "robotsHeader": null,
+      "bytes": 54543,
+      "title": "Stacked Owls Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/stacked-owls-candle-7fae0d",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Stacked Owls Candle",
+                  "item": "https://thetohfa.in/products/stacked-owls-candle-7fae0d"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Stacked Owls Candle",
+              "description": "Intricately textured sculptural pillar candle depicting wise owls perched in harmony. Clean burning with cozy sandalwood essential oils.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/owl/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/stacked-owls-candle-7fae0d",
+                "priceCurrency": "INR",
+                "price": "479.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/stacked-owls-candle-7fae0d"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/swan-relief-pillar-candle-78c470",
+      "final": "https://www.thetohfa.in/products/swan-relief-pillar-candle-78c470",
+      "status": 200,
+      "ms": 616,
+      "robotsHeader": null,
+      "bytes": 54585,
+      "title": "Swan Relief Pillar Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/swan-relief-pillar-candle-78c470",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Swan Relief Pillar Candle",
+                  "item": "https://thetohfa.in/products/swan-relief-pillar-candle-78c470"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Swan Relief Pillar Candle",
+              "description": "Majestic ceramic-style pillar candle featuring elegant swan bas-relief sculpting. Scented with soothing white jasmine and water lily.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/swan/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/swan-relief-pillar-candle-78c470",
+                "priceCurrency": "INR",
+                "price": "649.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/swan-relief-pillar-candle-78c470"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/wheat-lavender-relief-candle-ec0319",
+      "final": "https://www.thetohfa.in/products/wheat-lavender-relief-candle-ec0319",
+      "status": 200,
+      "ms": 720,
+      "robotsHeader": null,
+      "bytes": 54628,
+      "title": "Wheat &amp; Lavender Relief Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/wheat-lavender-relief-candle-ec0319",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Wheat & Lavender Relief Candle",
+                  "item": "https://thetohfa.in/products/wheat-lavender-relief-candle-ec0319"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Wheat & Lavender Relief Candle",
+              "description": "Warm rustic pillar candle embossed with botanical golden wheat stalks and French lavender sprigs. Calming aroma with slow, even burn.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/wheat/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/wheat-lavender-relief-candle-ec0319",
+                "priceCurrency": "INR",
+                "price": "499.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/wheat-lavender-relief-candle-ec0319"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/botanical-wooden-jar-candle-ef3f4f",
+      "final": "https://www.thetohfa.in/products/botanical-wooden-jar-candle-ef3f4f",
+      "status": 200,
+      "ms": 660,
+      "robotsHeader": null,
+      "bytes": 54565,
+      "title": "Botanical Wooden Jar Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/botanical-wooden-jar-candle-ef3f4f",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Botanical Wooden Jar Candle",
+                  "item": "https://thetohfa.in/products/botanical-wooden-jar-candle-ef3f4f"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Botanical Wooden Jar Candle",
+              "description": "Hand-turned natural teakwood grain jar candle filled with pure botanical soy wax infused with walnut blossom and cedar.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/wooden/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/botanical-wooden-jar-candle-ef3f4f",
+                "priceCurrency": "INR",
+                "price": "599.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/botanical-wooden-jar-candle-ef3f4f"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/red-gold-festive-3d-nails-a1ada5",
+      "final": "https://www.thetohfa.in/products/red-gold-festive-3d-nails-a1ada5",
+      "status": 200,
+      "ms": 643,
+      "robotsHeader": null,
+      "bytes": 54532,
+      "title": "Red &amp; Gold Festive 3D Nails | Nails &amp; Beauty | Tohfa",
+      "canonical": "https://thetohfa.in/products/red-gold-festive-3d-nails-a1ada5",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Nails & Beauty",
+                  "item": "https://thetohfa.in/category/nails-beauty"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Red & Gold Festive 3D Nails",
+                  "item": "https://thetohfa.in/products/red-gold-festive-3d-nails-a1ada5"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Red & Gold Festive 3D Nails",
+              "description": "A festive press-on set mixing red, nude, and gold-rimmed nails with 3D floral and star details.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa_new/red and white nails/IMG_7764.JPG"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/red-gold-festive-3d-nails-a1ada5",
+                "priceCurrency": "INR",
+                "price": "429.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Nails Diva"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/red-gold-festive-3d-nails-a1ada5"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/golden-retriever-round-candle-35f5a4",
+      "final": "https://www.thetohfa.in/products/golden-retriever-round-candle-35f5a4",
+      "status": 200,
+      "ms": 624,
+      "robotsHeader": null,
+      "bytes": 54662,
+      "title": "Golden Retriever Round Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/golden-retriever-round-candle-35f5a4",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Golden Retriever Round Candle",
+                  "item": "https://thetohfa.in/products/golden-retriever-round-candle-35f5a4"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Golden Retriever Round Candle",
+              "description": "Delightful rounded sphere candle with finely molded Golden Retriever relief artwork. Poured from 100% organic soy wax with a clean cotton wick.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/dog-round/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/golden-retriever-round-candle-35f5a4",
+                "priceCurrency": "INR",
+                "price": "449.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/golden-retriever-round-candle-35f5a4"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/stacked-puppies-candle-4dcf29",
+      "final": "https://www.thetohfa.in/products/stacked-puppies-candle-4dcf29",
+      "status": 200,
+      "ms": 588,
+      "robotsHeader": null,
+      "bytes": 54612,
+      "title": "Stacked Puppies Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/stacked-puppies-candle-4dcf29",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Stacked Puppies Candle",
+                  "item": "https://thetohfa.in/products/stacked-puppies-candle-4dcf29"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Stacked Puppies Candle",
+              "description": "Artisanal hand-poured soy wax sculptural candle featuring charming stacked puppy companions. Infused with gentle natural vanilla and sweet almond oils.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/dog/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/stacked-puppies-candle-4dcf29",
+                "priceCurrency": "INR",
+                "price": "499.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/stacked-puppies-candle-4dcf29"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/chess-knight-horse-candle-8e01a1",
+      "final": "https://www.thetohfa.in/products/chess-knight-horse-candle-8e01a1",
+      "status": 200,
+      "ms": 590,
+      "robotsHeader": null,
+      "bytes": 54576,
+      "title": "Chess Knight Horse Candle | Candles &amp; Aromatherapy | Tohfa",
+      "canonical": "https://thetohfa.in/products/chess-knight-horse-candle-8e01a1",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Candles & Aromatherapy",
+                  "item": "https://thetohfa.in/category/candles-aromatherapy"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Chess Knight Horse Candle",
+                  "item": "https://thetohfa.in/products/chess-knight-horse-candle-8e01a1"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Chess Knight Horse Candle",
+              "description": "Stately chess knight equine bust candle crafted with majestic architectural details. Scented with warm cedarwood and amber resin.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/horse/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/chess-knight-horse-candle-8e01a1",
+                "priceCurrency": "INR",
+                "price": "549.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "The Candle Story"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/chess-knight-horse-candle-8e01a1"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/black-gold-3d-charm-nails-a2fb81",
+      "final": "https://www.thetohfa.in/products/black-gold-3d-charm-nails-a2fb81",
+      "status": 200,
+      "ms": 591,
+      "robotsHeader": null,
+      "bytes": 54553,
+      "title": "Black &amp; Gold 3D Charm Nails | Nails &amp; Beauty | Tohfa",
+      "canonical": "https://thetohfa.in/products/black-gold-3d-charm-nails-a2fb81",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Nails & Beauty",
+                  "item": "https://thetohfa.in/category/nails-beauty"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Black & Gold 3D Charm Nails",
+                  "item": "https://thetohfa.in/products/black-gold-3d-charm-nails-a2fb81"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Black & Gold 3D Charm Nails",
+              "description": "Almond-shaped press-ons in smoky black and nude tones with gold foil detailing and 3D charm accents.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa_new/aesthetic black nails/IMG_7798.JPG"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/black-gold-3d-charm-nails-a2fb81",
+                "priceCurrency": "INR",
+                "price": "449.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Nails Diva"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/black-gold-3d-charm-nails-a2fb81"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/white-swirl-french-tip-nails-9aa90f",
+      "final": "https://www.thetohfa.in/products/white-swirl-french-tip-nails-9aa90f",
+      "status": 200,
+      "ms": 683,
+      "robotsHeader": null,
+      "bytes": 54489,
+      "title": "White Swirl French Tip Nails | Nails &amp; Beauty | Tohfa",
+      "canonical": "https://thetohfa.in/products/white-swirl-french-tip-nails-9aa90f",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Nails & Beauty",
+                  "item": "https://thetohfa.in/category/nails-beauty"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "White Swirl French Tip Nails",
+                  "item": "https://thetohfa.in/products/white-swirl-french-tip-nails-9aa90f"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "White Swirl French Tip Nails",
+              "description": "Almond press-on nails with a modern white swirl take on the classic French tip.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa_new/nails white strips/IMG_7834.JPG"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/white-swirl-french-tip-nails-9aa90f",
+                "priceCurrency": "INR",
+                "price": "329.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Nails Diva"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/white-swirl-french-tip-nails-9aa90f"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/pink-3d-floral-press-on-nails-1c7a5a",
+      "final": "https://www.thetohfa.in/products/pink-3d-floral-press-on-nails-1c7a5a",
+      "status": 200,
+      "ms": 796,
+      "robotsHeader": null,
+      "bytes": 54536,
+      "title": "Pink 3D Floral Press-On Nails | Nails &amp; Beauty | Tohfa",
+      "canonical": "https://thetohfa.in/products/pink-3d-floral-press-on-nails-1c7a5a",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Nails & Beauty",
+                  "item": "https://thetohfa.in/category/nails-beauty"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Pink 3D Floral Press-On Nails",
+                  "item": "https://thetohfa.in/products/pink-3d-floral-press-on-nails-1c7a5a"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Pink 3D Floral Press-On Nails",
+              "description": "Soft pink press-ons with silver ring accents and delicate 3D flower details, comes in a travel case.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa_new/pink nails/IMG_7837.JPG"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/pink-3d-floral-press-on-nails-1c7a5a",
+                "priceCurrency": "INR",
+                "price": "379.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Nails Diva"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/pink-3d-floral-press-on-nails-1c7a5a"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/cheetah-print-floral-3d-nails-788018",
+      "final": "https://www.thetohfa.in/products/cheetah-print-floral-3d-nails-788018",
+      "status": 200,
+      "ms": 781,
+      "robotsHeader": null,
+      "bytes": 54575,
+      "title": "Cheetah Print Floral 3D Nails | Nails &amp; Beauty | Tohfa",
+      "canonical": "https://thetohfa.in/products/cheetah-print-floral-3d-nails-788018",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Nails & Beauty",
+                  "item": "https://thetohfa.in/category/nails-beauty"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Cheetah Print Floral 3D Nails",
+                  "item": "https://thetohfa.in/products/cheetah-print-floral-3d-nails-788018"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Cheetah Print Floral 3D Nails",
+              "description": "Press-on nails in warm brown tones with cheetah print and 3D floral accents, comes in a reusable case.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa_new/brown aesthetic nails/IMG_7813.JPG"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/cheetah-print-floral-3d-nails-788018",
+                "priceCurrency": "INR",
+                "price": "399.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Nails Diva"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/cheetah-print-floral-3d-nails-788018"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/pink-bow-press-on-nails-8c1226",
+      "final": "https://www.thetohfa.in/products/pink-bow-press-on-nails-8c1226",
+      "status": 200,
+      "ms": 635,
+      "robotsHeader": null,
+      "bytes": 54587,
+      "title": "Pink Bow Press-On Nails | Nails &amp; Beauty | Tohfa",
+      "canonical": "https://thetohfa.in/products/pink-bow-press-on-nails-8c1226",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Nails & Beauty",
+                  "item": "https://thetohfa.in/category/nails-beauty"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Pink Bow Press-On Nails",
+                  "item": "https://thetohfa.in/products/pink-bow-press-on-nails-8c1226"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Pink Bow Press-On Nails",
+              "description": "Romantic blush pink press-on nails embellished with delicate 3D bow accents and rose quartz marbling. Reusable and gentle on natural nails.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/pink-mix-nails/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/pink-bow-press-on-nails-8c1226",
+                "priceCurrency": "INR",
+                "price": "349.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Nails Diva"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/pink-bow-press-on-nails-8c1226"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/polka-dot-floral-press-on-nails-078604",
+      "final": "https://www.thetohfa.in/products/polka-dot-floral-press-on-nails-078604",
+      "status": 200,
+      "ms": 771,
+      "robotsHeader": null,
+      "bytes": 54601,
+      "title": "Polka Dot &amp; Floral Press-On Nails | Nails &amp; Beauty | Tohfa",
+      "canonical": "https://thetohfa.in/products/polka-dot-floral-press-on-nails-078604",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Nails & Beauty",
+                  "item": "https://thetohfa.in/category/nails-beauty"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Polka Dot & Floral Press-On Nails",
+                  "item": "https://thetohfa.in/products/polka-dot-floral-press-on-nails-078604"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Polka Dot & Floral Press-On Nails",
+              "description": "A press-on nail set mixing nude, red French tips, polka dots, and a hand-painted floral accent nail.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa_new/aesthetic beach nails/IMG_7793.JPG"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/polka-dot-floral-press-on-nails-078604",
+                "priceCurrency": "INR",
+                "price": "349.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Nails Diva"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/polka-dot-floral-press-on-nails-078604"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/transparent-nude-press-on-nails-0bafac",
+      "final": "https://www.thetohfa.in/products/transparent-nude-press-on-nails-0bafac",
+      "status": 200,
+      "ms": 702,
+      "robotsHeader": null,
+      "bytes": 54645,
+      "title": "Transparent Nude Press-On Nails | Nails &amp; Beauty | Tohfa",
+      "canonical": "https://thetohfa.in/products/transparent-nude-press-on-nails-0bafac",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Nails & Beauty",
+                  "item": "https://thetohfa.in/category/nails-beauty"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Transparent Nude Press-On Nails",
+                  "item": "https://thetohfa.in/products/transparent-nude-press-on-nails-0bafac"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Transparent Nude Press-On Nails",
+              "description": "Crystal clear glass-gloss press-on nails with soft French ombre gradients and natural nude undertones. Effortlessly chic and reusable.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/transparent-nails/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/transparent-nude-press-on-nails-0bafac",
+                "priceCurrency": "INR",
+                "price": "329.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Nails Diva"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/transparent-nude-press-on-nails-0bafac"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/products/purple-press-on-nails-d24dc5",
+      "final": "https://www.thetohfa.in/products/purple-press-on-nails-d24dc5",
+      "status": 200,
+      "ms": 659,
+      "robotsHeader": null,
+      "bytes": 54601,
+      "title": "Purple Press-On Nails | Nails &amp; Beauty | Tohfa",
+      "canonical": "https://thetohfa.in/products/purple-press-on-nails-d24dc5",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Nails & Beauty",
+                  "item": "https://thetohfa.in/category/nails-beauty"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Purple Press-On Nails",
+                  "item": "https://thetohfa.in/products/purple-press-on-nails-d24dc5"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Purple Press-On Nails",
+              "description": "Royal amethyst and royal lilac press-on nails featuring subtle holographic sheen and salon-grade gel topcoat for long-lasting, chip-resistant elegance.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/purple-nails/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/purple-press-on-nails-d24dc5",
+                "priceCurrency": "INR",
+                "price": "379.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Nails Diva"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/purple-press-on-nails-d24dc5"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/seller/crochet-lady",
+      "final": "https://www.thetohfa.in/seller/crochet-lady",
+      "status": 200,
+      "ms": 644,
+      "robotsHeader": null,
+      "bytes": 42598,
+      "title": "Crochet Lady | Handmade Gifts from Indian Creators | Tohfa",
+      "canonical": "https://thetohfa.in/seller/crochet-lady",
+      "h1": [
+        "Artisan Shop"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://thetohfa.in/buyer/seller-profile#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/buyer/home"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Artisans",
+                  "item": "https://thetohfa.in/buyer/categories"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Artisan Profile",
+                  "item": "https://thetohfa.in/buyer/seller-profile"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/products/wine-cherry-blossom-press-on-nails-dd4dd2",
+      "final": "https://www.thetohfa.in/products/wine-cherry-blossom-press-on-nails-dd4dd2",
+      "status": 200,
+      "ms": 667,
+      "robotsHeader": null,
+      "bytes": 54771,
+      "title": "Wine Cherry Blossom Press-On Nails | Nails &amp; Beauty | Tohfa",
+      "canonical": "https://thetohfa.in/products/wine-cherry-blossom-press-on-nails-dd4dd2",
+      "h1": [
+        ""
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Nails & Beauty",
+                  "item": "https://thetohfa.in/category/nails-beauty"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Wine Cherry Blossom Press-On Nails",
+                  "item": "https://thetohfa.in/products/wine-cherry-blossom-press-on-nails-dd4dd2"
+                }
+              ]
+            },
+            {
+              "@type": "Product",
+              "name": "Wine Cherry Blossom Press-On Nails",
+              "description": "Sophisticated deep burgundy and cherry blossom press-on nails with reinforced salon tips. Hand-crafted with ultra-gloss gel finish for a luxurious, high-fashion evening look. Includes full application kit.",
+              "image": [
+                "https://thetohfa.in/img/products/meesho_tohfa/wine-nails/1.webp"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Tohfa"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "https://thetohfa.in/products/wine-cherry-blossom-press-on-nails-dd4dd2",
+                "priceCurrency": "INR",
+                "price": "389.00",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "Nails Diva"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "productLinks": [
+        "https://thetohfa.in/products/wine-cherry-blossom-press-on-nails-dd4dd2"
+      ]
+    },
+    {
+      "requested": "https://thetohfa.in/seller/the-candle-story",
+      "final": "https://www.thetohfa.in/seller/the-candle-story",
+      "status": 200,
+      "ms": 621,
+      "robotsHeader": null,
+      "bytes": 42615,
+      "title": "The Candle Story | Handmade Gifts from Indian Creators | Tohfa",
+      "canonical": "https://thetohfa.in/seller/the-candle-story",
+      "h1": [
+        "Artisan Shop"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://thetohfa.in/buyer/seller-profile#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/buyer/home"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Artisans",
+                  "item": "https://thetohfa.in/buyer/categories"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Artisan Profile",
+                  "item": "https://thetohfa.in/buyer/seller-profile"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/seller/nails-diva",
+      "final": "https://www.thetohfa.in/seller/nails-diva",
+      "status": 200,
+      "ms": 614,
+      "robotsHeader": null,
+      "bytes": 42589,
+      "title": "Nails Diva | Handmade Gifts from Indian Creators | Tohfa",
+      "canonical": "https://thetohfa.in/seller/nails-diva",
+      "h1": [
+        "Artisan Shop"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://thetohfa.in/buyer/seller-profile#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://thetohfa.in/buyer/home"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Artisans",
+                  "item": "https://thetohfa.in/buyer/categories"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Artisan Profile",
+                  "item": "https://thetohfa.in/buyer/seller-profile"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/robots.txt",
+      "final": "https://www.thetohfa.in/robots.txt",
+      "status": 200,
+      "ms": 423,
+      "robotsHeader": null,
+      "bytes": 193,
+      "h1": [],
+      "schemas": [],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/corporate-gifts",
+      "final": "https://www.thetohfa.in/corporate-gifts",
+      "status": 404,
+      "ms": 418,
+      "robotsHeader": null,
+      "bytes": 79,
+      "h1": [],
+      "schemas": [],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/bridal-gifts",
+      "final": "https://www.thetohfa.in/bridal-gifts",
+      "status": 404,
+      "ms": 421,
+      "robotsHeader": null,
+      "bytes": 79,
+      "h1": [],
+      "schemas": [],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/feeds/google-merchant.xml",
+      "final": "https://www.thetohfa.in/feeds/google-merchant.xml",
+      "status": 200,
+      "ms": 598,
+      "robotsHeader": null,
+      "bytes": 40515,
+      "title": "Tohfa Marketplace Product Feed",
+      "h1": [],
+      "schemas": [],
+      "productLinks": []
+    },
+    {
+      "requested": "https://thetohfa.in/this-page-does-not-exist-seo-audit",
+      "final": "https://www.thetohfa.in/this-page-does-not-exist-seo-audit",
+      "status": 404,
+      "ms": 421,
+      "robotsHeader": null,
+      "bytes": 79,
+      "h1": [],
+      "schemas": [],
+      "productLinks": []
+    }
+  ]
+}
