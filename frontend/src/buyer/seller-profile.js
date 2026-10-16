@@ -65,7 +65,7 @@ function renderHero(s) {
     <div class="seller-details">
       <div class="flex items-end gap-4">
         <div class="avatar avatar-xl" style="border:4px solid var(--color-surface); box-shadow:var(--shadow-md);">
-          <img src="${s.profile_photo_url || s.avatar_url || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80'}" alt="${s.store_name}">
+          <img src="${s.profile_photo_url || s.avatar_url || '/img/default-avatar.png'}" alt="${s.store_name}">
         </div>
         <div>
           <div class="flex items-center gap-2 flex-wrap" style="margin-bottom:var(--space-1);">
@@ -100,7 +100,7 @@ async function loadSellerProducts() {
     gridEl.innerHTML = products.map(p => `
       <a href="./product.html?id=${p.id}" class="product-card" style="text-decoration:none;color:inherit;display:block;">
         <div class="product-card__image-wrap">
-          <img src="${p.primary_image || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600&q=80'}" class="product-card__image" alt="${p.name}">
+          <img src="${p.primary_image || '/img/placeholder-product.png'}" class="product-card__image" alt="${p.name}">
         </div>
         <div class="product-card__body">
           <h3 class="product-card__name">${p.name}</h3>

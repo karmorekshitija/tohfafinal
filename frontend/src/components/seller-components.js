@@ -10,7 +10,42 @@
 
 import apiClient from '../utils/apiClient.js';
 
-// Shared in-memory and 60s sessionStorage cache for /api/seller/profile
+function getSellerCacheKey(token) {
+  if (!token) return 'anon';
+  try {
+    const parts = token.split('.');
+    if (parts.length === 3) {
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+      if (payload && payload.id) return `user_${payload.id}`;
+    }
+  } catch (e) {}
+  try {
+    const raw = sessionStorage.getItem('tohfa_user') || localStorage.getItem('tohfa_user');
+    if (raw) {
+      const u = JSON.parse(raw);
+      if (u && u.id) return `user_${u.id}`;
+    }
+  } catch (e) {}
+  return 'default';
+}
+
+export function clearSellerProfileCache(identityKey) {
+  try {
+    if (typeof window !== 'undefined') {
+      if (identityKey) {
+        sessionStorage.removeItem(`tohfa_seller_profile_cache_${identityKey}`);
+        if (window._tohfaSellerProfilePromises) delete window._tohfaSellerProfilePromises[identityKey];
+      } else {
+        Object.keys(sessionStorage).forEach(k => {
+          if (k.startsWith('tohfa_seller_profile_cache')) sessionStorage.removeItem(k);
+        });
+        window._tohfaSellerProfilePromises = {};
+      }
+    }
+  } catch (e) {}
+}
+
+// Shared in-memory and 60s sessionStorage cache for /api/seller/profile keyed by seller identity
 export function fetchSellerProfile(authToken) {
   const token = authToken ||
                 (typeof window !== 'undefined' && window.authStorage?.getToken?.()) ||
@@ -22,8 +57,11 @@ export function fetchSellerProfile(authToken) {
                 localStorage.getItem('accessToken') || '';
   if (!token) return Promise.resolve(null);
 
+  const sellerKey = getSellerCacheKey(token);
+  const cacheKey = `tohfa_seller_profile_cache_${sellerKey}`;
+
   try {
-    const cached = sessionStorage.getItem('tohfa_seller_profile_cache');
+    const cached = sessionStorage.getItem(cacheKey);
     if (cached) {
       const parsed = JSON.parse(cached);
       if (parsed.timestamp && (Date.now() - parsed.timestamp < 60000) && parsed.data) {
@@ -32,35 +70,40 @@ export function fetchSellerProfile(authToken) {
     }
   } catch (e) {}
 
-  if (typeof window !== 'undefined' && !window._tohfaSellerProfilePromise) {
-    window._tohfaSellerProfilePromise = fetch('/api/seller/profile', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-      .then(r => {
-        if (!r.ok) throw new Error('Seller profile request failed: ' + r.status);
-        return r.json();
+  if (typeof window !== 'undefined') {
+    window._tohfaSellerProfilePromises = window._tohfaSellerProfilePromises || {};
+    if (!window._tohfaSellerProfilePromises[sellerKey]) {
+      window._tohfaSellerProfilePromises[sellerKey] = fetch('/api/seller/profile', {
+        headers: { 'Authorization': `Bearer ${token}` }
       })
-      .then(res => {
-        try {
-          sessionStorage.setItem('tohfa_seller_profile_cache', JSON.stringify({
-            timestamp: Date.now(),
-            data: res
-          }));
-        } catch (e) {}
-        return res;
-      })
-      .catch(err => {
-        window._tohfaSellerProfilePromise = null;
-        throw err;
-      });
+        .then(r => {
+          if (!r.ok) throw new Error('Seller profile request failed: ' + r.status);
+          return r.json();
+        })
+        .then(res => {
+          try {
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+              timestamp: Date.now(),
+              data: res
+            }));
+          } catch (e) {}
+          return res;
+        })
+        .catch(err => {
+          if (window._tohfaSellerProfilePromises) {
+            delete window._tohfaSellerProfilePromises[sellerKey];
+          }
+          throw err;
+        });
+    }
+    return window._tohfaSellerProfilePromises[sellerKey];
   }
-  return typeof window !== 'undefined' && window._tohfaSellerProfilePromise
-    ? window._tohfaSellerProfilePromise
-    : Promise.resolve(null);
+  return Promise.resolve(null);
 }
 
 if (typeof window !== 'undefined') {
   window.fetchSellerProfile = fetchSellerProfile;
+  window.clearSellerProfileCache = clearSellerProfileCache;
 }
 
 // Inject global styles and CSS overrides for Seller Studio
@@ -142,7 +185,7 @@ if (typeof window !== 'undefined') {
 
     seller-sidebar {
       display: block !important;
-      width: 130px !important;
+      width: var(--ui-sidebar-width, 216px) !important;
       flex-shrink: 0 !important;
       z-index: 50 !important;
       transition: transform 0.3s ease-in-out !important;
@@ -173,7 +216,7 @@ if (typeof window !== 'undefined') {
       position: fixed !important;
       top: 0 !important;
       right: 0 !important;
-      left: 130px !important;
+      left: var(--ui-sidebar-width, 216px) !important;
       height: 60px !important;
       background-color: #FFF8E7 !important;
       border-bottom: 1px solid rgba(20, 56, 31, 0.10) !important;
@@ -302,88 +345,197 @@ class SellerSidebar extends HTMLElement {
   connectedCallback() {
     const activeTab = this.getAttribute('active-tab') || '';
     const isAdminSwitched = Boolean(sessionStorage.getItem('tohfa_admin_switch_context'));
+    const isOptIn = typeof document !== 'undefined' && document.body && document.body.getAttribute('data-ui-refinement') === 'seller';
     
-    this.innerHTML = `
-      <aside class="w-[130px] h-screen h-[100dvh] fixed left-0 top-0 bg-[#14381F] border-r border-white/10 shadow-lg flex flex-col py-5 z-50 overflow-hidden font-['DM_Sans'] text-[#FFF8E7]">
-        <!-- Artisan Studio Emblem -->
-        <div class="px-3 mb-5 flex flex-col items-center shrink-0">
-          <a href="/seller/dashboard.html" class="flex flex-col items-center text-decoration-none group" title="Seller Studio">
-            <div class="w-10 h-10 rounded-full bg-white/10 group-hover:bg-white/20 transition-all flex items-center justify-center text-[#FFF8E7] shadow-inner mb-1">
-              <span class="material-symbols-outlined text-[20px]">storefront</span>
-            </div>
-            <span class="text-[8px] uppercase tracking-widest text-[#FFF8E7]/60 font-mono font-bold">Studio</span>
-          </a>
-        </div>
-        
-        <!-- Navigation Links -->
-        <nav class="flex-1 space-y-0.5 overflow-y-auto overscroll-contain">
-          <!-- Dashboard -->
-          <a class="sidebar-link ${activeTab === 'home' || activeTab === 'dashboard' ? 'sidebar-link-active' : ''}" href="/seller/dashboard.html" title="Dashboard">
-            <span class="material-symbols-outlined mb-1 text-2xl">home</span>
-            <span class="text-[9px] uppercase tracking-widest text-center">Dashboard</span>
-          </a>
-          <!-- Catalog -->
-          <a class="sidebar-link ${activeTab === 'catalog' ? 'sidebar-link-active' : ''}" href="/seller/catalog.html" title="Catalog">
-            <span class="material-symbols-outlined mb-1 text-2xl">inventory_2</span>
-            <span class="text-[9px] uppercase tracking-widest text-center">Catalog</span>
-          </a>
-          <!-- Orders -->
-          <a class="sidebar-link ${activeTab === 'orders' ? 'sidebar-link-active' : ''}" href="/seller/orders.html" title="Orders">
-            <span class="material-symbols-outlined mb-1 text-2xl">shopping_bag</span>
-            <span class="text-[9px] uppercase tracking-widest text-center">Orders</span>
-          </a>
-          <!-- Customized Products -->
-          <a class="sidebar-link ${activeTab === 'customized' || activeTab === 'customised' ? 'sidebar-link-active' : ''} relative" href="/seller/customized-products.html" title="Customized Products">
-            <span class="material-symbols-outlined mb-1 text-2xl">auto_fix_high</span>
-            <span class="text-[9px] uppercase tracking-widest text-center">Customized</span>
-            <span id="sidebar-customized-badge" class="hidden absolute top-1 right-3 bg-[#14381F] text-white font-bold text-[8px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
-          </a>
-          ${!isAdminSwitched ? `
-          <!-- Payouts -->
-          <a class="sidebar-link ${activeTab === 'payments' || activeTab === 'payouts' ? 'sidebar-link-active' : ''}" href="/seller/payouts.html" title="Payouts">
-            <span class="material-symbols-outlined mb-1 text-2xl">payments</span>
-            <span class="text-[9px] uppercase tracking-widest text-center">Payouts</span>
-          </a>
-          ` : ''}
-          <!-- Analytics -->
-          <a class="sidebar-link ${activeTab === 'analytics' ? 'sidebar-link-active' : ''}" href="/seller/analytics.html" title="Analytics">
-            <span class="material-symbols-outlined mb-1 text-2xl">insights</span>
-            <span class="text-[9px] uppercase tracking-widest text-center">Analytics</span>
-          </a>
-          <!-- Reviews -->
-          <a class="sidebar-link ${activeTab === 'reviews' ? 'sidebar-link-active' : ''}" href="/seller/reviews.html" title="Reviews">
-            <span class="material-symbols-outlined mb-1 text-2xl">rate_review</span>
-            <span class="text-[9px] uppercase tracking-widest text-center">Reviews</span>
-          </a>
-          <!-- Profile & Settings -->
-          <a class="sidebar-link ${activeTab === 'profile' || activeTab === 'settings' ? 'sidebar-link-active' : ''}" href="/seller/profile.html" title="Profile &amp; Settings">
-            <span class="material-symbols-outlined mb-1 text-2xl">settings</span>
-            <span class="text-[9px] uppercase tracking-widest text-center">Settings</span>
-          </a>
-          ${!isAdminSwitched ? `
-          <!-- Studio Plans -->
-          <a class="sidebar-link ${activeTab === 'plans' ? 'sidebar-link-active' : ''} relative" href="/seller/plans.html" title="Studio Plans">
-            <span class="material-symbols-outlined mb-1 text-2xl">workspace_premium</span>
-            <span class="text-[9px] uppercase tracking-widest text-center flex items-center justify-center gap-1">
-              <span>Plans</span>
-              <span id="sidebar-plan-pill" class="hidden text-[8px] px-1 py-0.2 rounded font-bold uppercase tracking-normal" style="background:#FFF8E7;color:#14381F;"></span>
-            </span>
-          </a>
-          ` : ''}
-        </nav>
-        
-        <!-- Footer actions -->
-        <div class="sidebar-footer px-3 mt-auto pt-3 space-y-2 w-full shrink-0">
-          <button id="view-store-btn" class="w-full min-h-[44px] py-2 bg-[#FFF8E7] text-[#14381F] rounded-lg font-['DM_Sans'] font-semibold text-[10px] uppercase tracking-wider hover:bg-[#DCE6D8] active:scale-95 transition-all shadow-sm cursor-pointer border-none flex items-center justify-center gap-1">
-            <span class="material-symbols-outlined text-[13px]">visibility</span>
-            <span>View Store</span>
-          </button>
-          <button id="logout-btn" class="w-full min-h-[44px] py-2 bg-white/10 text-[#FFF8E7] rounded-lg font-['DM_Sans'] font-medium text-[10px] uppercase tracking-wider hover:bg-white/20 active:scale-95 transition-all cursor-pointer border-none flex items-center justify-center">
-            Logout
-          </button>
-        </div>
-      </aside>
-    `;
+    if (isOptIn) {
+      const isHomeActive = activeTab === 'home' || activeTab === 'dashboard';
+      const isCatalogActive = activeTab === 'catalog';
+      const isOrdersActive = activeTab === 'orders';
+      const isCustomizedActive = activeTab === 'customized' || activeTab === 'customised';
+      const isPayoutsActive = activeTab === 'payments' || activeTab === 'payouts';
+      const isAnalyticsActive = activeTab === 'analytics';
+      const isReviewsActive = activeTab === 'reviews';
+      const isProfileActive = activeTab === 'profile' || activeTab === 'settings';
+      const isPlansActive = activeTab === 'plans';
+
+      this.innerHTML = `
+        <aside class="w-[216px] xl:w-[232px] h-screen h-[100dvh] fixed left-0 top-0 bg-[#14381F] border-r border-white/10 shadow-lg flex flex-col py-4 z-50 overflow-hidden font-['DM_Sans'] text-[#FFF8E7]">
+          <!-- Artisan Studio Emblem / Branding -->
+          <div class="px-4 mb-3 flex items-center gap-3 shrink-0">
+            <a href="/seller/dashboard.html" class="flex items-center gap-2.5 text-decoration-none group" title="Tohfa Studio">
+              <div class="w-9 h-9 rounded-full bg-white/10 group-hover:bg-white/20 transition-all flex items-center justify-center text-[#FFF8E7] shadow-inner shrink-0">
+                <span class="material-symbols-outlined text-[20px]" aria-hidden="true">storefront</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="font-['Playfair_Display'] text-[17px] font-bold text-[#FFF8E7] leading-none">Tohfa Studio</span>
+                <span class="text-[9px] uppercase tracking-widest text-[#FFF8E7]/60 font-mono mt-0.5">Artisan Command</span>
+              </div>
+            </a>
+          </div>
+
+          <!-- Navigation Links with Semantic Group Headings -->
+          <nav class="flex-1 overflow-y-auto overscroll-contain py-1" aria-label="Seller Studio Navigation">
+            <!-- Group: Daily work -->
+            <div class="sidebar-group-heading" role="heading" aria-level="2">Daily work</div>
+
+            <!-- Dashboard -->
+            <a class="sidebar-link ${isHomeActive ? 'sidebar-link-active' : ''}" href="/seller/dashboard.html" title="Dashboard" aria-current="${isHomeActive ? 'page' : 'false'}">
+              <span class="material-symbols-outlined text-[20px]" aria-hidden="true">home</span>
+              <span class="sidebar-link-label">Dashboard</span>
+            </a>
+            <!-- Catalog -->
+            <a class="sidebar-link ${isCatalogActive ? 'sidebar-link-active' : ''}" href="/seller/catalog.html" title="Catalog" aria-current="${isCatalogActive ? 'page' : 'false'}">
+              <span class="material-symbols-outlined text-[20px]" aria-hidden="true">inventory_2</span>
+              <span class="sidebar-link-label">Catalog</span>
+            </a>
+            <!-- Orders -->
+            <a class="sidebar-link ${isOrdersActive ? 'sidebar-link-active' : ''}" href="/seller/orders.html" title="Orders" aria-current="${isOrdersActive ? 'page' : 'false'}">
+              <span class="material-symbols-outlined text-[20px]" aria-hidden="true">shopping_bag</span>
+              <span class="sidebar-link-label">Orders</span>
+            </a>
+            <!-- Customized Products -->
+            <a class="sidebar-link ${isCustomizedActive ? 'sidebar-link-active' : ''} relative" href="/seller/customized-products.html" title="Customized Products" aria-current="${isCustomizedActive ? 'page' : 'false'}">
+              <span class="material-symbols-outlined text-[20px]" aria-hidden="true">auto_fix_high</span>
+              <span class="sidebar-link-label">Customized</span>
+              <span id="sidebar-customized-badge" class="hidden absolute top-2 right-3 bg-[#FFF8E7] text-[#14381F] font-bold text-[9px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
+            </a>
+
+            <!-- Group: Performance -->
+            <div class="sidebar-group-heading" role="heading" aria-level="2">Performance</div>
+
+            ${!isAdminSwitched ? `
+            <!-- Payouts -->
+            <a class="sidebar-link ${isPayoutsActive ? 'sidebar-link-active' : ''}" href="/seller/payouts.html" title="Payouts" aria-current="${isPayoutsActive ? 'page' : 'false'}">
+              <span class="material-symbols-outlined text-[20px]" aria-hidden="true">payments</span>
+              <span class="sidebar-link-label">Payouts</span>
+            </a>
+            ` : ''}
+            <!-- Analytics -->
+            <a class="sidebar-link ${isAnalyticsActive ? 'sidebar-link-active' : ''}" href="/seller/analytics.html" title="Analytics" aria-current="${isAnalyticsActive ? 'page' : 'false'}">
+              <span class="material-symbols-outlined text-[20px]" aria-hidden="true">insights</span>
+              <span class="sidebar-link-label">Analytics</span>
+            </a>
+            <!-- Reviews -->
+            <a class="sidebar-link ${isReviewsActive ? 'sidebar-link-active' : ''}" href="/seller/reviews.html" title="Reviews" aria-current="${isReviewsActive ? 'page' : 'false'}">
+              <span class="material-symbols-outlined text-[20px]" aria-hidden="true">rate_review</span>
+              <span class="sidebar-link-label">Reviews</span>
+            </a>
+
+            <!-- Group: Store -->
+            <div class="sidebar-group-heading" role="heading" aria-level="2">Store</div>
+
+            <!-- Profile & Settings -->
+            <a class="sidebar-link ${isProfileActive ? 'sidebar-link-active' : ''}" href="/seller/profile.html" title="Settings" aria-current="${isProfileActive ? 'page' : 'false'}">
+              <span class="material-symbols-outlined text-[20px]" aria-hidden="true">settings</span>
+              <span class="sidebar-link-label">Settings</span>
+            </a>
+            ${!isAdminSwitched ? `
+            <!-- Studio Plans -->
+            <a class="sidebar-link ${isPlansActive ? 'sidebar-link-active' : ''} relative" href="/seller/plans.html" title="Studio Plans" aria-current="${isPlansActive ? 'page' : 'false'}">
+              <span class="material-symbols-outlined text-[20px]" aria-hidden="true">workspace_premium</span>
+              <span class="sidebar-link-label flex items-center gap-1.5">
+                <span>Plans</span>
+                <span id="sidebar-plan-pill" class="hidden text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-normal" style="background:#FFF8E7;color:#14381F;"></span>
+              </span>
+            </a>
+            ` : ''}
+          </nav>
+
+          <!-- Footer actions -->
+          <div class="sidebar-footer px-3 mt-auto pt-3 space-y-2 w-full shrink-0">
+            <button id="view-store-btn" class="w-full min-h-[44px] py-2.5 px-3 bg-[#FFF8E7] text-[#14381F] rounded-lg font-['DM_Sans'] font-semibold text-xs tracking-wide hover:bg-[#DCE6D8] active:scale-95 transition-all shadow-sm cursor-pointer border-none flex items-center justify-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px]" aria-hidden="true">visibility</span>
+              <span>View Store</span>
+            </button>
+            <button id="logout-btn" class="w-full min-h-[44px] py-2 px-3 bg-white/10 text-[#FFF8E7] rounded-lg font-['DM_Sans'] font-medium text-xs tracking-wide hover:bg-white/20 active:scale-95 transition-all cursor-pointer border-none flex items-center justify-center">
+              Logout
+            </button>
+          </div>
+        </aside>
+      `;
+    } else {
+      this.innerHTML = `
+        <aside class="w-[130px] h-screen h-[100dvh] fixed left-0 top-0 bg-[#14381F] border-r border-white/10 shadow-lg flex flex-col py-5 z-50 overflow-hidden font-['DM_Sans'] text-[#FFF8E7]">
+          <!-- Artisan Studio Emblem -->
+          <div class="px-3 mb-5 flex flex-col items-center shrink-0">
+            <a href="/seller/dashboard.html" class="flex flex-col items-center text-decoration-none group" title="Seller Studio">
+              <div class="w-10 h-10 rounded-full bg-white/10 group-hover:bg-white/20 transition-all flex items-center justify-center text-[#FFF8E7] shadow-inner mb-1">
+                <span class="material-symbols-outlined text-[20px]">storefront</span>
+              </div>
+              <span class="text-[8px] uppercase tracking-widest text-[#FFF8E7]/60 font-mono font-bold">Studio</span>
+            </a>
+          </div>
+
+          <!-- Navigation Links -->
+          <nav class="flex-1 space-y-0.5 overflow-y-auto overscroll-contain">
+            <!-- Dashboard -->
+            <a class="sidebar-link ${activeTab === 'home' || activeTab === 'dashboard' ? 'sidebar-link-active' : ''}" href="/seller/dashboard.html" title="Dashboard">
+              <span class="material-symbols-outlined mb-1 text-2xl">home</span>
+              <span class="text-[9px] uppercase tracking-widest text-center">Dashboard</span>
+            </a>
+            <!-- Catalog -->
+            <a class="sidebar-link ${activeTab === 'catalog' ? 'sidebar-link-active' : ''}" href="/seller/catalog.html" title="Catalog">
+              <span class="material-symbols-outlined mb-1 text-2xl">inventory_2</span>
+              <span class="text-[9px] uppercase tracking-widest text-center">Catalog</span>
+            </a>
+            <!-- Orders -->
+            <a class="sidebar-link ${activeTab === 'orders' ? 'sidebar-link-active' : ''}" href="/seller/orders.html" title="Orders">
+              <span class="material-symbols-outlined mb-1 text-2xl">shopping_bag</span>
+              <span class="text-[9px] uppercase tracking-widest text-center">Orders</span>
+            </a>
+            <!-- Customized Products -->
+            <a class="sidebar-link ${activeTab === 'customized' || activeTab === 'customised' ? 'sidebar-link-active' : ''} relative" href="/seller/customized-products.html" title="Customized Products">
+              <span class="material-symbols-outlined mb-1 text-2xl">auto_fix_high</span>
+              <span class="text-[9px] uppercase tracking-widest text-center">Customized</span>
+              <span id="sidebar-customized-badge" class="hidden absolute top-1 right-3 bg-[#14381F] text-white font-bold text-[8px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
+            </a>
+            ${!isAdminSwitched ? `
+            <!-- Payouts -->
+            <a class="sidebar-link ${activeTab === 'payments' || activeTab === 'payouts' ? 'sidebar-link-active' : ''}" href="/seller/payouts.html" title="Payouts">
+              <span class="material-symbols-outlined mb-1 text-2xl">payments</span>
+              <span class="text-[9px] uppercase tracking-widest text-center">Payouts</span>
+            </a>
+            ` : ''}
+            <!-- Analytics -->
+            <a class="sidebar-link ${activeTab === 'analytics' ? 'sidebar-link-active' : ''}" href="/seller/analytics.html" title="Analytics">
+              <span class="material-symbols-outlined mb-1 text-2xl">insights</span>
+              <span class="text-[9px] uppercase tracking-widest text-center">Analytics</span>
+            </a>
+            <!-- Reviews -->
+            <a class="sidebar-link ${activeTab === 'reviews' ? 'sidebar-link-active' : ''}" href="/seller/reviews.html" title="Reviews">
+              <span class="material-symbols-outlined mb-1 text-2xl">rate_review</span>
+              <span class="text-[9px] uppercase tracking-widest text-center">Reviews</span>
+            </a>
+            <!-- Profile & Settings -->
+            <a class="sidebar-link ${activeTab === 'profile' || activeTab === 'settings' ? 'sidebar-link-active' : ''}" href="/seller/profile.html" title="Profile &amp; Settings">
+              <span class="material-symbols-outlined mb-1 text-2xl">settings</span>
+              <span class="text-[9px] uppercase tracking-widest text-center">Settings</span>
+            </a>
+            ${!isAdminSwitched ? `
+            <!-- Studio Plans -->
+            <a class="sidebar-link ${activeTab === 'plans' ? 'sidebar-link-active' : ''} relative" href="/seller/plans.html" title="Studio Plans">
+              <span class="material-symbols-outlined mb-1 text-2xl">workspace_premium</span>
+              <span class="text-[9px] uppercase tracking-widest text-center flex items-center justify-center gap-1">
+                <span>Plans</span>
+                <span id="sidebar-plan-pill" class="hidden text-[8px] px-1 py-0.2 rounded font-bold uppercase tracking-normal" style="background:#FFF8E7;color:#14381F;"></span>
+              </span>
+            </a>
+            ` : ''}
+          </nav>
+
+          <!-- Footer actions -->
+          <div class="sidebar-footer px-3 mt-auto pt-3 space-y-2 w-full shrink-0">
+            <button id="view-store-btn" class="w-full min-h-[44px] py-2 bg-[#FFF8E7] text-[#14381F] rounded-lg font-['DM_Sans'] font-semibold text-[10px] uppercase tracking-wider hover:bg-[#DCE6D8] active:scale-95 transition-all shadow-sm cursor-pointer border-none flex items-center justify-center gap-1">
+              <span class="material-symbols-outlined text-[13px]">visibility</span>
+              <span>View Store</span>
+            </button>
+            <button id="logout-btn" class="w-full min-h-[44px] py-2 bg-white/10 text-[#FFF8E7] rounded-lg font-['DM_Sans'] font-medium text-[10px] uppercase tracking-wider hover:bg-white/20 active:scale-95 transition-all cursor-pointer border-none flex items-center justify-center">
+              Logout
+            </button>
+          </div>
+        </aside>
+      `;
+    }
 
     // Close mobile drawer on any navigation link click
     this.querySelectorAll('a').forEach(link => {
@@ -592,7 +744,7 @@ class SellerTopBar extends HTMLElement {
         if (returnBtn) {
           returnBtn.addEventListener('click', () => {
             sessionStorage.removeItem('tohfa_admin_switch_context');
-            sessionStorage.removeItem('tohfa_seller_profile_cache');
+            clearSellerProfileCache();
             window.location.href = ctx.returnUrl || '/admin/sellers.html';
           });
         }

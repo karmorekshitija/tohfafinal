@@ -328,7 +328,7 @@
                 if (gridSection) gridSection.classList.remove('hidden');
                 
                 grid.innerHTML = items.map(item => {
-                    const imgUrl = item.product_image || item.image_url || 'https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?w=500&auto=format&fit=crop&q=60';
+                    const imgUrl = item.product_image || item.image_url || '/img/placeholder-product.png';
                     const isOwner = isProductOwned(item.seller_id);
                     const pricePaise = item.price_paise !== undefined ? item.price_paise : (item.base_price ? item.base_price * 100 : 0);
                     

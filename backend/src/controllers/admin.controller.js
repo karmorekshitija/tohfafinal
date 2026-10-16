@@ -17,6 +17,112 @@ const { createNotification } = require('./notification.controller');
 const { slugify, isReservedSlug } = require('../utils/slug');
 const { maskPhone } = require('../utils/phone');
 
+function parseBoolean(val) {
+  if (val === undefined || val === null || val === '') return undefined;
+  if (typeof val === 'boolean') return val;
+  if (typeof val === 'number') return val === 1;
+  if (typeof val === 'string') {
+    const s = val.trim().toLowerCase();
+    if (s === 'true' || s === '1' || s === 't' || s === 'yes') return true;
+    if (s === 'false' || s === '0' || s === 'f' || s === 'no') return false;
+  }
+  return Boolean(val);
+}
+
+/**
+ * Resolves an admin route parameter to an unambiguous seller identity.
+ * Disambiguates between user_id, seller_id, profile_id, and slug.
+ * Rejects collisions/ambiguities where an ID matches multiple distinct sellers.
+ * Returns { user_id, seller_id, profile_id, store_name, slug, is_admin_managed } or throws/returns null.
+ */
+async function resolveAdminSellerTarget(identifier, { requireSpecial = false, idType = null, queryFn = query } = {}) {
+  if (!identifier) return null;
+  const idStr = String(identifier).trim();
+  const isNumeric = /^\d+$/.test(idStr);
+
+  if (idType === 'user_id' && isNumeric) {
+    const { rows } = await queryFn(
+      `SELECT u.id AS user_id, s.id AS seller_id, sp.id AS profile_id,
+              COALESCE(sp.store_name, s.store_name, u.name) AS store_name,
+              COALESCE(sp.slug, s.slug) AS slug,
+              (COALESCE(sp.is_admin_managed::text, s.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed
+       FROM users u
+       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+       LEFT JOIN sellers s ON s.user_id = u.id
+       WHERE u.id = $1`,
+      [Number(idStr)]
+    );
+    if (!rows.length) return null;
+    if (requireSpecial && !rows[0].is_admin_managed) return null;
+    return rows[0];
+  }
+
+  if (idType === 'seller_id' && isNumeric) {
+    const { rows } = await queryFn(
+      `SELECT u.id AS user_id, s.id AS seller_id, sp.id AS profile_id,
+              COALESCE(sp.store_name, s.store_name, u.name) AS store_name,
+              COALESCE(sp.slug, s.slug) AS slug,
+              (COALESCE(sp.is_admin_managed::text, s.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed
+       FROM sellers s
+       JOIN users u ON u.id = s.user_id
+       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+       WHERE s.id = $1`,
+      [Number(idStr)]
+    );
+    if (!rows.length) return null;
+    if (requireSpecial && !rows[0].is_admin_managed) return null;
+    return rows[0];
+  }
+
+  if (!isNumeric) {
+    const { rows } = await queryFn(
+      `SELECT u.id AS user_id, s.id AS seller_id, sp.id AS profile_id,
+              COALESCE(sp.store_name, s.store_name, u.name) AS store_name,
+              COALESCE(sp.slug, s.slug) AS slug,
+              (COALESCE(sp.is_admin_managed::text, s.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed
+       FROM users u
+       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+       LEFT JOIN sellers s ON s.user_id = u.id
+       WHERE sp.slug::text = $1 OR s.slug::text = $1`,
+      [idStr]
+    );
+    if (!rows.length) return null;
+    if (requireSpecial && !rows[0].is_admin_managed) return null;
+    return rows[0];
+  }
+
+  const numId = Number(idStr);
+  const { rows } = await queryFn(
+    `SELECT u.id AS user_id, s.id AS seller_id, sp.id AS profile_id,
+            COALESCE(sp.store_name, s.store_name, u.name) AS store_name,
+            COALESCE(sp.slug, s.slug) AS slug,
+            (COALESCE(sp.is_admin_managed::text, s.is_admin_managed::text, 'false') IN ('true', 't', '1')) AS is_admin_managed
+     FROM users u
+     LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+     LEFT JOIN sellers s ON s.user_id = u.id
+     WHERE u.id = $1 OR s.id = $1 OR sp.id = $1 OR sp.slug = $2 OR s.slug = $2`,
+    [numId, idStr]
+  );
+
+  let candidates = rows;
+  if (requireSpecial) {
+    candidates = candidates.filter(c => c.is_admin_managed);
+  }
+
+  if (!candidates.length) return null;
+
+  const distinctUserIds = [...new Set(candidates.map(c => c.user_id))];
+  if (distinctUserIds.length > 1) {
+    const err = new Error(`Ambiguous identifier "${idStr}" matches multiple distinct sellers (user IDs: ${distinctUserIds.join(', ')}). Specify query parameter ?id_type=user_id or ?id_type=seller_id, or use shop slug.`);
+    err.status = 409;
+    err.statusCode = 409;
+    err.code = 'AMBIGUOUS_IDENTIFIER';
+    throw err;
+  }
+
+  return candidates[0];
+}
+
 // ---------------------------------------------------------------------------
 // 1. DASHBOARD & LIVE PLATFORM STATS
 // ---------------------------------------------------------------------------
@@ -149,6 +255,13 @@ async function listSellers(req, res, next) {
 async function getSellerDetail(req, res, next) {
   try {
     const sellerId = req.params.sellerId || req.params.id;
+    const idType = req.query.id_type || null;
+    const target = await resolveAdminSellerTarget(sellerId, { requireSpecial: false, idType });
+
+    if (!target) {
+      return res.status(404).json({ success: false, message: 'Seller not found.' });
+    }
+
     const { rows } = await query(
       `SELECT u.id, u.name, u.email, u.phone, u.profile_photo_url, u.cover_photo_url, u.is_active,
               COALESCE(sp.store_name, s.store_name, 'Artisan Studio') AS store_name,
@@ -178,16 +291,8 @@ async function getSellerDetail(req, res, next) {
        FROM users u
        LEFT JOIN seller_profiles sp ON sp.user_id = u.id
        LEFT JOIN sellers s ON s.user_id = u.id
-       WHERE u.id::text = $1::text OR sp.id::text = $1::text OR s.id::text = $1::text
-       ORDER BY CASE 
-         WHEN u.id::text = $1::text AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 1
-         WHEN u.id::text = $1::text THEN 2
-         WHEN sp.id::text = $1::text THEN 3
-         WHEN s.id::text = $1::text THEN 4
-         ELSE 5 
-       END ASC
-       LIMIT 1`,
-      [String(sellerId)]
+       WHERE u.id = $1`,
+      [target.user_id]
     );
 
     if (!rows.length) {
@@ -196,53 +301,47 @@ async function getSellerDetail(req, res, next) {
 
     return res.json({ success: true, data: rows[0] });
   } catch (err) {
+    if (err.status === 409) {
+      return res.status(409).json({ success: false, code: err.code, message: err.message });
+    }
     next(err);
   }
 }
 
 async function verifySellerKyc(req, res, next) {
-  const id = req.params.id || req.params.sellerId;
-  let { status, action, remarks, rejectionReason, rejection_reason, reason, commissionRate, commission_rate } = req.body;
-
-  let normStatus = (status || action || '').toString().toUpperCase();
-  if (['APPROVE', 'APPROVED', 'VERIFIED'].includes(normStatus)) {
-    normStatus = 'VERIFIED';
-  } else if (['REJECT', 'REJECTED'].includes(normStatus)) {
-    normStatus = 'REJECTED';
-  }
-
-  if (!['VERIFIED', 'REJECTED'].includes(normStatus)) {
-    return res.status(400).json({ success: false, message: 'Invalid verification status' });
-  }
-
-  const isApproved = normStatus === 'VERIFIED';
-  const sellerStatus = isApproved ? 'APPROVED' : 'REJECTED';
-  const kycRemarks = remarks || rejectionReason || rejection_reason || reason || null;
-  const finalCommission = commissionRate !== undefined ? commissionRate : commission_rate;
-
+  const client = await db.getClient();
   try {
-    // Safely pre-ensure wallet row exists for approved sellers to satisfy fk_seller_wallet constraint
-    if (isApproved) {
-      await query(
-        `INSERT INTO wallets (seller_id, user_id, balance, created_at, updated_at)
-         SELECT s.id, s.user_id, 0.00, NOW(), NOW()
-         FROM sellers s
-         WHERE s.id::text = $1::text OR s.user_id::text = $1::text
-         ON CONFLICT (seller_id) DO NOTHING;`,
-        [String(id)]
-      ).catch(async () => {
-        await query(
-          `INSERT INTO wallets (seller_id, balance, created_at, updated_at)
-           VALUES ($1, 0.00, NOW(), NOW())
-           ON CONFLICT DO NOTHING;`,
-          [String(id)]
-        ).catch(() => {});
-      });
+    const id = req.params.id || req.params.sellerId;
+    const idType = req.query.id_type || req.body.id_type || null;
+    let { status, action, remarks, rejectionReason, rejection_reason, reason, commissionRate, commission_rate } = req.body;
+
+    let normStatus = (status || action || '').toString().toUpperCase();
+    if (['APPROVE', 'APPROVED', 'VERIFIED'].includes(normStatus)) {
+      normStatus = 'VERIFIED';
+    } else if (['REJECT', 'REJECTED'].includes(normStatus)) {
+      normStatus = 'REJECTED';
     }
 
-    // Update seller KYC and approval status atomically in sellers table
+    if (!['VERIFIED', 'REJECTED'].includes(normStatus)) {
+      return res.status(400).json({ success: false, message: 'Invalid verification status' });
+    }
+
+    const target = await resolveAdminSellerTarget(id, { requireSpecial: false, idType });
+    if (!target) {
+      return res.status(404).json({ success: false, message: 'Seller not found' });
+    }
+
+    const isApproved = normStatus === 'VERIFIED';
+    const kycRemarks = remarks || rejectionReason || rejection_reason || reason || null;
+    const finalCommission = commissionRate !== undefined ? commissionRate : commission_rate;
     const approvedBool = Boolean(isApproved);
-    const { rows: updatedSellers } = await query(
+    const userId = target.user_id;
+    const sellerTableId = target.seller_id;
+
+    await client.query('BEGIN');
+
+    // Update sellers table by resolved user_id
+    const { rows: updatedSellers } = await client.query(
       `UPDATE sellers
        SET is_approved = $1::boolean,
            is_active = CASE WHEN $1::boolean = TRUE THEN TRUE ELSE is_active END,
@@ -251,82 +350,53 @@ async function verifySellerKyc(req, res, next) {
            commission_rate = COALESCE($4::numeric, commission_rate),
            approved_at = CASE WHEN $2::text = 'VERIFIED' THEN NOW() ELSE approved_at END,
            updated_at = NOW()
-       WHERE id::text = $5::text OR user_id::text = $5::text
+       WHERE user_id = $5
        RETURNING *;`,
-      [approvedBool, normStatus, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, String(id)]
+      [approvedBool, normStatus, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, userId]
     );
 
-    let sellerRecord = updatedSellers[0];
+    // Update seller_profiles table by resolved user_id
+    const { rows: updatedProfiles } = await client.query(
+      `UPDATE seller_profiles
+       SET is_approved = $1::boolean,
+           is_active = CASE WHEN $1::boolean = TRUE THEN TRUE ELSE is_active END,
+           verification_status = CASE WHEN $1::boolean = TRUE THEN 'verified' ELSE 'rejected' END,
+           rejection_reason = CASE WHEN $1::boolean = FALSE THEN $2 ELSE NULL END,
+           commission_rate = COALESCE($3, commission_rate),
+           approved_at = CASE WHEN $1::boolean = TRUE THEN NOW() ELSE approved_at END,
+           updated_at = NOW()
+       WHERE user_id = $4
+       RETURNING *;`,
+      [approvedBool, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, userId]
+    );
 
-    if (!sellerRecord) {
-      // Fallback: check seller_profiles or users table
-      const { rows: profiles } = await query(
-        `UPDATE seller_profiles
-         SET is_approved = $1::boolean,
-             verification_status = CASE WHEN $1::boolean = TRUE THEN 'verified' ELSE 'rejected' END,
-             rejection_reason = CASE WHEN $1::boolean = FALSE THEN $2 ELSE NULL END,
-             commission_rate = COALESCE($3, commission_rate),
-             approved_at = CASE WHEN $1::boolean = TRUE THEN NOW() ELSE approved_at END,
-             updated_at = NOW()
-         WHERE id::text = $4::text OR user_id::text = $4::text
-         RETURNING *;`,
-        [approvedBool, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, String(id)]
-      );
-
-      if (profiles.length === 0) {
-        return res.status(404).json({ success: false, message: 'Seller not found' });
-      }
-      sellerRecord = profiles[0];
-    } else {
-      // Sync seller_profiles table in parallel
-      await query(
-        `UPDATE seller_profiles
-         SET is_approved = $1::boolean,
-             is_active = CASE WHEN $1::boolean = TRUE THEN TRUE ELSE is_active END,
-             verification_status = CASE WHEN $1::boolean = TRUE THEN 'verified' ELSE 'rejected' END,
-             rejection_reason = CASE WHEN $1::boolean = FALSE THEN $2 ELSE NULL END,
-             commission_rate = COALESCE($3, commission_rate),
-             approved_at = CASE WHEN $1::boolean = TRUE THEN NOW() ELSE approved_at END,
-             updated_at = NOW()
-         WHERE id::text = $4::text OR user_id::text = $4::text;`,
-        [approvedBool, kycRemarks, finalCommission !== undefined && finalCommission !== null ? Number(finalCommission) : null, String(id)]
-      ).catch(() => {});
-    }
-
-    const userId = sellerRecord.user_id || sellerRecord.id;
-    const sellerTableId = sellerRecord.id;
+    let sellerRecord = updatedSellers[0] || updatedProfiles[0] || target;
 
     // Ensure user role and status
     if (isApproved && userId) {
-      await query(
-        `UPDATE users SET is_active = TRUE, role = 'seller', updated_at = NOW() WHERE id::text = $1::text;`,
-        [String(userId)]
-      ).catch(() => {});
+      await client.query(
+        `UPDATE users SET is_active = TRUE, role = 'seller', updated_at = NOW() WHERE id = $1;`,
+        [userId]
+      );
     }
 
     // Safely ensure wallet exists for newly verified sellers
-    if (isApproved) {
-      const targetSellerIdForWallet = sellerTableId || id;
-      await query(
+    if (isApproved && sellerTableId) {
+      await client.query(
         `INSERT INTO wallets (seller_id, user_id, balance, created_at, updated_at)
          VALUES ($1, $2, 0.00, NOW(), NOW())
-         ON CONFLICT (seller_id) DO NOTHING;`,
-        [targetSellerIdForWallet, userId || null]
-      ).catch(async () => {
-        await query(
-          `INSERT INTO wallets (seller_id, balance, created_at, updated_at)
-           VALUES ($1, 0.00, NOW(), NOW())
-           ON CONFLICT DO NOTHING;`,
-          [targetSellerIdForWallet]
-        ).catch(() => {});
-      });
+         ON CONFLICT (seller_id) DO UPDATE SET updated_at = NOW();`,
+        [sellerTableId, userId]
+      ).catch(() => {});
     }
+
+    await client.query('COMMIT');
 
     // Send emails & notifications
     if (isApproved && userId) {
-      const { rows: userRows } = await query('SELECT name, email FROM users WHERE id::text = $1::text', [String(userId)]).catch(() => ({ rows: [] }));
+      const { rows: userRows } = await query('SELECT name, email FROM users WHERE id = $1', [userId]).catch(() => ({ rows: [] }));
       const sellerUser = userRows[0] || {};
-      const storeName = sellerRecord.store_name || 'Artisan Studio';
+      const storeName = sellerRecord.store_name || target.store_name || 'Artisan Studio';
       await emailService.sendSellerApprovalEmail(sellerUser.email, { sellerName: sellerUser.name || storeName, storeName }).catch(() => {});
       await createNotification(
         userId,
@@ -335,9 +405,9 @@ async function verifySellerKyc(req, res, next) {
         'Your artisan KYC application has been verified and approved. You can now publish handcrafted creations.'
       ).catch(() => {});
     } else if (normStatus === 'REJECTED' && userId) {
-      const { rows: userRows } = await query('SELECT name, email FROM users WHERE id::text = $1::text', [String(userId)]).catch(() => ({ rows: [] }));
+      const { rows: userRows } = await query('SELECT name, email FROM users WHERE id = $1', [userId]).catch(() => ({ rows: [] }));
       const sellerUser = userRows[0] || {};
-      const storeName = sellerRecord.store_name || 'Artisan Studio';
+      const storeName = sellerRecord.store_name || target.store_name || 'Artisan Studio';
       await emailService.sendSellerRejectionEmail(sellerUser.email, { sellerName: sellerUser.name || storeName, rejectionReason: kycRemarks }).catch(() => {});
       await createNotification(
         userId,
@@ -352,7 +422,7 @@ async function verifySellerKyc(req, res, next) {
         adminId: req.user.id,
         actionType: isApproved ? 'SELLER_KYC_APPROVED' : 'SELLER_KYC_REJECTED',
         targetEntity: 'sellers',
-        targetId: id,
+        targetId: userId,
         details: { status: normStatus, commissionRate: finalCommission, remarks: kycRemarks },
         ipAddress: req.ip
       }).catch(() => {});
@@ -364,49 +434,53 @@ async function verifySellerKyc(req, res, next) {
       data: sellerRecord
     });
   } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    if (error.status === 409) {
+      return res.status(409).json({ success: false, code: error.code, message: error.message });
+    }
     console.error('Error verifying seller KYC:', error);
     return res.status(500).json({ success: false, message: 'Internal server error while updating KYC' });
+  } finally {
+    client.release();
   }
 }
 
 const verifySellerKYC = verifySellerKyc;
 
 async function suspendSeller(req, res, next) {
+  const client = await db.getClient();
   try {
     const sellerId = req.params.sellerId || req.params.id;
     const reason = req.body.reason || req.body.ban_reason || 'Administrative suspension';
+    const idType = req.query.id_type || req.body.id_type || null;
 
-    // Resolve target user_id and seller_id accurately
-    const sellerMatch = await query(
-      `SELECT s.id AS seller_id, s.user_id 
-       FROM sellers s 
-       WHERE s.id::text = $1::text OR s.user_id::text = $1::text 
-       LIMIT 1`,
-      [String(sellerId)]
-    );
-    let targetUserId = sellerMatch.rows[0]?.user_id;
-    let targetSellerId = sellerMatch.rows[0]?.seller_id || sellerId;
-
-    if (!targetUserId) {
-      const spMatch = await query(
-        `SELECT id, user_id FROM seller_profiles WHERE id::text = $1::text OR user_id::text = $1::text LIMIT 1`,
-        [String(sellerId)]
-      );
-      targetUserId = spMatch.rows[0]?.user_id || sellerId;
-      targetSellerId = spMatch.rows[0]?.id || targetSellerId;
+    const target = await resolveAdminSellerTarget(sellerId, { requireSpecial: false, idType });
+    if (!target) {
+      return res.status(404).json({ success: false, message: 'Seller not found.' });
     }
 
-    await query('UPDATE users SET is_active = FALSE WHERE id::text = $1', [String(targetUserId)])
-      .catch(() => {});
+    const targetUserId = target.user_id;
 
-    await query("UPDATE seller_profiles SET verification_status = 'suspended', is_active = FALSE, is_approved = FALSE, updated_at = NOW() WHERE user_id::text = $1 OR id::text = $2", [String(targetUserId), String(targetSellerId)])
-      .catch(() => {});
+    await client.query('BEGIN');
 
-    await query("UPDATE sellers SET verification_status = 'suspended', is_active = FALSE, is_approved = FALSE WHERE user_id::text = $1 OR id::text = $2", [String(targetUserId), String(targetSellerId)])
-      .catch(() => {});
+    await client.query('UPDATE users SET is_active = FALSE WHERE id = $1', [targetUserId]);
 
-    await query("UPDATE products SET status = 'paused', is_active = FALSE WHERE seller_id::text = $1 OR seller_id::text = $2", [String(targetUserId), String(targetSellerId)])
-      .catch(() => {});
+    await client.query(
+      "UPDATE seller_profiles SET verification_status = 'suspended', is_active = FALSE, is_approved = FALSE, updated_at = NOW() WHERE user_id = $1",
+      [targetUserId]
+    );
+
+    await client.query(
+      "UPDATE sellers SET verification_status = 'suspended', is_active = FALSE, is_approved = FALSE WHERE user_id = $1",
+      [targetUserId]
+    );
+
+    await client.query(
+      "UPDATE products SET status = 'paused', is_active = FALSE WHERE seller_id = $1",
+      [targetUserId]
+    );
+
+    await client.query('COMMIT');
 
     await logAdminAction({
       adminId: req.user.id,
@@ -419,7 +493,13 @@ async function suspendSeller(req, res, next) {
 
     return res.status(200).json({ success: true, message: 'Seller suspended and products paused.' });
   } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    if (err.status === 409) {
+      return res.status(409).json({ success: false, code: err.code, message: err.message });
+    }
     next(err);
+  } finally {
+    client.release();
   }
 }
 
@@ -2547,9 +2627,18 @@ async function createRegularSeller(req, res, next) {
 }
 
 async function updateSpecialShop(req, res, next) {
+  const client = await db.getClient();
   try {
     const shopId = req.params.id || req.params.sellerId;
     const { store_name, bio, pickup_address, is_active, commission_rate } = req.body;
+    const idType = req.query.id_type || req.body.id_type || null;
+
+    const target = await resolveAdminSellerTarget(shopId, { requireSpecial: true, idType });
+    if (!target) {
+      return res.status(404).json({ success: false, message: 'Tohfa Special shop not found.' });
+    }
+
+    const { user_id } = target;
 
     const parsedCommRate = (commission_rate !== undefined && commission_rate !== null && commission_rate !== '')
       ? parseFloat(commission_rate)
@@ -2559,39 +2648,17 @@ async function updateSpecialShop(req, res, next) {
       ? (typeof pickup_address === 'string' ? pickup_address : JSON.stringify(pickup_address))
       : null;
 
-    // Find the user/seller associated with this shop
-    const { rows: matchRows } = await query(
-      `SELECT u.id AS user_id, s.id AS seller_id, sp.id AS profile_id
-       FROM users u
-       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
-       LEFT JOIN sellers s ON s.user_id = u.id
-       WHERE (u.id::text = $1::text OR sp.id::text = $1::text OR s.id::text = $1::text OR sp.slug::text = $1::text OR s.slug::text = $1::text)
-         AND (sp.is_admin_managed::text IN ('true', 't', '1') OR s.is_admin_managed::text IN ('true', 't', '1'))
-       ORDER BY CASE 
-         WHEN sp.slug::text = $1::text OR s.slug::text = $1::text THEN 1
-         WHEN u.id::text = $1::text AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 2
-         WHEN u.id::text = $1::text THEN 3
-         WHEN sp.id::text = $1::text THEN 4
-         WHEN s.id::text = $1::text THEN 5
-         ELSE 6 
-       END ASC
-       LIMIT 1`,
-      [shopId]
-    );
+    const parsedIsActive = parseBoolean(is_active);
 
-    if (!matchRows.length) {
-      return res.status(404).json({ success: false, message: 'Tohfa Special shop not found.' });
-    }
-
-    const { user_id, seller_id } = matchRows[0];
+    await client.query('BEGIN');
 
     // Update seller_profiles
-    const { rows: spRows } = await query(
+    const { rows: spRows } = await client.query(
       `UPDATE seller_profiles
        SET store_name = COALESCE($1, store_name),
            bio = COALESCE($2, bio),
            pickup_address = COALESCE($3::jsonb, pickup_address),
-           is_active = COALESCE($4, is_active),
+           is_active = CASE WHEN $4::boolean IS NOT NULL THEN $4::boolean ELSE is_active END,
            commission_rate = COALESCE($5, commission_rate),
            updated_at = NOW()
        WHERE user_id = $6
@@ -2600,19 +2667,19 @@ async function updateSpecialShop(req, res, next) {
         store_name || null,
         bio || null,
         formattedAddress,
-        is_active !== undefined ? Boolean(is_active) : null,
+        parsedIsActive !== undefined ? parsedIsActive : null,
         parsedCommRate,
         user_id
       ]
     );
 
-    // Update sellers (including commission_rate)
-    const { rows: sRows } = await query(
+    // Update sellers
+    const { rows: sRows } = await client.query(
       `UPDATE sellers
        SET store_name = COALESCE($1, store_name),
            bio = COALESCE($2, bio),
            pickup_address = COALESCE($3::jsonb, pickup_address),
-           is_active = COALESCE($4, is_active),
+           is_active = CASE WHEN $4::boolean IS NOT NULL THEN $4::boolean ELSE is_active END,
            commission_rate = COALESCE($5, commission_rate)
        WHERE user_id = $6
        RETURNING *`,
@@ -2620,17 +2687,19 @@ async function updateSpecialShop(req, res, next) {
         store_name || null,
         bio || null,
         formattedAddress,
-        is_active !== undefined ? Boolean(is_active) : null,
+        parsedIsActive !== undefined ? parsedIsActive : null,
         parsedCommRate,
         user_id
       ]
     );
 
+    await client.query('COMMIT');
+
     const merged = {
       ...(spRows[0] || {}),
       ...(sRows[0] || {}),
       user_id,
-      seller_id: seller_id || sRows[0]?.id || spRows[0]?.id,
+      seller_id: sRows[0]?.id || spRows[0]?.id || target.seller_id,
       commission_rate: sRows[0]?.commission_rate !== undefined ? parseFloat(sRows[0].commission_rate) : (parsedCommRate || 0),
       store_name: sRows[0]?.store_name || spRows[0]?.store_name || store_name,
       bio: sRows[0]?.bio || spRows[0]?.bio || bio,
@@ -2649,7 +2718,13 @@ async function updateSpecialShop(req, res, next) {
 
     return res.json({ success: true, message: 'Tohfa Special shop updated.', data: merged });
   } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    if (err.status === 409) {
+      return res.status(409).json({ success: false, code: err.code, message: err.message });
+    }
     next(err);
+  } finally {
+    client.release();
   }
 }
 
@@ -2657,41 +2732,22 @@ async function switchSessionToSpecialShop(req, res, next) {
   try {
     const shopId = req.params.id || req.params.sellerId;
     const authService = require('../services/auth.service');
+    const idType = req.query.id_type || null;
 
-    const { rows } = await query(
-      `SELECT COALESCE(sp.id, s.id) AS profile_id,
-              COALESCE(sp.store_name, s.store_name, s.shop_name, 'Tohfa Special') AS store_name,
-              COALESCE(sp.slug, s.slug, s.store_slug) AS slug,
-              u.id AS user_id, u.email, u.name
-       FROM users u
-       LEFT JOIN seller_profiles sp ON sp.user_id = u.id
-       LEFT JOIN sellers s ON s.user_id = u.id
-       WHERE (u.id::text = $1::text OR sp.id::text = $1::text OR s.id::text = $1::text OR sp.slug::text = $1::text OR s.slug::text = $1::text)
-         AND (sp.is_admin_managed::text IN ('true', 't', '1') OR s.is_admin_managed::text IN ('true', 't', '1'))
-       ORDER BY CASE 
-         WHEN sp.slug::text = $1::text OR s.slug::text = $1::text THEN 1
-         WHEN u.id::text = $1::text AND (sp.id IS NOT NULL OR s.id IS NOT NULL) THEN 2
-         WHEN u.id::text = $1::text THEN 3
-         WHEN sp.id::text = $1::text THEN 4
-         WHEN s.id::text = $1::text THEN 5
-         ELSE 6 
-       END ASC
-       LIMIT 1`,
-      [shopId]
-    );
-
-    if (!rows.length) {
+    const target = await resolveAdminSellerTarget(shopId, { requireSpecial: true, idType });
+    if (!target) {
       return res.status(404).json({
         success: false,
         message: 'Tohfa Special shop not found or is not admin-managed.'
       });
     }
 
-    const shop = rows[0];
+    const { rows: uRows } = await query('SELECT id, email, name FROM users WHERE id = $1', [target.user_id]);
+    const user = uRows[0] || {};
 
     const tokenPayload = {
-      id: shop.user_id,
-      email: shop.email,
+      id: target.user_id,
+      email: user.email,
       role: 'seller',
       isSellerApproved: true,
       isAdminManaged: true,
@@ -2705,26 +2761,26 @@ async function switchSessionToSpecialShop(req, res, next) {
       adminId: req.user.id,
       actionType: 'ADMIN_SWITCHED_TO_SPECIAL_SHOP',
       targetEntity: 'sellers',
-      targetId: shop.user_id,
-      details: { store_name: shop.store_name, slug: shop.slug },
+      targetId: target.user_id,
+      details: { store_name: target.store_name, slug: target.slug },
       ipAddress: req.ip
     });
 
     return res.json({
       success: true,
-      message: `Successfully generated session for "${shop.store_name}".`,
+      message: `Successfully generated session for "${target.store_name}".`,
       data: {
         user: {
-          id: shop.user_id,
-          name: shop.name || shop.store_name,
-          email: shop.email,
+          id: target.user_id,
+          name: user.name || target.store_name,
+          email: user.email,
           role: 'seller',
-          store_name: shop.store_name,
+          store_name: target.store_name,
           is_approved: 1,
           verification_status: 'verified',
           is_admin_managed: true
         },
-        seller: shop,
+        seller: target,
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
         token: tokens.accessToken,
@@ -2732,6 +2788,9 @@ async function switchSessionToSpecialShop(req, res, next) {
       }
     });
   } catch (err) {
+    if (err.status === 409) {
+      return res.status(409).json({ success: false, code: err.code, message: err.message });
+    }
     next(err);
   }
 }
@@ -2940,10 +2999,19 @@ async function getPlansOverview(req, res, next) {
 }
 
 async function updateSellerPlan(req, res, next) {
+  const client = await db.getClient();
   try {
     const sellerId = req.params.id || req.params.sellerId;
     const { plan = 'basic', status = 'active' } = req.body;
     const adminUser = req.user?.email || 'admin';
+    const idType = req.query.id_type || req.body.id_type || null;
+
+    const target = await resolveAdminSellerTarget(sellerId, { requireSpecial: false, idType });
+    if (!target) {
+      return res.status(404).json({ success: false, message: 'Seller not found.' });
+    }
+
+    const targetUserId = target.user_id;
 
     const normalizedPlan = String(plan).toLowerCase().trim();
     if (!['basic', 'pro', 'max'].includes(normalizedPlan)) {
@@ -2952,40 +3020,51 @@ async function updateSellerPlan(req, res, next) {
 
     const renewsAt = normalizedPlan === 'basic' ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
-    await query(
+    await client.query('BEGIN');
+
+    await client.query(
       `UPDATE sellers
        SET subscription_plan = $1,
            subscription_status = $2,
            subscription_renews_at = $3,
            subscription_updated_by = $4,
            updated_at = NOW()
-       WHERE id::text = $5::text OR user_id::text = $5::text`,
-      [normalizedPlan, status, renewsAt, 'admin:' + adminUser, String(sellerId)]
+       WHERE user_id = $5`,
+      [normalizedPlan, status, renewsAt, 'admin:' + adminUser, targetUserId]
     );
 
-    await query(
+    await client.query(
       `UPDATE seller_profiles
        SET subscription_plan = $1,
            subscription_status = $2,
            subscription_renews_at = $3,
            subscription_updated_by = $4,
            updated_at = NOW()
-       WHERE id::text = $5::text OR user_id::text = $5::text`,
-      [normalizedPlan, status, renewsAt, 'admin:' + adminUser, String(sellerId)]
+       WHERE user_id = $5`,
+      [normalizedPlan, status, renewsAt, 'admin:' + adminUser, targetUserId]
     );
+
+    await client.query('COMMIT');
 
     return res.json({
       success: true,
       message: 'Seller plan updated to ' + normalizedPlan + ' (' + status + ').',
       data: {
-        seller_id: sellerId,
+        seller_id: target.seller_id,
+        user_id: targetUserId,
         subscription_plan: normalizedPlan,
         subscription_status: status,
         subscription_renews_at: renewsAt
       }
     });
   } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    if (err.status === 409) {
+      return res.status(409).json({ success: false, code: err.code, message: err.message });
+    }
     next(err);
+  } finally {
+    client.release();
   }
 }
 
@@ -3538,4 +3617,6 @@ module.exports = {
   getSellerSubscriptions,
   getSpecialOrders,
   updateSpecialOrderStatus,
+  resolveAdminSellerTarget,
+  parseBoolean,
 };

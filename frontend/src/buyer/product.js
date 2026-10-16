@@ -75,7 +75,7 @@ function getImagesForVariant(variant, p) {
     const valid = p.images.map(img => (typeof img === 'string' ? img : (img.url || img.image_url || img))).filter(Boolean);
     if (valid.length > 0) return valid.map(url => ({ url }));
   }
-  return [{ url: p.image_url || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&q=80' }];
+  return [{ url: p.image_url || '/img/placeholder-product.png' }];
 }
 
 function renderProductUI(p) {
@@ -108,7 +108,7 @@ function renderProductUI(p) {
         const thumbUrl = optimizeImageUrl(rawUrl, { width: 160 });
         return `
         <div class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="switchImage('${rawUrl}', this)">
-          <img src="${thumbUrl}" alt="Thumbnail" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&q=80'">
+          <img src="${thumbUrl}" alt="Thumbnail" loading="lazy" decoding="async" onerror="this.src='/img/placeholder-product.png'">
         </div>
       `;
       }).join('')
@@ -360,7 +360,7 @@ window.selectVariant = (variantId, el) => {
           const thumbUrl = optimizeImageUrl(raw, { width: 160 });
           return `
           <div class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="switchImage('${raw}', this)">
-            <img src="${thumbUrl}" alt="Thumbnail" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&q=80'">
+            <img src="${thumbUrl}" alt="Thumbnail" loading="lazy" decoding="async" onerror="this.src='/img/placeholder-product.png'">
           </div>
         `;
         }).join('');
