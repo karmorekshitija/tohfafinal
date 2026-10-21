@@ -1134,7 +1134,7 @@ async function rebuildSpecialProducts(shopUserMap) {
     // Insert gallery product_images
     for (let i = 0; i < galleryImages.length; i++) {
       await query(
-        'INSERT INTO product_images (product_id, url, sort_order) VALUES ($1, $2, $3)',
+        'INSERT INTO product_images (product_id, url, sort_order) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
         [productId, galleryImages[i], i]
       );
     }

@@ -15,13 +15,14 @@ WHERE id IN (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_product_images_unique_url ON product_images (product_id, url);
 
 -- 2. Cart items UNIQUE constraint handling
+ALTER TABLE cart_items ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 DELETE FROM cart_items
 WHERE id IN (
   SELECT id
   FROM (
     SELECT id, ROW_NUMBER() OVER (
-      PARTITION BY buyer_id, cart_id, product_id, COALESCE(variant_id, -1)
-      ORDER BY updated_at DESC
+      PARTITION BY buyer_id, cart_id, product_id, COALESCE(variant_id, '00000000-0000-0000-0000-000000000000'::uuid)
+      ORDER BY created_at DESC
     ) as rn
     FROM cart_items
   ) t

@@ -5,5 +5,5 @@ UPDATE seller_profiles
 SET capacity_limit = 1000
 WHERE seller_type = 'special'
    OR is_admin_managed = TRUE
-   OR is_tohfa_original = TRUE
+   -- OR is_tohfa_original = TRUE
    OR store_name IN ('The Candle Story', 'Nails Diva', 'Crochet Lady');

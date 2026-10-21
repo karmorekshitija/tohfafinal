@@ -50,10 +50,15 @@ EXCEPTION
 END $$;
 
 -- Backfill type and reason from legacy columns if empty
-UPDATE reports 
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'reports' AND column_name = 'related_to_type') THEN
+    UPDATE reports 
 SET type = COALESCE(NULLIF(type, ''), related_to_type, 'other'),
     reason = COALESCE(NULLIF(reason, ''), description, subject, 'No details provided')
 WHERE type IS NULL OR reason IS NULL OR type = '' OR reason = '';
+  END IF;
+END $$;
 
 -- Add indexes for fast lookup by reporter and status
 CREATE INDEX IF NOT EXISTS idx_reports_reporter_id ON reports(reporter_id);

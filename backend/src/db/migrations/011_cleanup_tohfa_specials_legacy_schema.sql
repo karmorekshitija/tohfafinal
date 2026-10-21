@@ -36,7 +36,7 @@ BEGIN
 
   -- Backfill from email pattern or known official store user_id
   UPDATE seller_profiles SET is_admin_managed = TRUE 
-  WHERE user_id = 94 
+  WHERE user_id::text = '94' 
      OR user_id IN (SELECT id FROM users WHERE email LIKE '%.special@%' OR email LIKE '%official%@thetohfa.in');
 
   -- Synchronize sellers table mirror

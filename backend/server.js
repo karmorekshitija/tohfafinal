@@ -368,7 +368,8 @@ if (!process.env.VERCEL && process.env.ENABLE_CRON !== 'false') {
   bestsellerService.startBestsellerCron();
 
   // Run WhatsApp outbox dispatcher every minute (Asia/Kolkata)
-  nodeCron.schedule('* * * * *', async () => {
+  const outboxCronSchedule = process.env.OUTBOX_CRON_SCHEDULE || '*/30 * * * *';
+  nodeCron.schedule(outboxCronSchedule, async () => {
     try {
       await whatsappOutboxService.processOutbox();
     } catch (err) {
