@@ -251,8 +251,10 @@ CREATE INDEX IF NOT EXISTS idx_products_category_id     ON products(category_id)
 CREATE INDEX IF NOT EXISTS idx_products_status           ON products(status);
 CREATE INDEX IF NOT EXISTS idx_products_is_sponsored     ON products(is_sponsored);
 CREATE INDEX IF NOT EXISTS idx_products_bestseller       ON products(seller_id) WHERE is_bestseller = TRUE;
-CREATE INDEX IF NOT EXISTS idx_products_tohfa_original   ON products(is_tohfa_original) WHERE is_tohfa_original = TRUE;
-CREATE INDEX IF NOT EXISTS idx_products_priority_rank    ON products(priority_rank DESC);
+-- Optional legacy index (only created if column is present)
+-- CREATE INDEX IF NOT EXISTS idx_products_tohfa_original
+-- Optional legacy index (only created if column is present)
+-- CREATE INDEX IF NOT EXISTS idx_products_priority_rank
 
 -- Full-text search index on product name + description
 CREATE INDEX IF NOT EXISTS idx_products_fts ON products
@@ -696,7 +698,7 @@ CREATE TABLE IF NOT EXISTS banners (
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS our_story_features (
   id           SERIAL PRIMARY KEY,
-  seller_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  seller_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   blurb        TEXT DEFAULT '',
   image_url    TEXT,
   is_active    BOOLEAN NOT NULL DEFAULT TRUE,
@@ -712,7 +714,7 @@ CREATE INDEX IF NOT EXISTS idx_our_story_features_is_active ON our_story_feature
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS reports (
   id           SERIAL PRIMARY KEY,
-  reporter_id  INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  reporter_id  UUID REFERENCES users(id) ON DELETE CASCADE,
   type         VARCHAR(50) NOT NULL DEFAULT 'other',
   target_id    TEXT,
   reason       TEXT NOT NULL DEFAULT '',

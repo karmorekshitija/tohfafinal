@@ -7,4 +7,11 @@
 
 ALTER TABLE addresses ADD COLUMN IF NOT EXISTS locality TEXT;
 
-CREATE OR REPLACE VIEW user_addresses AS SELECT * FROM addresses;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.tables WHERE table_name = 'user_addresses' AND table_type = 'BASE TABLE'
+  ) THEN
+    EXECUTE 'CREATE OR REPLACE VIEW user_addresses AS SELECT * FROM addresses';
+  END IF;
+END $$;

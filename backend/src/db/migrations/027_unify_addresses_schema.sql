@@ -49,5 +49,12 @@ UPDATE addresses SET address_line1 = COALESCE(address_line1, line1) WHERE addres
 UPDATE addresses SET line2 = COALESCE(line2, address_line2) WHERE line2 IS NULL AND address_line2 IS NOT NULL;
 UPDATE addresses SET address_line2 = COALESCE(address_line2, line2) WHERE address_line2 IS NULL AND line2 IS NOT NULL;
 
--- 4. Refresh user_addresses view
-CREATE OR REPLACE VIEW user_addresses AS SELECT * FROM addresses;
+-- 4. Refresh user_addresses view (only if user_addresses is not already a base table)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.tables WHERE table_name = 'user_addresses' AND table_type = 'BASE TABLE'
+  ) THEN
+    EXECUTE 'CREATE OR REPLACE VIEW user_addresses AS SELECT * FROM addresses';
+  END IF;
+END $$;

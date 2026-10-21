@@ -11,7 +11,21 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
+const { Client } = require('pg');
 const { getClient } = require('../config/db');
+
+async function getMigrationClient() {
+  const directUrl = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
+  if (directUrl && !directUrl.includes('localhost')) {
+    const directClient = new Client({
+      connectionString: directUrl,
+      ssl: { rejectUnauthorized: false }
+    });
+    await directClient.connect();
+    return directClient;
+  }
+  return getClient();
+}
 
 const MIGRATION_FILES = [
   path.join(__dirname, 'schema.sql'),
@@ -57,7 +71,7 @@ async function runMigrations() {
   console.log('🚀 Starting Tohfa v2 database migration pipeline...\n');
   let client;
   try {
-    client = await getClient();
+    client = await getMigrationClient();
   } catch (dbErr) {
     console.error('⚠️ Could not connect to database:', dbErr.message);
     return;
@@ -83,7 +97,10 @@ async function runMigrations() {
   } catch (err) {
     console.error('\n❌ Migration failed:', err.message);
   } finally {
-    if (client) client.release();
+    if (client) {
+      if (typeof client.release === 'function') client.release();
+      else if (typeof client.end === 'function') await client.end();
+    }
   }
 }
 
